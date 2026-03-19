@@ -1,0 +1,91 @@
+name: PR Labeler
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  automate-pr:
+    name: Fields Compliance
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: read
+      repository-projects: write
+    
+    steps:
+      - name: Auto-Assign
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            await github.rest.issues.addAssignees({ owner, repo, issue_number, assignees: ['cristiangilsanz'] });
+
+      - name: Set Type Label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+            const body = context.payload.pull_request.body || '';
+            const types = ['Build', 'Chore', 'CI', 'Docs', 'Feat', 'Fix', 'Perf', 'Refactor', 'Style', 'Test'];
+            
+            const issueMatch = body.match(/QRW-(\d+)/i);
+            if (!issueMatch) return;
+
+            const issueId = issueMatch[1];
+            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: parseInt(issueId) }).catch(() => ({ data: null }));
+            
+            if (issue && issue.body) {
+              let detectedType = null;
+              for (const t of types) {
+                const regex = new RegExp(`- \\[x\\] ${t}`, 'i');
+                if (regex.test(issue.body)) {
+                  detectedType = t.toLowerCase();
+                  break; 
+                }
+              }
+
+              if (detectedType) {
+                const { data: labels } = await github.rest.issues.listLabelsOnIssue({ owner, repo, issue_number: prNumber });
+                for (const label of labels) {
+                  if (types.some(t => t.toLowerCase() === label.name.toLowerCase())) {
+                    await github.rest.issues.removeLabel({ owner, repo, issue_number: prNumber, name: label.name }).catch(() => {});
+                  }
+                }
+                await github.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels: [detectedType] });
+              }
+            }
+
+      - name: Set Milestone
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const body = context.payload.pull_request.body || '';
+            const prNumber = context.payload.pull_request.number;
+            
+            const issueMatch = body.match(/QRW-(\d+)/i);
+            if (!issueMatch) return;
+
+            const issueId = issueMatch[1];
+            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: parseInt(issueId) }).catch(() => ({ data: null }));
+            
+            if (issue?.milestone) {
+              const milestoneTitle = issue.milestone.title;
+              const milestoneKey = milestoneTitle.split(' ')[0];
+
+              let updatedBody = body;
+              const milestones = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
+              
+              for (const m of milestones) {
+                const mRegex = new RegExp(`- \\[[ xX]\\] (${m}[^\\n]+)`, 'gi');
+                updatedBody = updatedBody.replace(mRegex, m === milestoneKey ? `- [x] $1` : `- [ ] $1`);
+              }
+
+              if (updatedBody !== body) {
+                await github.rest.pulls.update({ owner, repo, pull_number: prNumber, body: updatedBody });
+              }
+              await github.rest.issues.update({ owner, repo, issue_number: prNumber, milestone: issue.milestone.number });
+            }
