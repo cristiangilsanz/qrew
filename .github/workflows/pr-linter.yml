@@ -1,0 +1,63 @@
+name: PR Linter
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate:
+    name: Conventional Commits Specification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Validate PR Title"
+        run: |
+          TYPES="build|chore|ci|docs|feat|fix|perf|refactor|style|test"
+          TITLE="${{ github.event.pull_request.title }}"
+          PATTERN="^($TYPES)(\(.*\))?!?: .+$"
+
+          if [[ ! "$TITLE" =~ $PATTERN ]]; then
+            echo "::error::Validation Failed! PR Title '$TITLE' does not follow '<type>[optional scope]: <description>' format."
+            exit 1
+          fi
+
+      - name: "Validate Commit Messages"
+        run: |
+          TYPES="build|chore|ci|docs|feat|fix|perf|refactor|style|test"
+          TITLE="${{ github.event.pull_request.title }}"
+          PR_TYPE=$(echo "$TITLE" | grep -oE "^[a-z]+" | head -n 1)
+
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+
+          PATTERN="^($TYPES)(\(.*\))?!?: .+$"
+          TYPE_PATTERN="^$PR_TYPE(\(.*\))?!?: .+$"
+          FAILED_LIST=""
+          MATCH_FOUND=false
+
+          while IFS= read -r line; do
+            sha="${line%% *}"
+            msg="${line#* }"
+            if [[ ! "$msg" =~ $PATTERN ]]; then
+              FAILED_LIST+="$sha - $msg"$'\n'
+            else
+              if [[ "$msg" =~ $TYPE_PATTERN ]]; then
+                MATCH_FOUND=true
+              fi
+            fi
+          done < <(git log "$BASE..$HEAD" --format="%h %s")
+
+          if [ -n "$FAILED_LIST" ]; then
+            echo "::error::Validation Failed! The following commits do not follow '<type>[optional scope]: <description>' format:"
+            printf '%s' "$FAILED_LIST"
+            exit 1
+          fi
+
+          if [ "$MATCH_FOUND" = false ]; then
+            echo "::error::Validation Failed! PR is labeled '$PR_TYPE' but no commits start with it."
+            exit 1
+          fi
