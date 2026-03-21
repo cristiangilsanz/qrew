@@ -1,4 +1,5 @@
 name: Issue Labeler
+
 on:
   issues:
     types: [opened, edited]
@@ -16,7 +17,11 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            await github.rest.issues.addAssignees({owner, repo, issue_number: context.payload.issue.number, assignees: ['cristiangilsanz']});
+            await github.rest.issues.addAssignees({
+              owner, repo,
+              issue_number: context.payload.issue.number,
+              assignees: ['cristiangilsanz']
+            });
 
       - name: Set Type Label
         uses: actions/github-script@v7
@@ -26,25 +31,17 @@ jobs:
             const issueNumber = context.payload.issue.number;
             const body = context.payload.issue.body || '';
             const types = ['Build', 'Chore', 'CI', 'Docs', 'Feat', 'Fix', 'Perf', 'Refactor', 'Style', 'Test'];
-            
-            let detectedType = null;
-            for (const t of types) {
-              const regex = new RegExp(`- \\[x\\] ${t}`, 'i');
-              if (regex.test(body)) {
-                detectedType = t.toLowerCase();
-                break; 
-              }
-            }
 
-            if (detectedType) {
-              const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({ owner, repo, issue_number: issueNumber });
-              for (const label of currentLabels) {
-                if (types.some(t => t.toLowerCase() === label.name.toLowerCase())) {
-                  await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: label.name }).catch(() => {});
-                }
-              }
-              await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: [detectedType] });
-            }
+            const detectedType = types.find(t => new RegExp(`- \\[x\\] ${t}`, 'i').test(body))?.toLowerCase();
+            if (!detectedType) return;
+
+            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({ owner, repo, issue_number: issueNumber });
+            await Promise.all(
+              currentLabels
+                .filter(l => types.some(t => t.toLowerCase() === l.name.toLowerCase()))
+                .map(l => github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: l.name }).catch(() => {}))
+            );
+            await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: [detectedType] });
 
       - name: Set Milestone
         uses: actions/github-script@v7
@@ -53,21 +50,17 @@ jobs:
             const { owner, repo } = context.repo;
             const body = context.payload.issue.body || '';
             const milestoneMatch = body.match(/- \[x\] (M\d)/i);
-            
-            if (milestoneMatch) {
-              const milestoneKey = milestoneMatch[1].toUpperCase();
-              const { data: milestones } = await github.rest.issues.listMilestones({ owner, repo });
-              const targetMilestone = milestones.find(m => m.title.startsWith(milestoneKey));
-              
-              if (targetMilestone) {
-                await github.rest.issues.update({
-                  owner,
-                  repo,
-                  issue_number: context.payload.issue.number,
-                  milestone: targetMilestone.number
-                });
-              }
-            }
+            if (!milestoneMatch) return;
+
+            const { data: milestones } = await github.rest.issues.listMilestones({ owner, repo });
+            const target = milestones.find(m => m.title.startsWith(milestoneMatch[1].toUpperCase()));
+            if (!target) return;
+
+            await github.rest.issues.update({
+              owner, repo,
+              issue_number: context.payload.issue.number,
+              milestone: target.number
+            });
 
       - name: Set Project
         uses: actions/github-script@v7
@@ -80,75 +73,90 @@ jobs:
             const issueNodeId = context.payload.issue.node_id;
             const projectNumber = parseInt(process.env.PROJECT_NUMBER);
 
-            const projectQuery = await github.graphql(`
+            const orgResult = await github.graphql(`
               query($owner: String!, $number: Int!) {
-                organization(login: $owner) {
-                  projectV2(number: $number) { id }
-                }
+                organization(login: $owner) { projectV2(number: $number) { id } }
               }`, { owner, number: projectNumber }
             ).catch(() => null);
 
-            const projectId =
-              projectQuery?.organization?.projectV2?.id ??
-              (await github.graphql(`
-                query($owner: String!, $number: Int!) {
-                  user(login: $owner) {
-                    projectV2(number: $number) { id }
-                  }
-                }`, { owner, number: projectNumber }
-              ).catch(() => null))?.user?.projectV2?.id;
+            const userResult = orgResult?.organization?.projectV2?.id ? null : await github.graphql(`
+              query($owner: String!, $number: Int!) {
+                user(login: $owner) { projectV2(number: $number) { id } }
+              }`, { owner, number: projectNumber }
+            ).catch(() => null);
 
+            const projectId = orgResult?.organization?.projectV2?.id ?? userResult?.user?.projectV2?.id;
             if (!projectId) { core.setFailed(`Project #${projectNumber} not found.`); return; }
 
             await github.graphql(`
               mutation($projectId: ID!, $contentId: ID!) {
-                addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
-                  item { id }
-                }
+                addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) { item { id } }
               }`, { projectId, contentId: issueNodeId }
             );
 
-      - name: Set Recommended Branch Name
+      - name: Set Issue Start Date
+        uses: actions/github-script@v7
+        env:
+          PROJECT_NUMBER: 1
+        with:
+          github-token: ${{ secrets.ISSUE_LABELER }}
+          script: |
+            const { owner } = context.repo;
+            const issueNodeId = context.payload.issue.node_id;
+            const projectNumber = parseInt(process.env.PROJECT_NUMBER);
+            const today = new Date().toISOString().split('T')[0];
+
+            const orgResult = await github.graphql(`
+              query($owner: String!, $number: Int!) {
+                organization(login: $owner) { projectV2(number: $number) { id fields(first: 20) { nodes { ... on ProjectV2Field { id name } } } } }
+              }`, { owner, number: projectNumber }
+            ).catch(() => null);
+
+            const userResult = orgResult?.organization?.projectV2 ? null : await github.graphql(`
+              query($owner: String!, $number: Int!) {
+                user(login: $owner) { projectV2(number: $number) { id fields(first: 20) { nodes { ... on ProjectV2Field { id name } } } } }
+              }`, { owner, number: projectNumber }
+            ).catch(() => null);
+
+            const project = orgResult?.organization?.projectV2 ?? userResult?.user?.projectV2;
+            if (!project) { core.setFailed(`Project #${projectNumber} not found.`); return; }
+
+            const startField = project.fields.nodes.find(f => f.name === 'Start date');
+            if (!startField) { core.setFailed('Start date field not found.'); return; }
+
+            const { addProjectV2ItemById: { item } } = await github.graphql(`
+              mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) { item { id } }
+              }`, { projectId: project.id, contentId: issueNodeId }
+            );
+
+            await github.graphql(`
+              mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: Date!) {
+                updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $fieldId, value: { date: $value } }) { projectV2Item { id } }
+              }`, { projectId: project.id, itemId: item.id, fieldId: startField.id, value: today }
+            );
+
+      - name: Set Branch Name
         uses: actions/github-script@v7
         with:
           script: |
             const { owner, repo } = context.repo;
             const issueNumber = context.payload.issue.number;
-            const issueTitle = context.payload.issue.title || '';
             const body = context.payload.issue.body || '';
-
             const types = ['Build', 'Chore', 'CI', 'Docs', 'Feat', 'Fix', 'Perf', 'Refactor', 'Style', 'Test'];
-            let detectedType = 'task';
-            for (const t of types) {
-              const regex = new RegExp(`- \\[x\\] ${t}`, 'i');
-              if (regex.test(body)) {
-                detectedType = t.toLowerCase();
-                break;
-              }
-            }
 
-            const slug = issueTitle
+            const detectedType = types.find(t => new RegExp(`- \\[x\\] ${t}`, 'i').test(body))?.toLowerCase() ?? 'task';
+            const slug = (context.payload.issue.title || '')
               .toLowerCase()
               .replace(/[^a-z0-9\s]/g, '')
               .trim()
               .replace(/\s+/g, '_');
-
             const branchName = `${detectedType}/QRW-${issueNumber}_${slug}`;
 
             const updatedBody = body.replace(
-              /(## Recommended Branch Name\s*\n)([\s\S]*?)(\n##|\s*$)/,
-              (match, header, _old, tail) =>
-                `${header}\n\`${branchName}\`\n${tail}`
+              /(## Branch\s*\n)([\s\S]*?)(\n##|\s*$)/,
+              (match, header, _old, tail) => `${header}\n\`${branchName}\`\n${tail}`
             );
+            if (updatedBody === body) return;
 
-            if (updatedBody !== body) {
-              await github.rest.issues.update({
-                owner,
-                repo,
-                issue_number: issueNumber,
-                body: updatedBody
-              });
-              console.log(`Branch name set to: ${branchName}`);
-            } else {
-              console.log('Could not find ## Recommended Branch Name section – skipping update.');
-            }
+            await github.rest.issues.update({ owner, repo, issue_number: issueNumber, body: updatedBody });

@@ -1,16 +1,17 @@
 ---
 name: Task
 about: Create a task issue
-title: "[TASK]"
+title: ""
 ---
 
 ## Description
-
-<!-- What needs to be done and why -->
+<!-- What needs to be done and why. -->
 
 ## Notes
+<!-- Optional. -->
 
-<!-- Optional -->
+## Branch
+<!-- What branch should be created. -->
 
 ## Type of Change
 Identify the category that best represents the nature of this contribution:

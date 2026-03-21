@@ -1,8 +1,9 @@
 name: PR Labeler
+
 on:
   pull_request:
     branches: [main]
-    types: [opened, edited, reopened, synchronize]
+    types: [opened, edited, synchronize, closed]
 
 jobs:
   automate-pr:
@@ -12,15 +13,17 @@ jobs:
       pull-requests: write
       issues: read
       repository-projects: write
-    
     steps:
       - name: Auto-Assign
         uses: actions/github-script@v7
         with:
           script: |
             const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
-            await github.rest.issues.addAssignees({ owner, repo, issue_number, assignees: ['cristiangilsanz'] });
+            await github.rest.issues.addAssignees({
+              owner, repo,
+              issue_number: context.payload.pull_request.number,
+              assignees: ['cristiangilsanz']
+            });
 
       - name: Set Type Label
         uses: actions/github-script@v7
@@ -30,62 +33,95 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const body = context.payload.pull_request.body || '';
             const types = ['Build', 'Chore', 'CI', 'Docs', 'Feat', 'Fix', 'Perf', 'Refactor', 'Style', 'Test'];
-            
+
             const issueMatch = body.match(/QRW-(\d+)/i);
             if (!issueMatch) return;
 
-            const issueId = issueMatch[1];
-            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: parseInt(issueId) }).catch(() => ({ data: null }));
-            
-            if (issue && issue.body) {
-              let detectedType = null;
-              for (const t of types) {
-                const regex = new RegExp(`- \\[x\\] ${t}`, 'i');
-                if (regex.test(issue.body)) {
-                  detectedType = t.toLowerCase();
-                  break; 
-                }
-              }
+            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: parseInt(issueMatch[1]) }).catch(() => ({ data: null }));
+            if (!issue?.body) return;
 
-              if (detectedType) {
-                const { data: labels } = await github.rest.issues.listLabelsOnIssue({ owner, repo, issue_number: prNumber });
-                for (const label of labels) {
-                  if (types.some(t => t.toLowerCase() === label.name.toLowerCase())) {
-                    await github.rest.issues.removeLabel({ owner, repo, issue_number: prNumber, name: label.name }).catch(() => {});
-                  }
-                }
-                await github.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels: [detectedType] });
-              }
-            }
+            const detectedType = types.find(t => new RegExp(`- \\[x\\] ${t}`, 'i').test(issue.body))?.toLowerCase();
+            if (!detectedType) return;
+
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({ owner, repo, issue_number: prNumber });
+            await Promise.all(
+              labels
+                .filter(l => types.some(t => t.toLowerCase() === l.name.toLowerCase()))
+                .map(l => github.rest.issues.removeLabel({ owner, repo, issue_number: prNumber, name: l.name }).catch(() => {}))
+            );
+            await github.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels: [detectedType] });
 
       - name: Set Milestone
         uses: actions/github-script@v7
         with:
           script: |
             const { owner, repo } = context.repo;
-            const body = context.payload.pull_request.body || '';
             const prNumber = context.payload.pull_request.number;
-            
+            const body = context.payload.pull_request.body || '';
+
             const issueMatch = body.match(/QRW-(\d+)/i);
             if (!issueMatch) return;
 
-            const issueId = issueMatch[1];
-            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: parseInt(issueId) }).catch(() => ({ data: null }));
-            
-            if (issue?.milestone) {
-              const milestoneTitle = issue.milestone.title;
-              const milestoneKey = milestoneTitle.split(' ')[0];
+            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: parseInt(issueMatch[1]) }).catch(() => ({ data: null }));
+            if (!issue?.milestone) return;
 
-              let updatedBody = body;
-              const milestones = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
-              
-              for (const m of milestones) {
-                const mRegex = new RegExp(`- \\[[ xX]\\] (${m}[^\\n]+)`, 'gi');
-                updatedBody = updatedBody.replace(mRegex, m === milestoneKey ? `- [x] $1` : `- [ ] $1`);
-              }
+            const milestoneKey = issue.milestone.title.split(' ')[0];
+            const milestones = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
+            const updatedBody = milestones.reduce((acc, m) => {
+              return acc.replace(
+                new RegExp(`- \\[[ xX]\\] (${m}[^\\n]+)`, 'gi'),
+                m === milestoneKey ? `- [x] $1` : `- [ ] $1`
+              );
+            }, body);
 
-              if (updatedBody !== body) {
-                await github.rest.pulls.update({ owner, repo, pull_number: prNumber, body: updatedBody });
-              }
-              await github.rest.issues.update({ owner, repo, issue_number: prNumber, milestone: issue.milestone.number });
+            if (updatedBody !== body) {
+              await github.rest.pulls.update({ owner, repo, pull_number: prNumber, body: updatedBody });
             }
+            await github.rest.issues.update({ owner, repo, issue_number: prNumber, milestone: issue.milestone.number });
+
+      - name: Set Issue End Date
+        if: github.event.pull_request.merged == true
+        uses: actions/github-script@v7
+        env:
+          PROJECT_NUMBER: 1
+        with:
+          github-token: ${{ secrets.ISSUE_LABELER }}
+          script: |
+            const { owner, repo } = context.repo;
+            const body = context.payload.pull_request.body || '';
+            const projectNumber = parseInt(process.env.PROJECT_NUMBER);
+            const today = new Date().toISOString().split('T')[0];
+
+            const issueMatch = body.match(/QRW-(\d+)/i);
+            if (!issueMatch) return;
+
+            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: parseInt(issueMatch[1]) }).catch(() => ({ data: null }));
+            if (!issue) return;
+
+            const orgResult = await github.graphql(`
+              query($owner: String!, $number: Int!) {
+                organization(login: $owner) { projectV2(number: $number) { id fields(first: 20) { nodes { ... on ProjectV2Field { id name } } } items(first: 100) { nodes { id content { ... on Issue { id } } } } } }
+              }`, { owner, number: projectNumber }
+            ).catch(() => null);
+
+            const userResult = orgResult?.organization?.projectV2 ? null : await github.graphql(`
+              query($owner: String!, $number: Int!) {
+                user(login: $owner) { projectV2(number: $number) { id fields(first: 20) { nodes { ... on ProjectV2Field { id name } } } items(first: 100) { nodes { id content { ... on Issue { id } } } } } }
+              }`, { owner, number: projectNumber }
+            ).catch(() => null);
+
+            const project = orgResult?.organization?.projectV2 ?? userResult?.user?.projectV2;
+            if (!project) { core.setFailed(`Project #${projectNumber} not found.`); return; }
+
+            const endField = project.fields.nodes.find(f => f.name === 'End date');
+            if (!endField) { core.setFailed('End date field not found.'); return; }
+
+            const projectItem = project.items.nodes.find(n => n.content?.id === issue.node_id);
+            if (!projectItem) return;
+
+            await github.graphql(`
+              mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: Date!) {
+                updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $fieldId, value: { date: $value } }) { projectV2Item { id } }
+              }`, { projectId: project.id, itemId: projectItem.id, fieldId: endField.id, value: today }
+            );
+
