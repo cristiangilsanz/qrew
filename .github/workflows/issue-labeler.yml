@@ -10,8 +10,6 @@ jobs:
     permissions:
       issues: write
       repository-projects: write
-      project: write
-      project: write
     steps:
       - name: Auto-Assign
         uses: actions/github-script@v7
@@ -46,96 +44,6 @@ jobs:
                 }
               }
               await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: [detectedType] });
-            }
-
-      - name: Set Recommended Branch Name
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const issueNumber = context.payload.issue.number;
-            const issueTitle = context.payload.issue.title || '';
-            const body = context.payload.issue.body || '';
-
-            const types = ['Build', 'Chore', 'CI', 'Docs', 'Feat', 'Fix', 'Perf', 'Refactor', 'Style', 'Test'];
-            let detectedType = 'task';
-            for (const t of types) {
-              const regex = new RegExp(`- \\[x\\] ${t}`, 'i');
-              if (regex.test(body)) {
-                detectedType = t.toLowerCase();
-                break;
-              }
-            }
-
-            const slug = issueTitle
-              .toLowerCase()
-              .replace(/[^a-z0-9\s]/g, '')
-              .trim()
-              .replace(/\s+/g, '_');
-
-            const branchName = `${detectedType}/QRW-${issueNumber}_${slug}`;
-
-            const updatedBody = body.replace(
-              /(## Recommended Branch Name\s*\n)([\s\S]*?)(\n##|\s*$)/,
-              (match, header, _old, tail) =>
-                `${header}\n\`${branchName}\`\n${tail}`
-            );
-
-            if (updatedBody !== body) {
-              await github.rest.issues.update({
-                owner,
-                repo,
-                issue_number: issueNumber,
-                body: updatedBody
-              });
-              console.log(`Branch name set to: ${branchName}`);
-            } else {
-              console.log('Could not find ## Recommended Branch Name section – skipping update.');
-            }
-
-      - name: Set Recommended Branch Name
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const issueNumber = context.payload.issue.number;
-            const issueTitle = context.payload.issue.title || '';
-            const body = context.payload.issue.body || '';
-
-            const types = ['Build', 'Chore', 'CI', 'Docs', 'Feat', 'Fix', 'Perf', 'Refactor', 'Style', 'Test'];
-            let detectedType = 'task';
-            for (const t of types) {
-              const regex = new RegExp(`- \\[x\\] ${t}`, 'i');
-              if (regex.test(body)) {
-                detectedType = t.toLowerCase();
-                break;
-              }
-            }
-
-            const slug = issueTitle
-              .toLowerCase()
-              .replace(/[^a-z0-9\s]/g, '')
-              .trim()
-              .replace(/\s+/g, '_');
-
-            const branchName = `${detectedType}/QRW-${issueNumber}_${slug}`;
-
-            const updatedBody = body.replace(
-              /(## Recommended Branch Name\s*\n)([\s\S]*?)(\n##|\s*$)/,
-              (match, header, _old, tail) =>
-                `${header}\n\`${branchName}\`\n${tail}`
-            );
-
-            if (updatedBody !== body) {
-              await github.rest.issues.update({
-                owner,
-                repo,
-                issue_number: issueNumber,
-                body: updatedBody
-              });
-              console.log(`Branch name set to: ${branchName}`);
-            } else {
-              console.log('Could not find ## Recommended Branch Name section – skipping update.');
             }
 
       - name: Set Milestone
@@ -199,3 +107,48 @@ jobs:
                 }
               }`, { projectId, contentId: issueNodeId }
             );
+
+      - name: Set Recommended Branch Name
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issueNumber = context.payload.issue.number;
+            const issueTitle = context.payload.issue.title || '';
+            const body = context.payload.issue.body || '';
+
+            const types = ['Build', 'Chore', 'CI', 'Docs', 'Feat', 'Fix', 'Perf', 'Refactor', 'Style', 'Test'];
+            let detectedType = 'task';
+            for (const t of types) {
+              const regex = new RegExp(`- \\[x\\] ${t}`, 'i');
+              if (regex.test(body)) {
+                detectedType = t.toLowerCase();
+                break;
+              }
+            }
+
+            const slug = issueTitle
+              .toLowerCase()
+              .replace(/[^a-z0-9\s]/g, '')
+              .trim()
+              .replace(/\s+/g, '_');
+
+            const branchName = `${detectedType}/QRW-${issueNumber}_${slug}`;
+
+            const updatedBody = body.replace(
+              /(## Recommended Branch Name\s*\n)([\s\S]*?)(\n##|\s*$)/,
+              (match, header, _old, tail) =>
+                `${header}\n\`${branchName}\`\n${tail}`
+            );
+
+            if (updatedBody !== body) {
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: updatedBody
+              });
+              console.log(`Branch name set to: ${branchName}`);
+            } else {
+              console.log('Could not find ## Recommended Branch Name section – skipping update.');
+            }
