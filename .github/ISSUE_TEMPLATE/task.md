@@ -12,6 +12,10 @@ title: "[TASK]"
 
 <!-- Optional -->
 
+## Recommended Branch Name
+
+<!-- Optional -->
+
 ## Type of Change
 Identify the category that best represents the nature of this contribution:
 - [ ] Build
