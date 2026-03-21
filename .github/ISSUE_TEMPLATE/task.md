@@ -1,20 +1,17 @@
 ---
 name: Task
 about: Create a task issue
-title: "[TASK]"
+title: ""
 ---
 
 ## Description
-
-<!-- What needs to be done and why -->
+<!-- What needs to be done and why. -->
 
 ## Notes
+<!-- Optional. -->
 
-<!-- Optional -->
-
-## Recommended Branch Name
-
-<!-- Optional -->
+## Branch
+<!-- What branch should be created. -->
 
 ## Type of Change
 Identify the category that best represents the nature of this contribution:
@@ -40,7 +37,3 @@ Identify the milestone this issue is associated with:
 - [ ] M6 — Resale & Transfer
 - [ ] M7 — Frontend & Web
 - [ ] M8 — QA & Documentation
-
-## Recommended Branch Name
-
-<!-- Optional -->
