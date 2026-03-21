@@ -40,3 +40,7 @@ Identify the milestone this issue is associated with:
 - [ ] M6 — Resale & Transfer
 - [ ] M7 — Frontend & Web
 - [ ] M8 — QA & Documentation
+
+## Recommended Branch Name
+
+<!-- Optional -->
