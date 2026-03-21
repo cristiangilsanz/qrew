@@ -10,6 +10,7 @@ jobs:
     permissions:
       issues: write
       repository-projects: write
+      project: write
     steps:
       - name: Auto-Assign
         uses: actions/github-script@v7
@@ -44,6 +45,51 @@ jobs:
                 }
               }
               await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: [detectedType] });
+            }
+
+      - name: Set Recommended Branch Name
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issueNumber = context.payload.issue.number;
+            const issueTitle = context.payload.issue.title || '';
+            const body = context.payload.issue.body || '';
+
+            const types = ['Build', 'Chore', 'CI', 'Docs', 'Feat', 'Fix', 'Perf', 'Refactor', 'Style', 'Test'];
+            let detectedType = 'task';
+            for (const t of types) {
+              const regex = new RegExp(`- \\[x\\] ${t}`, 'i');
+              if (regex.test(body)) {
+                detectedType = t.toLowerCase();
+                break;
+              }
+            }
+
+            const slug = issueTitle
+              .toLowerCase()
+              .replace(/[^a-z0-9\s]/g, '')
+              .trim()
+              .replace(/\s+/g, '_');
+
+            const branchName = `${detectedType}/QRW-${issueNumber}_${slug}`;
+
+            const updatedBody = body.replace(
+              /(## Recommended Branch Name\s*\n)([\s\S]*?)(\n##|\s*$)/,
+              (match, header, _old, tail) =>
+                `${header}\n\`${branchName}\`\n${tail}`
+            );
+
+            if (updatedBody !== body) {
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: updatedBody
+              });
+              console.log(`Branch name set to: ${branchName}`);
+            } else {
+              console.log('Could not find ## Recommended Branch Name section – skipping update.');
             }
 
       - name: Set Milestone
@@ -82,23 +128,35 @@ jobs:
 
             const projectQuery = await github.graphql(`
               query($owner: String!, $number: Int!) {
-                user(login: $owner) {
-                  projectV2(number: $number) { id }
-                }
                 organization(login: $owner) {
                   projectV2(number: $number) { id }
                 }
               }`, { owner, number: projectNumber }
             ).catch(() => null);
 
-            const projectId = projectQuery?.user?.projectV2?.id || projectQuery?.organization?.projectV2?.id;
-
-            if (projectId) {
-              await github.graphql(`
-                mutation($projectId: ID!, $contentId: ID!) {
-                  addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
-                    item { id }
+            const projectId =
+              projectQuery?.organization?.projectV2?.id ??
+              (await github.graphql(`
+                query($owner: String!, $number: Int!) {
+                  user(login: $owner) {
+                    projectV2(number: $number) { id }
                   }
-                }`, { projectId, contentId: issueNodeId }
-              );
+                }`, { owner, number: projectNumber }
+              ).catch(() => null))?.user?.projectV2?.id;
+
+            if (!projectId) {
+              core.setFailed(`Project #${projectNumber} not found for ${owner}.`);
+              return;
             }
+
+            console.log(`Found project ID: ${projectId}. Adding issue ${issueNodeId}...`);
+
+            const result = await github.graphql(`
+              mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+                  item { id }
+                }
+              }`, { projectId, contentId: issueNodeId }
+            );
+
+            console.log(`Issue successfully added to the project. Item ID: ${result.addProjectV2ItemById.item.id}`);

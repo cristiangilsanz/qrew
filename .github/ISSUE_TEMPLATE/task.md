@@ -1,8 +1,18 @@
+---
+name: Task
+about: Create a task issue
+title: "[TASK]"
+---
+
 ## Description
 
 <!-- What needs to be done and why -->
 
 ## Notes
+
+<!-- Optional -->
+
+## Recommended Branch Name
 
 <!-- Optional -->
 
