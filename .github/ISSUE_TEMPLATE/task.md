@@ -12,10 +12,6 @@ title: "[TASK]"
 
 <!-- Optional -->
 
-## Recommended Branch Name
-
-<!-- Optional -->
-
 ## Type of Change
 Identify the category that best represents the nature of this contribution:
 - [ ] Build
@@ -40,7 +36,3 @@ Identify the milestone this issue is associated with:
 - [ ] M6 — Resale & Transfer
 - [ ] M7 — Frontend & Web
 - [ ] M8 — QA & Documentation
-
-## Recommended Branch Name
-
-<!-- Optional -->
