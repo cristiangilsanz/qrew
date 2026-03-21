@@ -23,6 +23,7 @@ Identify the category that best represents the nature of this contribution:
 - [ ] Fix
 - [ ] Perf
 - [ ] Refactor
+- [ ] Revert
 - [ ] Style
 - [ ] Test
 

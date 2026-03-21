@@ -16,7 +16,7 @@ jobs:
 
       - name: Validate PR Title
         run: |
-          TYPES="build|chore|ci|docs|feat|fix|perf|refactor|style|test"
+          TYPES="build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test"
           TITLE="${{ github.event.pull_request.title }}"
           PATTERN="^($TYPES)(\(.*\))?!?: .+$"
 
@@ -27,7 +27,7 @@ jobs:
 
       - name: Validate Commit Messages
         run: |
-          TYPES="build|chore|ci|docs|feat|fix|perf|refactor|style|test"
+          TYPES="build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test"
           TITLE="${{ github.event.pull_request.title }}"
           PR_TYPE=$(echo "$TITLE" | grep -oE "^[a-z]+" | head -n 1)
 
