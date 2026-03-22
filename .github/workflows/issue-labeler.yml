@@ -69,24 +69,18 @@ jobs:
         with:
           github-token: ${{ secrets.ISSUE_LABELER }}
           script: |
-            const { owner } = context.repo;
+            const owner = 'cristiangilsanz';
             const issueNodeId = context.payload.issue.node_id;
             const projectNumber = parseInt(process.env.PROJECT_NUMBER);
 
-            const orgResult = await github.graphql(`
-              query($owner: String!, $number: Int!) {
-                organization(login: $owner) { projectV2(number: $number) { id } }
-              }`, { owner, number: projectNumber }
-            ).catch(() => null);
-
-            const userResult = orgResult?.organization?.projectV2?.id ? null : await github.graphql(`
+            const result = await github.graphql(`
               query($owner: String!, $number: Int!) {
                 user(login: $owner) { projectV2(number: $number) { id } }
               }`, { owner, number: projectNumber }
-            ).catch(() => null);
+            ).catch(e => { core.setFailed(`GraphQL error: ${e.message}`); return null; });
 
-            const projectId = orgResult?.organization?.projectV2?.id ?? userResult?.user?.projectV2?.id;
-            if (!projectId) { core.setFailed(`Project #${projectNumber} not found.`); return; }
+            const projectId = result?.user?.projectV2?.id;
+            if (!projectId) { core.setFailed(`Project #${projectNumber} not found for user ${owner}.`); return; }
 
             await github.graphql(`
               mutation($projectId: ID!, $contentId: ID!) {
@@ -101,25 +95,19 @@ jobs:
         with:
           github-token: ${{ secrets.ISSUE_LABELER }}
           script: |
-            const { owner } = context.repo;
+            const owner = 'cristiangilsanz';
             const issueNodeId = context.payload.issue.node_id;
             const projectNumber = parseInt(process.env.PROJECT_NUMBER);
             const today = new Date().toISOString().split('T')[0];
 
-            const orgResult = await github.graphql(`
-              query($owner: String!, $number: Int!) {
-                organization(login: $owner) { projectV2(number: $number) { id fields(first: 20) { nodes { ... on ProjectV2Field { id name } } } } }
-              }`, { owner, number: projectNumber }
-            ).catch(() => null);
-
-            const userResult = orgResult?.organization?.projectV2 ? null : await github.graphql(`
+            const result = await github.graphql(`
               query($owner: String!, $number: Int!) {
                 user(login: $owner) { projectV2(number: $number) { id fields(first: 20) { nodes { ... on ProjectV2Field { id name } } } } }
               }`, { owner, number: projectNumber }
-            ).catch(() => null);
+            ).catch(e => { core.setFailed(`GraphQL error: ${e.message}`); return null; });
 
-            const project = orgResult?.organization?.projectV2 ?? userResult?.user?.projectV2;
-            if (!project) { core.setFailed(`Project #${projectNumber} not found.`); return; }
+            const project = result?.user?.projectV2;
+            if (!project) { core.setFailed(`Project #${projectNumber} not found for user ${owner}.`); return; }
 
             const startField = project.fields.nodes.find(f => f.name === 'Start date');
             if (!startField) { core.setFailed('Start date field not found.'); return; }
