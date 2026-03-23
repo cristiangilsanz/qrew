@@ -143,7 +143,7 @@ jobs:
 
             const updatedBody = body.replace(
               /(## Branch\s*\n)([\s\S]*?)(\n##|\s*$)/,
-              (match, header, _old, tail) => `${header}\n\`\`\`\n${branchName}\n\`\`\`\n${tail}`
+              (match, header, _old, tail) => `${header}\`\`\`\n${branchName}\n\`\`\`\n${tail}`
             );
 
             if (updatedBody === body) return;
