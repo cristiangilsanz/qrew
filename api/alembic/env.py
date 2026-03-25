@@ -19,7 +19,7 @@ config.set_main_option("sqlalchemy.url", settings.database_url)
 #
 #   from com.qode.qrew.v1.service.models import Base
 
-target_metadata = None # target_metadata = Base.metadata
+target_metadata = None  # target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:

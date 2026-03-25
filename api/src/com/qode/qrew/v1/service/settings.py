@@ -3,7 +3,7 @@ from typing import Self
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-_DEFAULT_SECRET_KEY = "change-me-in-production"  # noqa: S105
+_DEFAULT_SECRET_KEY = "sekret"  # noqa: S105
 
 
 class Settings(BaseSettings):
@@ -24,6 +24,9 @@ class Settings(BaseSettings):
 
     secret_key: str = _DEFAULT_SECRET_KEY
     access_token_expire_minutes: int = 30
+
+    host: str = "0.0.0.0"  # noqa: S104
+    port: int = 8000
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 

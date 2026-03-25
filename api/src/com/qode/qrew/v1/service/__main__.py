@@ -1,10 +1,12 @@
 import uvicorn
 
+from com.qode.qrew.v1.service.settings import settings
+
 
 def main() -> None:
     uvicorn.run(
         "com.qode.qrew.v1.service.main:app",
         reload=True,
-        host="0.0.0.0",
-        port=8000,
+        host=settings.host,
+        port=settings.port,
     )
