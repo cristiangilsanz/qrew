@@ -1,0 +1,57 @@
+set shell := ["bash", "-c"]
+
+default: help
+
+# List available recipes
+help:
+    @just --list
+
+# Install dependencies
+install:
+    uv sync
+
+# Run development server with hot reload
+dev:
+    cd api && uv run uvicorn com.qode.qrew.v1.service.main:app --reload --host 0.0.0.0 --port 8000
+
+# Verify linter
+lint-check:
+    uv run ruff check .
+
+# Auto-fix linter errors
+lint-fix:
+    uv run ruff check --fix .
+
+# Verify formatter
+format-check:
+    uv run ruff format --check .
+
+# Auto-fix format errors
+format-fix:
+    uv run ruff format .
+
+# Verify type consistency
+type-check:
+    cd api && uv run pyright
+
+# Run test suite
+test:
+    cd api && uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -v
+
+# Create a new auto-generated migration
+migrate message:
+    cd api && uv run alembic revision --autogenerate -m "{{message}}"
+
+# Apply all pending migrations
+db-upgrade:
+    cd api && uv run alembic upgrade head
+
+# Rollback last migration
+db-downgrade:
+    cd api && uv run alembic downgrade -1
+
+# Auto-fix all issues
+fix: lint-fix format-fix
+
+# Verify all checks
+check: lint-check format-check type-check test
