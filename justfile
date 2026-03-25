@@ -8,7 +8,7 @@ help:
 
 # Install dependencies
 install:
-    uv sync
+    uv sync --all-groups
 
 # Run development server with hot reload
 dev:
