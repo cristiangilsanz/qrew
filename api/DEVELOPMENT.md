@@ -56,7 +56,7 @@ just dev
 
 ## 🔐 Environment Variables
 
->[!NOTE] 
+>[!NOTE]
 > **This is an optional step!**
 > The app will run using the default values in settings.py.
 

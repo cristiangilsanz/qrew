@@ -31,8 +31,8 @@ services:
 
   api:
     build:
-      context: ./api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api/Dockerfile
     ports:
       - "8000:8000"
     env_file:
@@ -40,6 +40,8 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
+      HOST: 0.0.0.0
+      DEBUG: false
     depends_on:
       postgres:
         condition: service_healthy

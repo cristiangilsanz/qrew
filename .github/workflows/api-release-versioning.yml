@@ -53,7 +53,8 @@ jobs:
       - name: Build Docker Image for Scanning
         uses: docker/build-push-action@v6
         with:
-          context: ./api
+          context: .
+          file: api/Dockerfile
           load: true
           tags: qrew-api:scan
           cache-to: type=gha,mode=max
@@ -70,7 +71,8 @@ jobs:
       - name: Push Docker Image
         uses: docker/build-push-action@v6
         with:
-          context: ./api
+          context: .
+          file: api/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/qrew-api:${{ needs.release-please.outputs.version }}
@@ -100,7 +102,8 @@ jobs:
       - name: Build & Push Dev Docker Image
         uses: docker/build-push-action@v6
         with:
-          context: ./api
+          context: .
+          file: api/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/qrew-api:dev
           cache-to: type=gha,mode=max

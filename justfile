@@ -10,7 +10,7 @@ help:
 setup:
     docker compose down
     docker compose up postgres redis -d
-    cd api && uv venv --python 3.12
+    uv venv --python 3.12
     cd api && uv sync --all-groups
 
 # Tear down dev environment
