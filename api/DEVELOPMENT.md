@@ -47,7 +47,7 @@ just db-upgrade
 just dev
 ```
 
-[!IMPORTANT]
+[!NOTE]
 > **Configure pre-commit hooks:**
 > ```bash
 > cd api && uv run pre-commit install
@@ -56,31 +56,12 @@ just dev
 
 ## 🔐 Environment Variables
 
-Copy the example file and edit it:
+[!NOTE]
+>This is an optional step. The app will run using the default values in settings.py.
+
+You can override them by creating a local `.env` file. To do this, copy the example file and edit it as needed:
 
 ```bash
 cp api/.env.example api/.env
 ```
 
-> [!NOTE]
-> All variables below have defaults that work out of the box with the Docker Compose local setup.
-
-| Variable | Default |
-| :------- | :------ |
-| `DATABASE_URL` | `postgresql+asyncpg://postgres:sekret@localhost:5432/qrew` |
-| `SECRET_KEY` | `dev-secret-key-change-in-production` |
-| `ENVIRONMENT` | `development` |
-| `DEBUG` | `true` |
-| `REDIS_URL` | `redis://localhost:6379/0` |
-| `CORS_ORIGINS` | `["http://localhost:3000"]` |
-| `HOST` | `127.0.0.1` |
-| `PORT` | `8000` |
-
-### 🔑 Generate a secure `SECRET_KEY`
-
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-> [!CAUTION]
-> **Never** use the default `SECRET_KEY` in PROD.

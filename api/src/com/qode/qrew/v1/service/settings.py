@@ -11,7 +11,6 @@ class Settings(BaseSettings):
 
     app_name: str = "qrew-api"
     version: str = "0.1.0"
-    environment: str = "development"
     debug: bool = True
 
     database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"

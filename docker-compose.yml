@@ -36,7 +36,10 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./api/.env.example
+      - ./api/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
         condition: service_healthy
