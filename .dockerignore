@@ -1,0 +1,43 @@
+# Git
+.git/
+.github/
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Testing & coverage
+api/tests/
+api/coverage.xml
+api/.coverage
+api/htmlcov/
+
+# Development
+api/.env
+api/.env.*
+!api/.env.example
+
+# Build artifacts
+api/dist/
+api/build/
+**/*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+**/*.swp
+**/*.swo
+
+# Misc
+*.md
+justfile
+commitlint.config.js
+release-please-config.json

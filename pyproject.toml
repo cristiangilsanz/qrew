@@ -1,0 +1,13 @@
+[project]
+name = "qrew-workspace"
+version = "0.1.0"
+description = "Qrew"
+requires-python = ">=3.12"
+
+[tool.uv.workspace]
+members = ["api"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.4",
+]

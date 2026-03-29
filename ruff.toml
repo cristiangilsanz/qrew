@@ -1,0 +1,44 @@
+line-length = 88
+target-version = "py312"
+
+[lint]
+select = [
+    "A",
+    "ANN",
+    "ASYNC",
+    "B",
+    "C4",
+    "E",
+    "EM",
+    "F",
+    "I",
+    "N",
+    "PL",
+    "PT",
+    "RET",
+    "RUF",
+    "S",
+    "SIM",
+    "TCH",
+    "UP",
+    "W",
+]
+ignore = [
+    "ANN401",
+    "EM101",
+    "EM102",
+    "PLR0913",
+    "S101",
+]
+
+[lint.per-file-ignores]
+"**/tests/**/*.py" = ["ANN", "PLR2004", "S"]
+
+[lint.isort]
+known-first-party = ["com"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

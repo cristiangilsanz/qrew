@@ -1,0 +1,80 @@
+# ── Build ─────────────────────────────────────────────────────────────────────
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# ── Project ───────────────────────────────────────────────────────────────────
+
+[project]
+name = "api"
+version = "0.1.0"
+description = "qrew API service"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic-settings>=2.4",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+    "redis[hiredis]>=5.0",
+    "python-jose[cryptography]>=3.3",
+    "passlib[bcrypt]>=1.7",
+    "slowapi>=0.1.9",
+    "structlog>=24.1",
+    "opentelemetry-sdk>=1.24",
+]
+
+[project.scripts]
+dev = "com.qode.qrew.v1.service.__main__:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=5",
+    "coverage[toml]>=7",
+    "httpx>=0.27",
+    "factory-boy>=3.3",
+    "pyright>=1.1",
+    "ruff>=0.4",
+    "pre-commit>=3.7",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/com"]
+
+# ── Pyright ───────────────────────────────────────────────────────────────────
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+venvPath = ".."
+venv = ".venv"
+
+# ── Pytest ────────────────────────────────────────────────────────────────────
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+python_files = ["*_test.py"]
+addopts = [
+    "--tb=short",
+    "--strict-markers",
+    "--no-header",
+]
+
+# ── Coverage ──────────────────────────────────────────────────────────────────
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = ["*/__main__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80

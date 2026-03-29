@@ -1,29 +1,22 @@
 version: 2
 updates:
   - package-ecosystem: pip
-    directory: /apps/api
+    directory: /api
     schedule:
-      interval: daily
-    labels:
-      - security
-
-  - package-ecosystem: npm
-    directory: /apps/app
-    schedule:
-      interval: daily
-    labels:
-      - security
-
-  - package-ecosystem: npm
-    directory: /apps/web
-    schedule:
-      interval: daily
+      interval: weekly
     labels:
       - security
 
   - package-ecosystem: docker
-    directory: /infra/docker
+    directory: /api
     schedule:
-      interval: daily
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
     labels:
       - security

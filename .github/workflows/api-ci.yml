@@ -1,0 +1,66 @@
+name: API CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  workflow_call:
+
+jobs:
+  lint:
+    name: Run Linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - uses: extractions/setup-just@v2
+      - run: just install
+      - run: just lint-check
+
+  format:
+    name: Run Formatter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - uses: extractions/setup-just@v2
+      - run: just install
+      - run: just format-check
+
+  typecheck:
+    name: Run Type Checker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - uses: extractions/setup-just@v2
+      - run: just install
+      - run: just type-check
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - uses: extractions/setup-just@v2
+      - run: just install
+      - run: just test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: api/coverage.xml
