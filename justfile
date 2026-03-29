@@ -19,7 +19,7 @@ shutdown:
 
 # Install dependencies
 install:
-    uv sync --all-groups
+    cd api && uv sync --all-groups
 
 # Run dev environment
 dev:
@@ -28,19 +28,19 @@ dev:
 
 # Verify linter
 lint-check:
-    uv run ruff check .
+    cd api && uv run ruff check .
 
 # Auto-fix linter errors
 lint-fix:
-    uv run ruff check --fix .
+    cd api && uv run ruff check --fix .
 
 # Verify formatter
 format-check:
-    uv run ruff format --check .
+    cd api && uv run ruff format --check .
 
 # Auto-fix format errors
 format-fix:
-    uv run ruff format .
+    cd api && uv run ruff format .
 
 # Verify type consistency
 type-check:

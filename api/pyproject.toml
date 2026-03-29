@@ -1,6 +1,10 @@
+# ── Build ─────────────────────────────────────────────────────────────────────
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# ── Project ───────────────────────────────────────────────────────────────────
 
 [project]
 name = "api"
@@ -41,15 +45,38 @@ dev = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/com"]
 
+# ── Ruff ──────────────────────────────────────────────────────────────────────
+
+[tool.ruff.lint]
+extend-select = ["I", "UP", "B", "C4", "SIM", "S", "RUF"]
+ignore = ["RUF100"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*_test.py" = ["S101"]
+
+# ── Pyright ───────────────────────────────────────────────────────────────────
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+venvPath = "."
+venv = ".venv"
+
+# ── Pytest ────────────────────────────────────────────────────────────────────
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["src"]
+python_files = ["*_test.py"]
 addopts = [
     "--tb=short",
     "--strict-markers",
     "--no-header",
 ]
+
+# ── Coverage ──────────────────────────────────────────────────────────────────
 
 [tool.coverage.run]
 source = ["src"]
@@ -60,16 +87,3 @@ omit = ["*/__main__.py"]
 show_missing = true
 skip_covered = false
 fail_under = 80
-
-[tool.ruff.lint]
-extend-select = ["S"]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]
-
-[tool.pyright]
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-include = ["src", "tests"]
-venvPath = "."
-venv = ".venv"
