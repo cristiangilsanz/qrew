@@ -50,7 +50,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker Image for Scanning
+      - name: Build Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -74,6 +74,7 @@ jobs:
           context: .
           file: api/Dockerfile
           push: true
+          provenance: false
           tags: |
             ghcr.io/${{ github.repository_owner }}/qrew-api:${{ needs.release-please.outputs.version }}
             ghcr.io/${{ github.repository_owner }}/qrew-api:latest
@@ -99,12 +100,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & Push Dev Docker Image
+      - name: Build Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: api/Dockerfile
+          load: true
+          tags: qrew-api:dev
+          cache-to: type=gha,mode=max
+          cache-from: type=gha
+
+      - name: Push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: api/Dockerfile
           push: true
+          provenance: false
           tags: ghcr.io/${{ github.repository_owner }}/qrew-api:dev
-          cache-to: type=gha,mode=max
           cache-from: type=gha
