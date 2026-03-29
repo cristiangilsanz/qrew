@@ -154,7 +154,6 @@ yarn-error.log*
 .ipynb_checkpoints
 .pdm.toml
 .Python
-.venv/
 .venv
 __pypackages__/
 __pycache__/
