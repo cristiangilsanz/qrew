@@ -15,8 +15,7 @@ Make sure you have the following installed before starting:
 | [Docker](https://docs.docker.com/get-docker/) | `24+` |
 | [Docker Compose](https://docs.docker.com/compose/install/) | `v2+` |
 
-> [!TIP]
-> **Install prerequisites:**
+> [!TIP] **Install prerequisites:**
 > ```bash
 > sudo apt update && sudo apt install -y python3.12 docker.io docker-compose-v2
 > curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -47,8 +46,7 @@ just db-upgrade
 just dev
 ```
 
-[!NOTE]
-> **Configure pre-commit hooks:**
+> [!TIP] **Configure pre-commit hooks:**
 > ```bash
 > cd api && uv run pre-commit install
 > ```
@@ -56,8 +54,8 @@ just dev
 
 ## 🔐 Environment Variables
 
-[!NOTE]
->This is an optional step. The app will run using the default values in settings.py.
+>[!NOTE] **This is an optional step!**
+> The app will run using the default values in settings.py.
 
 You can override them by creating a local `.env` file. To do this, copy the example file and edit it as needed:
 
