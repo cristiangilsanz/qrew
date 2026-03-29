@@ -1,7 +1,6 @@
 # ── Stage 1: Dependency Installation ─────────────────────────────────────────
 FROM python:3.12-slim AS builder
 
-# Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 WORKDIR /app
@@ -10,7 +9,7 @@ COPY pyproject.toml ./
 
 RUN uv sync --no-dev --frozen
 
-# ── Stage 2: R untime Image ────────────────────────────────────────────────────
+# ── Stage 2: Runtime Image ────────────────────────────────────────────────────
 FROM python:3.12-slim AS runtime
 
 WORKDIR /app

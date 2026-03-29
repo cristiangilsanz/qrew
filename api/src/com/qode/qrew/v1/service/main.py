@@ -31,6 +31,8 @@ app = FastAPI(
     redoc_url="/redoc" if settings.debug else None,
 )
 
+register_exception_handlers(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -40,5 +42,4 @@ app.add_middleware(
 )
 app.add_middleware(RequestIDMiddleware)
 
-register_exception_handlers(app)
 app.include_router(v1_router)
