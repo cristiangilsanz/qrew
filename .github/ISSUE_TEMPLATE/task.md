@@ -29,12 +29,7 @@ Identify the category that best represents the nature of this contribution:
 
 ## Milestone
 Identify the milestone this issue is associated with:
-- [ ] M0 — Foundation
-- [ ] M1 — Auth & Identity
-- [ ] M2 — Passkeys
-- [ ] M3 — Event & Ticket Domain
-- [ ] M4 — Payments
-- [ ] M5 — QR & Validation
-- [ ] M6 — Resale & Transfer
-- [ ] M7 — Frontend & Web
-- [ ] M8 — QA & Documentation
+- [ ] API
+- [ ] App
+- [ ] Web
+- [ ] CI/CD

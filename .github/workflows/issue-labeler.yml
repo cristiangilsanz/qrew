@@ -76,11 +76,12 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const body = context.payload.issue.body || '';
-            const milestoneMatch = body.match(/- \[x\] (M\d)/i);
-            if (!milestoneMatch) return;
+            const milestones = ['App', 'Web', 'API', 'CI/CD'];
+            const matched = milestones.find(m => new RegExp(`- \\[x\\] ${m.replace('/', '\\/')}`, 'i').test(body));
+            if (!matched) return;
 
-            const { data: milestones } = await github.rest.issues.listMilestones({ owner, repo });
-            const target = milestones.find(m => m.title.startsWith(milestoneMatch[1].toUpperCase()));
+            const { data: repoMilestones } = await github.rest.issues.listMilestones({ owner, repo });
+            const target = repoMilestones.find(m => m.title === matched);
             if (!target) return;
 
             await github.rest.issues.update({
