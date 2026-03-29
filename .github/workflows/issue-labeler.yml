@@ -13,7 +13,7 @@ jobs:
       repository-projects: write
     steps:
       - name: Auto-Assign
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -24,7 +24,7 @@ jobs:
             });
 
       - name: Set Type Label
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -44,7 +44,7 @@ jobs:
             await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: [detectedType] });
       
       - name: Set Branch Name
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -71,7 +71,7 @@ jobs:
 
 
       - name: Set Milestone
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -90,7 +90,7 @@ jobs:
             });
 
       - name: Set Project
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           PROJECT_NUMBER: 1
         with:
@@ -116,7 +116,7 @@ jobs:
             );
 
       - name: Set Issue Start Date
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           PROJECT_NUMBER: 1
         with:
