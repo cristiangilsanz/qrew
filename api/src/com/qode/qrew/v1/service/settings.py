@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
     redis_url: str = "redis://localhost:6379/0"
 
-    secret_key: str = "sekret"
+    secret_key: str = "sekret"  # noqa: S105
     access_token_expire_minutes: int = 30
 
     host: str = "127.0.0.1"
