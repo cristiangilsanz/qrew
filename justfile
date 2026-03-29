@@ -6,13 +6,25 @@ default: help
 help:
     @just --list
 
+# Set up dev environment
+setup:
+    docker compose down
+    docker compose up postgres redis -d
+    cd api && uv venv --python 3.12
+    cd api && uv sync --all-groups
+
+# Tear down dev environment
+shutdown:
+    docker compose down --volumes --rmi local --remove-orphans
+
 # Install dependencies
 install:
     uv sync --all-groups
 
-# Run development server with hot reload
+# Run dev environment
 dev:
-    cd api && uv run uvicorn com.qode.qrew.v1.service.main:app --reload --host 0.0.0.0 --port 8000
+    -fuser -k 8000/tcp
+    cd api && uv run dev
 
 # Verify linter
 lint-check:
@@ -38,6 +50,12 @@ type-check:
 test:
     cd api && uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -v
 
+# Auto-fix all issues
+fix: lint-fix format-fix
+
+# Verify all checks
+check: lint-check format-check type-check test
+
 # Create a new auto-generated migration
 migrate message:
     cd api && uv run alembic revision --autogenerate -m "{{message}}"
@@ -49,9 +67,3 @@ db-upgrade:
 # Rollback last migration
 db-downgrade:
     cd api && uv run alembic downgrade -1
-
-# Auto-fix all issues
-fix: lint-fix format-fix
-
-# Verify all checks
-check: lint-check format-check type-check test
