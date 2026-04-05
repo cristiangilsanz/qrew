@@ -15,11 +15,9 @@ if config.config_file_name is not None:
 
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
-# Import Base.metadata here once models are defined:
-#
-#   from com.qode.qrew.v1.service.models import Base
+from com.qode.qrew.v1.service.models import Base  # noqa: E402
 
-target_metadata = None  # target_metadata = Base.metadata
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:

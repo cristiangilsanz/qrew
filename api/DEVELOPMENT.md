@@ -16,7 +16,7 @@ Make sure you have the following installed before starting:
 | [Docker Compose](https://docs.docker.com/compose/install/) | `v2+` |
 
 > [!TIP] 
-> **Install prerequisites:**
+> **Install pre-requisites:**
 > ```bash
 > sudo apt update && sudo apt install -y python3.12 docker.io docker-compose-v2
 > curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -58,7 +58,8 @@ just dev
 
 >[!NOTE]
 > **This is an optional step!**
-> The app will run using the default values in settings.py.
+>
+> The app will run using the default values in `settings.py`.
 
 You can override them by creating a local `.env` file. To do this, copy the example file and edit it as needed:
 

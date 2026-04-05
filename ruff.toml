@@ -23,8 +23,10 @@ select = [
     "UP",
     "W",
 ]
+
 ignore = [
     "ANN401",
+    "B008",
     "EM101",
     "EM102",
     "PLR0913",
@@ -33,6 +35,8 @@ ignore = [
 
 [lint.per-file-ignores]
 "**/tests/**/*.py" = ["ANN", "PLR2004", "S"]
+"**/alembic/versions/*.py" = ["E501"]
+"**/templates/*.py" = ["E501"]
 
 [lint.isort]
 known-first-party = ["com"]
