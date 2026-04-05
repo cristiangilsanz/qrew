@@ -121,6 +121,8 @@ class RegistrationService:
 
     async def _dispatch_verifications(self, user: User) -> None:
         """Send verification link and OTP to the newly registered user."""
+        assert user.email_verification_token is not None
+        assert user.phone_number_otp is not None
         await self._notifier.send_email_verification_link(
             user.email,
             user.full_name,

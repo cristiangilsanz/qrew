@@ -25,5 +25,5 @@ async def _unexpected_exception_handler(
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Register exception handlers."""
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
     app.add_exception_handler(Exception, _unexpected_exception_handler)

@@ -7,7 +7,7 @@ import pytest
 from httpx import AsyncClient
 
 from com.qode.qrew.v1.service.main import app
-from com.qode.qrew.v1.service.routers.auth import _get_phone_verification_service
+from com.qode.qrew.v1.service.routers.auth import get_phone_verification_service
 from com.qode.qrew.v1.service.services.verification import VerificationError
 
 _ENDPOINT = "/v1/auth/verify-phone"
@@ -29,7 +29,7 @@ def mock_service() -> AsyncMock:
 
 @pytest.fixture(autouse=True)
 def override_service(mock_service: AsyncMock) -> Iterator[None]:
-    app.dependency_overrides[_get_phone_verification_service] = lambda: mock_service
+    app.dependency_overrides[get_phone_verification_service] = lambda: mock_service
     yield
     app.dependency_overrides.clear()
 

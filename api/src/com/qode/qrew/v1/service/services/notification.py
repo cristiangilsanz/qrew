@@ -49,7 +49,9 @@ class SmsService(Protocol):
 
 
 class NotificationService(Protocol):
-    async def send_email_verification_link(self, to_email: str, token: str) -> None:
+    async def send_email_verification_link(
+        self, to_email: str, full_name: str, token: str
+    ) -> None:
         """Dispatch a verification link email."""
         ...
 

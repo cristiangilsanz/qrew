@@ -8,7 +8,7 @@ from httpx import AsyncClient
 
 from com.qode.qrew.v1.service.core.captcha import CaptchaError
 from com.qode.qrew.v1.service.main import app
-from com.qode.qrew.v1.service.routers.auth import _get_registration_service
+from com.qode.qrew.v1.service.routers.auth import get_registration_service
 from com.qode.qrew.v1.service.schemas.auth import RegisterResponse
 from com.qode.qrew.v1.service.services.registration import RegistrationError
 
@@ -36,7 +36,7 @@ def mock_service() -> AsyncMock:
 
 @pytest.fixture(autouse=True)
 def override_service(mock_service: AsyncMock) -> Iterator[None]:
-    app.dependency_overrides[_get_registration_service] = lambda: mock_service
+    app.dependency_overrides[get_registration_service] = lambda: mock_service
     yield
     app.dependency_overrides.clear()
 

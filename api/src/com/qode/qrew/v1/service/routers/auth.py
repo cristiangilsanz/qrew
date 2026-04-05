@@ -43,7 +43,7 @@ def _get_notification_service() -> NotificationDispatcher:
     return build_notification_dispatcher()
 
 
-def _get_registration_service(
+def get_registration_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(_get_notification_service),
     captcha: CaptchaService = Depends(_get_captcha_service),
@@ -52,14 +52,14 @@ def _get_registration_service(
     return RegistrationService(UserRepository(db), notifier, captcha)
 
 
-def _get_email_verification_service(
+def get_email_verification_service(
     db: AsyncSession = Depends(get_db),
 ) -> EmailVerificationService:
     """Build and return the email verification service."""
     return EmailVerificationService(UserRepository(db))
 
 
-def _get_phone_verification_service(
+def get_phone_verification_service(
     db: AsyncSession = Depends(get_db),
 ) -> PhoneVerificationService:
     """Build and return the phone verification service."""
@@ -83,11 +83,11 @@ def _domain_error(
     status_code=status.HTTP_201_CREATED,
     summary="Create a new user account",
 )
-@limiter.limit("5/hour")
+@limiter.limit("5/hour")  # type: ignore[misc]
 async def register(
     request: Request,
     body: RegisterRequest,
-    service: RegistrationService = Depends(_get_registration_service),
+    service: RegistrationService = Depends(get_registration_service),
 ) -> RegisterResponse:
     """Register a new user account."""
     ip_address = request.client.host if request.client else "unknown"
@@ -107,11 +107,11 @@ async def register(
     status_code=status.HTTP_200_OK,
     summary="Confirm an email address using the token from the verification link",
 )
-@limiter.limit("10/hour")
+@limiter.limit("10/hour")  # type: ignore[misc]
 async def verify_email(
     request: Request,
     body: VerifyEmailRequest,
-    service: EmailVerificationService = Depends(_get_email_verification_service),
+    service: EmailVerificationService = Depends(get_email_verification_service),
 ) -> VerifyResponse:
     """Mark the user's email as verified."""
     try:
@@ -127,11 +127,11 @@ async def verify_email(
     status_code=status.HTTP_200_OK,
     summary="Confirm a phone number using the token from the SMS",
 )
-@limiter.limit("5/hour")
+@limiter.limit("5/hour")  # type: ignore[misc]
 async def verify_phone(
     request: Request,
     body: VerifyPhoneRequest,
-    service: PhoneVerificationService = Depends(_get_phone_verification_service),
+    service: PhoneVerificationService = Depends(get_phone_verification_service),
 ) -> VerifyResponse:
     """Mark the user's phone number as verified."""
     try:

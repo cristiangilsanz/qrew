@@ -1,6 +1,6 @@
 import phonenumbers
 import zxcvbn
-from MailChecker import MailChecker
+from MailChecker import MailChecker  # type: ignore[import-untyped]
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 _PASSWORD_SECURITY_MIN_SCORE = 3
@@ -15,7 +15,7 @@ class RegisterRequest(BaseModel):
     @classmethod
     def validate_email(cls, v: str) -> str:
         """Reject emails from known disposable address providers."""
-        if not MailChecker.is_valid(v):
+        if not MailChecker.is_valid(v):  # type: ignore[no-untyped-call]
             raise ValueError("Disposable email addresses are not allowed")
         return v.lower()
 
