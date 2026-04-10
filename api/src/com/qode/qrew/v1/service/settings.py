@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # Auth
     secret_key: str = "sekret"  # noqa: S105
     access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
     email_verification_token_expire_hours: int = 24
     phone_number_otp_expire_minutes: int = 10
 

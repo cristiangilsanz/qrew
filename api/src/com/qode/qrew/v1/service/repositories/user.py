@@ -22,6 +22,13 @@ class UserRepository:
         )
         return result.scalar() is not None
 
+    async def get_by_email(self, email: str) -> User | None:
+        """Return the user matching the given email address."""
+        result = await self._session.execute(
+            select(User).where(User.email == email).limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def get_by_email_verification_token(self, token: str) -> User | None:
         """Return the user matching the given email verification token."""
         result = await self._session.execute(

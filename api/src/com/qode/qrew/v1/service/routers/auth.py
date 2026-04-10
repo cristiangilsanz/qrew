@@ -10,12 +10,15 @@ from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
+    LoginRequest,
+    LoginResponse,
     RegisterRequest,
     RegisterResponse,
     VerifyEmailRequest,
     VerifyPhoneRequest,
     VerifyResponse,
 )
+from com.qode.qrew.v1.service.services.login import LoginError, LoginService
 from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
@@ -66,8 +69,15 @@ def get_phone_verification_service(
     return PhoneVerificationService(UserRepository(db))
 
 
+def get_login_service(
+    db: AsyncSession = Depends(get_db),
+) -> LoginService:
+    """Build and return the login service."""
+    return LoginService(UserRepository(db))
+
+
 def _domain_error(
-    exc: RegistrationError | VerificationError | CaptchaError,
+    exc: RegistrationError | VerificationError | CaptchaError | LoginError,
     http_status: int,
 ) -> HTTPException:
     """Convert a domain error to an HTTP exception."""
@@ -139,3 +149,22 @@ async def verify_phone(
         return VerifyResponse(message="Phone number verified successfully.")
     except VerificationError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Authenticate and receive access and refresh tokens",
+)
+@limiter.limit("10/minute")  # type: ignore[misc]
+async def login(
+    request: Request,
+    body: LoginRequest,
+    service: LoginService = Depends(get_login_service),
+) -> LoginResponse:
+    """Authenticate with email and password."""
+    try:
+        return await service.login(body)
+    except LoginError as exc:
+        raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
