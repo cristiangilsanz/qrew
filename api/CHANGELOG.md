@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v0.2.0...qrew-api/v0.3.0) (2026-04-10)
+## [1.0.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v0.2.0...qrew-api/v1.0.0) (2026-04-10)
 
 
 ### Features
