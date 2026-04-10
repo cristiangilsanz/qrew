@@ -9,6 +9,6 @@ logger = structlog.get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    await logger.ainfo("Startup")
+    await logger.ainfo("startup")
     yield
-    await logger.ainfo("Shutdown")
+    await logger.ainfo("shutdown")

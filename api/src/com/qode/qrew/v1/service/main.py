@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from com.qode.qrew.v1.service.core.exceptions import register_exception_handlers
+from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.middleware import RequestIDMiddleware
 from com.qode.qrew.v1.service.lifespan import lifespan
 from com.qode.qrew.v1.service.routers import router as v1_router
@@ -28,10 +29,11 @@ app = FastAPI(
     debug=settings.debug,
     lifespan=lifespan,
     docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
 )
 
 register_exception_handlers(app)
+
+app.state.limiter = limiter
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,6 +42,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.add_middleware(RequestIDMiddleware)
 
 app.include_router(v1_router)

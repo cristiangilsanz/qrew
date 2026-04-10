@@ -53,7 +53,6 @@ pytest-*.xml
 docker-compose.override.yml
 
 # Environment & secrets
-!.env.example
 *.cer
 *.crt
 *.der
@@ -63,6 +62,7 @@ docker-compose.override.yml
 *.pub
 .env
 .env.*
+!.env.example
 .secrets.baseline
 certs/
 secrets/
