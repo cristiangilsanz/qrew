@@ -12,8 +12,6 @@ from com.qode.qrew.v1.service.schemas.auth import LoginRequest, LoginResponse
 
 logger = structlog.get_logger(__name__)
 
-# Pre-computed hash so that the bcrypt cost is paid even when the user
-# does not exist, preventing timing-based email enumeration.
 _DUMMY_HASH = hash_password("dummy-timing-pad")
 
 
