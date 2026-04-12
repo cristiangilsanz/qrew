@@ -91,7 +91,7 @@ def _domain_error(
     "/register",
     response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new user account",
+    summary="Register a new user account",
 )
 @limiter.limit("5/hour")  # type: ignore[misc]
 async def register(
@@ -155,7 +155,7 @@ async def verify_phone(
     "/login",
     response_model=LoginResponse,
     status_code=status.HTTP_200_OK,
-    summary="Authenticate and receive access and refresh tokens",
+    summary="Log in a registered user",
 )
 @limiter.limit("10/minute")  # type: ignore[misc]
 async def login(
@@ -163,7 +163,7 @@ async def login(
     body: LoginRequest,
     service: LoginService = Depends(get_login_service),
 ) -> LoginResponse:
-    """Authenticate with email and password."""
+    """Log in as a registered user."""
     try:
         return await service.login(body)
     except LoginError as exc:

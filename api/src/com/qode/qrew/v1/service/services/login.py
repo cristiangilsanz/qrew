@@ -24,7 +24,7 @@ class LoginService:
         self._repo = repo
 
     async def login(self, request: LoginRequest) -> LoginResponse:
-        """Authenticate a user and return JWT tokens."""
+        """Authenticate a user."""
         user = await self._repo.get_by_email(request.email)
 
         if user is None:
