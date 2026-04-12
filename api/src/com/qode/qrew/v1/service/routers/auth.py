@@ -135,7 +135,7 @@ async def verify_email(
     "/verify-phone",
     response_model=VerifyResponse,
     status_code=status.HTTP_200_OK,
-    summary="Confirm a phone number using the token from the SMS",
+    summary="Confirm a phone number using the OTP from the SMS",
 )
 @limiter.limit("5/hour")  # type: ignore[misc]
 async def verify_phone(
