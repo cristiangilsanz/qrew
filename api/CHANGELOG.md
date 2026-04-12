@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.0.0...qrew-api/v1.1.0) (2026-04-12)
+
+
+### Features
+
+* implement auth login endpoint ([#34](https://github.com/cristiangilsanz/qrew/issues/34)) ([b5851ad](https://github.com/cristiangilsanz/qrew/commit/b5851ad3e32cf94b1d5c23d564c6e9371b5c5aa8))
+
 ## [1.0.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v0.2.0...qrew-api/v1.0.0) (2026-04-10)
 
 
