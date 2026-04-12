@@ -8,6 +8,13 @@ repos:
 
   - repo: local
     hooks:
+      - id: pyright
+        name: pyright
+        entry: bash -c 'cd api && uv run pyright'
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: pytest
         name: pytest
         entry: bash -c 'cd api && uv run pytest --cov=src --cov-report=term-missing -v'

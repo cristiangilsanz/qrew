@@ -155,7 +155,7 @@ async def verify_phone(
     "/login",
     response_model=LoginResponse,
     status_code=status.HTTP_200_OK,
-    summary="Log in a registered user",
+    summary="Log in as a registered user",
 )
 @limiter.limit("10/minute")  # type: ignore[misc]
 async def login(
