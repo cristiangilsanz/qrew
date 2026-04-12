@@ -4,6 +4,7 @@ import string
 from datetime import UTC, datetime, timedelta
 
 import httpx
+import jwt
 import structlog
 from passlib.context import CryptContext
 
@@ -70,3 +71,27 @@ def phone_number_otp_expiry() -> datetime:
     return datetime.now(UTC) + timedelta(
         minutes=settings.phone_number_otp_expire_minutes
     )
+
+
+def create_access_token(subject: str) -> str:
+    """Return a signed JWT access token for the given subject."""
+    now = datetime.now(UTC)
+    payload = {
+        "sub": subject,
+        "type": "access",
+        "iat": now,
+        "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+
+def create_refresh_token(subject: str) -> str:
+    """Return a signed JWT refresh token for the given subject."""
+    now = datetime.now(UTC)
+    payload = {
+        "sub": subject,
+        "type": "refresh",
+        "iat": now,
+        "exp": now + timedelta(days=settings.refresh_token_expire_days),
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm="HS256")

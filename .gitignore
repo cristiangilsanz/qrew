@@ -67,6 +67,9 @@ docker-compose.override.yml
 certs/
 secrets/
 
+# Claude Code
+.claude/
+
 # IDE — JetBrains
 *.iml
 *.ipr

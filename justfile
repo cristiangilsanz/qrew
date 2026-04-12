@@ -12,6 +12,12 @@ setup:
     docker compose up postgres redis -d
     uv venv --python 3.12
     cd api && uv sync --all-groups
+    just db-upgrade
+
+# Resume dev environment
+resume:
+    docker compose start postgres redis
+    just db-upgrade
 
 # Tear down dev environment
 shutdown:
@@ -24,6 +30,7 @@ install:
 # Run dev environment
 dev:
     -fuser -k 8000/tcp
+    just db-upgrade
     cd api && uv run dev
 
 # Verify linter

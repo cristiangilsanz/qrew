@@ -10,12 +10,15 @@ from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
+    LoginRequest,
+    LoginResponse,
     RegisterRequest,
     RegisterResponse,
     VerifyEmailRequest,
     VerifyPhoneRequest,
     VerifyResponse,
 )
+from com.qode.qrew.v1.service.services.login import LoginError, LoginService
 from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
@@ -66,8 +69,15 @@ def get_phone_verification_service(
     return PhoneVerificationService(UserRepository(db))
 
 
+def get_login_service(
+    db: AsyncSession = Depends(get_db),
+) -> LoginService:
+    """Build and return the login service."""
+    return LoginService(UserRepository(db))
+
+
 def _domain_error(
-    exc: RegistrationError | VerificationError | CaptchaError,
+    exc: RegistrationError | VerificationError | CaptchaError | LoginError,
     http_status: int,
 ) -> HTTPException:
     """Convert a domain error to an HTTP exception."""
@@ -81,7 +91,7 @@ def _domain_error(
     "/register",
     response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new user account",
+    summary="Register a new user account",
 )
 @limiter.limit("5/hour")  # type: ignore[misc]
 async def register(
@@ -125,7 +135,7 @@ async def verify_email(
     "/verify-phone",
     response_model=VerifyResponse,
     status_code=status.HTTP_200_OK,
-    summary="Confirm a phone number using the token from the SMS",
+    summary="Confirm a phone number using the OTP from the SMS",
 )
 @limiter.limit("5/hour")  # type: ignore[misc]
 async def verify_phone(
@@ -139,3 +149,22 @@ async def verify_phone(
         return VerifyResponse(message="Phone number verified successfully.")
     except VerificationError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Log in as a registered user",
+)
+@limiter.limit("10/minute")  # type: ignore[misc]
+async def login(
+    request: Request,
+    body: LoginRequest,
+    service: LoginService = Depends(get_login_service),
+) -> LoginResponse:
+    """Log in as a registered user."""
+    try:
+        return await service.login(body)
+    except LoginError as exc:
+        raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
