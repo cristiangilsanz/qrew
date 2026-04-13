@@ -30,7 +30,7 @@ dependencies = [
     "phonenumbers>=8.13",
     "mailchecker>=4.1",
     "zxcvbn>=4.4",
-    "opentelemetry-sdk>=1.24",
+    "opentelemetry-sdk>=1.41.0",
 ]
 
 [project.scripts]
