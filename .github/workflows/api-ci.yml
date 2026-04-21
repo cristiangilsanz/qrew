@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v3
       - run: just install
       - run: just lint-check
 
@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v3
       - run: just install
       - run: just format-check
 
@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v3
       - run: just install
       - run: just type-check
 
@@ -55,7 +55,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v3
       - run: just install
       - run: just test
       - uses: actions/upload-artifact@v4
