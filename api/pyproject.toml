@@ -31,6 +31,8 @@ dependencies = [
     "mailchecker>=4.1",
     "zxcvbn>=4.4",
     "opentelemetry-sdk>=1.24",
+    "webauthn>=2.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.scripts]
