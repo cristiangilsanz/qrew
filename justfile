@@ -6,13 +6,17 @@ default: help
 help:
     @just --list
 
-# Set up dev environment
+# Set up dev environment from scratch
 setup:
-    docker compose down
+    docker compose down --volumes --rmi local --remove-orphans
     docker compose up postgres redis -d
     uv venv --python 3.12
     cd api && uv sync --all-groups
     just db-upgrade
+
+# Stop dev environment
+stop:
+    docker compose stop
 
 # Resume dev environment
 resume:

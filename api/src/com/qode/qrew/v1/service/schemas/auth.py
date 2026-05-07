@@ -96,3 +96,12 @@ class LoginResponse(BaseModel):
 
 class VerifyResponse(BaseModel):
     message: str
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str = Field(..., min_length=1)
+
+
+class RefreshResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"  # noqa: S105
