@@ -1,0 +1,117 @@
+"""Tests for POST /v1/auth/refresh."""
+
+from collections.abc import Iterator
+from unittest.mock import AsyncMock
+
+import pytest
+from httpx import AsyncClient
+
+from com.qode.qrew.v1.service.main import app
+from com.qode.qrew.v1.service.routers.auth import get_refresh_service
+from com.qode.qrew.v1.service.schemas.auth import RefreshResponse
+from com.qode.qrew.v1.service.services.refresh import RefreshError
+
+_VALID_PAYLOAD: dict[str, object] = {
+    "refresh_token": "a.valid.refresh.token",
+}
+
+_ENDPOINT = "/v1/auth/refresh"
+
+
+# ── Fixtures ──────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def mock_service() -> AsyncMock:
+    service = AsyncMock()
+    service.refresh = AsyncMock()
+    return service
+
+
+@pytest.fixture(autouse=True)
+def override_service(mock_service: AsyncMock) -> Iterator[None]:
+    app.dependency_overrides[get_refresh_service] = lambda: mock_service
+    yield
+    app.dependency_overrides.clear()
+
+
+# ── Happy path ────────────────────────────────────────────────────────────────
+
+
+async def test_refresh_returns_200_with_access_token(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    mock_service.refresh.return_value = RefreshResponse(access_token="x.y.z")
+
+    response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["access_token"] == "x.y.z"
+    assert body["token_type"] == "bearer"
+
+
+async def test_refresh_calls_service_with_token(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    mock_service.refresh.return_value = RefreshResponse(access_token="x.y.z")
+
+    await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    mock_service.refresh.assert_awaited_once()
+    call_args = mock_service.refresh.call_args
+    assert call_args[0][0].refresh_token == "a.valid.refresh.token"
+
+
+# ── Input validation (422) ────────────────────────────────────────────────────
+
+
+async def test_rejects_missing_refresh_token(client: AsyncClient) -> None:
+    response = await client.post(_ENDPOINT, json={})
+    assert response.status_code == 422
+
+
+async def test_rejects_empty_refresh_token(client: AsyncClient) -> None:
+    response = await client.post(_ENDPOINT, json={"refresh_token": ""})
+    assert response.status_code == 422
+
+
+# ── Auth failures (401) ───────────────────────────────────────────────────────
+
+
+async def test_returns_401_on_expired_token(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    mock_service.refresh.side_effect = RefreshError("Refresh token has expired")
+    response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+    assert response.status_code == 401
+
+
+async def test_returns_401_on_invalid_token(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    mock_service.refresh.side_effect = RefreshError("Invalid refresh token")
+    response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+    assert response.status_code == 401
+
+
+async def test_returns_401_on_wrong_token_type(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    mock_service.refresh.side_effect = RefreshError("Invalid token type")
+    response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+    assert response.status_code == 401
+
+
+async def test_returns_401_on_inactive_user(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    mock_service.refresh.side_effect = RefreshError("Invalid refresh token")
+    response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+    assert response.status_code == 401
+
+
+async def test_error_has_no_field(client: AsyncClient, mock_service: AsyncMock) -> None:
+    mock_service.refresh.side_effect = RefreshError("Invalid refresh token")
+    response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+    assert response.json()["detail"]["field"] is None

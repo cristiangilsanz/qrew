@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,6 +9,13 @@ from com.qode.qrew.v1.service.models.user import User
 class UserRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def get_by_id(self, user_id: uuid.UUID) -> User | None:
+        """Return the user matching the given UUID."""
+        result = await self._session.execute(
+            select(User).where(User.id == user_id).limit(1)
+        )
+        return result.scalar_one_or_none()
 
     async def exists_by_email(self, email: str) -> bool:
         """Return True if a user with the given email exists."""

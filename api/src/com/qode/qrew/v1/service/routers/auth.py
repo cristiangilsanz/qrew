@@ -12,6 +12,8 @@ from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
     LoginRequest,
     LoginResponse,
+    RefreshRequest,
+    RefreshResponse,
     RegisterRequest,
     RegisterResponse,
     VerifyEmailRequest,
@@ -23,6 +25,7 @@ from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
 )
+from com.qode.qrew.v1.service.services.refresh import RefreshError, RefreshService
 from com.qode.qrew.v1.service.services.registration import (
     RegistrationError,
     RegistrationService,
@@ -76,10 +79,19 @@ def get_login_service(
     return LoginService(UserRepository(db))
 
 
-def _domain_error(
-    exc: RegistrationError | VerificationError | CaptchaError | LoginError,
-    http_status: int,
-) -> HTTPException:
+def get_refresh_service(
+    db: AsyncSession = Depends(get_db),
+) -> RefreshService:
+    """Build and return the refresh service."""
+    return RefreshService(UserRepository(db))
+
+
+_DomainError = (
+    RegistrationError | VerificationError | CaptchaError | LoginError | RefreshError
+)
+
+
+def _domain_error(exc: _DomainError, http_status: int) -> HTTPException:
     """Convert a domain error to an HTTP exception."""
     return HTTPException(
         status_code=http_status,
@@ -167,4 +179,23 @@ async def login(
     try:
         return await service.login(body)
     except LoginError as exc:
+        raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
+
+
+@router.post(
+    "/refresh",
+    response_model=RefreshResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Refresh an access token using a valid refresh token",
+)
+@limiter.limit("20/minute")  # type: ignore[misc]
+async def refresh(
+    request: Request,
+    body: RefreshRequest,
+    service: RefreshService = Depends(get_refresh_service),
+) -> RefreshResponse:
+    """Issue a new access token from a valid refresh token."""
+    try:
+        return await service.refresh(body)
+    except RefreshError as exc:
         raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
