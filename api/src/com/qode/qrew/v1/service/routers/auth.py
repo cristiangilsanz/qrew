@@ -16,6 +16,9 @@ from com.qode.qrew.v1.service.schemas.auth import (
     RefreshResponse,
     RegisterRequest,
     RegisterResponse,
+    ResendEmailVerificationRequest,
+    ResendPhoneOtpRequest,
+    ResendResponse,
     VerifyEmailRequest,
     VerifyPhoneRequest,
     VerifyResponse,
@@ -29,6 +32,11 @@ from com.qode.qrew.v1.service.services.refresh import RefreshError, RefreshServi
 from com.qode.qrew.v1.service.services.registration import (
     RegistrationError,
     RegistrationService,
+)
+from com.qode.qrew.v1.service.services.resend import (
+    ResendEmailVerificationService,
+    ResendError,
+    ResendPhoneOtpService,
 )
 from com.qode.qrew.v1.service.services.verification import (
     EmailVerificationService,
@@ -86,8 +94,29 @@ def get_refresh_service(
     return RefreshService(UserRepository(db))
 
 
+def get_resend_email_verification_service(
+    db: AsyncSession = Depends(get_db),
+    notifier: NotificationDispatcher = Depends(_get_notification_service),
+) -> ResendEmailVerificationService:
+    """Build and return the resend email verification service."""
+    return ResendEmailVerificationService(UserRepository(db), notifier)
+
+
+def get_resend_phone_otp_service(
+    db: AsyncSession = Depends(get_db),
+    notifier: NotificationDispatcher = Depends(_get_notification_service),
+) -> ResendPhoneOtpService:
+    """Build and return the resend phone OTP service."""
+    return ResendPhoneOtpService(UserRepository(db), notifier)
+
+
 _DomainError = (
-    RegistrationError | VerificationError | CaptchaError | LoginError | RefreshError
+    RegistrationError
+    | VerificationError
+    | CaptchaError
+    | LoginError
+    | RefreshError
+    | ResendError
 )
 
 
@@ -199,3 +228,45 @@ async def refresh(
         return await service.refresh(body)
     except RefreshError as exc:
         raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
+
+
+@router.post(
+    "/resend-email-verification",
+    response_model=ResendResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Resend the email verification link",
+)
+@limiter.limit("3/hour")  # type: ignore[misc]
+async def resend_email_verification(
+    request: Request,
+    body: ResendEmailVerificationRequest,
+    service: ResendEmailVerificationService = Depends(
+        get_resend_email_verification_service
+    ),
+) -> ResendResponse:
+    """Send a fresh email verification link to an unverified account."""
+    try:
+        await service.resend(body.email)
+        return ResendResponse(message="Verification link sent. Check your inbox.")
+    except ResendError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/resend-phone-otp",
+    response_model=ResendResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Resend the phone verification OTP",
+)
+@limiter.limit("3/hour")  # type: ignore[misc]
+async def resend_phone_otp(
+    request: Request,
+    body: ResendPhoneOtpRequest,
+    service: ResendPhoneOtpService = Depends(get_resend_phone_otp_service),
+) -> ResendResponse:
+    """Send a fresh OTP to an unverified phone number."""
+    try:
+        await service.resend(body.phone_number)
+        return ResendResponse(message="Verification OTP sent. Check your SMS.")
+    except ResendError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

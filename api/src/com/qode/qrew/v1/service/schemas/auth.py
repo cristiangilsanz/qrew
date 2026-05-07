@@ -105,3 +105,27 @@ class RefreshRequest(BaseModel):
 class RefreshResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"  # noqa: S105
+
+
+class ResendEmailVerificationRequest(BaseModel):
+    email: EmailStr
+
+
+class ResendPhoneOtpRequest(BaseModel):
+    phone_number: str = Field(..., min_length=7, max_length=20)
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, v: str) -> str:
+        """Reject phone numbers that are not valid for their region."""
+        try:
+            parsed = phonenumbers.parse(v, None)
+        except phonenumbers.NumberParseException as exc:
+            raise ValueError("Invalid phone number") from exc
+        if not phonenumbers.is_valid_number(parsed):
+            raise ValueError("Phone number is not valid for its region")
+        return v
+
+
+class ResendResponse(BaseModel):
+    message: str
