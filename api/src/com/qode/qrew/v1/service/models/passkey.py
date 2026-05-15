@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Integer, LargeBinary, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, LargeBinary, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.types import DateTime
 
 from com.qode.qrew.v1.service.core.database import Base
 

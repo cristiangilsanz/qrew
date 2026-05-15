@@ -22,7 +22,7 @@ from com.qode.qrew.v1.service.core.captcha import (
 from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
-from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
@@ -337,7 +337,7 @@ async def kyc_upload(
     try:
         await service.upload(current_user, content)
         return KycUploadResponse(
-            message="KYC document submitted for review.", kyc_status="pending"
+            message="KYC document submitted for review.", kyc_status=KycStatus.pending
         )
     except KycError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

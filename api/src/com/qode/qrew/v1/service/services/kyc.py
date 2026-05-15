@@ -22,8 +22,14 @@ class KycService:
     async def upload(self, user: User, content: bytes) -> None:
         """Hash the document and mark the user's KYC status as pending."""
         if len(content) == 0:
+            await logger.awarning(
+                "kyc_upload_failed", reason="empty_document", user_id=str(user.id)
+            )
             raise KycError("Document cannot be empty")
         if len(content) > _MAX_FILE_BYTES:
+            await logger.awarning(
+                "kyc_upload_failed", reason="document_too_large", user_id=str(user.id)
+            )
             raise KycError("Document exceeds the maximum allowed size of 10 MB")
 
         user.national_id_hash = hashlib.sha256(content).hexdigest()
