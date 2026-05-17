@@ -1,6 +1,7 @@
 import uuid
 
 import jwt
+import redis.asyncio as aioredis
 import structlog
 from jwt import ExpiredSignatureError, InvalidTokenError
 
@@ -8,6 +9,7 @@ from com.qode.qrew.v1.service.core.errors import DomainError
 from com.qode.qrew.v1.service.core.security import create_access_token
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import RefreshRequest, RefreshResponse
+from com.qode.qrew.v1.service.services.logout import JTI_BLACKLIST_PREFIX
 from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -18,8 +20,9 @@ class RefreshError(DomainError):
 
 
 class RefreshService:
-    def __init__(self, repo: UserRepository) -> None:
+    def __init__(self, repo: UserRepository, redis: aioredis.Redis) -> None:  # type: ignore[type-arg]
         self._repo = repo
+        self._redis = redis
 
     async def refresh(self, request: RefreshRequest) -> RefreshResponse:
         """Issue a new access token from a valid refresh token."""
@@ -39,6 +42,12 @@ class RefreshService:
         if payload.get("type") != "refresh":
             await logger.awarning("refresh_failed", reason="wrong_token_type")
             raise RefreshError("Invalid token type")
+
+        jti = payload.get("jti")
+        key = JTI_BLACKLIST_PREFIX + jti if isinstance(jti, str) else None
+        if key and await self._redis.exists(key):
+            await logger.awarning("refresh_failed", reason="token_revoked")
+            raise RefreshError("Refresh token has been revoked")
 
         subject = payload.get("sub")
         if not isinstance(subject, str):
