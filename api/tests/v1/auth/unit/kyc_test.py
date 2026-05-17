@@ -8,6 +8,7 @@ from httpx import AsyncClient
 
 from com.qode.qrew.v1.service.core.auth import get_setup_or_full_user
 from com.qode.qrew.v1.service.main import app
+from com.qode.qrew.v1.service.models.user import KycStatus
 from com.qode.qrew.v1.service.routers.auth import get_kyc_service
 from com.qode.qrew.v1.service.services.kyc import KycError
 
@@ -25,7 +26,7 @@ def _mock_user() -> MagicMock:
 @pytest.fixture
 def mock_service() -> AsyncMock:
     service = AsyncMock()
-    service.upload = AsyncMock(return_value=None)
+    service.upload = AsyncMock(return_value=KycStatus.pending)
     return service
 
 
