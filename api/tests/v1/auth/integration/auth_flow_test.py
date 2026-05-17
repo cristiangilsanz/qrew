@@ -1,14 +1,4 @@
-"""Integration tests for the full auth verification flow.
-
-Each test runs against the real Postgres and Redis instances started by
-`just setup`.  The `clean_db` fixture (autouse) truncates all tables before
-every test, and `redis_test` flushes Redis DB 1, so every test starts from a
-blank slate.
-
-Passkey complete is the one step that requires browser-side cryptography.  We
-patch only `webauthn.verify_registration_response` — everything else (Redis
-challenge lifecycle, DB write) runs for real.
-"""
+"""Integration tests for the full auth verification flow."""
 
 import uuid
 from unittest.mock import MagicMock, patch
@@ -38,8 +28,6 @@ _REGISTER_PAYLOAD: dict[str, object] = {
     "captcha_token": "test-token",
 }
 
-# Minimal payload that passes Pydantic validation for passkey/complete.
-# Attestation bytes are irrelevant — we mock verify_registration_response.
 _FAKE_ATTESTATION: dict[str, object] = {
     "id": "Y2hlY2tNZQ",
     "rawId": "Y2hlY2tNZQ",

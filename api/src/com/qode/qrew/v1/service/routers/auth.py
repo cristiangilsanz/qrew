@@ -22,7 +22,7 @@ from com.qode.qrew.v1.service.core.captcha import (
 from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
-from com.qode.qrew.v1.service.models.user import KycStatus, User
+from com.qode.qrew.v1.service.models.user import User
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
@@ -139,9 +139,10 @@ def get_resend_phone_otp_service(
 
 def get_kyc_service(
     db: AsyncSession = Depends(get_db),
+    notifier: NotificationDispatcher = Depends(_get_notification_service),
 ) -> KycService:
     """Build and return the KYC service."""
-    return KycService(UserRepository(db))
+    return KycService(UserRepository(db), notifier)
 
 
 def get_passkey_service(
@@ -349,9 +350,10 @@ async def kyc_upload(
     """Hash and store the national ID document; mark KYC as pending."""
     content = await document.read()
     try:
-        await service.upload(current_user, content)
+        final_status = await service.upload(current_user, content)
         return KycUploadResponse(
-            message="KYC document submitted for review.", kyc_status=KycStatus.pending
+            message="KYC document submitted for review.",
+            kyc_status=final_status,
         )
     except KycError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

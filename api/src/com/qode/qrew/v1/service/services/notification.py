@@ -8,6 +8,7 @@ import httpx
 import structlog
 
 from com.qode.qrew.v1.service.settings import settings
+from com.qode.qrew.v1.service.templates.kyc_status_email import kyc_status_email
 from com.qode.qrew.v1.service.templates.verification_link_email import (
     verification_link_email,
 )
@@ -31,12 +32,18 @@ def _mask_phone_number(phone_number: str) -> str:
 
 
 class EmailService(Protocol):
-    """Sends a single type of transactional email."""
+    """Sends transactional emails."""
 
     async def send_verification_link(
         self, to_email: str, full_name: str, token: str
     ) -> None:
         """Send a verification link to the given email address."""
+        ...
+
+    async def send_kyc_status(
+        self, to_email: str, full_name: str, status: str, reason: str | None
+    ) -> None:
+        """Send a KYC approval or rejection notification."""
         ...
 
 
@@ -72,6 +79,16 @@ class StubEmailService:
             "email_verification_stub",
             to=_mask_email(to_email),
             link_prefix=link[:60] + "…",
+        )
+
+    async def send_kyc_status(
+        self, to_email: str, full_name: str, status: str, reason: str | None
+    ) -> None:
+        """Log KYC status update."""
+        await logger.ainfo(
+            "kyc_status_stub",
+            to=_mask_email(to_email),
+            status=status,
         )
 
 
@@ -129,6 +146,37 @@ class SmtpEmailService:
                 "email_verification_failed", to=_mask_email(to_email), exc_info=exc
             )
 
+    async def send_kyc_status(
+        self, to_email: str, full_name: str, status: str, reason: str | None
+    ) -> None:
+        """Send a KYC status notification via SMTP."""
+        subject = (
+            "Your Qrew identity has been verified"
+            if status == "approved"
+            else "Qrew KYC verification update"
+        )
+        message = MIMEMultipart("alternative")
+        message["Subject"] = subject
+        message["From"] = self._from_address
+        message["To"] = to_email
+        message.attach(MIMEText(kyc_status_email(full_name, status, reason), "html"))
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=self._host,
+                port=self._port,
+                username=self._user,
+                password=self._password,
+                start_tls=True,
+            )
+            await logger.ainfo(
+                "kyc_status_email_sent", to=_mask_email(to_email), status=status
+            )
+        except Exception as exc:
+            await logger.aerror(
+                "kyc_status_email_failed", to=_mask_email(to_email), exc_info=exc
+            )
+
 
 class TwilioSmsService:
     def __init__(self, account_sid: str, auth_token: str, from_number: str) -> None:
@@ -180,6 +228,16 @@ class NotificationDispatcher:
     async def send_sms_otp(self, to_phone_number: str, otp: str) -> None:
         """Dispatch an SMS OTP."""
         await self._sms.send_otp(to_phone_number, otp)
+
+    async def send_kyc_status_update(
+        self,
+        to_email: str,
+        full_name: str,
+        status: str,
+        reason: str | None,
+    ) -> None:
+        """Dispatch a KYC approval or rejection email."""
+        await self._email.send_kyc_status(to_email, full_name, status, reason)
 
 
 def build_notification_dispatcher() -> NotificationDispatcher:

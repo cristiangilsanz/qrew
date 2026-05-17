@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     email_verification_token_expire_hours: int = 24
     phone_number_otp_expire_minutes: int = 10
 
+    # KYC
+    kyc_auto_approve: bool = False
+
     # Security
     hibp_enabled: bool = False
 

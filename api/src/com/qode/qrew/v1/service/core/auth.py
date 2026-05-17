@@ -82,3 +82,15 @@ async def get_setup_or_full_user(
 ) -> User:
     """Validate a Bearer token (setup or full-access) and return the user."""
     return await _resolve_user(credentials, db, allow_setup=True)
+
+
+async def get_admin_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    """Require the authenticated user to have admin privileges."""
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"message": "Admin access required", "field": None},
+        )
+    return current_user
