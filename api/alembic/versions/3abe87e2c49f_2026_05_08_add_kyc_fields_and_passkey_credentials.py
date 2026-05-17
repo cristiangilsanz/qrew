@@ -1,4 +1,4 @@
-"""add kyc fields and passkey credentials table
+"""2026_05_08_add_kyc_fields_and_passkey_credentials
 
 Revision ID: 3abe87e2c49f
 Revises: 393549af2f17

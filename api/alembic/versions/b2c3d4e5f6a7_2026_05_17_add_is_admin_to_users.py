@@ -1,4 +1,4 @@
-"""add is_admin to users
+"""2026_05_17_add_is_admin_to_users
 
 Revision ID: b2c3d4e5f6a7
 Revises: a1b2c3d4e5f6
