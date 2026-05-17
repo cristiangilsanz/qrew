@@ -25,7 +25,7 @@ def mock_service() -> AsyncMock:
 
 
 @pytest.fixture(autouse=True)
-def override_service(mock_service: AsyncMock) -> Iterator[None]:
+def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
     app.dependency_overrides[get_email_verification_service] = lambda: mock_service
     yield
     app.dependency_overrides.clear()

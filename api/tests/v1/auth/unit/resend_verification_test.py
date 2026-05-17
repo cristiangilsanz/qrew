@@ -11,7 +11,7 @@ from com.qode.qrew.v1.service.routers.auth import (
     get_resend_email_verification_service,
     get_resend_phone_otp_service,
 )
-from com.qode.qrew.v1.service.services.resend import ResendError
+from com.qode.qrew.v1.service.services.resend_verification import ResendError
 
 _EMAIL_ENDPOINT = "/v1/auth/resend-email-verification"
 _PHONE_ENDPOINT = "/v1/auth/resend-phone-otp"
@@ -38,7 +38,7 @@ def mock_phone_service() -> AsyncMock:
 
 
 @pytest.fixture(autouse=True)
-def override_services(
+def override_dependencies(
     mock_email_service: AsyncMock, mock_phone_service: AsyncMock
 ) -> Iterator[None]:
     app.dependency_overrides[get_resend_email_verification_service] = lambda: (

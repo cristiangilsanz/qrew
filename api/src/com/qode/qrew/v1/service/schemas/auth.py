@@ -97,8 +97,9 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     access_token: str
-    refresh_token: str
+    refresh_token: str | None = None
     token_type: str = "bearer"  # noqa: S105
+    setup_required: bool = False
 
 
 class VerifyResponse(BaseModel):

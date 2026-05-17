@@ -79,8 +79,22 @@ def create_access_token(subject: str) -> str:
     payload = {
         "sub": subject,
         "type": "access",
+        "scope": "access",
         "iat": now,
         "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+
+def create_setup_token(subject: str) -> str:
+    """Return a short-lived JWT scoped to the onboarding setup flow."""
+    now = datetime.now(UTC)
+    payload = {
+        "sub": subject,
+        "type": "access",
+        "scope": "setup",
+        "iat": now,
+        "exp": now + timedelta(minutes=settings.setup_token_expire_minutes),
     }
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
