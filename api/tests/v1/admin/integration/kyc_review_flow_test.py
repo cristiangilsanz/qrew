@@ -74,7 +74,7 @@ async def test_admin_can_approve_pending_kyc(
     user = await _create_pending_user(client, db_session)
 
     user.is_admin = True
-    await db_session.flush()
+    await db_session.commit()
 
     response = await client.post(
         f"/v1/admin/kyc/{user.id}/review",
@@ -99,7 +99,7 @@ async def test_admin_can_reject_pending_kyc_with_reason(
     user = await _create_pending_user(client, db_session)
 
     user.is_admin = True
-    await db_session.flush()
+    await db_session.commit()
 
     response = await client.post(
         f"/v1/admin/kyc/{user.id}/review",
@@ -141,7 +141,7 @@ async def test_cannot_review_non_pending_kyc(
 
     user.is_admin = True
     user.kyc_status = KycStatus.approved
-    await db_session.flush()
+    await db_session.commit()
 
     response = await client.post(
         f"/v1/admin/kyc/{user.id}/review",
@@ -163,7 +163,7 @@ async def test_returns_400_for_unknown_user(
         pytest.skip("needs at least one user to get an admin token")
 
     existing.is_admin = True
-    await db_session.flush()
+    await db_session.commit()
 
     fake_id = uuid.uuid4()
     response = await client.post(
