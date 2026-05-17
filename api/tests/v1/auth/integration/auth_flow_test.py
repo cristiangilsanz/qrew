@@ -102,7 +102,7 @@ async def test_full_post_login_verification_flow(  # noqa: PLR0915
     assert response.status_code == 201
     assert "Registration successful" in response.json()["message"]
 
-    # 2. Read token + OTP directly from the DB
+    # 2. Read token + OTP
     user = await _fetch_user(db_session)
     assert not user.email_verified
     assert not user.phone_number_verified
@@ -117,7 +117,7 @@ async def test_full_post_login_verification_flow(  # noqa: PLR0915
     response = await client.post("/v1/auth/verify-email", json={"token": email_token})
     assert response.status_code == 200
 
-    # 4. Login — setup incomplete, expect a setup-scoped token
+    # 4. Login
     response = await client.post(
         "/v1/auth/login", json={"email": _EMAIL, "password": _PASSWORD}
     )
@@ -184,7 +184,7 @@ async def test_full_post_login_verification_flow(  # noqa: PLR0915
     assert cred.public_key == b"fake-public-key"
     assert cred.sign_count == 0
 
-    # 9. Complete setup — exchange setup token for full access + refresh tokens
+    # 9. Complete setup
     response = await client.post("/v1/auth/complete-setup", headers=auth)
     assert response.status_code == 200
     full = response.json()
@@ -338,8 +338,8 @@ async def test_passkey_authentication_flow(
 
     # 3. Authenticate: complete — mock assertion verification
     fake_assertion: dict[str, object] = {
-        "id": "Y2hlY2tNZQ",
-        "rawId": "Y2hlY2tNZQ",
+        "id": "ZmFrZS1jcmVkZW50aWFsLWlk",
+        "rawId": "ZmFrZS1jcmVkZW50aWFsLWlk",
         "response": {
             "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0In0",
             "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAABA",
@@ -421,8 +421,8 @@ async def test_passkey_authenticate_complete_without_begin_is_rejected(
 
     # Skip authenticate/begin — no auth challenge in Redis
     fake_assertion: dict[str, object] = {
-        "id": "Y2hlY2tNZQ",
-        "rawId": "Y2hlY2tNZQ",
+        "id": "ZmFrZS1jcmVkZW50aWFsLWlk",
+        "rawId": "ZmFrZS1jcmVkZW50aWFsLWlk",
         "response": {
             "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0In0",
             "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAABA",
