@@ -281,3 +281,162 @@ async def test_passkey_complete_without_begin_is_rejected(
         )
     assert response.status_code == 400
     assert "expired" in response.json()["detail"]["message"].lower()
+
+
+@pytest.mark.integration
+async def test_passkey_authentication_flow(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    redis_test: aioredis.Redis,  # type: ignore[type-arg]
+) -> None:
+    """Full passkey authentication: register passkey then authenticate with it."""
+    # 1. Complete the full onboarding flow first (reuse helpers)
+    await _register(client)
+    user = await _fetch_user(db_session)
+    assert user.email_verification_token is not None
+
+    await _verify_email(client, user.email_verification_token)
+    setup_token = await _login(client)
+    auth = {"Authorization": f"Bearer {setup_token}"}
+
+    # Verify phone
+    await client.post(
+        "/v1/auth/verify-phone",
+        json={"phone_number": _PHONE, "otp": user.phone_number_otp},
+        headers=auth,
+    )
+
+    # KYC upload
+    await client.post(
+        "/v1/auth/kyc/upload",
+        files={"document": ("id.jpg", b"fake-content", "image/jpeg")},
+        headers=auth,
+    )
+
+    # Register passkey
+    await client.post("/v1/auth/passkey/register/begin", headers=auth)
+    with patch(
+        "com.qode.qrew.v1.service.services.passkey.webauthn.verify_registration_response",
+        return_value=_fake_verified_registration(),
+    ):
+        await client.post(
+            "/v1/auth/passkey/register/complete",
+            json=_FAKE_ATTESTATION,
+            headers=auth,
+        )
+
+    # 2. Authenticate: begin — returns assertion options with a Redis challenge
+    response = await client.post(
+        "/v1/auth/passkey/authenticate/begin",
+        json={"email": _EMAIL},
+    )
+    assert response.status_code == 200
+    assert "challenge" in response.json()
+
+    challenge_key = f"webauthn:auth:challenge:{user.id}"
+    assert await redis_test.get(challenge_key) is not None
+
+    # 3. Authenticate: complete — mock assertion verification
+    fake_assertion: dict[str, object] = {
+        "id": "Y2hlY2tNZQ",
+        "rawId": "Y2hlY2tNZQ",
+        "response": {
+            "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0In0",
+            "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAABA",
+            "signature": "MEYCIQDy0K2sGzrq7yGnxUBRyqvOBf5eRaKqMSuTvp6r1j8HqQ",
+        },
+        "type": "public-key",
+    }
+
+    def _fake_verified_auth() -> MagicMock:
+        v = MagicMock()
+        v.new_sign_count = 1
+        return v
+
+    with patch(
+        "com.qode.qrew.v1.service.services.passkey.webauthn.verify_authentication_response",
+        return_value=_fake_verified_auth(),
+    ):
+        response = await client.post(
+            "/v1/auth/passkey/authenticate/complete",
+            json=fake_assertion,
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["setup_required"] is False
+    assert body["refresh_token"] is not None
+    assert body["access_token"] is not None
+
+    # Challenge must be consumed
+    assert await redis_test.get(challenge_key) is None
+
+    # sign_count and last_used_at must be updated in DB
+    await db_session.refresh(user)
+    result = await db_session.execute(
+        select(PasskeyCredential).where(PasskeyCredential.user_id == user.id)
+    )
+    cred = result.scalar_one()
+    assert cred.sign_count == 1
+    assert cred.last_used_at is not None
+
+
+@pytest.mark.integration
+async def test_passkey_authenticate_begin_rejected_for_unknown_email(
+    client: AsyncClient,
+) -> None:
+    """Begin must return 400 for an email that has no account."""
+    response = await client.post(
+        "/v1/auth/passkey/authenticate/begin",
+        json={"email": "nobody@example.com"},
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.integration
+async def test_passkey_authenticate_complete_without_begin_is_rejected(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    """Completing passkey authentication without a prior begin must return 400."""
+    await _register(client)
+    user = await _fetch_user(db_session)
+    assert user.email_verification_token is not None
+
+    await _verify_email(client, user.email_verification_token)
+    setup_token = await _login(client)
+    auth = {"Authorization": f"Bearer {setup_token}"}
+
+    # Register a passkey so the credential exists in the DB
+    await client.post("/v1/auth/passkey/register/begin", headers=auth)
+    with patch(
+        "com.qode.qrew.v1.service.services.passkey.webauthn.verify_registration_response",
+        return_value=_fake_verified_registration(),
+    ):
+        await client.post(
+            "/v1/auth/passkey/register/complete",
+            json=_FAKE_ATTESTATION,
+            headers=auth,
+        )
+
+    # Skip authenticate/begin — no auth challenge in Redis
+    fake_assertion: dict[str, object] = {
+        "id": "Y2hlY2tNZQ",
+        "rawId": "Y2hlY2tNZQ",
+        "response": {
+            "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0In0",
+            "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAABA",
+            "signature": "MEYCIQDy0K2sGzrq7yGnxUBRyqvOBf5eRaKqMSuTvp6r1j8HqQ",
+        },
+        "type": "public-key",
+    }
+    with patch(
+        "com.qode.qrew.v1.service.services.passkey.webauthn.verify_authentication_response",
+        return_value=MagicMock(new_sign_count=1),
+    ):
+        response = await client.post(
+            "/v1/auth/passkey/authenticate/complete",
+            json=fake_assertion,
+        )
+    assert response.status_code == 400
+    assert "expired" in response.json()["detail"]["message"].lower()

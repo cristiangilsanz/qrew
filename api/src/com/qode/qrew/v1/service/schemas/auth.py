@@ -162,3 +162,25 @@ class PasskeyRegistrationCompleteRequest(BaseModel):
 
 class PasskeyRegistrationCompleteResponse(BaseModel):
     message: str
+
+
+class AssertionResponseData(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    client_data_json: str = Field(alias="clientDataJSON")
+    authenticator_data: str = Field(alias="authenticatorData")
+    signature: str
+    user_handle: str | None = Field(alias="userHandle", default=None)
+
+
+class PasskeyAuthenticationBeginRequest(BaseModel):
+    email: EmailStr
+
+
+class PasskeyAuthenticationCompleteRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    raw_id: str = Field(alias="rawId")
+    response: AssertionResponseData
+    type: str = "public-key"

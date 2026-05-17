@@ -29,6 +29,8 @@ from com.qode.qrew.v1.service.schemas.auth import (
     KycUploadResponse,
     LoginRequest,
     LoginResponse,
+    PasskeyAuthenticationBeginRequest,
+    PasskeyAuthenticationCompleteRequest,
     PasskeyRegistrationCompleteRequest,
     PasskeyRegistrationCompleteResponse,
     RefreshRequest,
@@ -147,7 +149,7 @@ def get_passkey_service(
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> PasskeyService:
     """Build and return the passkey service."""
-    return PasskeyService(PasskeyCredentialRepository(db), redis)
+    return PasskeyService(PasskeyCredentialRepository(db), redis, UserRepository(db))
 
 
 def get_complete_setup_service(
@@ -410,4 +412,42 @@ async def complete_setup(
     try:
         return await service.complete(current_user)
     except SetupError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/passkey/authenticate/begin",
+    status_code=status.HTTP_200_OK,
+    summary="Begin WebAuthn passkey authentication",
+)
+@limiter.limit("10/minute")  # type: ignore[misc]
+async def passkey_authenticate_begin(
+    request: Request,
+    body: PasskeyAuthenticationBeginRequest,
+    service: PasskeyService = Depends(get_passkey_service),
+) -> Response:
+    """Generate WebAuthn assertion options for the given email address."""
+    try:
+        options_json = await service.begin_authentication(body.email)
+        return Response(content=options_json, media_type="application/json")
+    except PasskeyError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/passkey/authenticate/complete",
+    response_model=LoginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Complete WebAuthn passkey authentication",
+)
+@limiter.limit("10/minute")  # type: ignore[misc]
+async def passkey_authenticate_complete(
+    request: Request,
+    body: PasskeyAuthenticationCompleteRequest,
+    service: PasskeyService = Depends(get_passkey_service),
+) -> LoginResponse:
+    """Verify the assertion response and return access tokens."""
+    try:
+        return await service.complete_authentication(body)
+    except PasskeyError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

@@ -28,6 +28,19 @@ class PasskeyCredentialRepository:
         )
         return result.scalar_one_or_none()
 
+    async def save(self, credential: PasskeyCredential) -> PasskeyCredential:
+        """Flush pending changes for an already-tracked PasskeyCredential."""
+        await self._session.flush()
+        await self._session.refresh(credential)
+        return credential
+
+    async def get_all_by_user_id(self, user_id: uuid.UUID) -> list[PasskeyCredential]:
+        """Return all credentials belonging to the given user."""
+        result = await self._session.execute(
+            select(PasskeyCredential).where(PasskeyCredential.user_id == user_id)
+        )
+        return list(result.scalars().all())
+
     async def has_passkey(self, user_id: uuid.UUID) -> bool:
         """Return True if the user has at least one registered passkey."""
         result = await self._session.execute(
