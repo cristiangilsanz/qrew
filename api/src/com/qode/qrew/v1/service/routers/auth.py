@@ -1,6 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from typing import Annotated
+
+import redis.asyncio as aioredis
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from com.qode.qrew.v1.service.core.auth import get_current_user
 from com.qode.qrew.v1.service.core.captcha import (
     CaptchaError,
     CaptchaService,
@@ -8,10 +21,16 @@ from com.qode.qrew.v1.service.core.captcha import (
 )
 from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
+from com.qode.qrew.v1.service.core.redis import get_redis
+from com.qode.qrew.v1.service.models.user import KycStatus, User
+from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
+    KycUploadResponse,
     LoginRequest,
     LoginResponse,
+    PasskeyRegistrationCompleteRequest,
+    PasskeyRegistrationCompleteResponse,
     RefreshRequest,
     RefreshResponse,
     RegisterRequest,
@@ -23,11 +42,13 @@ from com.qode.qrew.v1.service.schemas.auth import (
     VerifyPhoneRequest,
     VerifyResponse,
 )
+from com.qode.qrew.v1.service.services.kyc import KycError, KycService
 from com.qode.qrew.v1.service.services.login import LoginError, LoginService
 from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
 )
+from com.qode.qrew.v1.service.services.passkey import PasskeyError, PasskeyService
 from com.qode.qrew.v1.service.services.refresh import RefreshError, RefreshService
 from com.qode.qrew.v1.service.services.registration import (
     RegistrationError,
@@ -110,6 +131,21 @@ def get_resend_phone_otp_service(
     return ResendPhoneOtpService(UserRepository(db), notifier)
 
 
+def get_kyc_service(
+    db: AsyncSession = Depends(get_db),
+) -> KycService:
+    """Build and return the KYC service."""
+    return KycService(UserRepository(db))
+
+
+def get_passkey_service(
+    db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> PasskeyService:
+    """Build and return the passkey service."""
+    return PasskeyService(PasskeyCredentialRepository(db), redis)
+
+
 _DomainError = (
     RegistrationError
     | VerificationError
@@ -117,6 +153,8 @@ _DomainError = (
     | LoginError
     | RefreshError
     | ResendError
+    | KycError
+    | PasskeyError
 )
 
 
@@ -182,9 +220,18 @@ async def verify_email(
 async def verify_phone(
     request: Request,
     body: VerifyPhoneRequest,
+    current_user: User = Depends(get_current_user),
     service: PhoneVerificationService = Depends(get_phone_verification_service),
 ) -> VerifyResponse:
-    """Mark the user's phone number as verified."""
+    """Mark the authenticated user's phone number as verified."""
+    if body.phone_number != current_user.phone_number:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "message": "Phone number does not match your account",
+                "field": "phone_number",
+            },
+        )
     try:
         await service.verify(body.phone_number, body.otp)
         return VerifyResponse(message="Phone number verified successfully.")
@@ -269,4 +316,67 @@ async def resend_phone_otp(
         await service.resend(body.phone_number)
         return ResendResponse(message="Verification OTP sent. Check your SMS.")
     except ResendError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/kyc/upload",
+    response_model=KycUploadResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Submit a national ID document for KYC verification",
+)
+@limiter.limit("3/hour")  # type: ignore[misc]
+async def kyc_upload(
+    request: Request,
+    document: Annotated[UploadFile, File()],
+    current_user: User = Depends(get_current_user),
+    service: KycService = Depends(get_kyc_service),
+) -> KycUploadResponse:
+    """Hash and store the national ID document; mark KYC as pending."""
+    content = await document.read()
+    try:
+        await service.upload(current_user, content)
+        return KycUploadResponse(
+            message="KYC document submitted for review.", kyc_status=KycStatus.pending
+        )
+    except KycError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/passkey/register/begin",
+    status_code=status.HTTP_200_OK,
+    summary="Begin WebAuthn passkey registration",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def passkey_register_begin(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    service: PasskeyService = Depends(get_passkey_service),
+) -> Response:
+    """Generate WebAuthn registration options for the authenticated user."""
+    options_json = await service.begin_registration(current_user)
+    return Response(content=options_json, media_type="application/json")
+
+
+@router.post(
+    "/passkey/register/complete",
+    response_model=PasskeyRegistrationCompleteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Complete WebAuthn passkey registration",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def passkey_register_complete(
+    request: Request,
+    body: PasskeyRegistrationCompleteRequest,
+    current_user: User = Depends(get_current_user),
+    service: PasskeyService = Depends(get_passkey_service),
+) -> PasskeyRegistrationCompleteResponse:
+    """Verify the attestation response and store the passkey credential."""
+    try:
+        await service.complete_registration(current_user, body)
+        return PasskeyRegistrationCompleteResponse(
+            message="Passkey registered successfully."
+        )
+    except PasskeyError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

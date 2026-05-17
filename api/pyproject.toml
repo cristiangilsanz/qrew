@@ -31,6 +31,8 @@ dependencies = [
     "mailchecker>=4.1",
     "zxcvbn>=4.4",
     "opentelemetry-sdk>=1.24",
+    "webauthn>=2.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.scripts]
@@ -68,6 +70,9 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["src"]
 python_files = ["*_test.py"]
+markers = [
+    "integration: mark test as integration test requiring Docker services (Postgres + Redis)",
+]
 addopts = [
     "--tb=short",
     "--strict-markers",

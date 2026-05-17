@@ -1,7 +1,14 @@
 import phonenumbers
 import zxcvbn
 from MailChecker import MailChecker  # type: ignore[import-untyped]
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 _PASSWORD_SECURITY_MIN_SCORE = 3
 
@@ -128,4 +135,29 @@ class ResendPhoneOtpRequest(BaseModel):
 
 
 class ResendResponse(BaseModel):
+    message: str
+
+
+class KycUploadResponse(BaseModel):
+    message: str
+    kyc_status: str
+
+
+class AttestationResponseData(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    client_data_json: str = Field(alias="clientDataJSON")
+    attestation_object: str = Field(alias="attestationObject")
+
+
+class PasskeyRegistrationCompleteRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    raw_id: str = Field(alias="rawId")
+    response: AttestationResponseData
+    type: str = "public-key"
+
+
+class PasskeyRegistrationCompleteResponse(BaseModel):
     message: str

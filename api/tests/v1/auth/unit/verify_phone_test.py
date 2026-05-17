@@ -1,11 +1,12 @@
 """Tests for POST /v1/auth/verify-phone."""
 
 from collections.abc import Iterator
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import AsyncClient
 
+from com.qode.qrew.v1.service.core.auth import get_current_user
 from com.qode.qrew.v1.service.main import app
 from com.qode.qrew.v1.service.routers.auth import get_phone_verification_service
 from com.qode.qrew.v1.service.services.verification import VerificationError
@@ -20,6 +21,12 @@ _VALID_PAYLOAD: dict[str, str] = {
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 
+def _mock_user() -> MagicMock:
+    user = MagicMock()
+    user.phone_number = "+34612345678"
+    return user
+
+
 @pytest.fixture
 def mock_service() -> AsyncMock:
     service = AsyncMock()
@@ -28,8 +35,9 @@ def mock_service() -> AsyncMock:
 
 
 @pytest.fixture(autouse=True)
-def override_service(mock_service: AsyncMock) -> Iterator[None]:
+def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
     app.dependency_overrides[get_phone_verification_service] = lambda: mock_service
+    app.dependency_overrides[get_current_user] = _mock_user
     yield
     app.dependency_overrides.clear()
 
@@ -47,6 +55,17 @@ async def test_verify_phone_returns_200(
     mock_service.verify.assert_awaited_once_with(
         _VALID_PAYLOAD["phone_number"], _VALID_PAYLOAD["otp"]
     )
+
+
+# ── Phone ownership check (403) ───────────────────────────────────────────────
+
+
+async def test_returns_403_on_phone_number_mismatch(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    payload = {**_VALID_PAYLOAD, "phone_number": "+34699999999"}
+    response = await client.post(_ENDPOINT, json=payload)
+    assert response.status_code == 403
 
 
 # ── Verification failures (400) ───────────────────────────────────────────────
