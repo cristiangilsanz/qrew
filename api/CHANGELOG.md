@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.1.0...qrew-api/v1.2.0) (2026-05-17)
+
+
+### Features
+
+* implement auth refresh endpoint ([#43](https://github.com/cristiangilsanz/qrew/issues/43)) ([ffcf5dc](https://github.com/cristiangilsanz/qrew/commit/ffcf5dcb35757dc4a5e447cd3cd2cfcdf6f20f35))
+* implement post-login verification endpoints ([#46](https://github.com/cristiangilsanz/qrew/issues/46)) ([c6c7dde](https://github.com/cristiangilsanz/qrew/commit/c6c7dde7052707cd8ec7bdbe2528bdf8981fc289))
+* implement resend verification endpoints ([#45](https://github.com/cristiangilsanz/qrew/issues/45)) ([e19f297](https://github.com/cristiangilsanz/qrew/commit/e19f2979a6c4ea50319fef675852c05140891c0c))
+
 ## [1.1.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.0.0...qrew-api/v1.1.0) (2026-04-12)
 
 
