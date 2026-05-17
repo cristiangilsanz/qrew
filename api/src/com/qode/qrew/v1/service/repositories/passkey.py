@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,3 +27,12 @@ class PasskeyCredentialRepository:
             .limit(1)
         )
         return result.scalar_one_or_none()
+
+    async def has_passkey(self, user_id: uuid.UUID) -> bool:
+        """Return True if the user has at least one registered passkey."""
+        result = await self._session.execute(
+            select(PasskeyCredential.id)
+            .where(PasskeyCredential.user_id == user_id)
+            .limit(1)
+        )
+        return result.scalar_one_or_none() is not None

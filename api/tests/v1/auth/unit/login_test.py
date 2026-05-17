@@ -30,7 +30,7 @@ def mock_service() -> AsyncMock:
 
 
 @pytest.fixture(autouse=True)
-def override_service(mock_service: AsyncMock) -> Iterator[None]:
+def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
     app.dependency_overrides[get_login_service] = lambda: mock_service
     yield
     app.dependency_overrides.clear()
@@ -54,6 +54,24 @@ async def test_login_returns_200_with_tokens(
     assert body["access_token"] == "a.b.c"
     assert body["refresh_token"] == "d.e.f"
     assert body["token_type"] == "bearer"
+    assert body["setup_required"] is False
+
+
+async def test_login_returns_setup_token_when_setup_incomplete(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    mock_service.login.return_value = LoginResponse(
+        access_token="setup.token",
+        setup_required=True,
+    )
+
+    response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["access_token"] == "setup.token"
+    assert body["refresh_token"] is None
+    assert body["setup_required"] is True
 
 
 async def test_login_calls_service_with_correct_args(

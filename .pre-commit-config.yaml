@@ -24,7 +24,7 @@ repos:
 
       - id: pytest
         name: pytest
-        entry: bash -c 'cd api && uv run pytest --cov=src --cov-report=term-missing -v'
+        entry: bash -c 'cd api && uv run pytest -m "not integration" --cov=src --cov-report=term-missing -v'
         language: system
         pass_filenames: false
         always_run: true

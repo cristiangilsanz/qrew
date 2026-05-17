@@ -22,12 +22,21 @@ _CREDENTIALS_EXCEPTION = HTTPException(
     detail={"message": "Invalid or expired token", "field": None},
 )
 
+_SETUP_REQUIRED_EXCEPTION = HTTPException(
+    status_code=status.HTTP_403_FORBIDDEN,
+    detail={
+        "message": "Setup not complete. Use /auth/complete-setup first.",
+        "field": None,
+    },
+)
 
-async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
-    db: AsyncSession = Depends(get_db),
+
+async def _resolve_user(
+    credentials: HTTPAuthorizationCredentials,
+    db: AsyncSession,
+    *,
+    allow_setup: bool,
 ) -> User:
-    """Validate the Bearer access token and return the authenticated user."""
     try:
         payload = jwt.decode(
             credentials.credentials,
@@ -39,6 +48,9 @@ async def get_current_user(
 
     if payload.get("type") != "access":
         raise _CREDENTIALS_EXCEPTION
+
+    if not allow_setup and payload.get("scope") == "setup":
+        raise _SETUP_REQUIRED_EXCEPTION
 
     subject = payload.get("sub")
     if not isinstance(subject, str):
@@ -54,3 +66,19 @@ async def get_current_user(
         raise _CREDENTIALS_EXCEPTION
 
     return user
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Validate a full-access Bearer token and return the authenticated user."""
+    return await _resolve_user(credentials, db, allow_setup=False)
+
+
+async def get_setup_or_full_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Validate a Bearer token (setup or full-access) and return the user."""
+    return await _resolve_user(credentials, db, allow_setup=True)

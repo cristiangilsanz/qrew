@@ -42,11 +42,13 @@ class RefreshService:
 
         subject = payload.get("sub")
         if not isinstance(subject, str):
+            await logger.awarning("refresh_failed", reason="invalid_subject")
             raise RefreshError("Invalid refresh token")
 
         try:
             user_id = uuid.UUID(subject)
         except ValueError as exc:
+            await logger.awarning("refresh_failed", reason="invalid_subject")
             raise RefreshError("Invalid refresh token") from exc
 
         user = await self._repo.get_by_id(user_id)

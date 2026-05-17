@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from httpx import AsyncClient
 
-from com.qode.qrew.v1.service.core.auth import get_current_user
+from com.qode.qrew.v1.service.core.auth import get_setup_or_full_user
 from com.qode.qrew.v1.service.main import app
 from com.qode.qrew.v1.service.routers.auth import get_phone_verification_service
 from com.qode.qrew.v1.service.services.verification import VerificationError
@@ -37,7 +37,7 @@ def mock_service() -> AsyncMock:
 @pytest.fixture(autouse=True)
 def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
     app.dependency_overrides[get_phone_verification_service] = lambda: mock_service
-    app.dependency_overrides[get_current_user] = _mock_user
+    app.dependency_overrides[get_setup_or_full_user] = _mock_user
     yield
     app.dependency_overrides.clear()
 

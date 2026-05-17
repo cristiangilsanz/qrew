@@ -13,7 +13,7 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.service.core.auth import get_current_user
+from com.qode.qrew.v1.service.core.auth import get_setup_or_full_user
 from com.qode.qrew.v1.service.core.captcha import (
     CaptchaError,
     CaptchaService,
@@ -42,6 +42,10 @@ from com.qode.qrew.v1.service.schemas.auth import (
     VerifyPhoneRequest,
     VerifyResponse,
 )
+from com.qode.qrew.v1.service.services.complete_setup import (
+    CompleteSetupService,
+    SetupError,
+)
 from com.qode.qrew.v1.service.services.kyc import KycError, KycService
 from com.qode.qrew.v1.service.services.login import LoginError, LoginService
 from com.qode.qrew.v1.service.services.notification import (
@@ -54,7 +58,7 @@ from com.qode.qrew.v1.service.services.registration import (
     RegistrationError,
     RegistrationService,
 )
-from com.qode.qrew.v1.service.services.resend import (
+from com.qode.qrew.v1.service.services.resend_verification import (
     ResendEmailVerificationService,
     ResendError,
     ResendPhoneOtpService,
@@ -105,7 +109,7 @@ def get_login_service(
     db: AsyncSession = Depends(get_db),
 ) -> LoginService:
     """Build and return the login service."""
-    return LoginService(UserRepository(db))
+    return LoginService(UserRepository(db), PasskeyCredentialRepository(db))
 
 
 def get_refresh_service(
@@ -146,6 +150,13 @@ def get_passkey_service(
     return PasskeyService(PasskeyCredentialRepository(db), redis)
 
 
+def get_complete_setup_service(
+    db: AsyncSession = Depends(get_db),
+) -> CompleteSetupService:
+    """Build and return the complete-setup service."""
+    return CompleteSetupService(UserRepository(db), PasskeyCredentialRepository(db))
+
+
 _DomainError = (
     RegistrationError
     | VerificationError
@@ -155,6 +166,7 @@ _DomainError = (
     | ResendError
     | KycError
     | PasskeyError
+    | SetupError
 )
 
 
@@ -220,7 +232,7 @@ async def verify_email(
 async def verify_phone(
     request: Request,
     body: VerifyPhoneRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_setup_or_full_user),
     service: PhoneVerificationService = Depends(get_phone_verification_service),
 ) -> VerifyResponse:
     """Mark the authenticated user's phone number as verified."""
@@ -329,7 +341,7 @@ async def resend_phone_otp(
 async def kyc_upload(
     request: Request,
     document: Annotated[UploadFile, File()],
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_setup_or_full_user),
     service: KycService = Depends(get_kyc_service),
 ) -> KycUploadResponse:
     """Hash and store the national ID document; mark KYC as pending."""
@@ -351,7 +363,7 @@ async def kyc_upload(
 @limiter.limit("10/hour")  # type: ignore[misc]
 async def passkey_register_begin(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_setup_or_full_user),
     service: PasskeyService = Depends(get_passkey_service),
 ) -> Response:
     """Generate WebAuthn registration options for the authenticated user."""
@@ -369,7 +381,7 @@ async def passkey_register_begin(
 async def passkey_register_complete(
     request: Request,
     body: PasskeyRegistrationCompleteRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_setup_or_full_user),
     service: PasskeyService = Depends(get_passkey_service),
 ) -> PasskeyRegistrationCompleteResponse:
     """Verify the attestation response and store the passkey credential."""
@@ -379,4 +391,23 @@ async def passkey_register_complete(
             message="Passkey registered successfully."
         )
     except PasskeyError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/complete-setup",
+    response_model=LoginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Exchange a setup token for a full access token",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def complete_setup(
+    request: Request,
+    current_user: User = Depends(get_setup_or_full_user),
+    service: CompleteSetupService = Depends(get_complete_setup_service),
+) -> LoginResponse:
+    """Verify all onboarding steps are done and return full access + refresh tokens."""
+    try:
+        return await service.complete(current_user)
+    except SetupError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

@@ -90,7 +90,7 @@ async def _login(client: AsyncClient) -> str:
 
 
 @pytest.mark.integration
-async def test_full_post_login_verification_flow(
+async def test_full_post_login_verification_flow(  # noqa: PLR0915
     client: AsyncClient,
     db_session: AsyncSession,
     redis_test: aioredis.Redis,  # type: ignore[type-arg]
@@ -117,12 +117,15 @@ async def test_full_post_login_verification_flow(
     response = await client.post("/v1/auth/verify-email", json={"token": email_token})
     assert response.status_code == 200
 
-    # 4. Login
+    # 4. Login — setup incomplete, expect a setup-scoped token
     response = await client.post(
         "/v1/auth/login", json={"email": _EMAIL, "password": _PASSWORD}
     )
     assert response.status_code == 200
-    access_token = response.json()["access_token"]
+    body = response.json()
+    assert body["setup_required"] is True
+    assert body["refresh_token"] is None
+    access_token = body["access_token"]
     auth = {"Authorization": f"Bearer {access_token}"}
 
     # 5. Verify phone
@@ -180,6 +183,14 @@ async def test_full_post_login_verification_flow(
     assert cred.credential_id == b"fake-credential-id"
     assert cred.public_key == b"fake-public-key"
     assert cred.sign_count == 0
+
+    # 9. Complete setup — exchange setup token for full access + refresh tokens
+    response = await client.post("/v1/auth/complete-setup", headers=auth)
+    assert response.status_code == 200
+    full = response.json()
+    assert full["setup_required"] is False
+    assert full["refresh_token"] is not None
+    assert full["access_token"] != access_token
 
 
 # ── Negative paths ────────────────────────────────────────────────────────────
