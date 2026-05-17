@@ -115,3 +115,11 @@ async def test_error_has_no_field(client: AsyncClient, mock_service: AsyncMock) 
     mock_service.refresh.side_effect = RefreshError("Invalid refresh token")
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
     assert response.json()["detail"]["field"] is None
+
+
+async def test_returns_401_on_revoked_token(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    mock_service.refresh.side_effect = RefreshError("Refresh token has been revoked")
+    response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+    assert response.status_code == 401

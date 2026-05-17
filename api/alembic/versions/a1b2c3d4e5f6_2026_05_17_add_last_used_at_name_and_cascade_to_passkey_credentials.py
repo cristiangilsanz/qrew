@@ -1,4 +1,4 @@
-"""add last_used_at, name, and cascade to passkey_credentials
+"""2026_05_17_add_last_used_at_name_and_cascade_to_passkey_credentials
 
 Revision ID: a1b2c3d4e5f6
 Revises: 3abe87e2c49f

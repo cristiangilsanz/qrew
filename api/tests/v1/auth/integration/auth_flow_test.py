@@ -9,6 +9,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from com.qode.qrew.v1.service.core.security import create_refresh_token
 from com.qode.qrew.v1.service.models.passkey import PasskeyCredential
 from com.qode.qrew.v1.service.models.user import KycStatus, User
 
@@ -428,3 +429,38 @@ async def test_passkey_authenticate_complete_without_begin_is_rejected(
         )
     assert response.status_code == 400
     assert "expired" in response.json()["detail"]["message"].lower()
+
+
+# ── Logout ────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.integration
+async def test_logout_invalidates_refresh_token(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    """Logout → subsequent refresh is rejected with 401."""
+    await _register(client)
+    user = await _fetch_user(db_session)
+    await _verify_email(client, str(user.email_verification_token))
+
+    refresh_token = create_refresh_token(str(user.id))
+
+    r = await client.post("/v1/auth/logout", json={"refresh_token": refresh_token})
+    assert r.status_code == 200
+    assert "logged out" in r.json()["message"].lower()
+
+    r = await client.post("/v1/auth/refresh", json={"refresh_token": refresh_token})
+    assert r.status_code == 401
+    assert "revoked" in r.json()["detail"]["message"].lower()
+
+
+@pytest.mark.integration
+async def test_logout_with_invalid_token_returns_401(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    r = await client.post(
+        "/v1/auth/logout", json={"refresh_token": "not.a.valid.token"}
+    )
+    assert r.status_code == 401

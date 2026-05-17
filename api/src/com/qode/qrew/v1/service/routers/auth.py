@@ -29,6 +29,8 @@ from com.qode.qrew.v1.service.schemas.auth import (
     KycUploadResponse,
     LoginRequest,
     LoginResponse,
+    LogoutRequest,
+    LogoutResponse,
     PasskeyAuthenticationBeginRequest,
     PasskeyAuthenticationCompleteRequest,
     PasskeyRegistrationCompleteRequest,
@@ -50,6 +52,7 @@ from com.qode.qrew.v1.service.services.complete_setup import (
 )
 from com.qode.qrew.v1.service.services.kyc import KycError, KycService
 from com.qode.qrew.v1.service.services.login import LoginError, LoginService
+from com.qode.qrew.v1.service.services.logout import LogoutError, LogoutService
 from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
@@ -116,9 +119,17 @@ def get_login_service(
 
 def get_refresh_service(
     db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> RefreshService:
     """Build and return the refresh service."""
-    return RefreshService(UserRepository(db))
+    return RefreshService(UserRepository(db), redis)
+
+
+def get_logout_service(
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> LogoutService:
+    """Build and return the logout service."""
+    return LogoutService(redis)
 
 
 def get_resend_email_verification_service(
@@ -166,6 +177,7 @@ _DomainError = (
     | CaptchaError
     | LoginError
     | RefreshError
+    | LogoutError
     | ResendError
     | KycError
     | PasskeyError
@@ -289,6 +301,26 @@ async def refresh(
     try:
         return await service.refresh(body)
     except RefreshError as exc:
+        raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
+
+
+@router.post(
+    "/logout",
+    response_model=LogoutResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Log out and invalidate the refresh token",
+)
+@limiter.limit("20/minute")  # type: ignore[misc]
+async def logout(
+    request: Request,
+    body: LogoutRequest,
+    service: LogoutService = Depends(get_logout_service),
+) -> LogoutResponse:
+    """Blacklist the refresh token's JTI so it cannot be reused."""
+    try:
+        await service.logout(body.refresh_token)
+        return LogoutResponse(message="Logged out successfully.")
+    except LogoutError as exc:
         raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
 
 

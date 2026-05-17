@@ -115,6 +115,14 @@ class RefreshResponse(BaseModel):
     token_type: str = "bearer"  # noqa: S105
 
 
+class LogoutRequest(BaseModel):
+    refresh_token: str = Field(..., min_length=1)
+
+
+class LogoutResponse(BaseModel):
+    message: str
+
+
 class ResendEmailVerificationRequest(BaseModel):
     email: EmailStr
 

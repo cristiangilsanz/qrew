@@ -1,6 +1,7 @@
 import hashlib
 import secrets
 import string
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import httpx
@@ -105,7 +106,13 @@ def create_refresh_token(subject: str) -> str:
     payload = {
         "sub": subject,
         "type": "refresh",
+        "jti": str(uuid.uuid4()),
         "iat": now,
         "exp": now + timedelta(days=settings.refresh_token_expire_days),
     }
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+
+def decode_refresh_token(token: str) -> dict[str, object]:
+    """Decode and validate a refresh token; raises jwt errors on failure."""
+    return jwt.decode(token, settings.secret_key, algorithms=["HS256"])  # type: ignore[no-any-return]
