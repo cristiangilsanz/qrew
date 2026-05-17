@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.2.0...qrew-api/v1.3.0) (2026-05-17)
+
+
+### Features
+
+* implement KYC review admin endpoint ([#54](https://github.com/cristiangilsanz/qrew/issues/54)) ([aa85f0d](https://github.com/cristiangilsanz/qrew/commit/aa85f0d148ec39fdfbdec51c1eea97ada895c39b))
+* implement logout and refresh token revocation ([#55](https://github.com/cristiangilsanz/qrew/issues/55)) ([2f4df8b](https://github.com/cristiangilsanz/qrew/commit/2f4df8b859926c1dc1426fbdb303964e2085f5a9))
+* implement passkey authentication endpoints ([#53](https://github.com/cristiangilsanz/qrew/issues/53)) ([cddd719](https://github.com/cristiangilsanz/qrew/commit/cddd7199b92bfd5aa66803afd165ec866a5e9216))
+* implement two-tier token login flow and complete-setup endpoint ([#51](https://github.com/cristiangilsanz/qrew/issues/51)) ([889dd53](https://github.com/cristiangilsanz/qrew/commit/889dd53f757d362ff822ed3bd0b9ef99aff7de35))
+
 ## [1.2.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.1.0...qrew-api/v1.2.0) (2026-05-17)
 
 
