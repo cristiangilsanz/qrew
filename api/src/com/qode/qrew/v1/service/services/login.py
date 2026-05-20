@@ -8,10 +8,12 @@ from com.qode.qrew.v1.service.core.security import (
     hash_password,
     verify_password,
 )
+from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.models.user import KycStatus
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import LoginRequest, LoginResponse
+from com.qode.qrew.v1.service.services.audit import AuditService
 
 logger = structlog.get_logger(__name__)
 
@@ -24,10 +26,14 @@ class LoginError(DomainError):
 
 class LoginService:
     def __init__(
-        self, repo: UserRepository, passkey_repo: PasskeyCredentialRepository
+        self,
+        repo: UserRepository,
+        passkey_repo: PasskeyCredentialRepository,
+        audit: AuditService,
     ) -> None:
         self._repo = repo
         self._passkey_repo = passkey_repo
+        self._audit = audit
 
     async def login(self, request: LoginRequest) -> LoginResponse:
         """Authenticate a user, returning a setup or full-access token."""
@@ -36,6 +42,15 @@ class LoginService:
         if user is None:
             verify_password(request.password, _DUMMY_HASH)
             await logger.awarning("login_failed", reason="invalid_credentials")
+            try:
+                await self._audit.record(
+                    action=AuditAction.LOGIN_FAILED,
+                    payload={"reason": "invalid_credentials"},
+                )
+            except Exception:
+                await logger.awarning(
+                    "audit_write_failed", action=AuditAction.LOGIN_FAILED
+                )
             raise LoginError("Invalid email or password")
 
         if not verify_password(request.password, user.hashed_password):
@@ -44,6 +59,18 @@ class LoginService:
                 reason="invalid_credentials",
                 user_id=str(user.id),
             )
+            try:
+                await self._audit.record(
+                    action=AuditAction.LOGIN_FAILED,
+                    actor_id=user.id,
+                    entity_type="user",
+                    entity_id=str(user.id),
+                    payload={"reason": "invalid_credentials"},
+                )
+            except Exception:
+                await logger.awarning(
+                    "audit_write_failed", action=AuditAction.LOGIN_FAILED
+                )
             raise LoginError("Invalid email or password")
 
         if not user.email_verified:
@@ -72,9 +99,29 @@ class LoginService:
             access_token = create_access_token(str(user.id))
             refresh_token = create_refresh_token(str(user.id))
             await logger.ainfo("user_logged_in", user_id=str(user.id))
+            try:
+                await self._audit.record(
+                    action=AuditAction.LOGIN,
+                    actor_id=user.id,
+                    entity_type="user",
+                    entity_id=str(user.id),
+                    payload={"setup_complete": True},
+                )
+            except Exception:
+                await logger.awarning("audit_write_failed", action=AuditAction.LOGIN)
             return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
         await logger.ainfo("user_logged_in_setup_required", user_id=str(user.id))
+        try:
+            await self._audit.record(
+                action=AuditAction.LOGIN,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+                payload={"setup_complete": False},
+            )
+        except Exception:
+            await logger.awarning("audit_write_failed", action=AuditAction.LOGIN)
         return LoginResponse(
             access_token=create_setup_token(str(user.id)),
             setup_required=True,

@@ -9,9 +9,11 @@ from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.models.user import User
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.admin import (
+    AuditVerifyResponse,
     KycReviewRequest,
     KycReviewResponse,
 )
+from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.kyc_review import (
     KycReviewError,
     KycReviewService,
@@ -33,7 +35,27 @@ def get_kyc_review_service(
     notifier: NotificationDispatcher = Depends(_get_notification_service),
 ) -> KycReviewService:
     """Build and return the KYC review service."""
-    return KycReviewService(UserRepository(db), notifier)
+    return KycReviewService(UserRepository(db), notifier, AuditService())
+
+
+@router.get(
+    "/audit/verify",
+    response_model=AuditVerifyResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Verify the integrity of the audit event Merkle hash chain",
+)
+@limiter.limit("10/minute")  # type: ignore[misc]
+async def audit_verify(
+    request: Request,
+    _admin: User = Depends(get_admin_user),
+) -> AuditVerifyResponse:
+    """Walk the audit chain from genesis and detect any tampered rows."""
+    result = await AuditService().verify_chain()
+    return AuditVerifyResponse(
+        valid=result.valid,
+        event_count=result.event_count,
+        tampered_ids=result.tampered_ids,
+    )
 
 
 @router.post(

@@ -46,6 +46,7 @@ from com.qode.qrew.v1.service.schemas.auth import (
     VerifyPhoneRequest,
     VerifyResponse,
 )
+from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.complete_setup import (
     CompleteSetupService,
     SetupError,
@@ -93,28 +94,30 @@ def get_registration_service(
     captcha: CaptchaService = Depends(_get_captcha_service),
 ) -> RegistrationService:
     """Build and return the registration service."""
-    return RegistrationService(UserRepository(db), notifier, captcha)
+    return RegistrationService(UserRepository(db), notifier, captcha, AuditService())
 
 
 def get_email_verification_service(
     db: AsyncSession = Depends(get_db),
 ) -> EmailVerificationService:
     """Build and return the email verification service."""
-    return EmailVerificationService(UserRepository(db))
+    return EmailVerificationService(UserRepository(db), AuditService())
 
 
 def get_phone_verification_service(
     db: AsyncSession = Depends(get_db),
 ) -> PhoneVerificationService:
     """Build and return the phone verification service."""
-    return PhoneVerificationService(UserRepository(db))
+    return PhoneVerificationService(UserRepository(db), AuditService())
 
 
 def get_login_service(
     db: AsyncSession = Depends(get_db),
 ) -> LoginService:
     """Build and return the login service."""
-    return LoginService(UserRepository(db), PasskeyCredentialRepository(db))
+    return LoginService(
+        UserRepository(db), PasskeyCredentialRepository(db), AuditService()
+    )
 
 
 def get_refresh_service(
@@ -122,14 +125,14 @@ def get_refresh_service(
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> RefreshService:
     """Build and return the refresh service."""
-    return RefreshService(UserRepository(db), redis)
+    return RefreshService(UserRepository(db), redis, AuditService())
 
 
 def get_logout_service(
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> LogoutService:
     """Build and return the logout service."""
-    return LogoutService(redis)
+    return LogoutService(redis, AuditService())
 
 
 def get_resend_email_verification_service(
@@ -153,7 +156,7 @@ def get_kyc_service(
     notifier: NotificationDispatcher = Depends(_get_notification_service),
 ) -> KycService:
     """Build and return the KYC service."""
-    return KycService(UserRepository(db), notifier)
+    return KycService(UserRepository(db), notifier, AuditService())
 
 
 def get_passkey_service(
@@ -161,14 +164,18 @@ def get_passkey_service(
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> PasskeyService:
     """Build and return the passkey service."""
-    return PasskeyService(PasskeyCredentialRepository(db), redis, UserRepository(db))
+    return PasskeyService(
+        PasskeyCredentialRepository(db), redis, UserRepository(db), AuditService()
+    )
 
 
 def get_complete_setup_service(
     db: AsyncSession = Depends(get_db),
 ) -> CompleteSetupService:
     """Build and return the complete-setup service."""
-    return CompleteSetupService(UserRepository(db), PasskeyCredentialRepository(db))
+    return CompleteSetupService(
+        UserRepository(db), PasskeyCredentialRepository(db), AuditService()
+    )
 
 
 _DomainError = (

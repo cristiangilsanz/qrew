@@ -3,8 +3,10 @@ import hashlib
 import structlog
 
 from com.qode.qrew.v1.service.core.errors import DomainError
+from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.user import UserRepository
+from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.notification import NotificationDispatcher
 from com.qode.qrew.v1.service.settings import settings
 
@@ -18,9 +20,15 @@ class KycError(DomainError):
 
 
 class KycService:
-    def __init__(self, repo: UserRepository, notifier: NotificationDispatcher) -> None:
+    def __init__(
+        self,
+        repo: UserRepository,
+        notifier: NotificationDispatcher,
+        audit: AuditService,
+    ) -> None:
         self._repo = repo
         self._notifier = notifier
+        self._audit = audit
 
     async def upload(self, user: User, content: bytes) -> KycStatus:
         """Hash the document, mark KYC as pending (or auto-approve if enabled)."""
@@ -48,5 +56,16 @@ class KycService:
             await logger.ainfo("kyc_auto_approved", user_id=str(user.id))
         else:
             await logger.ainfo("kyc_submitted", user_id=str(user.id))
+
+        try:
+            await self._audit.record(
+                action=AuditAction.KYC_UPLOADED,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+                payload={"kyc_status": user.kyc_status},
+            )
+        except Exception:
+            await logger.awarning("audit_write_failed", action=AuditAction.KYC_UPLOADED)
 
         return user.kyc_status

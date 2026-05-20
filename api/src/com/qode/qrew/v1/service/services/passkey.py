@@ -9,9 +9,11 @@ from webauthn.helpers.structs import (
     AuthenticationCredential,
     AuthenticatorAssertionResponse,
     AuthenticatorAttestationResponse,
+    AuthenticatorSelectionCriteria,
     PublicKeyCredentialDescriptor,
     PublicKeyCredentialType,
     RegistrationCredential,
+    UserVerificationRequirement,
 )
 
 from com.qode.qrew.v1.service.core.errors import DomainError
@@ -20,6 +22,7 @@ from com.qode.qrew.v1.service.core.security import (
     create_refresh_token,
     create_setup_token,
 )
+from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.models.passkey import PasskeyCredential
 from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
@@ -29,6 +32,7 @@ from com.qode.qrew.v1.service.schemas.auth import (
     PasskeyAuthenticationCompleteRequest,
     PasskeyRegistrationCompleteRequest,
 )
+from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -56,10 +60,12 @@ class PasskeyService:
         passkey_repo: PasskeyCredentialRepository,
         redis: aioredis.Redis,  # type: ignore[type-arg]
         user_repo: UserRepository,
+        audit: AuditService,
     ) -> None:
         self._passkey_repo = passkey_repo
         self._redis = redis
         self._user_repo = user_repo
+        self._audit = audit
 
     async def begin_registration(self, user: User) -> str:
         """Generate WebAuthn registration options and cache the challenge."""
@@ -69,6 +75,9 @@ class PasskeyService:
             user_id=str(user.id).encode(),
             user_name=user.email,
             user_display_name=user.full_name,
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                user_verification=UserVerificationRequirement.REQUIRED,
+            ),
         )
         await self._redis.set(
             _challenge_key(user.id),
@@ -120,10 +129,14 @@ class PasskeyService:
                 "passkey_registration_failed",
                 reason="verification_failed",
                 user_id=str(user.id),
+                detail=str(exc),
             )
-            raise PasskeyError(
-                "Passkey registration failed. Please try again."
-            ) from exc
+            msg = (
+                f"Passkey registration failed: {exc}"
+                if settings.debug
+                else "Passkey registration failed. Please try again."
+            )
+            raise PasskeyError(msg) from exc
 
         await self._passkey_repo.create(
             PasskeyCredential(
@@ -136,6 +149,17 @@ class PasskeyService:
             )
         )
         await logger.ainfo("passkey_registered", user_id=str(user.id))
+        try:
+            await self._audit.record(
+                action=AuditAction.PASSKEY_REGISTERED,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_REGISTERED
+            )
 
     async def begin_authentication(self, email: str) -> str:
         """Generate WebAuthn assertion options and cache the challenge."""
@@ -157,6 +181,7 @@ class PasskeyService:
         options = webauthn.generate_authentication_options(
             rp_id=settings.rp_id,
             allow_credentials=allowed,
+            user_verification=UserVerificationRequirement.REQUIRED,
         )
         await self._redis.set(
             _auth_challenge_key(user.id),
@@ -233,10 +258,14 @@ class PasskeyService:
                 "passkey_authentication_failed",
                 reason="verification_failed",
                 user_id=str(user.id),
+                detail=str(exc),
             )
-            raise PasskeyError(
-                "Passkey authentication failed. Please try again."
-            ) from exc
+            msg = (
+                f"Passkey authentication failed: {exc}"
+                if settings.debug
+                else "Passkey authentication failed. Please try again."
+            )
+            raise PasskeyError(msg) from exc
 
         stored_credential.sign_count = verification.new_sign_count
         stored_credential.last_used_at = datetime.now(UTC)
@@ -250,9 +279,33 @@ class PasskeyService:
             access_token = create_access_token(str(user.id))
             refresh_token = create_refresh_token(str(user.id))
             await logger.ainfo("passkey_authenticated", user_id=str(user.id))
+            try:
+                await self._audit.record(
+                    action=AuditAction.PASSKEY_AUTHENTICATED,
+                    actor_id=user.id,
+                    entity_type="user",
+                    entity_id=str(user.id),
+                    payload={"setup_complete": True},
+                )
+            except Exception:
+                await logger.awarning(
+                    "audit_write_failed", action=AuditAction.PASSKEY_AUTHENTICATED
+                )
             return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
         await logger.ainfo("passkey_authenticated_setup_required", user_id=str(user.id))
+        try:
+            await self._audit.record(
+                action=AuditAction.PASSKEY_AUTHENTICATED,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+                payload={"setup_complete": False},
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_AUTHENTICATED
+            )
         return LoginResponse(
             access_token=create_setup_token(str(user.id)),
             setup_required=True,

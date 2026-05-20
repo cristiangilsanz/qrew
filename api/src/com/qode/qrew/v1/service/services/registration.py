@@ -13,9 +13,11 @@ from com.qode.qrew.v1.service.core.security import (
     is_password_pwned,
     phone_number_otp_expiry,
 )
+from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.models.user import User
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import RegisterRequest, RegisterResponse
+from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.notification import NotificationService
 
 logger = structlog.get_logger(__name__)
@@ -57,10 +59,12 @@ class RegistrationService:
         repo: UserRepository,
         notifier: NotificationService,
         captcha: CaptchaService,
+        audit: AuditService,
     ) -> None:
         self._repo = repo
         self._notifier = notifier
         self._captcha = captcha
+        self._audit = audit
 
     async def register(
         self,
@@ -85,6 +89,18 @@ class RegistrationService:
             user_id=str(created.id),
             registration_ip=ip_address,
         )
+
+        try:
+            await self._audit.record(
+                action=AuditAction.REGISTER,
+                actor_id=created.id,
+                entity_type="user",
+                entity_id=str(created.id),
+                ip_address=ip_address,
+                payload={"email": created.email},
+            )
+        except Exception:
+            await logger.awarning("audit_write_failed", action=AuditAction.REGISTER)
 
         return RegisterResponse(
             id=str(created.id),

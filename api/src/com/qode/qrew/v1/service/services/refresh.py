@@ -7,8 +7,10 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 
 from com.qode.qrew.v1.service.core.errors import DomainError
 from com.qode.qrew.v1.service.core.security import create_access_token
+from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import RefreshRequest, RefreshResponse
+from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.logout import JTI_BLACKLIST_PREFIX
 from com.qode.qrew.v1.service.settings import settings
 
@@ -20,9 +22,15 @@ class RefreshError(DomainError):
 
 
 class RefreshService:
-    def __init__(self, repo: UserRepository, redis: aioredis.Redis) -> None:  # type: ignore[type-arg]
+    def __init__(
+        self,
+        repo: UserRepository,
+        redis: aioredis.Redis,
+        audit: AuditService,  # type: ignore[type-arg]
+    ) -> None:
         self._repo = repo
         self._redis = redis
+        self._audit = audit
 
     async def refresh(self, request: RefreshRequest) -> RefreshResponse:
         """Issue a new access token from a valid refresh token."""
@@ -67,5 +75,17 @@ class RefreshService:
 
         access_token = create_access_token(str(user.id))
         await logger.ainfo("token_refreshed", user_id=str(user.id))
+
+        try:
+            await self._audit.record(
+                action=AuditAction.TOKEN_REFRESHED,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.TOKEN_REFRESHED
+            )
 
         return RefreshResponse(access_token=access_token)

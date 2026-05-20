@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Qrew — API Tester</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+
+/* ── header ── */
+.header{background:#020617;border-bottom:1px solid #1e293b;padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.header h1{font-size:13px;font-weight:700;letter-spacing:1px;color:#f8fafc;flex-shrink:0}
+.header input{background:#0f172a;border:1px solid #334155;color:#94a3b8;padding:5px 10px;border-radius:5px;font-size:12px;font-family:monospace;width:220px}
+.tokens{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.tok{font-size:10px;font-family:monospace;padding:3px 9px;border-radius:20px;background:#1e293b;color:#475569;display:flex;align-items:center;gap:4px;cursor:default;user-select:none}
+.tok.on{background:#0c2340;color:#38bdf8;cursor:pointer}
+.tok.on:hover{background:#0f2d52}
+.tok.copied{background:#14532d!important;color:#4ade80!important}
+.tok b{color:#64748b;font-size:10px;text-transform:uppercase}
+.tok.on b{color:#7dd3fc}
+.dot{width:5px;height:5px;border-radius:50%;background:#1e293b;flex-shrink:0;border:1px solid #334155}
+.tok.on .dot{background:#4ade80;border-color:#16a34a}
+.btn-clean{background:#450a0a;color:#fca5a5;font-size:11px;padding:5px 11px;border-radius:5px;border:1px solid #7f1d1d;cursor:pointer;font-weight:600;transition:background .15s;flex-shrink:0}
+.btn-clean:hover{background:#7f1d1d}
+.btn-clean:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── layout ── */
+.layout{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto;gap:1px;background:#1e293b;min-height:calc(100vh - 53px)}
+.col{background:#0f172a;display:flex;flex-direction:column}
+
+/* ── column header ── */
+.col-head{padding:14px 16px 10px;border-bottom:1px solid #1e293b;position:sticky;top:53px;background:#0f172a;z-index:10}
+.col-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#475569;margin-bottom:2px}
+.col-title{font-size:13px;font-weight:700;color:#f1f5f9}
+.col-desc{font-size:11px;color:#475569;margin-top:2px}
+
+/* ── cards ── */
+.cards{padding:10px 10px 24px;display:flex;flex-direction:column;gap:8px;flex:1}
+
+/* ── card ── */
+.card{background:#1e293b;border-radius:8px;border:1px solid #334155;overflow:hidden;transition:border-color .2s}
+.card.done{border-color:#166534}
+.card.fail{border-color:#991b1b}
+.card-head{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.num{width:22px;height:22px;border-radius:50%;background:#0f172a;color:#475569;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card.done .num{background:#14532d;color:#4ade80}
+.card.fail .num{background:#450a0a;color:#f87171}
+.card-info{flex:1;min-width:0}
+.card-title{font-size:12px;font-weight:600;color:#e2e8f0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.method{font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;font-family:monospace;flex-shrink:0}
+.POST{background:#1d3a8a;color:#93c5fd}
+.GET{background:#14532d;color:#86efac}
+.path{font-family:monospace;font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-desc{font-size:10px;color:#475569;margin-top:2px;line-height:1.4}
+
+/* ── card body ── */
+.card-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:6px}
+.field label{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:2px}
+.field input,.field select{width:100%;padding:6px 9px;border:1px solid #334155;border-radius:5px;font-size:11px;font-family:monospace;background:#0f172a;color:#cbd5e1;transition:border-color .2s,background .2s}
+.field input:focus,.field select:focus{outline:none;border-color:#6366f1;background:#0f172a}
+.field input.flashed{border-color:#22c55e!important;background:#052e16!important}
+.field select option{background:#0f172a}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.auto-tag{font-size:8px;background:#2e1065;color:#a78bfa;padding:1px 5px;border-radius:3px;font-style:normal;flex-shrink:0}
+.dev-tag{font-size:8px;background:#431407;color:#fb923c;padding:1px 5px;border-radius:3px;font-style:normal;flex-shrink:0}
+
+/* ── buttons ── */
+.btn{padding:7px 16px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;align-self:flex-start}
+.btn-primary{background:#4f46e5;color:#fff}
+.btn-primary:hover{background:#4338ca}
+.btn-primary:disabled{background:#312e81;color:#6366f1;cursor:not-allowed}
+.btn-danger{background:#7f1d1d;color:#fca5a5}
+.btn-danger:hover{background:#991b1b}
+
+/* ── info ── */
+.info{font-size:10px;color:#64748b;background:#0f172a;border:1px solid #1e293b;border-radius:5px;padding:7px 9px;line-height:1.5}
+.info code{font-family:monospace;background:#1e293b;padding:1px 4px;border-radius:2px;font-size:9px;color:#94a3b8}
+
+/* ── response ── */
+.res{border-radius:5px;overflow:hidden;display:none;margin-top:2px}
+.res.show{display:block}
+.res-bar{display:flex;align-items:center;gap:8px;padding:5px 10px;background:#020617;font-size:10px;font-family:monospace}
+.res-status{font-weight:700;font-size:12px}
+.res-status.ok{color:#4ade80}
+.res-status.er{color:#f87171}
+.res-path{color:#334155;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-ms{color:#1e293b}
+.res-body{background:#020617;color:#cbd5e1;padding:10px;font-family:monospace;font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto}
+.jk{color:#a78bfa}.js{color:#34d399}.jn{color:#fbbf24}.jb{color:#60a5fa}.jx{color:#475569}
+
+/* ── divider ── */
+.divider{height:1px;background:#1e293b;margin:4px 0}
+
+/* ── toast ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:9px 18px;border-radius:7px;font-size:12px;font-weight:500;transition:transform .25s ease;z-index:200;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{border-color:#7f1d1d;color:#fca5a5}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>QREW API</h1>
+  <input id="base" value="http://localhost:8000/v1" />
+  <button class="btn-clean" id="btn-clean" onclick="cleanDb()">⟳ Reset</button>
+  <div class="tokens">
+    <div class="tok" id="tk-setup" onclick="copyTok('setup')" title="Click to copy"><div class="dot"></div><b>setup</b><span id="tv-setup">—</span></div>
+    <div class="tok" id="tk-access" onclick="copyTok('access')" title="Click to copy"><div class="dot"></div><b>access</b><span id="tv-access">—</span></div>
+    <div class="tok" id="tk-refresh" onclick="copyTok('refresh')" title="Click to copy"><div class="dot"></div><b>refresh</b><span id="tv-refresh">—</span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="layout">
+
+  <!-- ══════════════════════════ AUTH ══════════════════════════ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-label">Router</div>
+      <div class="col-title">/auth</div>
+    </div>
+    <div class="cards">
+
+      <!-- Register -->
+      <div class="card" id="s-register">
+        <div class="card-head">
+          <div class="num">1</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/register</span></div>
+            <div class="card-desc">Create account</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row2">
+            <div class="field"><label>Full name</label><input id="r-name" value="Ana García" /></div>
+            <div class="field"><label>Email</label><input id="r-email" value="ana@qrew.dev" /></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Phone</label><input id="r-phone" value="+34600000001" /></div>
+            <div class="field"><label>Password</label><input id="r-password" type="password" value="Qrew2026!" /></div>
+          </div>
+          <button class="btn btn-primary" onclick="register()">Send</button>
+          <div class="res" id="res-register"></div>
+        </div>
+      </div>
+
+      <!-- Verify email -->
+      <div class="card" id="s-verify-email">
+        <div class="card-head">
+          <div class="num">2</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/verify-email</span></div>
+            <div class="card-desc">Confirm email</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>Token <em class="auto-tag">auto</em></label>
+            <input id="ve-token" placeholder="auto-filled" />
+          </div>
+          <button class="btn btn-primary" onclick="verifyEmail()">Send</button>
+          <div class="res" id="res-verify-email"></div>
+        </div>
+      </div>
+
+      <!-- Login setup -->
+      <div class="card" id="s-login-setup">
+        <div class="card-head">
+          <div class="num">3</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/login</span></div>
+            <div class="card-desc">Login</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row2">
+            <div class="field"><label>Email</label><input id="ls-email" value="ana@qrew.dev" /></div>
+            <div class="field"><label>Password</label><input id="ls-password" type="password" value="Qrew2026!" /></div>
+          </div>
+          <button class="btn btn-primary" onclick="loginSetup()">Send</button>
+          <div class="res" id="res-login-setup"></div>
+        </div>
+      </div>
+
+      <!-- Verify phone -->
+      <div class="card" id="s-verify-phone">
+        <div class="card-head">
+          <div class="num">4</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/verify-phone</span></div>
+            <div class="card-desc">Confirm phone</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>OTP <em class="auto-tag">auto</em></label>
+            <input id="vp-otp" placeholder="auto-filled" />
+          </div>
+          <button class="btn btn-primary" onclick="verifyPhone()">Send</button>
+          <div class="res" id="res-verify-phone"></div>
+        </div>
+      </div>
+
+      <!-- KYC -->
+      <div class="card" id="s-kyc">
+        <div class="card-head">
+          <div class="num">5</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/kyc/upload</span></div>
+            <div class="card-desc">Upload ID document</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <button class="btn btn-primary" onclick="kycUpload()">Send</button>
+          <div class="res" id="res-kyc"></div>
+        </div>
+      </div>
+
+      <!-- Passkey register -->
+      <div class="card" id="s-passkey">
+        <div class="card-head">
+          <div class="num">6</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/passkey/register</span></div>
+            <div class="card-desc">Register a passkey</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <button class="btn btn-primary" onclick="passkeyRegister()">Send</button>
+          <div class="res" id="res-passkey"></div>
+        </div>
+      </div>
+
+      <!-- Complete setup -->
+      <div class="card" id="s-complete-setup">
+        <div class="card-head">
+          <div class="num">7</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/complete-setup</span></div>
+            <div class="card-desc">Exchange setup token</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <button class="btn btn-primary" onclick="completeSetup()">Send</button>
+          <div class="res" id="res-complete-setup"></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Login full -->
+      <div class="card" id="s-login-full">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/login</span></div>
+            <div class="card-desc">Login after setup</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row2">
+            <div class="field"><label>Email</label><input id="lf-email" value="ana@qrew.dev" /></div>
+            <div class="field"><label>Password</label><input id="lf-password" type="password" value="Qrew2026!" /></div>
+          </div>
+          <button class="btn btn-primary" onclick="loginFull()">Send</button>
+          <div class="res" id="res-login-full"></div>
+        </div>
+      </div>
+
+      <!-- Refresh -->
+      <div class="card" id="s-refresh">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/refresh</span></div>
+            <div class="card-desc">Get new access token</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>Refresh token <em class="auto-tag">auto</em></label>
+            <input id="ref-token" placeholder="auto-filled" />
+          </div>
+          <button class="btn btn-primary" onclick="refresh()">Send</button>
+          <div class="res" id="res-refresh"></div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <div class="card" id="s-logout">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/logout</span></div>
+            <div class="card-desc">Revoke refresh token</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>Refresh token <em class="auto-tag">auto</em></label>
+            <input id="lo-token" placeholder="auto-filled" />
+          </div>
+          <button class="btn btn-danger" onclick="logout()">Send</button>
+          <div class="res" id="res-logout"></div>
+        </div>
+      </div>
+
+      <!-- Passkey auth -->
+      <div class="card" id="s-passkey-auth">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/auth/passkey/authenticate</span></div>
+            <div class="card-desc">Passkey login</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field"><label>Email</label><input id="pa-email" value="ana@qrew.dev" /></div>
+          <button class="btn btn-primary" onclick="passkeyAuth()">Send</button>
+          <div class="res" id="res-passkey-auth"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ ADMIN ══════════════════════════ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-label">Router</div>
+      <div class="col-title">/admin</div>
+    </div>
+    <div class="cards">
+
+      <!-- KYC review -->
+      <div class="card" id="s-kyc-review">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/admin/kyc/{id}/review</span></div>
+            <div class="card-desc">Approve or reject a pending KYC submission</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>User ID <em class="auto-tag">auto</em></label>
+            <input id="kr-uid" placeholder="auto-filled" />
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>Action</label>
+              <select id="kr-action">
+                <option value="approve">approve</option>
+                <option value="reject">reject</option>
+              </select>
+            </div>
+            <div class="field"><label>Reason (reject only)</label><input id="kr-reason" placeholder="optional" /></div>
+          </div>
+          <button class="btn btn-primary" onclick="kycReview()">Send</button>
+          <div class="res" id="res-kyc-review"></div>
+        </div>
+      </div>
+
+      <!-- Audit verify -->
+      <div class="card" id="s-audit">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method GET">GET</span><span class="path">/admin/audit/verify</span></div>
+            <div class="card-desc">Verify Merkle hash chain integrity</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="info">Uses the current access token automatically.</div>
+          <button class="btn btn-primary" onclick="auditVerify()">Send</button>
+          <div class="res" id="res-audit"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ HEALTH / DEV ══════════════════════════ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-label">Router</div>
+      <div class="col-title">/health · /dev</div>
+    </div>
+    <div class="cards">
+
+      <!-- Health -->
+      <div class="card" id="s-health">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method GET">GET</span><span class="path">/health</span></div>
+            <div class="card-desc">Check the API is running</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <button class="btn btn-primary" onclick="health()">Send</button>
+          <div class="res" id="res-health"></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Dev: lookup user -->
+      <div class="card" id="s-dev-user">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method GET">GET</span><span class="path">/dev/user</span><em class="dev-tag">dev</em></div>
+            <div class="card-desc">Inspect user</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field"><label>Email</label><input id="du-email" value="ana@qrew.dev" /></div>
+          <button class="btn btn-primary" onclick="devUser()">Send</button>
+          <div class="res" id="res-dev-user"></div>
+        </div>
+      </div>
+
+      <!-- Dev: reset -->
+      <div class="card" id="s-dev-reset">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/dev/reset</span><em class="dev-tag">dev</em></div>
+            <div class="card-desc">Truncate all tables from genesis</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <button class="btn btn-danger" onclick="cleanDb()">Send</button>
+          <div class="res" id="res-dev-reset"></div>
+        </div>
+      </div>
+
+      <!-- Dev: make admin -->
+      <div class="card" id="s-dev-admin">
+        <div class="card-head">
+          <div class="num">→</div>
+          <div class="card-info">
+            <div class="card-title"><span class="method POST">POST</span><span class="path">/dev/make-admin</span><em class="dev-tag">dev</em></div>
+            <div class="card-desc">Grant admin role</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field"><label>Email</label><input id="da-email" value="admin@qrew.dev" /></div>
+          <button class="btn btn-primary" onclick="devMakeAdmin()">Send</button>
+          <div class="res" id="res-dev-admin"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /layout -->
+
+<script>
+// ── token state ───────────────────────────────────────────────────
+const T = { setup:'', access:'', refresh:'' };
+
+function setTok(key, v) {
+  T[key] = v || '';
+  const pill = document.getElementById('tk-' + key);
+  const span = document.getElementById('tv-' + key);
+  if (!pill || !span) return;
+  span.textContent = v ? v.slice(0,20)+'…' : '—';
+  span.title = v || '';
+  pill.classList.toggle('on', !!v);
+}
+
+function copyTok(key) {
+  if (!T[key]) return;
+  navigator.clipboard.writeText(T[key]).then(() => {
+    const pill = document.getElementById('tk-' + key);
+    pill.classList.add('copied');
+    setTimeout(() => pill.classList.remove('copied'), 900);
+    toast('Copied ' + key.toUpperCase() + ' token');
+  });
+}
+
+function absorb(json) {
+  if (!json) return;
+  if (json.refresh_token) { setTok('refresh', json.refresh_token); autoFillRefresh(json.refresh_token); }
+  if (json.access_token)  { setTok(json.setup_required ? 'setup' : 'access', json.access_token); }
+}
+
+function autoFillRefresh(val) {
+  ['ref-token','lo-token'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value) { el.value = val; flash(id); }
+  });
+}
+
+// ── field helpers ─────────────────────────────────────────────────
+function fill(id, val) {
+  if (!val) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = val;
+  flash(id);
+}
+
+function flash(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('flashed');
+  setTimeout(() => el.classList.remove('flashed'), 1600);
+}
+
+// ── toast ─────────────────────────────────────────────────────────
+let _tt = 0;
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isErr ? ' err' : '');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── dev helpers ───────────────────────────────────────────────────
+async function fetchDevUser(email) {
+  try {
+    const r = await fetch(base() + '/dev/user?email=' + encodeURIComponent(email));
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+async function cleanDb() {
+  const btn = document.getElementById('btn-clean');
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const r = await fetch(base() + '/dev/reset', { method: 'POST' });
+    if (r.ok || r.status === 204) {
+      ['setup','access','refresh'].forEach(k => setTok(k, ''));
+      document.querySelectorAll('.card').forEach(el => el.classList.remove('done','fail'));
+      document.querySelectorAll('.res').forEach(el => { el.className='res'; el.innerHTML=''; });
+      ['ve-token','vp-otp','kr-uid','ma-email','ref-token','lo-token'].forEach(id => {
+        const el=document.getElementById(id); if(el) el.value='';
+      });
+      toast('Reset successful');
+    } else { toast('Reset failed (' + r.status + ')', true); }
+  } catch(e) { toast('Reset failed: ' + e.message, true); }
+  finally { btn.disabled=false; btn.textContent='⟳ Reset'; }
+}
+
+// ── http ──────────────────────────────────────────────────────────
+function base() { return document.getElementById('base').value.replace(/\/$/,''); }
+function authFor(type) {
+  return type==='setup'  ? (T.setup||T.access)
+       : type==='access' ? T.access
+       : '';
+}
+
+async function req(method, path, body, authType, isForm, resId, stepId) {
+  const resEl  = document.getElementById('res-' + resId);
+  const stepEl = document.getElementById('s-' + stepId);
+  resEl.className = 'res show';
+  resEl.innerHTML = '<div class="res-bar"><span class="res-status" style="color:#475569">…</span><span class="res-path">' + method + ' ' + path + '</span></div>';
+
+  const headers = {};
+  const t = authFor(authType);
+  if (t) headers['Authorization'] = 'Bearer ' + t;
+  let b;
+  if (isForm) { b = body; }
+  else if (body) { headers['Content-Type'] = 'application/json'; b = JSON.stringify(body); }
+
+  const t0 = Date.now();
+  try {
+    const r   = await fetch(base() + path, { method, headers, body: b });
+    const ms  = Date.now() - t0;
+    let json; try { json = await r.json(); } catch { json = null; }
+
+    const ok = r.status < 400;
+    if (stepEl) { stepEl.classList.toggle('done',ok); stepEl.classList.toggle('fail',!ok); }
+
+    resEl.innerHTML =
+      '<div class="res-bar">' +
+        '<span class="res-status ' + (ok?'ok':'er') + '">' + r.status + '</span>' +
+        '<span class="res-path">' + method + ' ' + path + '</span>' +
+        '<span class="res-ms">' + ms + 'ms</span>' +
+      '</div>' +
+      '<div class="res-body">' + (json ? fmt(json) : '(empty)') + '</div>';
+
+    absorb(json);
+    return { ok, status: r.status, json };
+  } catch(e) {
+    resEl.innerHTML = '<div class="res-bar"><span class="res-status er">ERR</span><span class="res-path">' + e.message + '</span></div>';
+    if (stepEl) stepEl.classList.add('fail');
+    return { ok: false };
+  }
+}
+
+function fmt(j) {
+  return JSON.stringify(j, null, 2)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"([^"]+)":/g, '<span class="jk">"$1"</span>:')
+    .replace(/: "([^"]*)"/g, ': <span class="js">"$1"</span>')
+    .replace(/: (\d+\.?\d*)/g, ': <span class="jn">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="jb">$1</span>')
+    .replace(/: null/g, ': <span class="jx">null</span>');
+}
+
+function v(id) { return (document.getElementById(id)||{}).value||''; }
+
+// ── auth handlers ─────────────────────────────────────────────────
+async function register() {
+  const email = v('r-email');
+  const r = await req('POST','/auth/register',{
+    full_name:v('r-name'), email, phone_number:v('r-phone'),
+    password:v('r-password'), captcha_token:'1x00000000000000000000AA', terms_accepted:true
+  },null,false,'register','register');
+  if (r.ok) {
+    const user = await fetchDevUser(email);
+    if (user) {
+      fill('ve-token', user.email_verification_token);
+      fill('vp-otp', user.phone_number_otp);
+      fill('kr-uid', user.id);
+      toast('Email token + OTP + user ID auto-filled');
+    }
+  }
+  return r;
+}
+
+function verifyEmail() {
+  return req('POST','/auth/verify-email',{ token:v('ve-token') },null,false,'verify-email','verify-email');
+}
+
+function loginSetup() {
+  return req('POST','/auth/login',{ email:v('ls-email'), password:v('ls-password') },null,false,'login-setup','login-setup');
+}
+
+function verifyPhone() {
+  return req('POST','/auth/verify-phone',{ phone_number:v('r-phone')||'+34600000001', otp:v('vp-otp') },'setup',false,'verify-phone','verify-phone');
+}
+
+function kycUpload() {
+  const form = new FormData();
+  form.append('document', new Blob(['FAKE_KYC_DOCUMENT\nName: Ana García\nID: 12345678A'],{type:'text/plain'}), 'id.txt');
+  return req('POST','/auth/kyc/upload',form,'setup',true,'kyc','kyc');
+}
+
+async function passkeyRegister() {
+  const toBytes = s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c=>c.charCodeAt(0));
+  const toB64   = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const resEl   = document.getElementById('res-passkey');
+  resEl.className = 'res show';
+  resEl.innerHTML = '<div class="res-bar"><span class="res-status" style="color:#475569">Waiting for authenticator…</span></div>';
+  try {
+    const br = await fetch(base()+'/auth/passkey/register/begin',{method:'POST',headers:{Authorization:'Bearer '+(T.setup||T.access)}});
+    const opts = await br.json();
+    if (!br.ok) {
+      resEl.innerHTML='<div class="res-bar"><span class="res-status er">'+br.status+'</span><span class="res-path">begin failed</span></div><div class="res-body">'+fmt(opts)+'</div>';
+      return;
+    }
+    opts.challenge = toBytes(opts.challenge);
+    opts.user.id   = toBytes(opts.user.id);
+    if (opts.excludeCredentials) opts.excludeCredentials = opts.excludeCredentials.map(c=>({...c,id:toBytes(c.id)}));
+    const cred = await navigator.credentials.create({ publicKey: opts });
+    await req('POST','/auth/passkey/register/complete',{
+      id:cred.id, raw_id:toB64(cred.rawId),
+      response:{ client_data_json:toB64(cred.response.clientDataJSON), attestation_object:toB64(cred.response.attestationObject) }
+    },'setup',false,'passkey','passkey');
+  } catch(e) {
+    resEl.innerHTML='<div class="res-bar"><span class="res-status er">ERR</span><span class="res-path">'+e.message+'</span></div>';
+    document.getElementById('s-passkey').classList.add('fail');
+  }
+}
+
+function completeSetup() {
+  return req('POST','/auth/complete-setup',null,'setup',false,'complete-setup','complete-setup');
+}
+
+function loginFull() {
+  return req('POST','/auth/login',{ email:v('lf-email'), password:v('lf-password') },null,false,'login-full','login-full');
+}
+
+function refresh() {
+  return req('POST','/auth/refresh',{ refresh_token:v('ref-token')||T.refresh },null,false,'refresh','refresh');
+}
+
+function logout() {
+  return req('POST','/auth/logout',{ refresh_token:v('lo-token')||T.refresh },null,false,'logout','logout');
+}
+
+async function passkeyAuth() {
+  const toBytes = s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c=>c.charCodeAt(0));
+  const toB64   = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const resEl   = document.getElementById('res-passkey-auth');
+  resEl.className = 'res show';
+  resEl.innerHTML = '<div class="res-bar"><span class="res-status" style="color:#475569">Waiting for authenticator…</span></div>';
+  try {
+    const br = await fetch(base()+'/auth/passkey/authenticate/begin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:v('pa-email')})});
+    const opts = await br.json();
+    if (!br.ok) { resEl.innerHTML='<div class="res-bar"><span class="res-status er">'+br.status+'</span></div><div class="res-body">'+fmt(opts)+'</div>'; return; }
+    opts.challenge = toBytes(opts.challenge);
+    if (opts.allowCredentials) opts.allowCredentials = opts.allowCredentials.map(c=>({...c,id:toBytes(c.id)}));
+    const cred = await navigator.credentials.get({ publicKey: opts });
+    await req('POST','/auth/passkey/authenticate/complete',{
+      id:cred.id, raw_id:toB64(cred.rawId),
+      response:{
+        client_data_json:toB64(cred.response.clientDataJSON),
+        authenticator_data:toB64(cred.response.authenticatorData),
+        signature:toB64(cred.response.signature),
+        user_handle:cred.response.userHandle?toB64(cred.response.userHandle):null
+      }
+    },null,false,'passkey-auth','passkey-auth');
+  } catch(e) {
+    resEl.innerHTML='<div class="res-bar"><span class="res-status er">ERR</span><span class="res-path">'+e.message+'</span></div>';
+  }
+}
+
+// ── admin handlers ────────────────────────────────────────────────
+
+function kycReview() {
+  const body = { action:v('kr-action') };
+  const reason = v('kr-reason'); if (reason) body.reason = reason;
+  return req('POST','/admin/kyc/'+v('kr-uid')+'/review',body,'access',false,'kyc-review','kyc-review');
+}
+
+function auditVerify() {
+  return req('GET','/admin/audit/verify',null,'access',false,'audit','audit');
+}
+
+// ── health / dev handlers ─────────────────────────────────────────
+function health() {
+  return fetch(base()+'/health')
+    .then(r=>r.json().then(j=>{
+      const el=document.getElementById('res-health');
+      el.className='res show';
+      el.innerHTML='<div class="res-bar"><span class="res-status ok">'+r.status+'</span><span class="res-path">GET /health</span></div><div class="res-body">'+fmt(j)+'</div>';
+      document.getElementById('s-health').classList.add('done');
+    }));
+}
+
+function devUser() {
+  const email = v('du-email');
+  return fetch(base()+'/dev/user?email='+encodeURIComponent(email))
+    .then(async r=>{
+      const json=await r.json();
+      const el=document.getElementById('res-dev-user');
+      el.className='res show';
+      const ok=r.status<400;
+      el.innerHTML='<div class="res-bar"><span class="res-status '+(ok?'ok':'er')+'">'+r.status+'</span><span class="res-path">GET /dev/user</span></div><div class="res-body">'+fmt(json)+'</div>';
+      document.getElementById('s-dev-user').classList.toggle('done',ok);
+    });
+}
+
+function devMakeAdmin() {
+  return req('POST','/dev/make-admin?email='+encodeURIComponent(v('da-email')),null,null,false,'dev-admin','dev-admin');
+}
+</script>
+</body>
+</html>

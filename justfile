@@ -78,3 +78,7 @@ db-upgrade:
 # Rollback last migration
 db-downgrade:
     cd api && uv run alembic downgrade -1
+
+# Drop all tables and re-apply migrations from scratch
+db-clean:
+    cd api && uv run alembic downgrade base && uv run alembic upgrade head

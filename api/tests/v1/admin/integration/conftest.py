@@ -20,7 +20,10 @@ async def clean_db() -> None:
     await engine.dispose()
     async with engine.begin() as conn:
         await conn.execute(
-            text("TRUNCATE passkey_credentials, users RESTART IDENTITY CASCADE")
+            text(
+                "TRUNCATE audit_events, passkey_credentials, users"
+                " RESTART IDENTITY CASCADE"
+            )
         )
 
 
