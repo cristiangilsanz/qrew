@@ -91,11 +91,15 @@ async def test_verify_chain_detects_tampered_payload(db_session: AsyncSession) -
     await audit.record(action=AuditAction.REGISTER, payload={"email": "a@b.com"})
     await audit.record(action=AuditAction.LOGIN)
 
-    # Mutate the register event's payload directly in DB — bypasses app layer
+    # Disable triggers to simulate direct DB tampering, then re-enable
+    await db_session.execute(text("SET session_replication_role = 'replica'"))
     await db_session.execute(
-        text("UPDATE audit_events SET payload = :p::jsonb WHERE action = :action"),
+        text(
+            "UPDATE audit_events SET payload = CAST(:p AS jsonb) WHERE action = :action"
+        ),
         {"action": AuditAction.REGISTER, "p": '{"email":"hacked@evil.com"}'},
     )
+    await db_session.execute(text("SET session_replication_role = DEFAULT"))
     await db_session.commit()
 
     result = await audit.verify_chain()
@@ -109,9 +113,11 @@ async def test_verify_chain_detects_tampered_action(db_session: AsyncSession) ->
     actor = uuid.uuid4()
     await audit.record(action=AuditAction.LOGIN, actor_id=actor)
 
+    await db_session.execute(text("SET session_replication_role = 'replica'"))
     await db_session.execute(
         text("UPDATE audit_events SET action = 'login_failed' WHERE action = 'login'")
     )
+    await db_session.execute(text("SET session_replication_role = DEFAULT"))
     await db_session.commit()
 
     result = await audit.verify_chain()
