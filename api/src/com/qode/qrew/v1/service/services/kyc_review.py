@@ -3,9 +3,11 @@ import uuid
 import structlog
 
 from com.qode.qrew.v1.service.core.errors import DomainError
+from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.admin import KycAction
+from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.notification import NotificationDispatcher
 
 logger = structlog.get_logger(__name__)
@@ -16,9 +18,15 @@ class KycReviewError(DomainError):
 
 
 class KycReviewService:
-    def __init__(self, repo: UserRepository, notifier: NotificationDispatcher) -> None:
+    def __init__(
+        self,
+        repo: UserRepository,
+        notifier: NotificationDispatcher,
+        audit: AuditService,
+    ) -> None:
         self._repo = repo
         self._notifier = notifier
+        self._audit = audit
 
     async def review(
         self,
@@ -52,4 +60,19 @@ class KycReviewService:
             action=action,
             status=new_status,
         )
+
+        try:
+            await self._audit.record(
+                action=AuditAction.KYC_REVIEWED,
+                entity_type="user",
+                entity_id=str(user.id),
+                payload={
+                    "kyc_action": action,
+                    "kyc_status": new_status,
+                    "reason": reason,
+                },
+            )
+        except Exception:
+            await logger.awarning("audit_write_failed", action=AuditAction.KYC_REVIEWED)
+
         return user

@@ -3,7 +3,9 @@ from datetime import UTC, datetime
 import structlog
 
 from com.qode.qrew.v1.service.core.errors import DomainError
+from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.repositories.user import UserRepository
+from com.qode.qrew.v1.service.services.audit import AuditService
 
 logger = structlog.get_logger(__name__)
 
@@ -13,8 +15,9 @@ class VerificationError(DomainError):
 
 
 class EmailVerificationService:
-    def __init__(self, repo: UserRepository) -> None:
+    def __init__(self, repo: UserRepository, audit: AuditService) -> None:
         self._repo = repo
+        self._audit = audit
 
     async def verify(self, token: str) -> None:
         """Mark the user's email as verified if the token is valid and unexpired."""
@@ -53,11 +56,21 @@ class EmailVerificationService:
         await self._repo.save(user)
 
         await logger.ainfo("email_verified", user_id=str(user.id))
+        try:
+            await self._audit.record(
+                action=AuditAction.VERIFY_EMAIL,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+            )
+        except Exception:
+            await logger.awarning("audit_write_failed", action=AuditAction.VERIFY_EMAIL)
 
 
 class PhoneVerificationService:
-    def __init__(self, repo: UserRepository) -> None:
+    def __init__(self, repo: UserRepository, audit: AuditService) -> None:
         self._repo = repo
+        self._audit = audit
 
     async def verify(self, phone_number: str, otp: str) -> None:
         """Mark the user's phone as verified if the verification OTP is valid
@@ -97,3 +110,12 @@ class PhoneVerificationService:
         await self._repo.save(user)
 
         await logger.ainfo("phone_number_verified", user_id=str(user.id))
+        try:
+            await self._audit.record(
+                action=AuditAction.VERIFY_PHONE,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+            )
+        except Exception:
+            await logger.awarning("audit_write_failed", action=AuditAction.VERIFY_PHONE)
