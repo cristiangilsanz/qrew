@@ -16,8 +16,8 @@ from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import RefreshRequest, RefreshResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.logout import (
-    JTI_BLACKLIST_PREFIX,
-    USER_REVOKE_ALL_PREFIX,
+    BLACKLIST_JTI_PREFIX,
+    BLACKLIST_USER_PREFIX,
 )
 from com.qode.qrew.v1.service.settings import settings
 
@@ -42,11 +42,7 @@ class RefreshService:
         self._audit = audit
 
     async def refresh(self, request: RefreshRequest) -> RefreshResponse:
-        """Issue a new access + refresh token pair, invalidating the old refresh token.
-
-        Re-use of an already-rotated token is treated as theft: all tokens for
-        the user are immediately revoked via a per-user revocation timestamp.
-        """
+        """Issue a new access + refresh token pair, invalidating the old one."""
         try:
             payload = jwt.decode(
                 request.refresh_token,
@@ -66,7 +62,7 @@ class RefreshService:
 
         jti = payload.get("jti")
         subject = payload.get("sub")
-        jti_key = JTI_BLACKLIST_PREFIX + jti if isinstance(jti, str) else None
+        jti_key = BLACKLIST_JTI_PREFIX + jti if isinstance(jti, str) else None
 
         if jti_key:
             await self._check_jti(jti_key, subject, jti)
@@ -126,7 +122,7 @@ class RefreshService:
         """Revoke all tokens for the user and record the theft event."""
         ttl = settings.refresh_token_expire_days * 24 * 3600
         await self._redis.setex(
-            USER_REVOKE_ALL_PREFIX + subject,
+            BLACKLIST_USER_PREFIX + subject,
             ttl,
             str(int(datetime.now(UTC).timestamp())),
         )
@@ -148,7 +144,7 @@ class RefreshService:
     async def _check_user_revocation(self, subject: str, iat: object) -> None:
         """Raise if a user-level revocation covers this token's issue time."""
         revoked_at_raw: bytes | None = await self._redis.get(
-            USER_REVOKE_ALL_PREFIX + subject
+            BLACKLIST_USER_PREFIX + subject
         )
         if (
             revoked_at_raw is not None
@@ -159,7 +155,7 @@ class RefreshService:
             raise RefreshError("Refresh token has been revoked")
 
     async def _rotate_jti(self, jti_key: str, exp: object) -> None:
-        """Blacklist the old JTI as 'rotated' so any replay triggers theft detection."""
+        """Blacklist the old JTI as rotated so any replay triggers theft detection."""
         ttl = (
             int(exp) - int(datetime.now(UTC).timestamp())
             if isinstance(exp, (int, float))

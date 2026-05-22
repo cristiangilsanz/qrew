@@ -12,8 +12,8 @@ from com.qode.qrew.v1.service.services.audit import AuditService
 
 logger = structlog.get_logger(__name__)
 
-JTI_BLACKLIST_PREFIX = "blacklist:jti:"
-USER_REVOKE_ALL_PREFIX = "blacklist:all:"
+BLACKLIST_JTI_PREFIX = "blacklist:jti:"
+BLACKLIST_USER_PREFIX = "blacklist:user:"
 
 
 class LogoutError(DomainError):
@@ -49,7 +49,7 @@ class LogoutService:
         )
 
         if ttl > 0:
-            await self._redis.setex(JTI_BLACKLIST_PREFIX + jti, ttl, "1")
+            await self._redis.setex(BLACKLIST_JTI_PREFIX + jti, ttl, "1")
 
         await logger.ainfo("token_revoked", jti=jti)
 
