@@ -464,3 +464,58 @@ async def test_logout_with_invalid_token_returns_401(
         "/v1/auth/logout", json={"refresh_token": "not.a.valid.token"}
     )
     assert r.status_code == 401
+
+
+# ── Refresh token rotation ────────────────────────────────────────────────────
+
+
+@pytest.mark.integration
+async def test_refresh_rotates_token(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    """Each /refresh call returns a new refresh token; old one is invalidated."""
+    await _register(client)
+    user = await _fetch_user(db_session)
+    await _verify_email(client, str(user.email_verification_token))
+
+    original = create_refresh_token(str(user.id))
+
+    r = await client.post("/v1/auth/refresh", json={"refresh_token": original})
+    assert r.status_code == 200
+    body = r.json()
+    assert "access_token" in body
+    assert "refresh_token" in body
+    new_token = body["refresh_token"]
+    assert new_token != original
+
+    # Old token must now be rejected
+    r2 = await client.post("/v1/auth/refresh", json={"refresh_token": original})
+    assert r2.status_code == 401
+    assert "revoked" in r2.json()["detail"]["message"].lower()
+
+
+@pytest.mark.integration
+async def test_refresh_reuse_after_rotation_triggers_revocation(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    """Replaying a rotated refresh token invalidates all tokens for the user."""
+    await _register(client)
+    user = await _fetch_user(db_session)
+    await _verify_email(client, str(user.email_verification_token))
+
+    original = create_refresh_token(str(user.id))
+
+    # First rotation — legitimate
+    r = await client.post("/v1/auth/refresh", json={"refresh_token": original})
+    assert r.status_code == 200
+    new_token = r.json()["refresh_token"]
+
+    # Replay the already-rotated original → theft detected, all tokens revoked
+    r2 = await client.post("/v1/auth/refresh", json={"refresh_token": original})
+    assert r2.status_code == 401
+
+    # The newly issued token is now also revoked because of the user-level revocation
+    r3 = await client.post("/v1/auth/refresh", json={"refresh_token": new_token})
+    assert r3.status_code == 401

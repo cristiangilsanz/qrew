@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 import jwt
 import redis.asyncio as aioredis
@@ -6,15 +7,23 @@ import structlog
 from jwt import ExpiredSignatureError, InvalidTokenError
 
 from com.qode.qrew.v1.service.core.errors import DomainError
-from com.qode.qrew.v1.service.core.security import create_access_token
+from com.qode.qrew.v1.service.core.security import (
+    create_access_token,
+    create_refresh_token,
+)
 from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import RefreshRequest, RefreshResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
-from com.qode.qrew.v1.service.services.logout import JTI_BLACKLIST_PREFIX
+from com.qode.qrew.v1.service.services.logout import (
+    JTI_BLACKLIST_PREFIX,
+    USER_REVOKE_ALL_PREFIX,
+)
 from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
+
+_ROTATED = b"rotated"
 
 
 class RefreshError(DomainError):
@@ -33,7 +42,11 @@ class RefreshService:
         self._audit = audit
 
     async def refresh(self, request: RefreshRequest) -> RefreshResponse:
-        """Issue a new access token from a valid refresh token."""
+        """Issue a new access + refresh token pair, invalidating the old refresh token.
+
+        Re-use of an already-rotated token is treated as theft: all tokens for
+        the user are immediately revoked via a per-user revocation timestamp.
+        """
         try:
             payload = jwt.decode(
                 request.refresh_token,
@@ -52,15 +65,17 @@ class RefreshService:
             raise RefreshError("Invalid token type")
 
         jti = payload.get("jti")
-        key = JTI_BLACKLIST_PREFIX + jti if isinstance(jti, str) else None
-        if key and await self._redis.exists(key):
-            await logger.awarning("refresh_failed", reason="token_revoked")
-            raise RefreshError("Refresh token has been revoked")
-
         subject = payload.get("sub")
+        jti_key = JTI_BLACKLIST_PREFIX + jti if isinstance(jti, str) else None
+
+        if jti_key:
+            await self._check_jti(jti_key, subject, jti)
+
         if not isinstance(subject, str):
             await logger.awarning("refresh_failed", reason="invalid_subject")
             raise RefreshError("Invalid refresh token")
+
+        await self._check_user_revocation(subject, payload.get("iat"))
 
         try:
             user_id = uuid.UUID(subject)
@@ -73,9 +88,13 @@ class RefreshService:
             await logger.awarning("refresh_failed", reason="user_not_found_or_inactive")
             raise RefreshError("Invalid refresh token")
 
-        access_token = create_access_token(str(user.id))
-        await logger.ainfo("token_refreshed", user_id=str(user.id))
+        if jti_key:
+            await self._rotate_jti(jti_key, payload.get("exp"))
 
+        access_token = create_access_token(str(user.id))
+        new_refresh_token = create_refresh_token(str(user.id))
+
+        await logger.ainfo("token_refreshed", user_id=str(user.id))
         try:
             await self._audit.record(
                 action=AuditAction.TOKEN_REFRESHED,
@@ -88,4 +107,63 @@ class RefreshService:
                 "audit_write_failed", action=AuditAction.TOKEN_REFRESHED
             )
 
-        return RefreshResponse(access_token=access_token)
+        return RefreshResponse(
+            access_token=access_token,
+            refresh_token=new_refresh_token,
+        )
+
+    async def _check_jti(self, jti_key: str, subject: object, jti: object) -> None:
+        """Raise if the JTI is blacklisted; trigger theft detection on replay."""
+        stored: bytes | None = await self._redis.get(jti_key)
+        if stored is None:
+            return
+        if stored == _ROTATED and isinstance(subject, str) and isinstance(jti, str):
+            await self._handle_theft(subject, jti)
+        await logger.awarning("refresh_failed", reason="token_revoked")
+        raise RefreshError("Refresh token has been revoked")
+
+    async def _handle_theft(self, subject: str, jti: str) -> None:
+        """Revoke all tokens for the user and record the theft event."""
+        ttl = settings.refresh_token_expire_days * 24 * 3600
+        await self._redis.setex(
+            USER_REVOKE_ALL_PREFIX + subject,
+            ttl,
+            str(int(datetime.now(UTC).timestamp())),
+        )
+        await logger.awarning("refresh_theft_detected", user_id=subject, jti=jti)
+        try:
+            actor_id = uuid.UUID(subject)
+            await self._audit.record(
+                action=AuditAction.TOKEN_THEFT_DETECTED,
+                actor_id=actor_id,
+                entity_type="user",
+                entity_id=subject,
+                payload={"jti": jti},
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.TOKEN_THEFT_DETECTED
+            )
+
+    async def _check_user_revocation(self, subject: str, iat: object) -> None:
+        """Raise if a user-level revocation covers this token's issue time."""
+        revoked_at_raw: bytes | None = await self._redis.get(
+            USER_REVOKE_ALL_PREFIX + subject
+        )
+        if (
+            revoked_at_raw is not None
+            and isinstance(iat, (int, float))
+            and int(iat) <= int(revoked_at_raw)
+        ):
+            await logger.awarning("refresh_failed", reason="all_tokens_revoked")
+            raise RefreshError("Refresh token has been revoked")
+
+    async def _rotate_jti(self, jti_key: str, exp: object) -> None:
+        """Blacklist the old JTI as 'rotated' so any replay triggers theft detection."""
+        ttl = (
+            int(exp) - int(datetime.now(UTC).timestamp())
+            if isinstance(exp, (int, float))
+            else 0
+        )
+        if ttl > 0:
+            await self._redis.setex(jti_key, ttl, "rotated")

@@ -38,23 +38,28 @@ def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
 # ── Happy path ────────────────────────────────────────────────────────────────
 
 
-async def test_refresh_returns_200_with_access_token(
+async def test_refresh_returns_200_with_tokens(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
-    mock_service.refresh.return_value = RefreshResponse(access_token="x.y.z")
+    mock_service.refresh.return_value = RefreshResponse(
+        access_token="x.y.z", refresh_token="new.refresh.token"
+    )
 
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
     assert response.status_code == 200
     body = response.json()
     assert body["access_token"] == "x.y.z"
+    assert body["refresh_token"] == "new.refresh.token"
     assert body["token_type"] == "bearer"
 
 
 async def test_refresh_calls_service_with_token(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
-    mock_service.refresh.return_value = RefreshResponse(access_token="x.y.z")
+    mock_service.refresh.return_value = RefreshResponse(
+        access_token="x.y.z", refresh_token="new.refresh.token"
+    )
 
     await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 

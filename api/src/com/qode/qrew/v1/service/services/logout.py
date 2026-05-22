@@ -13,6 +13,7 @@ from com.qode.qrew.v1.service.services.audit import AuditService
 logger = structlog.get_logger(__name__)
 
 JTI_BLACKLIST_PREFIX = "blacklist:jti:"
+USER_REVOKE_ALL_PREFIX = "blacklist:all:"
 
 
 class LogoutError(DomainError):
