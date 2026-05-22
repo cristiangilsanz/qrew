@@ -54,8 +54,10 @@ def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
 async def test_approve_returns_200_with_approved_status(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={"action": "approve"})
 
+    # Then
     assert response.status_code == 200
     body = response.json()
     assert body["kyc_status"] == "approved"
@@ -65,12 +67,15 @@ async def test_approve_returns_200_with_approved_status(
 async def test_reject_returns_200_with_rejected_status(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.review.return_value = _mock_reviewed_user(KycStatus.rejected)
 
+    # When
     response = await client.post(
         _ENDPOINT, json={"action": "reject", "reason": "Blurry document"}
     )
 
+    # Then
     assert response.status_code == 200
     assert response.json()["kyc_status"] == "rejected"
 
@@ -78,9 +83,12 @@ async def test_reject_returns_200_with_rejected_status(
 async def test_calls_service_with_correct_args(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     await client.post(
         _ENDPOINT, json={"action": "reject", "reason": "Could not verify"}
     )
+
+    # Then
     mock_service.review.assert_awaited_once()
     call_kwargs = mock_service.review.call_args
     assert call_kwargs.args[1].value == "reject"
@@ -88,7 +96,10 @@ async def test_calls_service_with_correct_args(
 
 
 async def test_reason_is_optional(client: AsyncClient, mock_service: AsyncMock) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={"action": "approve"})
+
+    # Then
     assert response.status_code == 200
 
 
@@ -98,8 +109,13 @@ async def test_reason_is_optional(client: AsyncClient, mock_service: AsyncMock) 
 async def test_returns_400_when_user_not_found(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.review.side_effect = KycReviewError("User not found", field="user_id")
+
+    # When
     response = await client.post(_ENDPOINT, json={"action": "approve"})
+
+    # Then
     assert response.status_code == 400
     assert response.json()["detail"]["field"] == "user_id"
 
@@ -107,10 +123,15 @@ async def test_returns_400_when_user_not_found(
 async def test_returns_400_when_kyc_not_pending(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.review.side_effect = KycReviewError(
         "KYC is not pending (current status: approved)", field="kyc_status"
     )
+
+    # When
     response = await client.post(_ENDPOINT, json={"action": "approve"})
+
+    # Then
     assert response.status_code == 400
     assert response.json()["detail"]["field"] == "kyc_status"
 
@@ -119,13 +140,18 @@ async def test_returns_400_when_kyc_not_pending(
 
 
 async def test_returns_403_for_non_admin(client: AsyncClient) -> None:
+    # Given
     app.dependency_overrides[get_admin_user] = lambda: (_ for _ in ()).throw(
         __import__("fastapi").HTTPException(
             status_code=403,
             detail={"message": "Admin access required", "field": None},
         )
     )
+
+    # When
     response = await client.post(_ENDPOINT, json={"action": "approve"})
+
+    # Then
     assert response.status_code == 403
 
 
@@ -133,17 +159,26 @@ async def test_returns_403_for_non_admin(client: AsyncClient) -> None:
 
 
 async def test_rejects_invalid_action(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={"action": "delete"})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_missing_action(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_reason_too_long(client: AsyncClient) -> None:
+    # When
     response = await client.post(
         _ENDPOINT, json={"action": "reject", "reason": "x" * 501}
     )
+
+    # Then
     assert response.status_code == 422

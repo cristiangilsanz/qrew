@@ -48,8 +48,10 @@ def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
 async def test_verify_phone_returns_200(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
+    # Then
     assert response.status_code == 200
     assert "verified" in response.json()["message"].lower()
     mock_service.verify.assert_awaited_once_with(
@@ -63,8 +65,13 @@ async def test_verify_phone_returns_200(
 async def test_returns_403_on_phone_number_mismatch(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     payload = {**_VALID_PAYLOAD, "phone_number": "+34699999999"}
+
+    # When
     response = await client.post(_ENDPOINT, json=payload)
+
+    # Then
     assert response.status_code == 403
 
 
@@ -74,11 +81,15 @@ async def test_returns_403_on_phone_number_mismatch(
 async def test_returns_400_on_invalid_otp(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.verify.side_effect = VerificationError(
         "invalid or expired OTP", field="otp"
     )
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
+    # Then
     assert response.status_code == 400
     assert response.json()["detail"]["field"] == "otp"
 
@@ -86,11 +97,15 @@ async def test_returns_400_on_invalid_otp(
 async def test_returns_400_on_expired_otp(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.verify.side_effect = VerificationError(
         "this OTP has expired; request a new one", field="otp"
     )
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
+    # Then
     assert response.status_code == 400
     assert "expired" in response.json()["detail"]["message"].lower()
 
@@ -98,11 +113,15 @@ async def test_returns_400_on_expired_otp(
 async def test_returns_400_on_already_verified(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.verify.side_effect = VerificationError(
         "this phone number is already verified", field="otp"
     )
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
+    # Then
     assert response.status_code == 400
     assert "already" in response.json()["detail"]["message"].lower()
 
@@ -111,22 +130,34 @@ async def test_returns_400_on_already_verified(
 
 
 async def test_rejects_non_digit_otp(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={**_VALID_PAYLOAD, "otp": "abcdef"})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_otp_wrong_length(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={**_VALID_PAYLOAD, "otp": "12345"})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_invalid_phone_format(client: AsyncClient) -> None:
+    # When
     response = await client.post(
         _ENDPOINT, json={**_VALID_PAYLOAD, "phone_number": "not-a-phone!!!"}
     )
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_missing_required_fields(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={})
+
+    # Then
     assert response.status_code == 422

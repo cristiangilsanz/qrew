@@ -99,8 +99,10 @@ def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
 async def test_register_begin_returns_200_with_options(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     response = await client.post(_REGISTER_BEGIN_ENDPOINT)
 
+    # Then
     assert response.status_code == 200
     body = response.json()
     assert body["rp"]["name"] == "Qrew"
@@ -110,7 +112,10 @@ async def test_register_begin_returns_200_with_options(
 async def test_register_begin_calls_service_with_current_user(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     await client.post(_REGISTER_BEGIN_ENDPOINT)
+
+    # Then
     mock_service.begin_registration.assert_awaited_once()
 
 
@@ -120,8 +125,10 @@ async def test_register_begin_calls_service_with_current_user(
 async def test_register_complete_returns_200(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     response = await client.post(_REGISTER_COMPLETE_ENDPOINT, json=_REGISTER_PAYLOAD)
 
+    # Then
     assert response.status_code == 200
     assert "registered" in response.json()["message"].lower()
 
@@ -129,39 +136,62 @@ async def test_register_complete_returns_200(
 async def test_register_complete_calls_service_with_credential(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     await client.post(_REGISTER_COMPLETE_ENDPOINT, json=_REGISTER_PAYLOAD)
+
+    # Then
     mock_service.complete_registration.assert_awaited_once()
 
 
 async def test_register_complete_returns_400_on_expired_challenge(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete_registration.side_effect = PasskeyError(
         "Registration session expired. Please start again."
     )
+
+    # When
     response = await client.post(_REGISTER_COMPLETE_ENDPOINT, json=_REGISTER_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_register_complete_returns_400_on_verification_failure(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete_registration.side_effect = PasskeyError(
         "Passkey registration failed. Please try again."
     )
+
+    # When
     response = await client.post(_REGISTER_COMPLETE_ENDPOINT, json=_REGISTER_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_register_complete_rejects_missing_id(client: AsyncClient) -> None:
+    # Given
     payload = {k: v for k, v in _REGISTER_PAYLOAD.items() if k != "id"}
+
+    # When
     response = await client.post(_REGISTER_COMPLETE_ENDPOINT, json=payload)
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_register_complete_rejects_missing_response(client: AsyncClient) -> None:
+    # Given
     payload = {k: v for k, v in _REGISTER_PAYLOAD.items() if k != "response"}
+
+    # When
     response = await client.post(_REGISTER_COMPLETE_ENDPOINT, json=payload)
+
+    # Then
     assert response.status_code == 422
 
 
@@ -171,8 +201,10 @@ async def test_register_complete_rejects_missing_response(client: AsyncClient) -
 async def test_auth_begin_returns_200_with_assertion_options(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     response = await client.post(_AUTH_BEGIN_ENDPOINT, json=_AUTH_BEGIN_PAYLOAD)
 
+    # Then
     assert response.status_code == 200
     body = response.json()
     assert "challenge" in body
@@ -182,22 +214,33 @@ async def test_auth_begin_returns_200_with_assertion_options(
 async def test_auth_begin_calls_service_with_email(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     await client.post(_AUTH_BEGIN_ENDPOINT, json=_AUTH_BEGIN_PAYLOAD)
+
+    # Then
     mock_service.begin_authentication.assert_awaited_once_with("alice@example.com")
 
 
 async def test_auth_begin_returns_400_when_no_passkey(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.begin_authentication.side_effect = PasskeyError(
         "No passkey registered for this account"
     )
+
+    # When
     response = await client.post(_AUTH_BEGIN_ENDPOINT, json=_AUTH_BEGIN_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_auth_begin_rejects_invalid_email(client: AsyncClient) -> None:
+    # When
     response = await client.post(_AUTH_BEGIN_ENDPOINT, json={"email": "not-an-email"})
+
+    # Then
     assert response.status_code == 422
 
 
@@ -207,8 +250,10 @@ async def test_auth_begin_rejects_invalid_email(client: AsyncClient) -> None:
 async def test_auth_complete_returns_200_with_full_tokens(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     response = await client.post(_AUTH_COMPLETE_ENDPOINT, json=_AUTH_COMPLETE_PAYLOAD)
 
+    # Then
     assert response.status_code == 200
     body = response.json()
     assert body["access_token"] == "full.access.token"
@@ -219,12 +264,16 @@ async def test_auth_complete_returns_200_with_full_tokens(
 async def test_auth_complete_returns_200_with_setup_token_when_incomplete(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete_authentication.return_value = LoginResponse(
         access_token="setup.token",
         setup_required=True,
     )
+
+    # When
     response = await client.post(_AUTH_COMPLETE_ENDPOINT, json=_AUTH_COMPLETE_PAYLOAD)
 
+    # Then
     assert response.status_code == 200
     body = response.json()
     assert body["setup_required"] is True
@@ -234,37 +283,60 @@ async def test_auth_complete_returns_200_with_setup_token_when_incomplete(
 async def test_auth_complete_calls_service_with_assertion(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     await client.post(_AUTH_COMPLETE_ENDPOINT, json=_AUTH_COMPLETE_PAYLOAD)
+
+    # Then
     mock_service.complete_authentication.assert_awaited_once()
 
 
 async def test_auth_complete_returns_400_on_expired_session(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete_authentication.side_effect = PasskeyError(
         "Authentication session expired. Please start again."
     )
+
+    # When
     response = await client.post(_AUTH_COMPLETE_ENDPOINT, json=_AUTH_COMPLETE_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_auth_complete_returns_400_on_verification_failure(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete_authentication.side_effect = PasskeyError(
         "Passkey authentication failed. Please try again."
     )
+
+    # When
     response = await client.post(_AUTH_COMPLETE_ENDPOINT, json=_AUTH_COMPLETE_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_auth_complete_rejects_missing_id(client: AsyncClient) -> None:
+    # Given
     payload = {k: v for k, v in _AUTH_COMPLETE_PAYLOAD.items() if k != "id"}
+
+    # When
     response = await client.post(_AUTH_COMPLETE_ENDPOINT, json=payload)
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_auth_complete_rejects_missing_response(client: AsyncClient) -> None:
+    # Given
     payload = {k: v for k, v in _AUTH_COMPLETE_PAYLOAD.items() if k != "response"}
+
+    # When
     response = await client.post(_AUTH_COMPLETE_ENDPOINT, json=payload)
+
+    # Then
     assert response.status_code == 422

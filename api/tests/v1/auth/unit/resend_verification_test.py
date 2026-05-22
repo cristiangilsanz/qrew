@@ -55,10 +55,13 @@ def override_dependencies(
 async def test_resend_email_returns_200(
     client: AsyncClient, mock_email_service: AsyncMock
 ) -> None:
+    # Given
     mock_email_service.resend.return_value = None
 
+    # When
     response = await client.post(_EMAIL_ENDPOINT, json=_VALID_EMAIL_PAYLOAD)
 
+    # Then
     assert response.status_code == 200
     assert "message" in response.json()
 
@@ -66,50 +69,74 @@ async def test_resend_email_returns_200(
 async def test_resend_email_calls_service_with_email(
     client: AsyncClient, mock_email_service: AsyncMock
 ) -> None:
+    # Given
     mock_email_service.resend.return_value = None
 
+    # When
     await client.post(_EMAIL_ENDPOINT, json=_VALID_EMAIL_PAYLOAD)
 
+    # Then
     mock_email_service.resend.assert_awaited_once_with("alice@example.com")
 
 
 async def test_resend_email_rejects_missing_email(client: AsyncClient) -> None:
+    # When
     response = await client.post(_EMAIL_ENDPOINT, json={})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_resend_email_rejects_invalid_email_format(client: AsyncClient) -> None:
+    # When
     response = await client.post(_EMAIL_ENDPOINT, json={"email": "not-an-email"})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_resend_email_returns_400_when_user_not_found(
     client: AsyncClient, mock_email_service: AsyncMock
 ) -> None:
+    # Given
     mock_email_service.resend.side_effect = ResendError(
         "No account found with that email address", field="email"
     )
+
+    # When
     response = await client.post(_EMAIL_ENDPOINT, json=_VALID_EMAIL_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_resend_email_returns_400_when_already_verified(
     client: AsyncClient, mock_email_service: AsyncMock
 ) -> None:
+    # Given
     mock_email_service.resend.side_effect = ResendError(
         "This email address is already verified", field="email"
     )
+
+    # When
     response = await client.post(_EMAIL_ENDPOINT, json=_VALID_EMAIL_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_resend_email_error_includes_field(
     client: AsyncClient, mock_email_service: AsyncMock
 ) -> None:
+    # Given
     mock_email_service.resend.side_effect = ResendError(
         "This email address is already verified", field="email"
     )
+
+    # When
     response = await client.post(_EMAIL_ENDPOINT, json=_VALID_EMAIL_PAYLOAD)
+
+    # Then
     assert response.json()["detail"]["field"] == "email"
 
 
@@ -119,10 +146,13 @@ async def test_resend_email_error_includes_field(
 async def test_resend_phone_returns_200(
     client: AsyncClient, mock_phone_service: AsyncMock
 ) -> None:
+    # Given
     mock_phone_service.resend.return_value = None
 
+    # When
     response = await client.post(_PHONE_ENDPOINT, json=_VALID_PHONE_PAYLOAD)
 
+    # Then
     assert response.status_code == 200
     assert "message" in response.json()
 
@@ -130,48 +160,72 @@ async def test_resend_phone_returns_200(
 async def test_resend_phone_calls_service_with_phone_number(
     client: AsyncClient, mock_phone_service: AsyncMock
 ) -> None:
+    # Given
     mock_phone_service.resend.return_value = None
 
+    # When
     await client.post(_PHONE_ENDPOINT, json=_VALID_PHONE_PAYLOAD)
 
+    # Then
     mock_phone_service.resend.assert_awaited_once_with("+34612345678")
 
 
 async def test_resend_phone_rejects_missing_phone(client: AsyncClient) -> None:
+    # When
     response = await client.post(_PHONE_ENDPOINT, json={})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_resend_phone_rejects_invalid_phone_format(client: AsyncClient) -> None:
+    # When
     response = await client.post(_PHONE_ENDPOINT, json={"phone_number": "not-a-phone"})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_resend_phone_returns_400_when_user_not_found(
     client: AsyncClient, mock_phone_service: AsyncMock
 ) -> None:
+    # Given
     mock_phone_service.resend.side_effect = ResendError(
         "No account found with that phone number", field="phone_number"
     )
+
+    # When
     response = await client.post(_PHONE_ENDPOINT, json=_VALID_PHONE_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_resend_phone_returns_400_when_already_verified(
     client: AsyncClient, mock_phone_service: AsyncMock
 ) -> None:
+    # Given
     mock_phone_service.resend.side_effect = ResendError(
         "This phone number is already verified", field="phone_number"
     )
+
+    # When
     response = await client.post(_PHONE_ENDPOINT, json=_VALID_PHONE_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_resend_phone_error_includes_field(
     client: AsyncClient, mock_phone_service: AsyncMock
 ) -> None:
+    # Given
     mock_phone_service.resend.side_effect = ResendError(
         "This phone number is already verified", field="phone_number"
     )
+
+    # When
     response = await client.post(_PHONE_ENDPOINT, json=_VALID_PHONE_PAYLOAD)
+
+    # Then
     assert response.json()["detail"]["field"] == "phone_number"

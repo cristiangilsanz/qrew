@@ -43,13 +43,16 @@ def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
 async def test_complete_setup_returns_200_with_full_tokens(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete.return_value = LoginResponse(
         access_token="full.access.token",
         refresh_token="full.refresh.token",
     )
 
+    # When
     response = await client.post(_ENDPOINT)
 
+    # Then
     assert response.status_code == 200
     body = response.json()
     assert body["access_token"] == "full.access.token"
@@ -60,10 +63,15 @@ async def test_complete_setup_returns_200_with_full_tokens(
 async def test_complete_setup_calls_service_with_current_user(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete.return_value = LoginResponse(
         access_token="a.b.c", refresh_token="d.e.f"
     )
+
+    # When
     await client.post(_ENDPOINT)
+
+    # Then
     mock_service.complete.assert_awaited_once()
 
 
@@ -73,10 +81,15 @@ async def test_complete_setup_calls_service_with_current_user(
 async def test_returns_400_when_phone_not_verified(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete.side_effect = SetupError(
         "Phone number is not verified", field="phone_number"
     )
+
+    # When
     response = await client.post(_ENDPOINT)
+
+    # Then
     assert response.status_code == 400
     assert response.json()["detail"]["field"] == "phone_number"
 
@@ -84,10 +97,15 @@ async def test_returns_400_when_phone_not_verified(
 async def test_returns_400_when_kyc_not_submitted(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete.side_effect = SetupError(
         "KYC document has not been submitted", field="kyc"
     )
+
+    # When
     response = await client.post(_ENDPOINT)
+
+    # Then
     assert response.status_code == 400
     assert response.json()["detail"]["field"] == "kyc"
 
@@ -95,9 +113,14 @@ async def test_returns_400_when_kyc_not_submitted(
 async def test_returns_400_when_passkey_not_registered(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.complete.side_effect = SetupError(
         "Passkey has not been registered", field="passkey"
     )
+
+    # When
     response = await client.post(_ENDPOINT)
+
+    # Then
     assert response.status_code == 400
     assert response.json()["detail"]["field"] == "passkey"

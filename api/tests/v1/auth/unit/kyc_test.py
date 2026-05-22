@@ -44,11 +44,13 @@ def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
 async def test_kyc_upload_returns_200(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     response = await client.post(
         _ENDPOINT,
         files={"document": ("id.jpg", _FAKE_DOCUMENT, "image/jpeg")},
     )
 
+    # Then
     assert response.status_code == 200
     body = response.json()
     assert "submitted" in body["message"].lower()
@@ -58,11 +60,13 @@ async def test_kyc_upload_returns_200(
 async def test_kyc_upload_calls_service_with_content(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     await client.post(
         _ENDPOINT,
         files={"document": ("id.jpg", _FAKE_DOCUMENT, "image/jpeg")},
     )
 
+    # Then
     mock_service.upload.assert_awaited_once()
     call_args = mock_service.upload.call_args[0]
     assert call_args[1] == _FAKE_DOCUMENT
@@ -74,24 +78,34 @@ async def test_kyc_upload_calls_service_with_content(
 async def test_returns_400_on_empty_document(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.upload.side_effect = KycError("Document cannot be empty")
+
+    # When
     response = await client.post(
         _ENDPOINT,
         files={"document": ("id.jpg", b"", "image/jpeg")},
     )
+
+    # Then
     assert response.status_code == 400
 
 
 async def test_returns_400_on_oversized_document(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.upload.side_effect = KycError(
         "Document exceeds the maximum allowed size of 10 MB"
     )
+
+    # When
     response = await client.post(
         _ENDPOINT,
         files={"document": ("id.jpg", _FAKE_DOCUMENT, "image/jpeg")},
     )
+
+    # Then
     assert response.status_code == 400
 
 
@@ -99,5 +113,8 @@ async def test_returns_400_on_oversized_document(
 
 
 async def test_rejects_missing_file(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT)
+
+    # Then
     assert response.status_code == 422
