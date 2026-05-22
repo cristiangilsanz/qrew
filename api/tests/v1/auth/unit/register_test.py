@@ -47,13 +47,16 @@ def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
 async def test_register_returns_201_with_user_id(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.register.return_value = RegisterResponse(
         id="11111111-1111-1111-1111-111111111111",
         message="Registration successful. Check your email to verify your account.",
     )
 
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
+    # Then
     assert response.status_code == 201
     body = response.json()
     assert body["id"] == "11111111-1111-1111-1111-111111111111"
@@ -63,13 +66,16 @@ async def test_register_returns_201_with_user_id(
 async def test_register_calls_service_with_correct_args(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.register.return_value = RegisterResponse(
         id="22222222-2222-2222-2222-222222222222",
         message="Registration successful. Check your email to verify your account.",
     )
 
+    # When
     await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
+    # Then
     mock_service.register.assert_awaited_once()
     call_args = mock_service.register.call_args
     request_body = call_args[0][0]
@@ -82,50 +88,73 @@ async def test_register_calls_service_with_correct_args(
 
 
 async def test_rejects_missing_captcha_token(client: AsyncClient) -> None:
+    # Given
     payload = {k: v for k, v in _VALID_PAYLOAD.items() if k != "captcha_token"}
+
+    # When
     response = await client.post(_ENDPOINT, json=payload)
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_disposable_email(client: AsyncClient) -> None:
+    # When
     response = await client.post(
         _ENDPOINT, json={**_VALID_PAYLOAD, "email": "user@mailinator.com"}
     )
+
+    # Then
     assert response.status_code == 422
     assert any("disposable" in str(e).lower() for e in response.json()["detail"])
 
 
 async def test_rejects_password_too_short(client: AsyncClient) -> None:
+    # When
     response = await client.post(
         _ENDPOINT, json={**_VALID_PAYLOAD, "password": "Short1!"}
     )
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_weak_password(client: AsyncClient) -> None:
+    # When
     response = await client.post(
         _ENDPOINT, json={**_VALID_PAYLOAD, "password": "password123"}
     )
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_terms_not_accepted(client: AsyncClient) -> None:
+    # When
     response = await client.post(
         _ENDPOINT, json={**_VALID_PAYLOAD, "terms_accepted": False}
     )
+
+    # Then
     assert response.status_code == 422
     assert any("terms" in str(e).lower() for e in response.json()["detail"])
 
 
 async def test_rejects_invalid_phone_number(client: AsyncClient) -> None:
+    # When
     response = await client.post(
         _ENDPOINT, json={**_VALID_PAYLOAD, "phone_number": "not-a-phone!!!"}
     )
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_missing_required_fields(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={})
+
+    # Then
     assert response.status_code == 422
 
 
@@ -135,10 +164,15 @@ async def test_rejects_missing_required_fields(client: AsyncClient) -> None:
 async def test_returns_409_on_duplicate_email(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.register.side_effect = RegistrationError(
         "email already registered", field="email"
     )
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    # Then
     assert response.status_code == 409
     assert response.json()["detail"]["field"] == "email"
 
@@ -146,10 +180,15 @@ async def test_returns_409_on_duplicate_email(
 async def test_returns_409_on_duplicate_phone(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.register.side_effect = RegistrationError(
         "phone number already registered", field="phone_number"
     )
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    # Then
     assert response.status_code == 409
     assert response.json()["detail"]["field"] == "phone_number"
 
@@ -157,10 +196,15 @@ async def test_returns_409_on_duplicate_phone(
 async def test_returns_409_on_breached_password(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.register.side_effect = RegistrationError(
         "this password has appeared in a known data breach", field="password"
     )
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    # Then
     assert response.status_code == 409
     assert response.json()["detail"]["field"] == "password"
 
@@ -171,9 +215,14 @@ async def test_returns_409_on_breached_password(
 async def test_returns_400_on_captcha_failure(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.register.side_effect = CaptchaError(
         "CAPTCHA verification failed", field="captcha_token"
     )
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    # Then
     assert response.status_code == 400
     assert response.json()["detail"]["field"] == "captcha_token"

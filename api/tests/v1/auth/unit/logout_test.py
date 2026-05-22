@@ -35,8 +35,10 @@ def override_dependencies(mock_service: AsyncMock) -> Iterator[None]:
 
 
 async def test_logout_returns_200(client: AsyncClient, mock_service: AsyncMock) -> None:
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
+    # Then
     assert response.status_code == 200
     assert "logged out" in response.json()["message"].lower()
 
@@ -44,8 +46,10 @@ async def test_logout_returns_200(client: AsyncClient, mock_service: AsyncMock) 
 async def test_logout_calls_service_with_token(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # When
     await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
 
+    # Then
     mock_service.logout.assert_awaited_once_with("a.valid.refresh.token")
 
 
@@ -53,7 +57,10 @@ async def test_expired_token_still_returns_200(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
     """Expired tokens are silently accepted — no error, no blacklist entry."""
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    # Then
     assert response.status_code == 200
 
 
@@ -63,16 +70,26 @@ async def test_expired_token_still_returns_200(
 async def test_returns_401_on_invalid_token(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.logout.side_effect = LogoutError("Invalid refresh token")
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    # Then
     assert response.status_code == 401
 
 
 async def test_returns_401_on_wrong_token_type(
     client: AsyncClient, mock_service: AsyncMock
 ) -> None:
+    # Given
     mock_service.logout.side_effect = LogoutError("Invalid token type")
+
+    # When
     response = await client.post(_ENDPOINT, json=_VALID_PAYLOAD)
+
+    # Then
     assert response.status_code == 401
 
 
@@ -80,10 +97,16 @@ async def test_returns_401_on_wrong_token_type(
 
 
 async def test_rejects_missing_refresh_token(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={})
+
+    # Then
     assert response.status_code == 422
 
 
 async def test_rejects_empty_refresh_token(client: AsyncClient) -> None:
+    # When
     response = await client.post(_ENDPOINT, json={"refresh_token": ""})
+
+    # Then
     assert response.status_code == 422
