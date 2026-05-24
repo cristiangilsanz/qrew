@@ -182,6 +182,25 @@ class AssertionResponseData(BaseModel):
     user_handle: str | None = Field(alias="userHandle", default=None)
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        """Reject weak passwords."""
+        result = zxcvbn.zxcvbn(v)
+        if result["score"] < _PASSWORD_SECURITY_MIN_SCORE:
+            feedback = result["feedback"]["warning"] or "Password is too weak"
+            raise ValueError(feedback)
+        return v
+
+
+class ChangePasswordResponse(BaseModel):
+    message: str
+
+
 class PasskeyAuthenticationBeginRequest(BaseModel):
     email: EmailStr
 

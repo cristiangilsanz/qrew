@@ -28,6 +28,8 @@ from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepos
 from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
+    ChangePasswordRequest,
+    ChangePasswordResponse,
     KycUploadResponse,
     LoginRequest,
     LoginResponse,
@@ -70,6 +72,10 @@ from com.qode.qrew.v1.service.services.notification import (
     build_notification_dispatcher,
 )
 from com.qode.qrew.v1.service.services.passkey import PasskeyError, PasskeyService
+from com.qode.qrew.v1.service.services.password_change import (
+    PasswordChangeError,
+    PasswordChangeService,
+)
 from com.qode.qrew.v1.service.services.refresh import RefreshError, RefreshService
 from com.qode.qrew.v1.service.services.registration import (
     RegistrationError,
@@ -211,6 +217,19 @@ def get_complete_setup_service(
     )
 
 
+def get_password_change_service(
+    db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> PasswordChangeService:
+    """Build and return the password change service."""
+    return PasswordChangeService(
+        UserRepository(db),
+        SessionRepository(db),
+        redis,
+        AuditService(),
+    )
+
+
 _DomainError = (
     RegistrationError
     | VerificationError
@@ -223,6 +242,7 @@ _DomainError = (
     | PasskeyError
     | SetupError
     | SessionError
+    | PasswordChangeError
 )
 
 
@@ -673,3 +693,29 @@ async def rename_passkey(
         return await service.rename_passkey(pk_id, current_user.id, body.name)
     except PasskeyError as exc:
         raise _domain_error(exc, status.HTTP_404_NOT_FOUND) from exc
+
+
+# ── Account management ────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/change-password",
+    response_model=ChangePasswordResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Change the authenticated user's password",
+)
+@limiter.limit("5/hour")  # type: ignore[misc]
+async def change_password(
+    request: Request,
+    body: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    service: PasswordChangeService = Depends(get_password_change_service),
+) -> ChangePasswordResponse:
+    """Verify the current password and replace it; revokes all active sessions."""
+    try:
+        await service.change_password(
+            current_user, body.current_password, body.new_password
+        )
+        return ChangePasswordResponse(message="Password changed successfully.")
+    except PasswordChangeError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
