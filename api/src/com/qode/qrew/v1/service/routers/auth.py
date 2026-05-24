@@ -1,3 +1,4 @@
+import contextlib
 import uuid
 from typing import Annotated
 
@@ -72,6 +73,12 @@ from com.qode.qrew.v1.service.schemas.auth import (
     VerifyPhoneRequest,
     VerifyResponse,
 )
+from com.qode.qrew.v1.service.schemas.device import (
+    DeviceListResponse,
+    DeviceResponse,
+    DeviceRevokeAllResponse,
+    DeviceRevokeResponse,
+)
 from com.qode.qrew.v1.service.schemas.passkey import (
     PasskeyListResponse,
     PasskeyRenameRequest,
@@ -86,6 +93,7 @@ from com.qode.qrew.v1.service.services.complete_setup import (
     CompleteSetupService,
     SetupError,
 )
+from com.qode.qrew.v1.service.services.device import DeviceError, DeviceService
 from com.qode.qrew.v1.service.services.device_binding import (
     DeviceBindingError,
     DeviceBindingService,
@@ -321,6 +329,16 @@ def get_device_binding_service(
     return DeviceBindingService(DeviceRepository(db), redis, AuditService())
 
 
+def get_device_service(
+    db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> DeviceService:
+    """Build and return the device management service."""
+    return DeviceService(
+        DeviceRepository(db), SessionRepository(db), redis, AuditService()
+    )
+
+
 def get_email_change_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(_get_notification_service),
@@ -359,6 +377,7 @@ _DomainError = (
     | PhoneChangeError
     | RecoveryError
     | DeviceBindingError
+    | DeviceError
 )
 
 
@@ -1054,3 +1073,86 @@ async def device_bind_complete(
         )
     except DeviceBindingError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+# ── Device management ──────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/devices",
+    response_model=DeviceListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="List the current user's bound devices",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def list_devices(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    service: DeviceService = Depends(get_device_service),
+) -> DeviceListResponse:
+    """Return all non-revoked devices registered to the authenticated user."""
+    devices = await service.list_devices(current_user)
+    return DeviceListResponse(
+        devices=[
+            DeviceResponse(
+                id=d.id,
+                name=d.name,
+                created_at=d.created_at,
+                last_seen_at=d.last_seen_at,
+            )
+            for d in devices
+        ]
+    )
+
+
+@router.post(
+    "/devices/{device_id}/revoke",
+    response_model=DeviceRevokeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Revoke a specific bound device",
+)
+@limiter.limit("20/hour")  # type: ignore[misc]
+async def revoke_device(
+    request: Request,
+    device_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    service: DeviceService = Depends(get_device_service),
+) -> DeviceRevokeResponse:
+    """Revoke a device and invalidate all associated sessions."""
+    calling_device_header = request.headers.get("X-Calling-Device-Id")
+    calling_device_id: uuid.UUID | None = None
+    if calling_device_header:
+        with contextlib.suppress(ValueError):
+            calling_device_id = uuid.UUID(calling_device_header)
+
+    try:
+        await service.revoke_device(current_user, device_id, calling_device_id)
+        return DeviceRevokeResponse(message="Device revoked successfully.")
+    except DeviceError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/devices/revoke-all",
+    response_model=DeviceRevokeAllResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Revoke all bound devices except the calling one",
+)
+@limiter.limit("5/hour")  # type: ignore[misc]
+async def revoke_all_devices(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    service: DeviceService = Depends(get_device_service),
+) -> DeviceRevokeAllResponse:
+    """Panic button: revoke every device (except the caller) and kill all sessions."""
+    calling_device_header = request.headers.get("X-Calling-Device-Id")
+    calling_device_id: uuid.UUID | None = None
+    if calling_device_header:
+        with contextlib.suppress(ValueError):
+            calling_device_id = uuid.UUID(calling_device_header)
+
+    revoked_count = await service.revoke_all_devices(current_user, calling_device_id)
+    return DeviceRevokeAllResponse(
+        message=f"Revoked {revoked_count} device(s).",
+        revoked_count=revoked_count,
+    )
