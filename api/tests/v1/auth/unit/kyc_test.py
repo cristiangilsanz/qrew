@@ -72,6 +72,58 @@ async def test_kyc_upload_calls_service_with_content(
     assert call_args[1] == _FAKE_DOCUMENT
 
 
+# ── Resubmission ─────────────────────────────────────────────────────────────
+
+
+async def test_kyc_resubmission_accepted_when_rejected(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    # Given — service returns pending (resubmission accepted)
+    mock_service.upload.return_value = KycStatus.pending
+
+    # When
+    response = await client.post(
+        _ENDPOINT,
+        files={"document": ("id.jpg", _FAKE_DOCUMENT, "image/jpeg")},
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json()["kyc_status"] == "pending"
+
+
+async def test_returns_400_when_already_approved(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    # Given
+    mock_service.upload.side_effect = KycError("KYC is already approved")
+
+    # When
+    response = await client.post(
+        _ENDPOINT,
+        files={"document": ("id.jpg", _FAKE_DOCUMENT, "image/jpeg")},
+    )
+
+    # Then
+    assert response.status_code == 400
+
+
+async def test_returns_400_when_already_pending(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    # Given
+    mock_service.upload.side_effect = KycError("KYC is already under review")
+
+    # When
+    response = await client.post(
+        _ENDPOINT,
+        files={"document": ("id.jpg", _FAKE_DOCUMENT, "image/jpeg")},
+    )
+
+    # Then
+    assert response.status_code == 400
+
+
 # ── Domain errors (400) ───────────────────────────────────────────────────────
 
 

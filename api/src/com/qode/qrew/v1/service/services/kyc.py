@@ -32,6 +32,19 @@ class KycService:
 
     async def upload(self, user: User, content: bytes) -> KycStatus:
         """Hash the document, mark KYC as pending (or auto-approve if enabled)."""
+        if user.kyc_status == KycStatus.approved:
+            await logger.awarning(
+                "kyc_upload_failed", reason="already_approved", user_id=str(user.id)
+            )
+            raise KycError("KYC is already approved")
+        if user.kyc_status == KycStatus.pending:
+            await logger.awarning(
+                "kyc_upload_failed",
+                reason="already_pending",
+                user_id=str(user.id),
+            )
+            raise KycError("KYC is already under review")
+
         if len(content) == 0:
             await logger.awarning(
                 "kyc_upload_failed", reason="empty_document", user_id=str(user.id)
