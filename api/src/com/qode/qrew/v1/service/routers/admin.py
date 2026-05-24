@@ -7,13 +7,18 @@ from com.qode.qrew.v1.service.core.auth import get_admin_user
 from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.repositories.fingerprint import (
+    DeviceFingerprintRepository,
+)
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.admin import (
     AuditVerifyResponse,
+    FingerprintAdminResponse,
     KycReviewRequest,
     KycReviewResponse,
 )
 from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.fingerprint import FingerprintService
 from com.qode.qrew.v1.service.services.kyc_review import (
     KycReviewError,
     KycReviewService,
@@ -28,6 +33,13 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 def _get_notification_service() -> NotificationDispatcher:
     return build_notification_dispatcher()
+
+
+def get_fingerprint_service(
+    db: AsyncSession = Depends(get_db),
+) -> FingerprintService:
+    """Build and return the fingerprint service."""
+    return FingerprintService(DeviceFingerprintRepository(db), AuditService())
 
 
 def get_kyc_review_service(
@@ -85,3 +97,28 @@ async def kyc_review(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"message": exc.message, "field": exc.field},
         ) from exc
+
+
+# ── Device fingerprinting ─────────────────────────────────────────────────────
+
+
+@router.get(
+    "/fingerprints/{fingerprint_hash}",
+    response_model=FingerprintAdminResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Look up all user accounts associated with a device fingerprint hash",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def get_fingerprint(
+    request: Request,
+    fingerprint_hash: str,
+    _admin: User = Depends(get_admin_user),
+    service: FingerprintService = Depends(get_fingerprint_service),
+) -> FingerprintAdminResponse:
+    """Return all user IDs that have reported the given fingerprint hash."""
+    user_ids = await service.get_by_hash(fingerprint_hash)
+    return FingerprintAdminResponse(
+        fingerprint_hash=fingerprint_hash,
+        user_ids=[str(uid) for uid in user_ids],
+        account_count=len(user_ids),
+    )
