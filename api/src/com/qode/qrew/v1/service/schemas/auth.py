@@ -182,6 +182,28 @@ class AssertionResponseData(BaseModel):
     user_handle: str | None = Field(alias="userHandle", default=None)
 
 
+class ChangeEmailRequest(BaseModel):
+    new_email: EmailStr
+
+    @field_validator("new_email")
+    @classmethod
+    def validate_new_email(cls, v: str) -> str:
+        """Reject disposable email addresses."""
+        if not MailChecker.is_valid(v):  # type: ignore[no-untyped-call]
+            raise ValueError("Disposable email addresses are not allowed")
+        return v.lower()
+
+    current_password: str = Field(..., min_length=1)
+
+
+class ConfirmEmailChangeRequest(BaseModel):
+    token: str = Field(..., min_length=1, max_length=512)
+
+
+class ChangeEmailResponse(BaseModel):
+    message: str
+
+
 class ChangePasswordRequest(BaseModel):
     current_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8)

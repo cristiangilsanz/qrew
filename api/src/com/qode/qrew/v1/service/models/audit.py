@@ -26,6 +26,8 @@ class AuditAction(enum.StrEnum):
     TOKEN_THEFT_DETECTED = "token_theft_detected"  # noqa: S105
     SETUP_COMPLETED = "setup_completed"
     PASSWORD_CHANGED = "password_changed"  # noqa: S105
+    EMAIL_CHANGE_REQUESTED = "email_change_requested"
+    EMAIL_CHANGE_CONFIRMED = "email_change_confirmed"
     GENESIS = "genesis"
 
 

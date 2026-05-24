@@ -46,6 +46,14 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    pending_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    pending_email_verification_token: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, index=True
+    )
+    pending_email_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     national_id_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     kyc_status: Mapped[KycStatus] = mapped_column(
         Enum(KycStatus, name="kyc_status"),
