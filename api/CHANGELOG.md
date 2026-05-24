@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.3.0...qrew-api/v1.4.0) (2026-05-24)
+
+
+### Features
+
+* implement append-only audit event log with Merkle hash chain ([#74](https://github.com/cristiangilsanz/qrew/issues/74)) ([0af4b98](https://github.com/cristiangilsanz/qrew/commit/0af4b987dec94bf09ea05e1126f5c73f0060c68c))
+* implement refresh token rotation with theft detection ([#76](https://github.com/cristiangilsanz/qrew/issues/76)) ([7915116](https://github.com/cristiangilsanz/qrew/commit/7915116fc097237a4e991cb3d382b82725d5c1f5))
+* implement session management endpoints ([#77](https://github.com/cristiangilsanz/qrew/issues/77)) ([ac881cb](https://github.com/cristiangilsanz/qrew/commit/ac881cb072a485c31e2df0aef8e507bbf859de3e))
+
 ## [1.3.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.2.0...qrew-api/v1.3.0) (2026-05-17)
 
 
