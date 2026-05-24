@@ -35,6 +35,10 @@ from com.qode.qrew.v1.service.schemas.auth import (
     PasskeyAuthenticationCompleteRequest,
     PasskeyRegistrationCompleteRequest,
 )
+from com.qode.qrew.v1.service.schemas.passkey import (
+    PasskeyListResponse,
+    PasskeyResponse,
+)
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.settings import settings
 
@@ -321,6 +325,84 @@ class PasskeyService:
         return LoginResponse(
             access_token=create_setup_token(str(user.id)),
             setup_required=True,
+        )
+
+    async def list_passkeys(self, user_id: uuid.UUID) -> PasskeyListResponse:
+        """Return all passkeys registered by the given user."""
+        credentials = await self._passkey_repo.get_all_by_user_id(user_id)
+        return PasskeyListResponse(
+            passkeys=[
+                PasskeyResponse(
+                    id=str(c.id),
+                    name=c.name,
+                    aaguid=c.aaguid,
+                    last_used_at=c.last_used_at,
+                    created_at=c.created_at,
+                )
+                for c in credentials
+            ]
+        )
+
+    async def delete_passkey(self, passkey_id: uuid.UUID, user_id: uuid.UUID) -> None:
+        """Delete a passkey by ID, refusing to remove the user's last one."""
+        credential = await self._passkey_repo.get_by_id(passkey_id)
+        if credential is None or credential.user_id != user_id:
+            raise PasskeyError("Passkey not found", field="id")
+
+        count = await self._passkey_repo.count_by_user_id(user_id)
+        if count <= 1:
+            raise PasskeyError(
+                "Cannot delete the last passkey — register a new one first",
+                field="id",
+            )
+
+        await self._passkey_repo.delete_by_id(passkey_id)
+        await logger.ainfo(
+            "passkey_deleted", user_id=str(user_id), passkey_id=str(passkey_id)
+        )
+        try:
+            await self._audit.record(
+                action=AuditAction.PASSKEY_DELETED,
+                actor_id=user_id,
+                entity_type="passkey_credential",
+                entity_id=str(passkey_id),
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_DELETED
+            )
+
+    async def rename_passkey(
+        self, passkey_id: uuid.UUID, user_id: uuid.UUID, name: str
+    ) -> PasskeyResponse:
+        """Rename a passkey and return the updated representation."""
+        credential = await self._passkey_repo.get_by_id(passkey_id)
+        if credential is None or credential.user_id != user_id:
+            raise PasskeyError("Passkey not found", field="id")
+
+        credential.name = name
+        updated = await self._passkey_repo.save(credential)
+        await logger.ainfo(
+            "passkey_renamed", user_id=str(user_id), passkey_id=str(passkey_id)
+        )
+        try:
+            await self._audit.record(
+                action=AuditAction.PASSKEY_RENAMED,
+                actor_id=user_id,
+                entity_type="passkey_credential",
+                entity_id=str(passkey_id),
+                payload={"name": name},
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_RENAMED
+            )
+        return PasskeyResponse(
+            id=str(updated.id),
+            name=updated.name,
+            aaguid=updated.aaguid,
+            last_used_at=updated.last_used_at,
+            created_at=updated.created_at,
         )
 
     async def _persist_session(

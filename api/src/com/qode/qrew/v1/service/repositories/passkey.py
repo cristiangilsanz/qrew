@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.service.models.passkey import PasskeyCredential
@@ -40,6 +40,29 @@ class PasskeyCredentialRepository:
             select(PasskeyCredential).where(PasskeyCredential.user_id == user_id)
         )
         return list(result.scalars().all())
+
+    async def get_by_id(self, credential_id: uuid.UUID) -> PasskeyCredential | None:
+        """Return the credential matching the given UUID primary key."""
+        result = await self._session.execute(
+            select(PasskeyCredential)
+            .where(PasskeyCredential.id == credential_id)
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def count_by_user_id(self, user_id: uuid.UUID) -> int:
+        """Return the number of credentials belonging to the given user."""
+        result = await self._session.execute(
+            select(func.count()).where(PasskeyCredential.user_id == user_id)
+        )
+        return result.scalar_one()
+
+    async def delete_by_id(self, credential_id: uuid.UUID) -> None:
+        """Delete the credential with the given UUID primary key."""
+        await self._session.execute(
+            delete(PasskeyCredential).where(PasskeyCredential.id == credential_id)
+        )
+        await self._session.flush()
 
     async def has_passkey(self, user_id: uuid.UUID) -> bool:
         """Return True if the user has at least one registered passkey."""

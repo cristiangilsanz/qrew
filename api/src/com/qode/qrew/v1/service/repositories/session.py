@@ -26,7 +26,7 @@ class SessionRepository:
         return result.scalar_one_or_none()
 
     async def get_all_by_user_id(self, user_id: uuid.UUID) -> list[Session]:
-        """Return all sessions for the given user ordered by last_used_at descending."""
+        """Return all sessions for the given user ordered."""
         result = await self._session.execute(
             select(Session)
             .where(Session.user_id == user_id)
@@ -35,7 +35,8 @@ class SessionRepository:
         return list(result.scalars().all())
 
     async def update_jti(self, old_jti: str, new_jti: str) -> None:
-        """Replace the JTI and refresh last_used_at for the matching session."""
+        """Replace the JTI and refresh last used timestamp for
+        the matching session."""
         result = await self._session.execute(
             select(Session).where(Session.jti == old_jti).limit(1)
         )
