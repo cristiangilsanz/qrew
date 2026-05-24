@@ -29,6 +29,7 @@ from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
 from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.repositories.device import DeviceRepository
 from com.qode.qrew.v1.service.repositories.fingerprint import (
     DeviceFingerprintRepository,
 )
@@ -44,6 +45,9 @@ from com.qode.qrew.v1.service.schemas.auth import (
     ChangePhoneResponse,
     ConfirmEmailChangeRequest,
     ConfirmPhoneChangeRequest,
+    DeviceBindBeginResponse,
+    DeviceBindCompleteRequest,
+    DeviceBindCompleteResponse,
     FingerprintReportRequest,
     FingerprintReportResponse,
     KycUploadResponse,
@@ -81,6 +85,10 @@ from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.complete_setup import (
     CompleteSetupService,
     SetupError,
+)
+from com.qode.qrew.v1.service.services.device_binding import (
+    DeviceBindingError,
+    DeviceBindingService,
 )
 from com.qode.qrew.v1.service.services.email_change import (
     EmailChangeError,
@@ -305,6 +313,14 @@ def get_phone_change_service(
     return PhoneChangeService(UserRepository(db), notifier, AuditService())
 
 
+def get_device_binding_service(
+    db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> DeviceBindingService:
+    """Build and return the device binding service."""
+    return DeviceBindingService(DeviceRepository(db), redis, AuditService())
+
+
 def get_email_change_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(_get_notification_service),
@@ -342,6 +358,7 @@ _DomainError = (
     | EmailChangeError
     | PhoneChangeError
     | RecoveryError
+    | DeviceBindingError
 )
 
 
@@ -990,4 +1007,50 @@ async def recovery_complete(
         await service.complete(current_user, body)
         return RecoveryCompleteResponse(message="Account recovery complete.")
     except RecoveryError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+# ── Cryptographic device binding ──────────────────────────────────────────────
+
+
+@router.post(
+    "/devices/bind/begin",
+    response_model=DeviceBindBeginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Begin device binding — returns a challenge nonce to sign",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def device_bind_begin(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    service: DeviceBindingService = Depends(get_device_binding_service),
+) -> DeviceBindBeginResponse:
+    """Generate a challenge for the client to sign with its private key."""
+    challenge = await service.begin(current_user)
+    return DeviceBindBeginResponse(challenge=challenge)
+
+
+@router.post(
+    "/devices/bind/complete",
+    response_model=DeviceBindCompleteResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Complete device binding by submitting signed challenge + public key",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def device_bind_complete(
+    request: Request,
+    body: DeviceBindCompleteRequest,
+    current_user: User = Depends(get_current_user),
+    service: DeviceBindingService = Depends(get_device_binding_service),
+) -> DeviceBindCompleteResponse:
+    """Verify ECDSA-P256 signature, register the public key as a bound device."""
+    try:
+        device = await service.complete(
+            current_user, body.name, body.public_key, body.signature
+        )
+        return DeviceBindCompleteResponse(
+            device_id=str(device.id),
+            message="Device bound successfully.",
+        )
+    except DeviceBindingError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

@@ -36,6 +36,7 @@ class AuditAction(enum.StrEnum):
     RECOVERY_COMPLETED = "recovery_completed"
     RECOVERY_FAILED = "recovery_failed"
     LOGIN_ANOMALY_DETECTED = "login_anomaly_detected"
+    DEVICE_BIND = "device_bind"
     GENESIS = "genesis"
 
 

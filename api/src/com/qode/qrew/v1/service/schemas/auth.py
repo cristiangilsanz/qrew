@@ -271,6 +271,21 @@ class RecoveryCompleteResponse(BaseModel):
     message: str
 
 
+class DeviceBindBeginResponse(BaseModel):
+    challenge: str
+
+
+class DeviceBindCompleteRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=128)
+    public_key: str = Field(..., min_length=1, max_length=512)
+    signature: str = Field(..., min_length=1, max_length=256)
+
+
+class DeviceBindCompleteResponse(BaseModel):
+    device_id: str
+    message: str
+
+
 class PasskeyAuthenticationBeginRequest(BaseModel):
     email: EmailStr
 
