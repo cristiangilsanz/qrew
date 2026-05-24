@@ -261,6 +261,16 @@ class FingerprintReportResponse(BaseModel):
     flagged: bool
 
 
+class RecoveryBeginResponse(BaseModel):
+    message: str
+    recovery_token: str | None = None
+    passkey_options: str | None = None
+
+
+class RecoveryCompleteResponse(BaseModel):
+    message: str
+
+
 class PasskeyAuthenticationBeginRequest(BaseModel):
     email: EmailStr
 

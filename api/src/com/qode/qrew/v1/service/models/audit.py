@@ -32,6 +32,9 @@ class AuditAction(enum.StrEnum):
     PHONE_CHANGE_CONFIRMED = "phone_change_confirmed"
     FINGERPRINT_MULTI_ACCOUNT_FLAG = "fingerprint_multi_account_flag"
     FINGERPRINT_HEADLESS_FLAG = "fingerprint_headless_flag"
+    RECOVERY_BEGIN = "recovery_begin"
+    RECOVERY_COMPLETED = "recovery_completed"
+    RECOVERY_FAILED = "recovery_failed"
     GENESIS = "genesis"
 
 

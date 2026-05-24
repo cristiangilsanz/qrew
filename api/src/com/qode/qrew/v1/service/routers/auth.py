@@ -6,6 +6,7 @@ from fastapi import (
     APIRouter,
     Depends,
     File,
+    Form,
     HTTPException,
     Request,
     Response,
@@ -14,7 +15,11 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.service.core.auth import get_current_user, get_setup_or_full_user
+from com.qode.qrew.v1.service.core.auth import (
+    get_current_user,
+    get_recovery_user,
+    get_setup_or_full_user,
+)
 from com.qode.qrew.v1.service.core.captcha import (
     CaptchaError,
     CaptchaService,
@@ -50,6 +55,8 @@ from com.qode.qrew.v1.service.schemas.auth import (
     PasskeyAuthenticationCompleteRequest,
     PasskeyRegistrationCompleteRequest,
     PasskeyRegistrationCompleteResponse,
+    RecoveryBeginResponse,
+    RecoveryCompleteResponse,
     RefreshRequest,
     RefreshResponse,
     RegisterRequest,
@@ -97,6 +104,7 @@ from com.qode.qrew.v1.service.services.phone_change import (
     PhoneChangeError,
     PhoneChangeService,
 )
+from com.qode.qrew.v1.service.services.recovery import RecoveryError, RecoveryService
 from com.qode.qrew.v1.service.services.refresh import RefreshError, RefreshService
 from com.qode.qrew.v1.service.services.registration import (
     RegistrationError,
@@ -251,6 +259,24 @@ def get_fingerprint_service(
     return FingerprintService(DeviceFingerprintRepository(db), AuditService())
 
 
+def get_recovery_service(
+    db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+    notifier: NotificationDispatcher = Depends(_get_notification_service),
+    ocr: OcrService = Depends(get_ocr_service),
+) -> RecoveryService:
+    """Build and return the account recovery service."""
+    return RecoveryService(
+        UserRepository(db),
+        PasskeyCredentialRepository(db),
+        SessionRepository(db),
+        redis,
+        notifier,
+        AuditService(),
+        ocr,
+    )
+
+
 def get_phone_change_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(_get_notification_service),
@@ -295,6 +321,7 @@ _DomainError = (
     | PasswordChangeError
     | EmailChangeError
     | PhoneChangeError
+    | RecoveryError
 )
 
 
@@ -891,3 +918,56 @@ async def report_fingerprint(
         message="Fingerprint recorded.",
         flagged=flagged,
     )
+
+
+# ── Account recovery ──────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/recovery/begin",
+    response_model=RecoveryBeginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Begin account recovery by verifying identity via national ID document",
+)
+@limiter.limit("5/hour")  # type: ignore[misc]
+async def recovery_begin(
+    request: Request,
+    email: Annotated[str, Form()],
+    document: Annotated[UploadFile, File()],
+    service: RecoveryService = Depends(get_recovery_service),
+) -> RecoveryBeginResponse:
+    """Verify identity via OCR; return a recovery token and passkey challenge."""
+    content = await document.read()
+    recovery_token, passkey_options = await service.begin(email, content)
+    if recovery_token is None:
+        return RecoveryBeginResponse(
+            message=(
+                "If a matching account was found, recovery instructions have been sent."
+            )
+        )
+    return RecoveryBeginResponse(
+        message="Identity verified. Complete recovery by registering a new passkey.",
+        recovery_token=recovery_token,
+        passkey_options=passkey_options,
+    )
+
+
+@router.post(
+    "/recovery/complete",
+    response_model=RecoveryCompleteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Complete account recovery by registering a new passkey",
+)
+@limiter.limit("5/hour")  # type: ignore[misc]
+async def recovery_complete(
+    request: Request,
+    body: PasskeyRegistrationCompleteRequest,
+    current_user: User = Depends(get_recovery_user),
+    service: RecoveryService = Depends(get_recovery_service),
+) -> RecoveryCompleteResponse:
+    """Verify WebAuthn attestation, revoke all sessions, register the new passkey."""
+    try:
+        await service.complete(current_user, body)
+        return RecoveryCompleteResponse(message="Account recovery complete.")
+    except RecoveryError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

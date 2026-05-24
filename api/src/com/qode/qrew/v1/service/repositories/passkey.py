@@ -72,3 +72,10 @@ class PasskeyCredentialRepository:
             .limit(1)
         )
         return result.scalar_one_or_none() is not None
+
+    async def delete_all_by_user_id(self, user_id: uuid.UUID) -> None:
+        """Delete all passkey credentials belonging to the given user."""
+        await self._session.execute(
+            delete(PasskeyCredential).where(PasskeyCredential.user_id == user_id)
+        )
+        await self._session.flush()

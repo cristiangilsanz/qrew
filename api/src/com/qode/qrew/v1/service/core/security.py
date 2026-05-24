@@ -100,6 +100,19 @@ def create_setup_token(subject: str) -> str:
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
 
+def create_recovery_token(subject: str) -> str:
+    """Return a short-lived JWT scoped to the account-recovery flow."""
+    now = datetime.now(UTC)
+    payload = {
+        "sub": subject,
+        "type": "access",
+        "scope": "recovery",
+        "iat": now,
+        "exp": now + timedelta(minutes=settings.setup_token_expire_minutes),
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+
 def create_refresh_token(subject: str) -> str:
     """Return a signed JWT refresh token for the given subject."""
     now = datetime.now(UTC)

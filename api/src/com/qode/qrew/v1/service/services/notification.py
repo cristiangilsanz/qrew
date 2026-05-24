@@ -64,6 +64,10 @@ class EmailService(Protocol):
         """Send a security notice to the old email address."""
         ...
 
+    async def send_account_recovery(self, to_email: str, full_name: str) -> None:
+        """Send a security notice that account recovery was completed."""
+        ...
+
 
 class SmsService(Protocol):
     """Sends a single type of transactional SMS."""
@@ -126,6 +130,13 @@ class StubEmailService:
         """Log email change alert."""
         await logger.ainfo(
             "email_change_alert_stub",
+            to=_mask_email(to_email),
+        )
+
+    async def send_account_recovery(self, to_email: str, full_name: str) -> None:
+        """Log account recovery notification."""
+        await logger.ainfo(
+            "account_recovery_stub",
             to=_mask_email(to_email),
         )
 
@@ -272,6 +283,36 @@ class SmtpEmailService:
                 "kyc_status_email_failed", to=_mask_email(to_email), exc_info=exc
             )
 
+    async def send_account_recovery(self, to_email: str, full_name: str) -> None:
+        """Send an account recovery security notice via SMTP."""
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Your Qrew account has been recovered"
+        message["From"] = self._from_address
+        message["To"] = to_email
+        body = (
+            f"Hello {full_name},\n\n"
+            "Your Qrew account passkey was just reset via account recovery.\n"
+            "If you did not initiate this, contact support immediately.\n\n"
+            "— The Qrew Team"
+        )
+        message.attach(MIMEText(body, "plain"))
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=self._host,
+                port=self._port,
+                username=self._user,
+                password=self._password,
+                start_tls=True,
+            )
+            await logger.ainfo("account_recovery_email_sent", to=_mask_email(to_email))
+        except Exception as exc:
+            await logger.aerror(
+                "account_recovery_email_failed",
+                to=_mask_email(to_email),
+                exc_info=exc,
+            )
+
 
 class TwilioSmsService:
     def __init__(self, account_sid: str, auth_token: str, from_number: str) -> None:
@@ -345,6 +386,10 @@ class NotificationDispatcher:
     ) -> None:
         """Dispatch a security notice to the old email address."""
         await self._email.send_email_change_alert(to_email, full_name, new_email)
+
+    async def send_account_recovery(self, to_email: str, full_name: str) -> None:
+        """Dispatch an account recovery security notice."""
+        await self._email.send_account_recovery(to_email, full_name)
 
 
 def build_notification_dispatcher() -> NotificationDispatcher:
