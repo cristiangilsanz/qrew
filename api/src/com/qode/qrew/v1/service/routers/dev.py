@@ -53,7 +53,8 @@ async def dev_reset_db(
 ) -> None:
     await db.execute(
         text(
-            "TRUNCATE audit_events, passkey_credentials, users RESTART IDENTITY CASCADE"
+            "TRUNCATE audit_events, sessions, passkey_credentials, users"
+            " RESTART IDENTITY CASCADE"
         )
     )
     await db.commit()

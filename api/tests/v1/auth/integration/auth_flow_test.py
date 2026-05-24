@@ -75,6 +75,24 @@ async def _login(client: AsyncClient) -> str:
     return str(r.json()["access_token"])
 
 
+async def _make_setup_complete(db: AsyncSession, user: User) -> None:
+    """Force a user into a fully-setup state via direct DB writes."""
+    user.phone_number_verified = True
+    user.kyc_status = KycStatus.pending
+    db.add(
+        PasskeyCredential(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            credential_id=b"cred",
+            public_key=b"pk",
+            sign_count=0,
+            aaguid="00000000-0000-0000-0000-000000000000",
+        )
+    )
+    await db.commit()
+    await db.refresh(user)
+
+
 # ── Happy path ────────────────────────────────────────────────────────────────
 
 
@@ -542,3 +560,104 @@ async def test_refresh_reuse_after_rotation_triggers_revocation(
 
     r3 = await client.post("/v1/auth/refresh", json={"refresh_token": new_token})
     assert r3.status_code == 401
+
+
+# ── Session management ────────────────────────────────────────────────────────
+
+
+@pytest.mark.integration
+async def test_login_creates_session(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    """A full login persists a session row visible via GET /sessions."""
+    # Given
+    await _register(client)
+    user = await _fetch_user(db_session)
+    await _verify_email(client, str(user.email_verification_token))
+    await _make_setup_complete(db_session, user)
+    access_token = await _login(client)
+
+    # When
+    r = await client.get(
+        "/v1/auth/sessions",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    # Then
+    assert r.status_code == 200
+    sessions = r.json()["sessions"]
+    assert len(sessions) == 1
+    assert sessions[0]["jti"] is not None
+
+
+@pytest.mark.integration
+async def test_revoke_session_invalidates_refresh_token(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    """Revoking a session via DELETE /sessions/{jti} blacklists its refresh token."""
+    # Given
+    await _register(client)
+    user = await _fetch_user(db_session)
+    await _verify_email(client, str(user.email_verification_token))
+    await _make_setup_complete(db_session, user)
+    access_token = await _login(client)
+    auth = {"Authorization": f"Bearer {access_token}"}
+
+    r = await client.get("/v1/auth/sessions", headers=auth)
+    jti = r.json()["sessions"][0]["jti"]
+
+    # When
+    r = await client.delete(f"/v1/auth/sessions/{jti}", headers=auth)
+
+    # Then
+    assert r.status_code == 204
+
+    r = await client.get("/v1/auth/sessions", headers=auth)
+    assert r.json()["sessions"] == []
+
+
+@pytest.mark.integration
+async def test_revoke_all_sessions(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    """POST /sessions/revoke-all removes all sessions for the user."""
+    # Given
+    await _register(client)
+    user = await _fetch_user(db_session)
+    await _verify_email(client, str(user.email_verification_token))
+    await _make_setup_complete(db_session, user)
+    access_token = await _login(client)
+    auth = {"Authorization": f"Bearer {access_token}"}
+
+    # When
+    r = await client.post("/v1/auth/sessions/revoke-all", headers=auth)
+
+    # Then
+    assert r.status_code == 200
+    assert "revoked" in r.json()["message"].lower()
+
+    r = await client.get("/v1/auth/sessions", headers=auth)
+    assert r.json()["sessions"] == []
+
+
+@pytest.mark.integration
+async def test_revoke_nonexistent_session_returns_404(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    # Given
+    await _register(client)
+    user = await _fetch_user(db_session)
+    await _verify_email(client, str(user.email_verification_token))
+    await _make_setup_complete(db_session, user)
+    access_token = await _login(client)
+    auth = {"Authorization": f"Bearer {access_token}"}
+
+    # When
+    r = await client.delete("/v1/auth/sessions/no-such-jti", headers=auth)
+
+    # Then
+    assert r.status_code == 404

@@ -17,7 +17,7 @@ repos:
 
       - id: pyright
         name: pyright
-        entry: bash -c 'cd api && uv run pyright'
+        entry: bash -c 'cd api && ~/.local/bin/uv run pyright'
         language: system
         pass_filenames: false
         always_run: true

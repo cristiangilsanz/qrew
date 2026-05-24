@@ -10,8 +10,10 @@ from com.qode.qrew.v1.service.core.errors import DomainError
 from com.qode.qrew.v1.service.core.security import (
     create_access_token,
     create_refresh_token,
+    extract_jti,
 )
 from com.qode.qrew.v1.service.models.audit import AuditAction
+from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import RefreshRequest, RefreshResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
@@ -36,10 +38,12 @@ class RefreshService:
         repo: UserRepository,
         redis: aioredis.Redis,
         audit: AuditService,  # type: ignore[type-arg]
+        session_repo: SessionRepository | None = None,
     ) -> None:
         self._repo = repo
         self._redis = redis
         self._audit = audit
+        self._session_repo = session_repo
 
     async def refresh(self, request: RefreshRequest) -> RefreshResponse:
         """Issue a new access + refresh token pair, invalidating the old one."""
@@ -90,6 +94,11 @@ class RefreshService:
         access_token = create_access_token(str(user.id))
         new_refresh_token = create_refresh_token(str(user.id))
 
+        if self._session_repo is not None and isinstance(jti, str):
+            new_jti = extract_jti(new_refresh_token)
+            if new_jti is not None:
+                await self._session_repo.update_jti(jti, new_jti)
+
         await logger.ainfo("token_refreshed", user_id=str(user.id))
         try:
             await self._audit.record(
@@ -126,6 +135,12 @@ class RefreshService:
             ttl,
             str(int(datetime.now(UTC).timestamp())),
         )
+        if self._session_repo is not None:
+            try:
+                user_id = uuid.UUID(subject)
+                await self._session_repo.delete_all_by_user_id(user_id)
+            except ValueError:
+                pass
         await logger.awarning("refresh_theft_detected", user_id=subject, jti=jti)
         try:
             actor_id = uuid.UUID(subject)

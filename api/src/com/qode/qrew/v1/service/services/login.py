@@ -1,3 +1,5 @@
+import uuid
+
 import structlog
 
 from com.qode.qrew.v1.service.core.errors import DomainError
@@ -5,12 +7,15 @@ from com.qode.qrew.v1.service.core.security import (
     create_access_token,
     create_refresh_token,
     create_setup_token,
+    extract_jti,
     hash_password,
     verify_password,
 )
 from com.qode.qrew.v1.service.models.audit import AuditAction
+from com.qode.qrew.v1.service.models.session import Session
 from com.qode.qrew.v1.service.models.user import KycStatus
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
+from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import LoginRequest, LoginResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
@@ -30,12 +35,20 @@ class LoginService:
         repo: UserRepository,
         passkey_repo: PasskeyCredentialRepository,
         audit: AuditService,
+        session_repo: SessionRepository | None = None,
     ) -> None:
         self._repo = repo
         self._passkey_repo = passkey_repo
         self._audit = audit
+        self._session_repo = session_repo
 
-    async def login(self, request: LoginRequest) -> LoginResponse:
+    async def login(
+        self,
+        request: LoginRequest,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_fingerprint: str | None = None,
+    ) -> LoginResponse:
         """Authenticate a user, returning a setup or full-access token."""
         user = await self._repo.get_by_email(request.email)
 
@@ -98,6 +111,9 @@ class LoginService:
         if setup_complete:
             access_token = create_access_token(str(user.id))
             refresh_token = create_refresh_token(str(user.id))
+            await self._persist_session(
+                user.id, refresh_token, ip_address, user_agent, device_fingerprint
+            )
             await logger.ainfo("user_logged_in", user_id=str(user.id))
             try:
                 await self._audit.record(
@@ -125,4 +141,28 @@ class LoginService:
         return LoginResponse(
             access_token=create_setup_token(str(user.id)),
             setup_required=True,
+        )
+
+    async def _persist_session(
+        self,
+        user_id: uuid.UUID,
+        refresh_token: str,
+        ip_address: str | None,
+        user_agent: str | None,
+        device_fingerprint: str | None,
+    ) -> None:
+        if self._session_repo is None:
+            return
+        jti = extract_jti(refresh_token)
+        if jti is None:
+            return
+        await self._session_repo.create(
+            Session(
+                id=uuid.uuid4(),
+                user_id=user_id,
+                jti=jti,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_fingerprint=device_fingerprint,
+            )
         )
