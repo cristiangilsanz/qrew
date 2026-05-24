@@ -29,7 +29,7 @@ from com.qode.qrew.v1.service.core.captcha import (
 from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
-from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.device import DeviceRepository
 from com.qode.qrew.v1.service.repositories.fingerprint import (
     DeviceFingerprintRepository,
@@ -56,6 +56,7 @@ from com.qode.qrew.v1.service.schemas.auth import (
     LoginResponse,
     LogoutRequest,
     LogoutResponse,
+    OnboardingStatusResponse,
     PasskeyAuthenticationBeginRequest,
     PasskeyAuthenticationCompleteRequest,
     PasskeyRegistrationCompleteRequest,
@@ -69,6 +70,7 @@ from com.qode.qrew.v1.service.schemas.auth import (
     ResendEmailVerificationRequest,
     ResendPhoneOtpRequest,
     ResendResponse,
+    UserProfileResponse,
     VerifyEmailRequest,
     VerifyPhoneRequest,
     VerifyResponse,
@@ -1155,4 +1157,64 @@ async def revoke_all_devices(
     return DeviceRevokeAllResponse(
         message=f"Revoked {revoked_count} device(s).",
         revoked_count=revoked_count,
+    )
+
+
+# ── User profile ───────────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/me",
+    response_model=UserProfileResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Return the authenticated user's profile",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def get_me(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+) -> UserProfileResponse:
+    """Return public profile fields for the currently authenticated user."""
+    return UserProfileResponse(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        phone_number=current_user.phone_number,
+        kyc_status=current_user.kyc_status,
+        email_verified=current_user.email_verified,
+        phone_verified=current_user.phone_number_verified,
+        created_at=current_user.created_at,
+    )
+
+
+# ── Onboarding status ──────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/onboarding-status",
+    response_model=OnboardingStatusResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Return which onboarding steps the user has completed",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def get_onboarding_status(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_setup_or_full_user),
+) -> OnboardingStatusResponse:
+    """Return completion status for the four onboarding gates."""
+    passkey_repo = PasskeyCredentialRepository(db)
+    has_passkey = await passkey_repo.has_passkey(current_user.id)
+
+    kyc_submitted = current_user.kyc_status != KycStatus.not_submitted
+    email_verified = current_user.email_verified
+    phone_verified = current_user.phone_number_verified
+    is_complete = email_verified and phone_verified and kyc_submitted and has_passkey
+
+    return OnboardingStatusResponse(
+        email_verified=email_verified,
+        phone_verified=phone_verified,
+        kyc_submitted=kyc_submitted,
+        passkey_registered=has_passkey,
+        is_complete=is_complete,
     )

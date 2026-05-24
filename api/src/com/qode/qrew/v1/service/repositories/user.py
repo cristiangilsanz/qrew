@@ -1,9 +1,9 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.models.user import KycStatus, User
 
 
 class UserRepository:
@@ -78,3 +78,32 @@ class UserRepository:
         await self._session.flush()
         await self._session.refresh(user)
         return user
+
+    async def search_paginated(
+        self,
+        page: int,
+        page_size: int,
+        search: str | None = None,
+        kyc_status: KycStatus | None = None,
+    ) -> tuple[list[User], int]:
+        """Return a page of users matching optional filters, plus the total count."""
+        base = select(User)
+        if search:
+            pattern = f"%{search}%"
+            base = base.where(
+                or_(User.email.ilike(pattern), User.full_name.ilike(pattern))
+            )
+        if kyc_status is not None:
+            base = base.where(User.kyc_status == kyc_status)
+
+        count_result = await self._session.execute(
+            select(func.count()).select_from(base.subquery())
+        )
+        total = count_result.scalar_one()
+
+        rows = await self._session.execute(
+            base.order_by(User.created_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+        return list(rows.scalars().all()), total
