@@ -32,7 +32,10 @@ from com.qode.qrew.v1.service.schemas.auth import (
     ChangeEmailResponse,
     ChangePasswordRequest,
     ChangePasswordResponse,
+    ChangePhoneRequest,
+    ChangePhoneResponse,
     ConfirmEmailChangeRequest,
+    ConfirmPhoneChangeRequest,
     KycUploadResponse,
     LoginRequest,
     LoginResponse,
@@ -82,6 +85,10 @@ from com.qode.qrew.v1.service.services.passkey import PasskeyError, PasskeyServi
 from com.qode.qrew.v1.service.services.password_change import (
     PasswordChangeError,
     PasswordChangeService,
+)
+from com.qode.qrew.v1.service.services.phone_change import (
+    PhoneChangeError,
+    PhoneChangeService,
 )
 from com.qode.qrew.v1.service.services.refresh import RefreshError, RefreshService
 from com.qode.qrew.v1.service.services.registration import (
@@ -224,6 +231,14 @@ def get_complete_setup_service(
     )
 
 
+def get_phone_change_service(
+    db: AsyncSession = Depends(get_db),
+    notifier: NotificationDispatcher = Depends(_get_notification_service),
+) -> PhoneChangeService:
+    """Build and return the phone change service."""
+    return PhoneChangeService(UserRepository(db), notifier, AuditService())
+
+
 def get_email_change_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(_get_notification_service),
@@ -259,6 +274,7 @@ _DomainError = (
     | SessionError
     | PasswordChangeError
     | EmailChangeError
+    | PhoneChangeError
 )
 
 
@@ -779,4 +795,50 @@ async def confirm_email_change(
         await service.confirm_change(body.token)
         return ChangeEmailResponse(message="Email address updated successfully.")
     except EmailChangeError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/change-phone",
+    response_model=ChangePhoneResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Request a phone number change",
+)
+@limiter.limit("3/hour")  # type: ignore[misc]
+async def change_phone(
+    request: Request,
+    body: ChangePhoneRequest,
+    current_user: User = Depends(get_current_user),
+    service: PhoneChangeService = Depends(get_phone_change_service),
+) -> ChangePhoneResponse:
+    """Store a pending phone change and send an OTP to the new number."""
+    try:
+        await service.request_change(
+            current_user, body.new_phone_number, body.current_password
+        )
+        return ChangePhoneResponse(
+            message="Verification code sent to your new phone number."
+        )
+    except PhoneChangeError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/confirm-phone-change",
+    response_model=ChangePhoneResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Confirm a phone number change using the OTP",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def confirm_phone_change(
+    request: Request,
+    body: ConfirmPhoneChangeRequest,
+    current_user: User = Depends(get_current_user),
+    service: PhoneChangeService = Depends(get_phone_change_service),
+) -> ChangePhoneResponse:
+    """Validate the OTP and swap the pending phone number into the active field."""
+    try:
+        await service.confirm_change(current_user, body.new_phone_number, body.otp)
+        return ChangePhoneResponse(message="Phone number updated successfully.")
+    except PhoneChangeError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

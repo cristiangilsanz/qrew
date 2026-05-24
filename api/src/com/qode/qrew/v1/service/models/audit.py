@@ -28,6 +28,8 @@ class AuditAction(enum.StrEnum):
     PASSWORD_CHANGED = "password_changed"  # noqa: S105
     EMAIL_CHANGE_REQUESTED = "email_change_requested"
     EMAIL_CHANGE_CONFIRMED = "email_change_confirmed"
+    PHONE_CHANGE_REQUESTED = "phone_change_requested"
+    PHONE_CHANGE_CONFIRMED = "phone_change_confirmed"
     GENESIS = "genesis"
 
 
