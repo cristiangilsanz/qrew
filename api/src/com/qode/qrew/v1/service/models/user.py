@@ -46,6 +46,12 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    pending_phone_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    pending_phone_otp: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    pending_phone_otp_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     pending_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     pending_email_verification_token: Mapped[str | None] = mapped_column(
         String(255), nullable=True, index=True

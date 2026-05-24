@@ -182,6 +182,33 @@ class AssertionResponseData(BaseModel):
     user_handle: str | None = Field(alias="userHandle", default=None)
 
 
+class ChangePhoneRequest(BaseModel):
+    new_phone_number: str = Field(..., min_length=7, max_length=20)
+
+    @field_validator("new_phone_number")
+    @classmethod
+    def validate_new_phone_number(cls, v: str) -> str:
+        """Reject phone numbers that are not valid for their region."""
+        try:
+            parsed = phonenumbers.parse(v, None)
+        except phonenumbers.NumberParseException as exc:
+            raise ValueError("Invalid phone number") from exc
+        if not phonenumbers.is_valid_number(parsed):
+            raise ValueError("Phone number is not valid for its region")
+        return v
+
+    current_password: str = Field(..., min_length=1)
+
+
+class ConfirmPhoneChangeRequest(BaseModel):
+    new_phone_number: str = Field(..., min_length=7, max_length=20)
+    otp: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class ChangePhoneResponse(BaseModel):
+    message: str
+
+
 class ChangeEmailRequest(BaseModel):
     new_email: EmailStr
 
