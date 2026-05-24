@@ -21,11 +21,14 @@ from com.qode.qrew.v1.service.core.security import (
     create_access_token,
     create_refresh_token,
     create_setup_token,
+    extract_jti,
 )
 from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.models.passkey import PasskeyCredential
+from com.qode.qrew.v1.service.models.session import Session
 from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
+from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
     LoginResponse,
@@ -61,11 +64,13 @@ class PasskeyService:
         redis: aioredis.Redis,  # type: ignore[type-arg]
         user_repo: UserRepository,
         audit: AuditService,
+        session_repo: SessionRepository | None = None,
     ) -> None:
         self._passkey_repo = passkey_repo
         self._redis = redis
         self._user_repo = user_repo
         self._audit = audit
+        self._session_repo = session_repo
 
     async def begin_registration(self, user: User) -> str:
         """Generate WebAuthn registration options and cache the challenge."""
@@ -192,7 +197,11 @@ class PasskeyService:
         return webauthn.options_to_json(options)
 
     async def complete_authentication(
-        self, request: PasskeyAuthenticationCompleteRequest
+        self,
+        request: PasskeyAuthenticationCompleteRequest,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_fingerprint: str | None = None,
     ) -> LoginResponse:
         """Verify the assertion response and return access tokens."""
         raw_id = base64url_to_bytes(request.raw_id)
@@ -278,6 +287,9 @@ class PasskeyService:
         if setup_complete:
             access_token = create_access_token(str(user.id))
             refresh_token = create_refresh_token(str(user.id))
+            await self._persist_session(
+                user.id, refresh_token, ip_address, user_agent, device_fingerprint
+            )
             await logger.ainfo("passkey_authenticated", user_id=str(user.id))
             try:
                 await self._audit.record(
@@ -309,4 +321,28 @@ class PasskeyService:
         return LoginResponse(
             access_token=create_setup_token(str(user.id)),
             setup_required=True,
+        )
+
+    async def _persist_session(
+        self,
+        user_id: uuid.UUID,
+        refresh_token: str,
+        ip_address: str | None,
+        user_agent: str | None,
+        device_fingerprint: str | None,
+    ) -> None:
+        if self._session_repo is None:
+            return
+        jti = extract_jti(refresh_token)
+        if jti is None:
+            return
+        await self._session_repo.create(
+            Session(
+                id=uuid.uuid4(),
+                user_id=user_id,
+                jti=jti,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_fingerprint=device_fingerprint,
+            )
         )

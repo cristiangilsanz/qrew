@@ -8,6 +8,7 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 from com.qode.qrew.v1.service.core.errors import DomainError
 from com.qode.qrew.v1.service.core.security import decode_refresh_token
 from com.qode.qrew.v1.service.models.audit import AuditAction
+from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
 
 logger = structlog.get_logger(__name__)
@@ -21,12 +22,18 @@ class LogoutError(DomainError):
 
 
 class LogoutService:
-    def __init__(self, redis: aioredis.Redis, audit: AuditService) -> None:  # type: ignore[type-arg]
+    def __init__(
+        self,
+        redis: aioredis.Redis,  # type: ignore[type-arg]
+        audit: AuditService,
+        session_repo: SessionRepository | None = None,
+    ) -> None:
         self._redis = redis
         self._audit = audit
+        self._session_repo = session_repo
 
     async def logout(self, refresh_token: str) -> None:
-        """Blacklist the refresh token's JTI so it cannot be used again."""
+        """Blacklist the refresh token's JTI and remove the session row."""
         try:
             payload = decode_refresh_token(refresh_token)
         except ExpiredSignatureError:
@@ -50,6 +57,9 @@ class LogoutService:
 
         if ttl > 0:
             await self._redis.setex(BLACKLIST_JTI_PREFIX + jti, ttl, "1")
+
+        if self._session_repo is not None:
+            await self._session_repo.delete_by_jti(jti)
 
         await logger.ainfo("token_revoked", jti=jti)
 

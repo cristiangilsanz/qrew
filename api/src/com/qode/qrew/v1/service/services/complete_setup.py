@@ -1,13 +1,18 @@
+import uuid
+
 import structlog
 
 from com.qode.qrew.v1.service.core.errors import DomainError
 from com.qode.qrew.v1.service.core.security import (
     create_access_token,
     create_refresh_token,
+    extract_jti,
 )
 from com.qode.qrew.v1.service.models.audit import AuditAction
+from com.qode.qrew.v1.service.models.session import Session
 from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
+from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import LoginResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
@@ -25,12 +30,20 @@ class CompleteSetupService:
         user_repo: UserRepository,
         passkey_repo: PasskeyCredentialRepository,
         audit: AuditService,
+        session_repo: SessionRepository | None = None,
     ) -> None:
         self._user_repo = user_repo
         self._passkey_repo = passkey_repo
         self._audit = audit
+        self._session_repo = session_repo
 
-    async def complete(self, user: User) -> LoginResponse:
+    async def complete(
+        self,
+        user: User,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_fingerprint: str | None = None,
+    ) -> LoginResponse:
         """Issue full tokens once all onboarding steps are complete."""
         if not user.phone_number_verified:
             await logger.awarning(
@@ -55,6 +68,10 @@ class CompleteSetupService:
         access_token = create_access_token(str(user.id))
         refresh_token = create_refresh_token(str(user.id))
 
+        await self._persist_session(
+            user.id, refresh_token, ip_address, user_agent, device_fingerprint
+        )
+
         await logger.ainfo("setup_completed", user_id=str(user.id))
 
         try:
@@ -70,3 +87,27 @@ class CompleteSetupService:
             )
 
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
+
+    async def _persist_session(
+        self,
+        user_id: uuid.UUID,
+        refresh_token: str,
+        ip_address: str | None,
+        user_agent: str | None,
+        device_fingerprint: str | None,
+    ) -> None:
+        if self._session_repo is None:
+            return
+        jti = extract_jti(refresh_token)
+        if jti is None:
+            return
+        await self._session_repo.create(
+            Session(
+                id=uuid.uuid4(),
+                user_id=user_id,
+                jti=jti,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_fingerprint=device_fingerprint,
+            )
+        )

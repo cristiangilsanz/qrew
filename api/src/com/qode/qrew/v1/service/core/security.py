@@ -116,3 +116,12 @@ def create_refresh_token(subject: str) -> str:
 def decode_refresh_token(token: str) -> dict[str, object]:
     """Decode and validate a refresh token; raises jwt errors on failure."""
     return jwt.decode(token, settings.secret_key, algorithms=["HS256"])  # type: ignore[no-any-return]
+
+
+def extract_jti(token: str) -> str | None:
+    """Return the JTI claim from a signed JWT, or None if absent."""
+    payload: dict[str, object] = jwt.decode(
+        token, settings.secret_key, algorithms=["HS256"]
+    )
+    jti = payload.get("jti")
+    return jti if isinstance(jti, str) else None

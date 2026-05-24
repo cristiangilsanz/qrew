@@ -13,7 +13,7 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.service.core.auth import get_setup_or_full_user
+from com.qode.qrew.v1.service.core.auth import get_current_user, get_setup_or_full_user
 from com.qode.qrew.v1.service.core.captcha import (
     CaptchaError,
     CaptchaService,
@@ -24,6 +24,7 @@ from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
 from com.qode.qrew.v1.service.models.user import User
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
+from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
     KycUploadResponse,
@@ -45,6 +46,10 @@ from com.qode.qrew.v1.service.schemas.auth import (
     VerifyEmailRequest,
     VerifyPhoneRequest,
     VerifyResponse,
+)
+from com.qode.qrew.v1.service.schemas.session import (
+    RevokeAllResponse,
+    SessionListResponse,
 )
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.complete_setup import (
@@ -69,6 +74,7 @@ from com.qode.qrew.v1.service.services.resend_verification import (
     ResendError,
     ResendPhoneOtpService,
 )
+from com.qode.qrew.v1.service.services.session import SessionError, SessionService
 from com.qode.qrew.v1.service.services.verification import (
     EmailVerificationService,
     PhoneVerificationService,
@@ -116,7 +122,10 @@ def get_login_service(
 ) -> LoginService:
     """Build and return the login service."""
     return LoginService(
-        UserRepository(db), PasskeyCredentialRepository(db), AuditService()
+        UserRepository(db),
+        PasskeyCredentialRepository(db),
+        AuditService(),
+        SessionRepository(db),
     )
 
 
@@ -125,14 +134,25 @@ def get_refresh_service(
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> RefreshService:
     """Build and return the refresh service."""
-    return RefreshService(UserRepository(db), redis, AuditService())
+    return RefreshService(
+        UserRepository(db), redis, AuditService(), SessionRepository(db)
+    )
 
 
 def get_logout_service(
+    db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> LogoutService:
     """Build and return the logout service."""
-    return LogoutService(redis, AuditService())
+    return LogoutService(redis, AuditService(), SessionRepository(db))
+
+
+def get_session_service(
+    db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> SessionService:
+    """Build and return the session service."""
+    return SessionService(SessionRepository(db), redis)
 
 
 def get_resend_email_verification_service(
@@ -165,7 +185,11 @@ def get_passkey_service(
 ) -> PasskeyService:
     """Build and return the passkey service."""
     return PasskeyService(
-        PasskeyCredentialRepository(db), redis, UserRepository(db), AuditService()
+        PasskeyCredentialRepository(db),
+        redis,
+        UserRepository(db),
+        AuditService(),
+        SessionRepository(db),
     )
 
 
@@ -174,7 +198,10 @@ def get_complete_setup_service(
 ) -> CompleteSetupService:
     """Build and return the complete-setup service."""
     return CompleteSetupService(
-        UserRepository(db), PasskeyCredentialRepository(db), AuditService()
+        UserRepository(db),
+        PasskeyCredentialRepository(db),
+        AuditService(),
+        SessionRepository(db),
     )
 
 
@@ -189,6 +216,7 @@ _DomainError = (
     | KycError
     | PasskeyError
     | SetupError
+    | SessionError
 )
 
 
@@ -286,8 +314,11 @@ async def login(
     service: LoginService = Depends(get_login_service),
 ) -> LoginResponse:
     """Log in as a registered user."""
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("User-Agent")
+    device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:
-        return await service.login(body)
+        return await service.login(body, ip_address, user_agent, device_fingerprint)
     except LoginError as exc:
         raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
 
@@ -450,8 +481,13 @@ async def complete_setup(
     service: CompleteSetupService = Depends(get_complete_setup_service),
 ) -> LoginResponse:
     """Verify all onboarding steps are done and return full access + refresh tokens."""
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("User-Agent")
+    device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:
-        return await service.complete(current_user)
+        return await service.complete(
+            current_user, ip_address, user_agent, device_fingerprint
+        )
     except SetupError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
 
@@ -488,7 +524,68 @@ async def passkey_authenticate_complete(
     service: PasskeyService = Depends(get_passkey_service),
 ) -> LoginResponse:
     """Verify the assertion response and return access tokens."""
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("User-Agent")
+    device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:
-        return await service.complete_authentication(body)
+        return await service.complete_authentication(
+            body, ip_address, user_agent, device_fingerprint
+        )
     except PasskeyError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+# ── Session management ────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/sessions",
+    response_model=SessionListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="List all active sessions for the current user",
+)
+@limiter.limit("20/minute")  # type: ignore[misc]
+async def list_sessions(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    service: SessionService = Depends(get_session_service),
+) -> SessionListResponse:
+    """Return all active sessions for the authenticated user."""
+    sessions = await service.list_sessions(current_user.id)
+    return SessionListResponse(sessions=sessions)
+
+
+@router.delete(
+    "/sessions/{jti}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Revoke a specific session by JTI",
+)
+@limiter.limit("20/minute")  # type: ignore[misc]
+async def revoke_session(
+    request: Request,
+    jti: str,
+    current_user: User = Depends(get_current_user),
+    service: SessionService = Depends(get_session_service),
+) -> None:
+    """Blacklist the given JTI and remove the session row."""
+    try:
+        await service.revoke_session(jti, current_user.id)
+    except SessionError as exc:
+        raise _domain_error(exc, status.HTTP_404_NOT_FOUND) from exc
+
+
+@router.post(
+    "/sessions/revoke-all",
+    response_model=RevokeAllResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Revoke all sessions for the current user",
+)
+@limiter.limit("10/minute")  # type: ignore[misc]
+async def revoke_all_sessions(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    service: SessionService = Depends(get_session_service),
+) -> RevokeAllResponse:
+    """Invalidate every refresh token for the authenticated user."""
+    await service.revoke_all(current_user.id)
+    return RevokeAllResponse(message="All sessions have been revoked.")
