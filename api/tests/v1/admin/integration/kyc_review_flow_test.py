@@ -223,6 +223,9 @@ async def test_kyc_upload_auto_approves_when_flag_enabled(
     with patch("com.qode.qrew.v1.service.services.kyc.settings") as mock_settings:
         mock_settings.kyc_auto_approve = True
         mock_settings.max_file_bytes = 10 * 1024 * 1024
+        mock_settings.national_id_encryption_key = (
+            "083GJwgqjfJeEG1bHg2nNNtyAH8XTCxBcEOmeHsjgDg="
+        )
 
         r = await client.post(
             "/v1/auth/kyc/upload",

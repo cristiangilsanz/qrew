@@ -161,6 +161,44 @@ async def test_returns_400_on_oversized_document(
     assert response.status_code == 400
 
 
+async def test_returns_400_when_ocr_cannot_extract_national_id(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    # Given
+    mock_service.upload.side_effect = KycError(
+        "Could not extract a national ID number from the document"
+    )
+
+    # When
+    response = await client.post(
+        _ENDPOINT,
+        files={"document": ("id.jpg", _FAKE_DOCUMENT, "image/jpeg")},
+    )
+
+    # Then
+    assert response.status_code == 400
+
+
+async def test_returns_400_when_national_id_already_registered(
+    client: AsyncClient, mock_service: AsyncMock
+) -> None:
+    # Given
+    mock_service.upload.side_effect = KycError(
+        "This national ID is already associated with another account",
+        field="document",
+    )
+
+    # When
+    response = await client.post(
+        _ENDPOINT,
+        files={"document": ("id.jpg", _FAKE_DOCUMENT, "image/jpeg")},
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json()["detail"]["field"] == "document"
+
+
 # ── Input validation (422) ────────────────────────────────────────────────────
 
 

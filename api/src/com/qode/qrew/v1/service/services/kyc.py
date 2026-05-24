@@ -1,6 +1,7 @@
 import hashlib
 
 import structlog
+from cryptography.fernet import Fernet
 
 from com.qode.qrew.v1.service.core.errors import DomainError
 from com.qode.qrew.v1.service.models.audit import AuditAction
@@ -8,6 +9,7 @@ from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.notification import NotificationDispatcher
+from com.qode.qrew.v1.service.services.ocr import OcrError, OcrService
 from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -25,13 +27,15 @@ class KycService:
         repo: UserRepository,
         notifier: NotificationDispatcher,
         audit: AuditService,
+        ocr: OcrService,
     ) -> None:
         self._repo = repo
         self._notifier = notifier
         self._audit = audit
+        self._ocr = ocr
 
     async def upload(self, user: User, content: bytes) -> KycStatus:
-        """Hash the document, mark KYC as pending (or auto-approve if enabled)."""
+        """Extract national ID via OCR, enforce uniqueness, and mark KYC pending."""
         if user.kyc_status == KycStatus.approved:
             await logger.awarning(
                 "kyc_upload_failed", reason="already_approved", user_id=str(user.id)
@@ -56,7 +60,31 @@ class KycService:
             )
             raise KycError("Document exceeds the maximum allowed size of 10 MB")
 
-        user.national_id_hash = hashlib.sha256(content).hexdigest()
+        try:
+            id_number = self._ocr.extract_national_id(content)
+        except OcrError as exc:
+            await logger.awarning(
+                "kyc_upload_failed", reason="ocr_failed", user_id=str(user.id)
+            )
+            raise KycError(str(exc)) from exc
+
+        id_hash = hashlib.sha256(id_number.encode()).hexdigest()
+
+        existing = await self._repo.get_by_national_id_hash(id_hash)
+        if existing is not None and existing.id != user.id:
+            await logger.awarning(
+                "kyc_upload_failed",
+                reason="duplicate_national_id",
+                user_id=str(user.id),
+            )
+            raise KycError(
+                "This national ID is already associated with another account",
+                field="document",
+            )
+
+        fernet = Fernet(settings.national_id_encryption_key.encode())
+        user.national_id_hash = id_hash
+        user.national_id_number = fernet.encrypt(id_number.encode()).decode()
         user.kyc_status = KycStatus.pending
         await self._repo.save(user)
 
