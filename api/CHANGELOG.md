@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.6.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.5.0...qrew-api/v1.6.0) (2026-05-24)
+
+
+### Features
+
+* allow resubmission of rejected KYC documents ([#84](https://github.com/cristiangilsanz/qrew/issues/84)) ([dddfbf2](https://github.com/cristiangilsanz/qrew/commit/dddfbf2329818b5ea23ae6ea498ae1613e9ad979))
+* implement account recovery with KYC re-verification and passkey re-enrollment ([#87](https://github.com/cristiangilsanz/qrew/issues/87)) ([1438a52](https://github.com/cristiangilsanz/qrew/commit/1438a52aa008fec81c860eabfac642a0b90addf2))
+* implement cryptographic device binding ([#89](https://github.com/cristiangilsanz/qrew/issues/89)) ([9ba2ce8](https://github.com/cristiangilsanz/qrew/commit/9ba2ce81d40d97346b467989b38b6ed8b30a31d1))
+* implement device fingerprint reporting and cross-account detection ([#85](https://github.com/cristiangilsanz/qrew/issues/85)) ([1e4a96e](https://github.com/cristiangilsanz/qrew/commit/1e4a96ec1899eb024bd697f12a4976388cf3da77))
+* implement device list and lost-device deregistration ([#90](https://github.com/cristiangilsanz/qrew/issues/90)) ([fafd06e](https://github.com/cristiangilsanz/qrew/commit/fafd06e749e3d2c56c96456075be91b670aae34c))
+* implement GET /me, GET /onboarding-status, GET /admin/users ([#95](https://github.com/cristiangilsanz/qrew/issues/95)) ([b3c1fd0](https://github.com/cristiangilsanz/qrew/commit/b3c1fd0d7e3b3fa58dc83530342264077285e343))
+* implement KYC-lite OCR with unique national ID constraint ([#86](https://github.com/cristiangilsanz/qrew/issues/86)) ([5f74f0b](https://github.com/cristiangilsanz/qrew/commit/5f74f0bb400219ed71f0a1a631582bb34a1ec08b))
+* implement login anomaly detection (impossible travel + concurrent device) ([#88](https://github.com/cristiangilsanz/qrew/issues/88)) ([28f0192](https://github.com/cristiangilsanz/qrew/commit/28f0192ead580ba33e037093b8778239510804ca))
+* implement phone number change with re-verification ([#82](https://github.com/cristiangilsanz/qrew/issues/82)) ([a61a4b5](https://github.com/cristiangilsanz/qrew/commit/a61a4b5f4672bfd50ea622c5bb561e26b7264e3b))
+
 ## [1.5.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.4.0...qrew-api/v1.5.0) (2026-05-24)
 
 
