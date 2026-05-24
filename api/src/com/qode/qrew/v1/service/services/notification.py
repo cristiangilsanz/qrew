@@ -8,6 +8,12 @@ import httpx
 import structlog
 
 from com.qode.qrew.v1.service.settings import settings
+from com.qode.qrew.v1.service.templates.email_change_alert_email import (
+    email_change_alert_email,
+)
+from com.qode.qrew.v1.service.templates.email_change_verify_email import (
+    email_change_verify_email,
+)
 from com.qode.qrew.v1.service.templates.kyc_status_email import kyc_status_email
 from com.qode.qrew.v1.service.templates.verification_link_email import (
     verification_link_email,
@@ -44,6 +50,18 @@ class EmailService(Protocol):
         self, to_email: str, full_name: str, status: str, reason: str | None
     ) -> None:
         """Send a KYC approval or rejection notification."""
+        ...
+
+    async def send_email_change_verification(
+        self, to_email: str, full_name: str, token: str
+    ) -> None:
+        """Send a confirmation link to the new email address."""
+        ...
+
+    async def send_email_change_alert(
+        self, to_email: str, full_name: str, new_email: str
+    ) -> None:
+        """Send a security notice to the old email address."""
         ...
 
 
@@ -89,6 +107,26 @@ class StubEmailService:
             "kyc_status_stub",
             to=_mask_email(to_email),
             status=status,
+        )
+
+    async def send_email_change_verification(
+        self, to_email: str, full_name: str, token: str
+    ) -> None:
+        """Log email change verification link."""
+        link = f"{settings.base_url}/confirm-email-change?token={token}"
+        await logger.ainfo(
+            "email_change_verification_stub",
+            to=_mask_email(to_email),
+            link_prefix=link[:60] + "…",
+        )
+
+    async def send_email_change_alert(
+        self, to_email: str, full_name: str, new_email: str
+    ) -> None:
+        """Log email change alert."""
+        await logger.ainfo(
+            "email_change_alert_stub",
+            to=_mask_email(to_email),
         )
 
 
@@ -144,6 +182,63 @@ class SmtpEmailService:
         except Exception as exc:
             await logger.aerror(
                 "email_verification_failed", to=_mask_email(to_email), exc_info=exc
+            )
+
+    async def send_email_change_verification(
+        self, to_email: str, full_name: str, token: str
+    ) -> None:
+        """Send an email change confirmation link via SMTP."""
+        link = f"{settings.base_url}/confirm-email-change?token={token}"
+        expire_hours = settings.email_verification_token_expire_hours
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Confirm your new Qrew email address"
+        message["From"] = self._from_address
+        message["To"] = to_email
+        message.attach(
+            MIMEText(email_change_verify_email(full_name, link, expire_hours), "html")
+        )
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=self._host,
+                port=self._port,
+                username=self._user,
+                password=self._password,
+                start_tls=True,
+            )
+            await logger.ainfo(
+                "email_change_verification_sent", to=_mask_email(to_email)
+            )
+        except Exception as exc:
+            await logger.aerror(
+                "email_change_verification_failed",
+                to=_mask_email(to_email),
+                exc_info=exc,
+            )
+
+    async def send_email_change_alert(
+        self, to_email: str, full_name: str, new_email: str
+    ) -> None:
+        """Send an email change security alert via SMTP."""
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Email change requested on your Qrew account"
+        message["From"] = self._from_address
+        message["To"] = to_email
+        message.attach(MIMEText(email_change_alert_email(full_name, new_email), "html"))
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=self._host,
+                port=self._port,
+                username=self._user,
+                password=self._password,
+                start_tls=True,
+            )
+            await logger.ainfo("email_change_alert_sent", to=_mask_email(to_email))
+        except Exception as exc:
+            await logger.aerror(
+                "email_change_alert_failed", to=_mask_email(to_email), exc_info=exc
             )
 
     async def send_kyc_status(
@@ -238,6 +333,18 @@ class NotificationDispatcher:
     ) -> None:
         """Dispatch a KYC approval or rejection email."""
         await self._email.send_kyc_status(to_email, full_name, status, reason)
+
+    async def send_email_change_verification(
+        self, to_email: str, full_name: str, token: str
+    ) -> None:
+        """Dispatch a confirmation link to the new email address."""
+        await self._email.send_email_change_verification(to_email, full_name, token)
+
+    async def send_email_change_alert(
+        self, to_email: str, full_name: str, new_email: str
+    ) -> None:
+        """Dispatch a security notice to the old email address."""
+        await self._email.send_email_change_alert(to_email, full_name, new_email)
 
 
 def build_notification_dispatcher() -> NotificationDispatcher:

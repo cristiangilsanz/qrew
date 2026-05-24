@@ -28,8 +28,11 @@ from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepos
 from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
+    ChangeEmailRequest,
+    ChangeEmailResponse,
     ChangePasswordRequest,
     ChangePasswordResponse,
+    ConfirmEmailChangeRequest,
     KycUploadResponse,
     LoginRequest,
     LoginResponse,
@@ -63,6 +66,10 @@ from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.complete_setup import (
     CompleteSetupService,
     SetupError,
+)
+from com.qode.qrew.v1.service.services.email_change import (
+    EmailChangeError,
+    EmailChangeService,
 )
 from com.qode.qrew.v1.service.services.kyc import KycError, KycService
 from com.qode.qrew.v1.service.services.login import LoginError, LoginService
@@ -217,6 +224,14 @@ def get_complete_setup_service(
     )
 
 
+def get_email_change_service(
+    db: AsyncSession = Depends(get_db),
+    notifier: NotificationDispatcher = Depends(_get_notification_service),
+) -> EmailChangeService:
+    """Build and return the email change service."""
+    return EmailChangeService(UserRepository(db), notifier, AuditService())
+
+
 def get_password_change_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -243,6 +258,7 @@ _DomainError = (
     | SetupError
     | SessionError
     | PasswordChangeError
+    | EmailChangeError
 )
 
 
@@ -718,4 +734,49 @@ async def change_password(
         )
         return ChangePasswordResponse(message="Password changed successfully.")
     except PasswordChangeError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/change-email",
+    response_model=ChangeEmailResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Request an email address change",
+)
+@limiter.limit("3/hour")  # type: ignore[misc]
+async def change_email(
+    request: Request,
+    body: ChangeEmailRequest,
+    current_user: User = Depends(get_current_user),
+    service: EmailChangeService = Depends(get_email_change_service),
+) -> ChangeEmailResponse:
+    """Store a pending email change and send a confirmation link to the new address."""
+    try:
+        await service.request_change(
+            current_user, body.new_email, body.current_password
+        )
+        return ChangeEmailResponse(
+            message="Confirmation link sent to your new email address."
+        )
+    except EmailChangeError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/confirm-email-change",
+    response_model=ChangeEmailResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Confirm an email address change using the token from the link",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def confirm_email_change(
+    request: Request,
+    body: ConfirmEmailChangeRequest,
+    service: EmailChangeService = Depends(get_email_change_service),
+) -> ChangeEmailResponse:
+    """Swap the pending email into the active email field."""
+    try:
+        await service.confirm_change(body.token)
+        return ChangeEmailResponse(message="Email address updated successfully.")
+    except EmailChangeError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc

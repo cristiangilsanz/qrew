@@ -59,6 +59,13 @@ class UserRepository:
         await self._session.refresh(user)
         return user
 
+    async def get_by_pending_email_token(self, token: str) -> User | None:
+        """Return the user matching the given pending email verification token."""
+        result = await self._session.execute(
+            select(User).where(User.pending_email_verification_token == token).limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def save(self, user: User) -> User:
         """Flush pending changes for an already-tracked User."""
         await self._session.flush()
