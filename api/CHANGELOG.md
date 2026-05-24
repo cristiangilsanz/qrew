@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.4.0...qrew-api/v1.5.0) (2026-05-24)
+
+
+### Features
+
+* implement email change with re-verification ([#81](https://github.com/cristiangilsanz/qrew/issues/81)) ([a36536b](https://github.com/cristiangilsanz/qrew/commit/a36536b147f415f4eaa5dc0cb3919ffb4c0270e7))
+* implement passkey list, delete, and rename endpoints ([#78](https://github.com/cristiangilsanz/qrew/issues/78)) ([e1a4b3d](https://github.com/cristiangilsanz/qrew/commit/e1a4b3dec62e1d46efcec273af8288ccc2f57c9e))
+* implement password change endpoint for authenticated users ([#80](https://github.com/cristiangilsanz/qrew/issues/80)) ([b4c0cfb](https://github.com/cristiangilsanz/qrew/commit/b4c0cfbf438ee5736a08dc578ad6bb1582abdc78))
+
 ## [1.4.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.3.0...qrew-api/v1.4.0) (2026-05-24)
 
 
