@@ -96,3 +96,21 @@ class AuditRepository:
             )
         )
         return list(result.scalars().all())
+
+    async def get_recent_login_events(
+        self,
+        user_id: uuid.UUID,
+        limit: int = 5,
+    ) -> list[AuditEvent]:
+        """Return the most recent full-login audit events for a user."""
+        result = await self._session.execute(
+            select(AuditEvent)
+            .where(
+                AuditEvent.actor_id == user_id,
+                AuditEvent.action == AuditAction.LOGIN,
+                AuditEvent.ip_address.isnot(None),
+            )
+            .order_by(AuditEvent.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())

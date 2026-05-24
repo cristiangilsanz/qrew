@@ -19,6 +19,7 @@ from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import LoginRequest, LoginResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.login_anomaly import LoginAnomalyService
 
 logger = structlog.get_logger(__name__)
 
@@ -36,11 +37,13 @@ class LoginService:
         passkey_repo: PasskeyCredentialRepository,
         audit: AuditService,
         session_repo: SessionRepository | None = None,
+        anomaly: LoginAnomalyService | None = None,
     ) -> None:
         self._repo = repo
         self._passkey_repo = passkey_repo
         self._audit = audit
         self._session_repo = session_repo
+        self._anomaly = anomaly
 
     async def login(
         self,
@@ -121,10 +124,18 @@ class LoginService:
                     actor_id=user.id,
                     entity_type="user",
                     entity_id=str(user.id),
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                    device_fingerprint_hash=device_fingerprint,
                     payload={"setup_complete": True},
                 )
             except Exception:
                 await logger.awarning("audit_write_failed", action=AuditAction.LOGIN)
+            if self._anomaly is not None:
+                try:
+                    await self._anomaly.check(user, ip_address, device_fingerprint)
+                except Exception:
+                    await logger.awarning("anomaly_check_error", user_id=str(user.id))
             return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
         await logger.ainfo("user_logged_in_setup_required", user_id=str(user.id))

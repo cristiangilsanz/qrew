@@ -87,8 +87,10 @@ from com.qode.qrew.v1.service.services.email_change import (
     EmailChangeService,
 )
 from com.qode.qrew.v1.service.services.fingerprint import FingerprintService
+from com.qode.qrew.v1.service.services.geoip import GeoIpService
 from com.qode.qrew.v1.service.services.kyc import KycError, KycService
 from com.qode.qrew.v1.service.services.login import LoginError, LoginService
+from com.qode.qrew.v1.service.services.login_anomaly import LoginAnomalyService
 from com.qode.qrew.v1.service.services.logout import LogoutError, LogoutService
 from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
@@ -121,6 +123,7 @@ from com.qode.qrew.v1.service.services.verification import (
     PhoneVerificationService,
     VerificationError,
 )
+from com.qode.qrew.v1.service.settings import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -158,15 +161,32 @@ def get_phone_verification_service(
     return PhoneVerificationService(UserRepository(db), AuditService())
 
 
+def get_geoip_service() -> GeoIpService:
+    """Build and return the GeoIP service (reads the MaxMind DB once on first call)."""
+    return GeoIpService(settings.geoip_db_path)
+
+
 def get_login_service(
     db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+    notifier: NotificationDispatcher = Depends(_get_notification_service),
+    geoip: GeoIpService = Depends(get_geoip_service),
 ) -> LoginService:
     """Build and return the login service."""
+    session_repo = SessionRepository(db)
+    anomaly = LoginAnomalyService(
+        geoip=geoip,
+        audit=AuditService(),
+        session_repo=session_repo,
+        notifier=notifier,
+        redis=redis,
+    )
     return LoginService(
         UserRepository(db),
         PasskeyCredentialRepository(db),
         AuditService(),
-        SessionRepository(db),
+        session_repo,
+        anomaly,
     )
 
 

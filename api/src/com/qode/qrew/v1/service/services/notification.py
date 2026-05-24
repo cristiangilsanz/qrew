@@ -68,6 +68,16 @@ class EmailService(Protocol):
         """Send a security notice that account recovery was completed."""
         ...
 
+    async def send_login_anomaly_alert(
+        self,
+        to_email: str,
+        full_name: str,
+        reason: str,
+        ip_address: str | None,
+    ) -> None:
+        """Send a security alert when a login anomaly is detected."""
+        ...
+
 
 class SmsService(Protocol):
     """Sends a single type of transactional SMS."""
@@ -138,6 +148,20 @@ class StubEmailService:
         await logger.ainfo(
             "account_recovery_stub",
             to=_mask_email(to_email),
+        )
+
+    async def send_login_anomaly_alert(
+        self,
+        to_email: str,
+        full_name: str,
+        reason: str,
+        ip_address: str | None,
+    ) -> None:
+        """Log login anomaly alert."""
+        await logger.awarning(
+            "login_anomaly_alert_stub",
+            to=_mask_email(to_email),
+            reason=reason,
         )
 
 
@@ -283,6 +307,46 @@ class SmtpEmailService:
                 "kyc_status_email_failed", to=_mask_email(to_email), exc_info=exc
             )
 
+    async def send_login_anomaly_alert(
+        self,
+        to_email: str,
+        full_name: str,
+        reason: str,
+        ip_address: str | None,
+    ) -> None:
+        """Send a login anomaly security alert via SMTP."""
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Suspicious login detected on your Qrew account"
+        message["From"] = self._from_address
+        message["To"] = to_email
+        ip_info = f" from IP {ip_address}" if ip_address else ""
+        body = (
+            f"Hello {full_name},\n\n"
+            f"A suspicious login{ip_info} was detected on your account.\n"
+            f"Reason: {reason}\n\n"
+            "If this was you, no action is needed.\n"
+            "If not, secure your account immediately at "
+            f"{settings.base_url}/account/security\n\n"
+            "— The Qrew Team"
+        )
+        message.attach(MIMEText(body, "plain"))
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=self._host,
+                port=self._port,
+                username=self._user,
+                password=self._password,
+                start_tls=True,
+            )
+            await logger.ainfo("login_anomaly_alert_sent", to=_mask_email(to_email))
+        except Exception as exc:
+            await logger.aerror(
+                "login_anomaly_alert_failed",
+                to=_mask_email(to_email),
+                exc_info=exc,
+            )
+
     async def send_account_recovery(self, to_email: str, full_name: str) -> None:
         """Send an account recovery security notice via SMTP."""
         message = MIMEMultipart("alternative")
@@ -390,6 +454,18 @@ class NotificationDispatcher:
     async def send_account_recovery(self, to_email: str, full_name: str) -> None:
         """Dispatch an account recovery security notice."""
         await self._email.send_account_recovery(to_email, full_name)
+
+    async def send_login_anomaly_alert(
+        self,
+        to_email: str,
+        full_name: str,
+        reason: str,
+        ip_address: str | None,
+    ) -> None:
+        """Dispatch a login anomaly security alert."""
+        await self._email.send_login_anomaly_alert(
+            to_email, full_name, reason, ip_address
+        )
 
 
 def build_notification_dispatcher() -> NotificationDispatcher:

@@ -6,7 +6,7 @@ import structlog
 from sqlalchemy import text
 
 from com.qode.qrew.v1.service.core.database import AsyncSessionLocal
-from com.qode.qrew.v1.service.models.audit import AuditAction
+from com.qode.qrew.v1.service.models.audit import AuditAction, AuditEvent
 from com.qode.qrew.v1.service.repositories.audit import (
     AuditRepository,
     build_event,
@@ -90,6 +90,14 @@ class AuditService:
             )
             await repo.insert(event)
         await logger.ainfo("audit_genesis_created")
+
+    async def get_recent_login_events(
+        self, user_id: uuid.UUID, limit: int = 5
+    ) -> list[AuditEvent]:
+        """Return the most recent full-login audit events for a user."""
+        async with AsyncSessionLocal() as session:
+            repo = AuditRepository(session)
+            return await repo.get_recent_login_events(user_id, limit)
 
     async def verify_chain(self) -> ChainVerificationResult:
         """Recompute every hash from genesis and return tampered IDs."""

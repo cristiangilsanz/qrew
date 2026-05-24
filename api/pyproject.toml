@@ -37,6 +37,7 @@ dependencies = [
     "pillow>=10.0",
     "opencv-python-headless>=4.8",
     "cryptography>=42.0",
+    "geoip2>=5.2.0",
 ]
 
 [project.scripts]
