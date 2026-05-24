@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     # Device fingerprinting
     fingerprint_multi_account_threshold: int = 2
 
+    # Login anomaly detection
+    geoip_db_path: str = "GeoLite2-City.mmdb"
+    anomaly_impossible_travel_kmh: float = 1000.0
+    anomaly_concurrent_window_minutes: int = 5
+    anomaly_kill_sessions_on_detection: bool = False
+
     # Security
     hibp_enabled: bool = False
 
