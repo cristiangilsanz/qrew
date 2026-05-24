@@ -66,6 +66,13 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_national_id_hash(self, national_id_hash: str) -> User | None:
+        """Return the user matching the given national ID hash, or None."""
+        result = await self._session.execute(
+            select(User).where(User.national_id_hash == national_id_hash).limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def save(self, user: User) -> User:
         """Flush pending changes for an already-tracked User."""
         await self._session.flush()

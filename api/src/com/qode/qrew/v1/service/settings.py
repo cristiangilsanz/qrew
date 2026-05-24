@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     # KYC
     kyc_auto_approve: bool = False
+    national_id_encryption_key: str = "083GJwgqjfJeEG1bHg2nNNtyAH8XTCxBcEOmeHsjgDg="
 
     # Device fingerprinting
     fingerprint_multi_account_threshold: int = 2

@@ -3,6 +3,12 @@ name = "qrew-workspace"
 version = "0.1.0"
 description = "Qrew"
 requires-python = ">=3.12"
+dependencies = [
+    "cryptography>=46.0.5",
+    "opencv-python-headless>=4.8",
+    "pillow>=12.2.0",
+    "pytesseract>=0.3.13",
+]
 
 [tool.uv.workspace]
 members = ["api"]

@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from unittest.mock import MagicMock
 
 import pytest_asyncio
 import redis.asyncio as aioredis
@@ -10,6 +11,10 @@ from com.qode.qrew.v1.service.core.database import AsyncSessionLocal, engine
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
 from com.qode.qrew.v1.service.main import app
+from com.qode.qrew.v1.service.routers.auth import get_ocr_service
+from com.qode.qrew.v1.service.services.ocr import OcrService
+
+_FAKE_NATIONAL_ID = "12345678Z"
 
 _TEST_REDIS_URL = "redis://localhost:6379/1"
 
@@ -55,7 +60,11 @@ async def client(redis_test: aioredis.Redis) -> AsyncGenerator[AsyncClient, None
     async def _get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[type-arg]
         yield redis_test
 
+    mock_ocr = MagicMock(spec=OcrService)
+    mock_ocr.extract_national_id.return_value = _FAKE_NATIONAL_ID
+
     app.dependency_overrides[get_redis] = _get_redis
+    app.dependency_overrides[get_ocr_service] = lambda: mock_ocr
     limiter.reset()
 
     async with AsyncClient(
@@ -65,3 +74,4 @@ async def client(redis_test: aioredis.Redis) -> AsyncGenerator[AsyncClient, None
         yield ac
 
     app.dependency_overrides.pop(get_redis, None)
+    app.dependency_overrides.pop(get_ocr_service, None)

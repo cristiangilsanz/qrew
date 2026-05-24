@@ -87,6 +87,7 @@ from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
 )
+from com.qode.qrew.v1.service.services.ocr import OcrService
 from com.qode.qrew.v1.service.services.passkey import PasskeyError, PasskeyService
 from com.qode.qrew.v1.service.services.password_change import (
     PasswordChangeError,
@@ -203,12 +204,18 @@ def get_resend_phone_otp_service(
     return ResendPhoneOtpService(UserRepository(db), notifier)
 
 
+def get_ocr_service() -> OcrService:
+    """Build and return the OCR service."""
+    return OcrService()
+
+
 def get_kyc_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(_get_notification_service),
+    ocr: OcrService = Depends(get_ocr_service),
 ) -> KycService:
     """Build and return the KYC service."""
-    return KycService(UserRepository(db), notifier, AuditService())
+    return KycService(UserRepository(db), notifier, AuditService(), ocr)
 
 
 def get_passkey_service(

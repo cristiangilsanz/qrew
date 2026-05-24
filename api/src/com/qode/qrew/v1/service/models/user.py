@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, String, func
+from sqlalchemy import Boolean, DateTime, Enum, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -60,7 +60,10 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
 
-    national_id_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    national_id_hash: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, unique=True, index=True
+    )
+    national_id_number: Mapped[str | None] = mapped_column(Text, nullable=True)
     kyc_status: Mapped[KycStatus] = mapped_column(
         Enum(KycStatus, name="kyc_status"),
         default=KycStatus.not_submitted,
