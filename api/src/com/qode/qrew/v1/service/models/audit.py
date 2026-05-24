@@ -30,6 +30,8 @@ class AuditAction(enum.StrEnum):
     EMAIL_CHANGE_CONFIRMED = "email_change_confirmed"
     PHONE_CHANGE_REQUESTED = "phone_change_requested"
     PHONE_CHANGE_CONFIRMED = "phone_change_confirmed"
+    FINGERPRINT_MULTI_ACCOUNT_FLAG = "fingerprint_multi_account_flag"
+    FINGERPRINT_HEADLESS_FLAG = "fingerprint_headless_flag"
     GENESIS = "genesis"
 
 

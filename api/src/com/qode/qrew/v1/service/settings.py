@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # KYC
     kyc_auto_approve: bool = False
 
+    # Device fingerprinting
+    fingerprint_multi_account_threshold: int = 2
+
     # Security
     hibp_enabled: bool = False
 

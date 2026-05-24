@@ -250,6 +250,17 @@ class ChangePasswordResponse(BaseModel):
     message: str
 
 
+class FingerprintReportRequest(BaseModel):
+    fingerprint_hash: str = Field(..., min_length=1, max_length=255)
+    user_agent: str | None = Field(default=None, max_length=1024)
+    ip_address: str | None = Field(default=None, max_length=45)
+
+
+class FingerprintReportResponse(BaseModel):
+    message: str
+    flagged: bool
+
+
 class PasskeyAuthenticationBeginRequest(BaseModel):
     email: EmailStr
 

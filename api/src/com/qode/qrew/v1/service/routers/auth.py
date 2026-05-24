@@ -24,6 +24,9 @@ from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
 from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.repositories.fingerprint import (
+    DeviceFingerprintRepository,
+)
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
 from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
@@ -36,6 +39,8 @@ from com.qode.qrew.v1.service.schemas.auth import (
     ChangePhoneResponse,
     ConfirmEmailChangeRequest,
     ConfirmPhoneChangeRequest,
+    FingerprintReportRequest,
+    FingerprintReportResponse,
     KycUploadResponse,
     LoginRequest,
     LoginResponse,
@@ -74,6 +79,7 @@ from com.qode.qrew.v1.service.services.email_change import (
     EmailChangeError,
     EmailChangeService,
 )
+from com.qode.qrew.v1.service.services.fingerprint import FingerprintService
 from com.qode.qrew.v1.service.services.kyc import KycError, KycService
 from com.qode.qrew.v1.service.services.login import LoginError, LoginService
 from com.qode.qrew.v1.service.services.logout import LogoutError, LogoutService
@@ -229,6 +235,13 @@ def get_complete_setup_service(
         AuditService(),
         SessionRepository(db),
     )
+
+
+def get_fingerprint_service(
+    db: AsyncSession = Depends(get_db),
+) -> FingerprintService:
+    """Build and return the fingerprint service."""
+    return FingerprintService(DeviceFingerprintRepository(db), AuditService())
 
 
 def get_phone_change_service(
@@ -842,3 +855,32 @@ async def confirm_phone_change(
         return ChangePhoneResponse(message="Phone number updated successfully.")
     except PhoneChangeError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+# ── Device fingerprinting ─────────────────────────────────────────────────────
+
+
+@router.post(
+    "/devices/fingerprint",
+    response_model=FingerprintReportResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Report a device fingerprint for the current user",
+)
+@limiter.limit("30/hour")  # type: ignore[misc]
+async def report_fingerprint(
+    request: Request,
+    body: FingerprintReportRequest,
+    current_user: User = Depends(get_current_user),
+    service: FingerprintService = Depends(get_fingerprint_service),
+) -> FingerprintReportResponse:
+    """Upsert a device fingerprint and flag headless clients or multi-account hashes."""
+    flagged = await service.report(
+        current_user,
+        body.fingerprint_hash,
+        body.user_agent,
+        body.ip_address,
+    )
+    return FingerprintReportResponse(
+        message="Fingerprint recorded.",
+        flagged=flagged,
+    )
