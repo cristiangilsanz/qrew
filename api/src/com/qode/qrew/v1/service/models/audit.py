@@ -20,6 +20,8 @@ class AuditAction(enum.StrEnum):
     KYC_REVIEWED = "kyc_reviewed"
     PASSKEY_REGISTERED = "passkey_registered"
     PASSKEY_AUTHENTICATED = "passkey_authenticated"
+    PASSKEY_DELETED = "passkey_deleted"
+    PASSKEY_RENAMED = "passkey_renamed"
     TOKEN_REFRESHED = "token_refreshed"  # noqa: S105
     TOKEN_THEFT_DETECTED = "token_theft_detected"  # noqa: S105
     SETUP_COMPLETED = "setup_completed"

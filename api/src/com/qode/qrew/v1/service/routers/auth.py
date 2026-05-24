@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated
 
 import redis.asyncio as aioredis
@@ -46,6 +47,11 @@ from com.qode.qrew.v1.service.schemas.auth import (
     VerifyEmailRequest,
     VerifyPhoneRequest,
     VerifyResponse,
+)
+from com.qode.qrew.v1.service.schemas.passkey import (
+    PasskeyListResponse,
+    PasskeyRenameRequest,
+    PasskeyResponse,
 )
 from com.qode.qrew.v1.service.schemas.session import (
     RevokeAllResponse,
@@ -589,3 +595,81 @@ async def revoke_all_sessions(
     """Invalidate every refresh token for the authenticated user."""
     await service.revoke_all(current_user.id)
     return RevokeAllResponse(message="All sessions have been revoked.")
+
+
+# ── Passkey management ────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/passkeys",
+    response_model=PasskeyListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="List all passkeys for the current user",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def list_passkeys(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    service: PasskeyService = Depends(get_passkey_service),
+) -> PasskeyListResponse:
+    """Return all passkeys registered by the authenticated user."""
+    return await service.list_passkeys(current_user.id)
+
+
+@router.delete(
+    "/passkeys/{passkey_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a passkey by ID",
+)
+@limiter.limit("20/minute")  # type: ignore[misc]
+async def delete_passkey(
+    request: Request,
+    passkey_id: str,
+    current_user: User = Depends(get_current_user),
+    service: PasskeyService = Depends(get_passkey_service),
+) -> None:
+    """Remove a passkey; refuses if it is the user's last one (409)."""
+    try:
+        pk_id = uuid.UUID(passkey_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"message": "Invalid passkey ID", "field": "passkey_id"},
+        ) from exc
+    try:
+        await service.delete_passkey(pk_id, current_user.id)
+    except PasskeyError as exc:
+        http_status = (
+            status.HTTP_409_CONFLICT
+            if "last passkey" in exc.message
+            else status.HTTP_404_NOT_FOUND
+        )
+        raise _domain_error(exc, http_status) from exc
+
+
+@router.patch(
+    "/passkeys/{passkey_id}",
+    response_model=PasskeyResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Rename a passkey",
+)
+@limiter.limit("20/minute")  # type: ignore[misc]
+async def rename_passkey(
+    request: Request,
+    passkey_id: str,
+    body: PasskeyRenameRequest,
+    current_user: User = Depends(get_current_user),
+    service: PasskeyService = Depends(get_passkey_service),
+) -> PasskeyResponse:
+    """Update the display name of a passkey credential."""
+    try:
+        pk_id = uuid.UUID(passkey_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"message": "Invalid passkey ID", "field": "passkey_id"},
+        ) from exc
+    try:
+        return await service.rename_passkey(pk_id, current_user.id, body.name)
+    except PasskeyError as exc:
+        raise _domain_error(exc, status.HTTP_404_NOT_FOUND) from exc
