@@ -1,4 +1,6 @@
 import enum
+import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -29,3 +31,21 @@ class FingerprintAdminResponse(BaseModel):
     fingerprint_hash: str
     user_ids: list[str]
     account_count: int
+
+
+class UserSummaryResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+    full_name: str
+    kyc_status: str
+    email_verified: bool
+    phone_verified: bool
+    is_admin: bool
+    created_at: datetime
+
+
+class UserListResponse(BaseModel):
+    users: list[UserSummaryResponse]
+    total: int
+    page: int
+    page_size: int

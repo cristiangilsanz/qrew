@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from com.qode.qrew.v1.service.core.auth import get_admin_user
 from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
-from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.fingerprint import (
     DeviceFingerprintRepository,
 )
@@ -16,6 +16,8 @@ from com.qode.qrew.v1.service.schemas.admin import (
     FingerprintAdminResponse,
     KycReviewRequest,
     KycReviewResponse,
+    UserListResponse,
+    UserSummaryResponse,
 )
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.fingerprint import FingerprintService
@@ -121,4 +123,48 @@ async def get_fingerprint(
         fingerprint_hash=fingerprint_hash,
         user_ids=[str(uid) for uid in user_ids],
         account_count=len(user_ids),
+    )
+
+
+# ── User listing ──────────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/users",
+    response_model=UserListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="List and search users",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def list_users(
+    request: Request,
+    page: int = 1,
+    page_size: int = 20,
+    search: str | None = None,
+    kyc_status: KycStatus | None = None,
+    _admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserListResponse:
+    """Return a paginated list of users with optional filters."""
+    page = max(page, 1)
+    page_size = 20 if page_size < 1 or page_size > 100 else page_size  # noqa: PLR2004
+    repo = UserRepository(db)
+    users, total = await repo.search_paginated(page, page_size, search, kyc_status)
+    return UserListResponse(
+        users=[
+            UserSummaryResponse(
+                id=u.id,
+                email=u.email,
+                full_name=u.full_name,
+                kyc_status=u.kyc_status,
+                email_verified=u.email_verified,
+                phone_verified=u.phone_number_verified,
+                is_admin=u.is_admin,
+                created_at=u.created_at,
+            )
+            for u in users
+        ],
+        total=total,
+        page=page,
+        page_size=page_size,
     )

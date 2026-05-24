@@ -1,3 +1,6 @@
+import uuid
+from datetime import datetime
+
 import phonenumbers
 import zxcvbn
 from MailChecker import MailChecker  # type: ignore[import-untyped]
@@ -297,3 +300,22 @@ class PasskeyAuthenticationCompleteRequest(BaseModel):
     raw_id: str = Field(alias="rawId")
     response: AssertionResponseData
     type: str = "public-key"
+
+
+class UserProfileResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+    full_name: str
+    phone_number: str
+    kyc_status: str
+    email_verified: bool
+    phone_verified: bool
+    created_at: datetime
+
+
+class OnboardingStatusResponse(BaseModel):
+    email_verified: bool
+    phone_verified: bool
+    kyc_submitted: bool
+    passkey_registered: bool
+    is_complete: bool
