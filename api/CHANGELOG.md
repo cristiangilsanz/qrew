@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.7.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.6.0...qrew-api/v1.7.0) (2026-05-26)
+
+
+### Features
+
+* bind device_id to sessions for device-bound refresh tokens ([#103](https://github.com/cristiangilsanz/qrew/issues/103)) ([d8fbdf0](https://github.com/cristiangilsanz/qrew/commit/d8fbdf028432becfda3be5db78794ff262dbb142))
+* implement passkey re-assertion endpoint for QR display gate ([#105](https://github.com/cristiangilsanz/qrew/issues/105)) ([fdd2228](https://github.com/cristiangilsanz/qrew/commit/fdd222873577bfc4589338ed20fa7a6ab2276379))
+* implement per-account failed-login lockout with exponential backoff ([#107](https://github.com/cristiangilsanz/qrew/issues/107)) ([6298363](https://github.com/cristiangilsanz/qrew/commit/6298363c96cfcfafed8df61efd8992ac83b3d37f))
+* implement scanner credential management for venue entry ([#106](https://github.com/cristiangilsanz/qrew/issues/106)) ([22e0304](https://github.com/cristiangilsanz/qrew/commit/22e0304968b775741a023ca1f2cb8d701dfb1f09))
+
 ## [1.6.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.5.0...qrew-api/v1.6.0) (2026-05-24)
 
 
