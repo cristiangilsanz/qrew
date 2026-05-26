@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.8.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.7.0...qrew-api/v1.8.0) (2026-05-26)
+
+
+### Features
+
+* enforce concurrent session cap per user with oldest-first eviction ([#110](https://github.com/cristiangilsanz/qrew/issues/110)) ([32dda46](https://github.com/cristiangilsanz/qrew/commit/32dda46cc311d08e731a77ec87ae66f9e7917c48))
+* HIBP breach check at login to flag post-registration compromised passwords ([#108](https://github.com/cristiangilsanz/qrew/issues/108)) ([06da18b](https://github.com/cristiangilsanz/qrew/commit/06da18b1b5b758b1b11ba807cbf8c592343f6b12))
+* implement account deletion with PII anonymisation ([#111](https://github.com/cristiangilsanz/qrew/issues/111)) ([1177880](https://github.com/cristiangilsanz/qrew/commit/1177880c6e22bf5849bdf39327609becae91f20c))
+* implement device integrity attestation ([#112](https://github.com/cristiangilsanz/qrew/issues/112)) ([844077f](https://github.com/cristiangilsanz/qrew/commit/844077fa36a281ca3bf26efdd18a9b50803522fe))
+* implement user-facing audit log read endpoint ([#113](https://github.com/cristiangilsanz/qrew/issues/113)) ([4fb008c](https://github.com/cristiangilsanz/qrew/commit/4fb008ce942811ba9b05474b21a063cbe1d1c700))
+
 ## [1.7.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.6.0...qrew-api/v1.7.0) (2026-05-26)
 
 
