@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     login_max_attempts: int = 5
     login_lockout_base_seconds: int = 300
 
+    # Concurrent session cap
+    max_sessions_per_user: int = 5
+
     # Cloudflare Turnstile
     captcha_enabled: bool = False
     captcha_secret_key: str = "1x0000000000000000000000000000000AA"  # noqa: S105

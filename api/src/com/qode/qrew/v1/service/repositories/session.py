@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.service.models.session import Session
@@ -31,6 +31,25 @@ class SessionRepository:
             select(Session)
             .where(Session.user_id == user_id)
             .order_by(Session.last_used_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def count_by_user_id(self, user_id: uuid.UUID) -> int:
+        """Return the number of sessions persisted for the given user."""
+        result = await self._session.execute(
+            select(func.count()).select_from(Session).where(Session.user_id == user_id)
+        )
+        return int(result.scalar_one())
+
+    async def get_oldest_by_user_id(
+        self, user_id: uuid.UUID, limit: int
+    ) -> list[Session]:
+        """Return the user's oldest sessions, ordered by created_at ASC."""
+        result = await self._session.execute(
+            select(Session)
+            .where(Session.user_id == user_id)
+            .order_by(Session.created_at.asc())
+            .limit(limit)
         )
         return list(result.scalars().all())
 

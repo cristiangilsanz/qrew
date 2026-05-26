@@ -216,6 +216,7 @@ def get_login_service(
         anomaly,
         DeviceRepository(db),
         lockout,
+        redis,
     )
 
 
