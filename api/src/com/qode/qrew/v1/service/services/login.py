@@ -1,5 +1,6 @@
 import uuid
 
+import redis.asyncio as aioredis
 import structlog
 
 from com.qode.qrew.v1.service.core.errors import DomainError
@@ -23,6 +24,8 @@ from com.qode.qrew.v1.service.schemas.auth import LoginRequest, LoginResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.login_anomaly import LoginAnomalyService
 from com.qode.qrew.v1.service.services.login_lockout import LoginLockoutService
+from com.qode.qrew.v1.service.services.logout import BLACKLIST_JTI_PREFIX
+from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -43,6 +46,7 @@ class LoginService:
         anomaly: LoginAnomalyService | None = None,
         device_repo: DeviceRepository | None = None,
         lockout: LoginLockoutService | None = None,
+        redis: aioredis.Redis | None = None,  # type: ignore[type-arg]
     ) -> None:
         self._repo = repo
         self._passkey_repo = passkey_repo
@@ -51,6 +55,7 @@ class LoginService:
         self._anomaly = anomaly
         self._device_repo = device_repo
         self._lockout = lockout
+        self._redis = redis
 
     async def login(  # noqa: PLR0912, PLR0915
         self,
@@ -148,6 +153,7 @@ class LoginService:
                 device_fingerprint,
                 bound_device_id,
             )
+            await self.enforce_session_cap(user.id)
             await logger.ainfo("user_logged_in", user_id=str(user.id))
             try:
                 await self._audit.record(
@@ -189,6 +195,38 @@ class LoginService:
             setup_required=True,
             password_compromised=password_compromised,
         )
+
+    async def enforce_session_cap(self, user_id: uuid.UUID) -> None:
+        """Evict the user's oldest sessions if the cap is exceeded."""
+        if self._session_repo is None:
+            return
+        cap = settings.max_sessions_per_user
+        if cap <= 0:
+            return
+        count = await self._session_repo.count_by_user_id(user_id)
+        if count <= cap:
+            return
+        overflow = count - cap
+        victims = await self._session_repo.get_oldest_by_user_id(user_id, overflow)
+        ttl = settings.refresh_token_expire_days * 86400
+        for victim in victims:
+            jti = victim.jti
+            await self._session_repo.delete_by_jti(jti)
+            if self._redis is not None:
+                await self._redis.setex(BLACKLIST_JTI_PREFIX + jti, ttl, "1")
+            await logger.ainfo("session_evicted", user_id=str(user_id), jti=jti)
+            try:
+                await self._audit.record(
+                    action=AuditAction.SESSION_EVICTED,
+                    actor_id=user_id,
+                    entity_type="session",
+                    entity_id=str(victim.id),
+                    payload={"reason": "session_cap", "jti": jti},
+                )
+            except Exception:
+                await logger.awarning(
+                    "audit_write_failed", action=AuditAction.SESSION_EVICTED
+                )
 
     async def _check_password_pwned(
         self,
