@@ -40,6 +40,8 @@ from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepos
 from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import (
+    AccountDeleteRequest,
+    AccountDeleteResponse,
     ChangeEmailRequest,
     ChangeEmailResponse,
     ChangePasswordRequest,
@@ -93,6 +95,10 @@ from com.qode.qrew.v1.service.schemas.passkey import (
 from com.qode.qrew.v1.service.schemas.session import (
     RevokeAllResponse,
     SessionListResponse,
+)
+from com.qode.qrew.v1.service.services.account_deletion import (
+    AccountDeletionError,
+    AccountDeletionService,
 )
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.complete_setup import (
@@ -374,6 +380,20 @@ def get_password_change_service(
     )
 
 
+def get_account_deletion_service(
+    db: AsyncSession = Depends(get_db),
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> AccountDeletionService:
+    """Build and return the account deletion service."""
+    return AccountDeletionService(
+        UserRepository(db),
+        SessionRepository(db),
+        PasskeyCredentialRepository(db),
+        redis,
+        AuditService(),
+    )
+
+
 _DomainError = (
     RegistrationError
     | VerificationError
@@ -392,6 +412,7 @@ _DomainError = (
     | RecoveryError
     | DeviceBindingError
     | DeviceError
+    | AccountDeletionError
 )
 
 
@@ -930,6 +951,27 @@ async def change_password(
         )
         return ChangePasswordResponse(message="Password changed successfully.")
     except PasswordChangeError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/account/delete",
+    response_model=AccountDeleteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Delete the authenticated user's account (PII anonymised, soft delete)",
+)
+@limiter.limit("5/hour")  # type: ignore[misc]
+async def delete_account(
+    request: Request,
+    body: AccountDeleteRequest,
+    current_user: User = Depends(get_current_user),
+    service: AccountDeletionService = Depends(get_account_deletion_service),
+) -> AccountDeleteResponse:
+    """Anonymise PII, revoke sessions and passkeys, set deleted_at on the user."""
+    try:
+        await service.delete(current_user, body.current_password)
+        return AccountDeleteResponse(message="Account deleted.")
+    except AccountDeletionError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
 
 

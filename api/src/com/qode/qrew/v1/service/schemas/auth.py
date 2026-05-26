@@ -254,6 +254,14 @@ class ChangePasswordResponse(BaseModel):
     message: str
 
 
+class AccountDeleteRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+
+
+class AccountDeleteResponse(BaseModel):
+    message: str
+
+
 class FingerprintReportRequest(BaseModel):
     fingerprint_hash: str = Field(..., min_length=1, max_length=255)
     user_agent: str | None = Field(default=None, max_length=1024)
