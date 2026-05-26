@@ -14,6 +14,7 @@ from com.qode.qrew.v1.service.core.security import (
 from com.qode.qrew.v1.service.models.audit import AuditAction
 from com.qode.qrew.v1.service.models.session import Session
 from com.qode.qrew.v1.service.models.user import KycStatus
+from com.qode.qrew.v1.service.repositories.device import DeviceRepository
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
 from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
@@ -38,12 +39,14 @@ class LoginService:
         audit: AuditService,
         session_repo: SessionRepository | None = None,
         anomaly: LoginAnomalyService | None = None,
+        device_repo: DeviceRepository | None = None,
     ) -> None:
         self._repo = repo
         self._passkey_repo = passkey_repo
         self._audit = audit
         self._session_repo = session_repo
         self._anomaly = anomaly
+        self._device_repo = device_repo
 
     async def login(
         self,
@@ -51,6 +54,7 @@ class LoginService:
         ip_address: str | None = None,
         user_agent: str | None = None,
         device_fingerprint: str | None = None,
+        device_id: uuid.UUID | None = None,
     ) -> LoginResponse:
         """Authenticate a user, returning a setup or full-access token."""
         user = await self._repo.get_by_email(request.email)
@@ -112,10 +116,19 @@ class LoginService:
         )
 
         if setup_complete:
-            access_token = create_access_token(str(user.id))
+            bound_device_id = await self.resolve_bound_device(user.id, device_id)
+            access_token = create_access_token(
+                str(user.id),
+                device_id=str(bound_device_id) if bound_device_id else None,
+            )
             refresh_token = create_refresh_token(str(user.id))
             await self._persist_session(
-                user.id, refresh_token, ip_address, user_agent, device_fingerprint
+                user.id,
+                refresh_token,
+                ip_address,
+                user_agent,
+                device_fingerprint,
+                bound_device_id,
             )
             await logger.ainfo("user_logged_in", user_id=str(user.id))
             try:
@@ -161,6 +174,7 @@ class LoginService:
         ip_address: str | None,
         user_agent: str | None,
         device_fingerprint: str | None,
+        device_id: uuid.UUID | None = None,
     ) -> None:
         if self._session_repo is None:
             return
@@ -175,5 +189,17 @@ class LoginService:
                 ip_address=ip_address,
                 user_agent=user_agent,
                 device_fingerprint=device_fingerprint,
+                device_id=device_id,
             )
         )
+
+    async def resolve_bound_device(
+        self, user_id: uuid.UUID, device_id: uuid.UUID | None
+    ) -> uuid.UUID | None:
+        """Return device_id if it belongs to the user and is not revoked."""
+        if device_id is None or self._device_repo is None:
+            return None
+        device = await self._device_repo.get_by_id(device_id)
+        if device is None or device.user_id != user_id or device.revoked_at is not None:
+            return None
+        return device.id

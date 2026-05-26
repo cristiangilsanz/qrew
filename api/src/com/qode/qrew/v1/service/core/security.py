@@ -74,16 +74,18 @@ def phone_number_otp_expiry() -> datetime:
     )
 
 
-def create_access_token(subject: str) -> str:
+def create_access_token(subject: str, device_id: str | None = None) -> str:
     """Return a signed JWT access token for the given subject."""
     now = datetime.now(UTC)
-    payload = {
+    payload: dict[str, object] = {
         "sub": subject,
         "type": "access",
         "scope": "access",
         "iat": now,
         "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
     }
+    if device_id is not None:
+        payload["device_id"] = device_id
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
 

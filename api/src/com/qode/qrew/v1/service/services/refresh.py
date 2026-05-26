@@ -45,7 +45,11 @@ class RefreshService:
         self._audit = audit
         self._session_repo = session_repo
 
-    async def refresh(self, request: RefreshRequest) -> RefreshResponse:
+    async def refresh(
+        self,
+        request: RefreshRequest,
+        device_id: uuid.UUID | None = None,
+    ) -> RefreshResponse:
         """Issue a new access + refresh token pair, invalidating the old one."""
         try:
             payload = jwt.decode(
@@ -88,10 +92,15 @@ class RefreshService:
             await logger.awarning("refresh_failed", reason="user_not_found_or_inactive")
             raise RefreshError("Invalid refresh token")
 
+        bound_device_id = await self.check_device_binding(jti, device_id)
+
         if jti_key:
             await self._rotate_jti(jti_key, payload.get("exp"))
 
-        access_token = create_access_token(str(user.id))
+        access_token = create_access_token(
+            str(user.id),
+            device_id=str(bound_device_id) if bound_device_id else None,
+        )
         new_refresh_token = create_refresh_token(str(user.id))
 
         if self._session_repo is not None and isinstance(jti, str):
@@ -168,6 +177,24 @@ class RefreshService:
         ):
             await logger.awarning("refresh_failed", reason="all_tokens_revoked")
             raise RefreshError("Refresh token has been revoked")
+
+    async def check_device_binding(
+        self, jti: object, device_id: uuid.UUID | None
+    ) -> uuid.UUID | None:
+        """If the session is device-bound, require a matching X-Device-Id."""
+        if self._session_repo is None or not isinstance(jti, str):
+            return None
+        session = await self._session_repo.get_by_jti(jti)
+        if session is None or session.device_id is None:
+            return None
+        if device_id is None or device_id != session.device_id:
+            await logger.awarning(
+                "refresh_failed",
+                reason="device_mismatch",
+                session_device_id=str(session.device_id),
+            )
+            raise RefreshError("Refresh token is bound to a different device")
+        return session.device_id
 
     async def _rotate_jti(self, jti_key: str, exp: object) -> None:
         """Blacklist the old JTI as rotated so any replay triggers theft detection."""
