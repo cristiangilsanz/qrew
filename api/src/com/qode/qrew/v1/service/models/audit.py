@@ -17,6 +17,7 @@ class AuditAction(enum.StrEnum):
     LOGIN_UNLOCKED = "login_unlocked"
     LOGIN_COMPROMISED_PASSWORD = "login_compromised_password"  # noqa: S105
     SESSION_EVICTED = "session_evicted"
+    ACCOUNT_DELETED = "account_deleted"
     LOGOUT = "logout"
     VERIFY_EMAIL = "verify_email"
     VERIFY_PHONE = "verify_phone"
