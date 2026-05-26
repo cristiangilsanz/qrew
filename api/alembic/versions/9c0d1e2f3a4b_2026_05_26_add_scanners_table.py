@@ -1,4 +1,4 @@
-"""add scanners table
+"""2026_05_26_add_scanners_table
 
 Revision ID: 9c0d1e2f3a4b
 Revises: 8b9c0d1e2f3a

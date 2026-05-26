@@ -298,6 +298,16 @@ class DeviceBindCompleteResponse(BaseModel):
     message: str
 
 
+class DeviceAttestRequest(BaseModel):
+    platform: str = Field(..., pattern=r"^(android|ios)$")
+    token: str = Field(..., min_length=1, max_length=16384)
+
+
+class DeviceAttestResponse(BaseModel):
+    message: str
+    platform: str
+
+
 class PasskeyAuthenticationBeginRequest(BaseModel):
     email: EmailStr
 

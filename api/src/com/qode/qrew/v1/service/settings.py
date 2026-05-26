@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     # Concurrent session cap
     max_sessions_per_user: int = 5
 
+    # Device integrity attestation
+    attestation_enabled: bool = False
+    attestation_dev_bypass: bool = True
+    android_package_name: str = ""
+    android_app_cert_digest_sha256: str = ""
+    ios_team_id: str = ""
+    ios_bundle_id: str = ""
+
     # Cloudflare Turnstile
     captcha_enabled: bool = False
     captcha_secret_key: str = "1x0000000000000000000000000000000AA"  # noqa: S105

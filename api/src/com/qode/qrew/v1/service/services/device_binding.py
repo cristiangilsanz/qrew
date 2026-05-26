@@ -16,6 +16,8 @@ from com.qode.qrew.v1.service.models.device import Device
 from com.qode.qrew.v1.service.models.user import User
 from com.qode.qrew.v1.service.repositories.device import DeviceRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.device_attestation import consume_attestation
+from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -102,13 +104,25 @@ class DeviceBindingService:
                 "This key is already registered.", field="public_key"
             )
 
+        platform = await consume_attestation(self._redis, user.id)
+        if settings.attestation_enabled and platform is None:
+            raise DeviceBindingError(
+                "Device attestation required before binding.",
+                field=None,
+            )
+
+        now = datetime.now(UTC)
         device = await self._device_repo.create(
             Device(
                 id=uuid.uuid4(),
                 user_id=user.id,
                 name=name,
                 public_key=public_key_bytes,
-                last_seen_at=datetime.now(UTC),
+                last_seen_at=now,
+                attested_at=now if platform and platform != "skipped" else None,
+                attestation_platform=platform
+                if platform and platform != "skipped"
+                else None,
             )
         )
 

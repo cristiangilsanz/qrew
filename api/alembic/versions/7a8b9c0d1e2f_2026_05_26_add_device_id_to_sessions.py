@@ -1,4 +1,4 @@
-"""add device_id to sessions
+"""2026_05_26_add_device_id_to_sessions
 
 Revision ID: 7a8b9c0d1e2f
 Revises: 6f9d4a5d9ce4
