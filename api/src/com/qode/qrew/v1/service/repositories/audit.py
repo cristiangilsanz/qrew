@@ -97,6 +97,39 @@ class AuditRepository:
         )
         return list(result.scalars().all())
 
+    async def list_for_user(
+        self,
+        user_id: uuid.UUID,
+        limit: int,
+        action: str | None = None,
+        since: datetime | None = None,
+        cursor_created_at: datetime | None = None,
+        cursor_id: uuid.UUID | None = None,
+    ) -> list[AuditEvent]:
+        """User-facing query: reverse-chronological, with action/since filters.
+
+        Cursor pagination: pass the (created_at, id) of the last row from the
+        previous page to fetch the next page.
+        """
+        stmt = select(AuditEvent).where(AuditEvent.actor_id == user_id)
+        if action is not None:
+            stmt = stmt.where(AuditEvent.action == action)
+        if since is not None:
+            stmt = stmt.where(AuditEvent.created_at >= since)
+        if cursor_created_at is not None and cursor_id is not None:
+            stmt = stmt.where(
+                (AuditEvent.created_at < cursor_created_at)
+                | (
+                    (AuditEvent.created_at == cursor_created_at)
+                    & (AuditEvent.id < cursor_id)
+                )
+            )
+        stmt = stmt.order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc()).limit(
+            limit
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
     async def get_recent_login_events(
         self,
         user_id: uuid.UUID,
