@@ -46,6 +46,16 @@ class SessionRepository:
             session.last_used_at = datetime.now(UTC)
             await self._session.flush()
 
+    async def update_last_asserted_at(self, jti: str, asserted_at: datetime) -> None:
+        """Stamp the last passkey re-assertion timestamp on the given session."""
+        result = await self._session.execute(
+            select(Session).where(Session.jti == jti).limit(1)
+        )
+        session = result.scalar_one_or_none()
+        if session is not None:
+            session.last_asserted_at = asserted_at
+            await self._session.flush()
+
     async def delete_by_jti(self, jti: str) -> None:
         """Delete the session with the given JTI."""
         await self._session.execute(delete(Session).where(Session.jti == jti))

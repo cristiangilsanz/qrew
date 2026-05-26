@@ -39,6 +39,7 @@ class AuditAction(enum.StrEnum):
     DEVICE_BIND = "device_bind"
     DEVICE_REVOKE = "device_revoke"
     DEVICE_REVOKE_ALL = "device_revoke_all"
+    PASSKEY_REASSERTED = "passkey_reasserted"
     GENESIS = "genesis"
 
 

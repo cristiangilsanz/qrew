@@ -302,6 +302,14 @@ class PasskeyAuthenticationCompleteRequest(BaseModel):
     type: str = "public-key"
 
 
+class PasskeyAssertBeginResponse(BaseModel):
+    options: str
+
+
+class PasskeyAssertCompleteResponse(BaseModel):
+    asserted_at: datetime
+
+
 class UserProfileResponse(BaseModel):
     id: uuid.UUID
     email: str

@@ -17,6 +17,7 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.service.core.auth import (
+    get_current_session,
     get_current_user,
     get_recovery_user,
     get_setup_or_full_user,
@@ -29,6 +30,7 @@ from com.qode.qrew.v1.service.core.captcha import (
 from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
+from com.qode.qrew.v1.service.models.session import Session
 from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.device import DeviceRepository
 from com.qode.qrew.v1.service.repositories.fingerprint import (
@@ -57,6 +59,8 @@ from com.qode.qrew.v1.service.schemas.auth import (
     LogoutRequest,
     LogoutResponse,
     OnboardingStatusResponse,
+    PasskeyAssertBeginResponse,
+    PasskeyAssertCompleteResponse,
     PasskeyAuthenticationBeginRequest,
     PasskeyAuthenticationCompleteRequest,
     PasskeyRegistrationCompleteRequest,
@@ -707,6 +711,51 @@ async def passkey_authenticate_complete(
         return await service.complete_authentication(
             body, ip_address, user_agent, device_fingerprint
         )
+    except PasskeyError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/passkey/assert/begin",
+    response_model=PasskeyAssertBeginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Begin a passkey re-assertion challenge for the current session",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def passkey_assert_begin(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    current_session: Session = Depends(get_current_session),
+    service: PasskeyService = Depends(get_passkey_service),
+) -> PasskeyAssertBeginResponse:
+    """Generate a 30s WebAuthn challenge bound to the current session."""
+    try:
+        options = await service.begin_reassertion(current_user, current_session.jti)
+        return PasskeyAssertBeginResponse(options=options)
+    except PasskeyError as exc:
+        raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/passkey/assert/complete",
+    response_model=PasskeyAssertCompleteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Complete a passkey re-assertion and stamp the session",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def passkey_assert_complete(
+    request: Request,
+    body: PasskeyAuthenticationCompleteRequest,
+    current_user: User = Depends(get_current_user),
+    current_session: Session = Depends(get_current_session),
+    service: PasskeyService = Depends(get_passkey_service),
+) -> PasskeyAssertCompleteResponse:
+    """Verify a re-assertion; updates session.last_asserted_at, issues no tokens."""
+    try:
+        asserted_at = await service.complete_reassertion(
+            current_user, current_session, body
+        )
+        return PasskeyAssertCompleteResponse(asserted_at=asserted_at)
     except PasskeyError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
 

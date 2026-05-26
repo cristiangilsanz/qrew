@@ -117,11 +117,13 @@ class LoginService:
 
         if setup_complete:
             bound_device_id = await self.resolve_bound_device(user.id, device_id)
+            refresh_token = create_refresh_token(str(user.id))
+            session_jti = extract_jti(refresh_token)
             access_token = create_access_token(
                 str(user.id),
                 device_id=str(bound_device_id) if bound_device_id else None,
+                session_jti=session_jti,
             )
-            refresh_token = create_refresh_token(str(user.id))
             await self._persist_session(
                 user.id,
                 refresh_token,
