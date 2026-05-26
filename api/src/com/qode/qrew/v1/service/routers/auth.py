@@ -1,5 +1,7 @@
+import base64
 import contextlib
 import uuid
+from datetime import datetime
 from typing import Annotated
 
 import redis.asyncio as aioredis
@@ -33,6 +35,7 @@ from com.qode.qrew.v1.service.core.limiter import limiter
 from com.qode.qrew.v1.service.core.redis import get_redis
 from com.qode.qrew.v1.service.models.session import Session
 from com.qode.qrew.v1.service.models.user import KycStatus, User
+from com.qode.qrew.v1.service.repositories.audit import AuditRepository
 from com.qode.qrew.v1.service.repositories.device import DeviceRepository
 from com.qode.qrew.v1.service.repositories.fingerprint import (
     DeviceFingerprintRepository,
@@ -40,6 +43,11 @@ from com.qode.qrew.v1.service.repositories.fingerprint import (
 from com.qode.qrew.v1.service.repositories.passkey import PasskeyCredentialRepository
 from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
+from com.qode.qrew.v1.service.schemas.audit import (
+    UserAuditCursor,
+    UserAuditEventResponse,
+    UserAuditListResponse,
+)
 from com.qode.qrew.v1.service.schemas.auth import (
     AccountDeleteRequest,
     AccountDeleteResponse,
@@ -1373,4 +1381,68 @@ async def get_onboarding_status(
         kyc_submitted=kyc_submitted,
         passkey_registered=has_passkey,
         is_complete=is_complete,
+    )
+
+
+# ── User audit log ─────────────────────────────────────────────────────────────
+
+
+_AUDIT_PAGE_SIZE = 50
+
+
+def _decode_audit_cursor(raw: str | None) -> tuple[datetime, uuid.UUID] | None:
+    if raw is None:
+        return None
+    try:
+        decoded = base64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4)).decode()
+        parsed = UserAuditCursor.model_validate_json(decoded)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"message": "Invalid cursor", "field": "cursor"},
+        ) from exc
+    return parsed.created_at, parsed.id
+
+
+@router.get(
+    "/audit",
+    response_model=UserAuditListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Return the current user's own audit history",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def list_user_audit(
+    request: Request,
+    action: str | None = None,
+    since: datetime | None = None,
+    cursor: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserAuditListResponse:
+    """Return the user's own audit events, reverse-chronological, paginated."""
+    cursor_pair = _decode_audit_cursor(cursor)
+    cursor_created_at = cursor_pair[0] if cursor_pair else None
+    cursor_id = cursor_pair[1] if cursor_pair else None
+
+    repo = AuditRepository(db)
+    events = await repo.list_for_user(
+        current_user.id,
+        limit=_AUDIT_PAGE_SIZE + 1,
+        action=action,
+        since=since,
+        cursor_created_at=cursor_created_at,
+        cursor_id=cursor_id,
+    )
+
+    next_cursor = None
+    if len(events) > _AUDIT_PAGE_SIZE:
+        last_visible = events[_AUDIT_PAGE_SIZE - 1]
+        events = events[:_AUDIT_PAGE_SIZE]
+        next_cursor = UserAuditCursor(
+            created_at=last_visible.created_at, id=last_visible.id
+        )
+
+    return UserAuditListResponse(
+        events=[UserAuditEventResponse.from_event(e) for e in events],
+        next_cursor=next_cursor,
     )
