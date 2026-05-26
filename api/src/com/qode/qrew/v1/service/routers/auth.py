@@ -16,6 +16,7 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from com.qode.qrew.v1.service.core.attestation import build_attestation_verifier
 from com.qode.qrew.v1.service.core.auth import (
     get_current_session,
     get_current_user,
@@ -50,6 +51,8 @@ from com.qode.qrew.v1.service.schemas.auth import (
     ChangePhoneResponse,
     ConfirmEmailChangeRequest,
     ConfirmPhoneChangeRequest,
+    DeviceAttestRequest,
+    DeviceAttestResponse,
     DeviceBindBeginResponse,
     DeviceBindCompleteRequest,
     DeviceBindCompleteResponse,
@@ -106,6 +109,10 @@ from com.qode.qrew.v1.service.services.complete_setup import (
     SetupError,
 )
 from com.qode.qrew.v1.service.services.device import DeviceError, DeviceService
+from com.qode.qrew.v1.service.services.device_attestation import (
+    DeviceAttestationError,
+    DeviceAttestationService,
+)
 from com.qode.qrew.v1.service.services.device_binding import (
     DeviceBindingError,
     DeviceBindingService,
@@ -349,6 +356,13 @@ def get_device_binding_service(
     return DeviceBindingService(DeviceRepository(db), redis, AuditService())
 
 
+def get_device_attestation_service(
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> DeviceAttestationService:
+    """Build and return the device attestation service."""
+    return DeviceAttestationService(build_attestation_verifier(), redis, AuditService())
+
+
 def get_device_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -413,6 +427,7 @@ _DomainError = (
     | DeviceBindingError
     | DeviceError
     | AccountDeletionError
+    | DeviceAttestationError
 )
 
 
@@ -1192,6 +1207,30 @@ async def device_bind_complete(
         )
     except DeviceBindingError as exc:
         raise _domain_error(exc, status.HTTP_400_BAD_REQUEST) from exc
+
+
+@router.post(
+    "/devices/attest",
+    response_model=DeviceAttestResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Submit a Play Integrity / App Attest verdict for device integrity",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def device_attest(
+    request: Request,
+    body: DeviceAttestRequest,
+    current_user: User = Depends(get_current_user),
+    service: DeviceAttestationService = Depends(get_device_attestation_service),
+) -> DeviceAttestResponse:
+    """Verify a platform attestation token against the active bind challenge."""
+    try:
+        result = await service.attest(current_user.id, body.platform, body.token)
+        return DeviceAttestResponse(
+            message="Device attested successfully.",
+            platform=result.platform,
+        )
+    except DeviceAttestationError as exc:
+        raise _domain_error(exc, status.HTTP_403_FORBIDDEN) from exc
 
 
 # ── Device management ──────────────────────────────────────────────────────────
