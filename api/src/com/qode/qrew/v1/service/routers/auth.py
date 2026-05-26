@@ -205,6 +205,7 @@ def get_login_service(
         AuditService(),
         session_repo,
         anomaly,
+        DeviceRepository(db),
     )
 
 
@@ -480,8 +481,15 @@ async def login(
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("User-Agent")
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
+    device_id: uuid.UUID | None = None
+    device_id_header = request.headers.get("X-Device-Id")
+    if device_id_header:
+        with contextlib.suppress(ValueError):
+            device_id = uuid.UUID(device_id_header)
     try:
-        return await service.login(body, ip_address, user_agent, device_fingerprint)
+        return await service.login(
+            body, ip_address, user_agent, device_fingerprint, device_id
+        )
     except LoginError as exc:
         raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
 
@@ -499,8 +507,13 @@ async def refresh(
     service: RefreshService = Depends(get_refresh_service),
 ) -> RefreshResponse:
     """Issue a new access token from a valid refresh token."""
+    device_id: uuid.UUID | None = None
+    device_id_header = request.headers.get("X-Device-Id")
+    if device_id_header:
+        with contextlib.suppress(ValueError):
+            device_id = uuid.UUID(device_id_header)
     try:
-        return await service.refresh(body)
+        return await service.refresh(body, device_id)
     except RefreshError as exc:
         raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
 
