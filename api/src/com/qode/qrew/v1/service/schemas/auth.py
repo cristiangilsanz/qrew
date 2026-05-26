@@ -103,6 +103,7 @@ class LoginResponse(BaseModel):
     refresh_token: str | None = None
     token_type: str = "bearer"  # noqa: S105
     setup_required: bool = False
+    password_compromised: bool = False
 
 
 class VerifyResponse(BaseModel):
