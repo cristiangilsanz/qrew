@@ -10,6 +10,7 @@ from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.fingerprint import (
     DeviceFingerprintRepository,
 )
+from com.qode.qrew.v1.service.repositories.scanner import ScannerRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.admin import (
     AuditVerifyResponse,
@@ -18,6 +19,14 @@ from com.qode.qrew.v1.service.schemas.admin import (
     KycReviewResponse,
     UserListResponse,
     UserSummaryResponse,
+)
+from com.qode.qrew.v1.service.schemas.scanner import (
+    ScannerCreateRequest,
+    ScannerDeactivateResponse,
+    ScannerListResponse,
+    ScannerRotateRequest,
+    ScannerSummaryResponse,
+    ScannerTokenResponse,
 )
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.fingerprint import FingerprintService
@@ -29,6 +38,7 @@ from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
 )
+from com.qode.qrew.v1.service.services.scanner import ScannerError, ScannerService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -168,3 +178,113 @@ async def list_users(
         page=page,
         page_size=page_size,
     )
+
+
+def get_scanner_service(
+    db: AsyncSession = Depends(get_db),
+) -> ScannerService:
+    """Build and return the scanner service."""
+    return ScannerService(ScannerRepository(db), AuditService())
+
+
+def _scanner_summary(scanner: object) -> ScannerSummaryResponse:
+    return ScannerSummaryResponse.model_validate(scanner, from_attributes=True)
+
+
+# ── Scanner credentials ──────────────────────────────────────────────────────
+
+
+@router.post(
+    "/scanners",
+    response_model=ScannerTokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a scanner and return a short-lived RS256 JWT",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def create_scanner(
+    request: Request,
+    body: ScannerCreateRequest,
+    admin: User = Depends(get_admin_user),
+    service: ScannerService = Depends(get_scanner_service),
+) -> ScannerTokenResponse:
+    """Persist a new scanner and return its initial signed credential."""
+    scanner, token = await service.create(
+        admin.id, body.name, body.venue_id, body.event_id, body.date
+    )
+    return ScannerTokenResponse(
+        scanner_id=scanner.id,
+        token=token,
+        expires_in_hours=service.token_ttl_hours,
+    )
+
+
+@router.get(
+    "/scanners",
+    response_model=ScannerListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="List all registered scanners",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def list_scanners(
+    request: Request,
+    _admin: User = Depends(get_admin_user),
+    service: ScannerService = Depends(get_scanner_service),
+) -> ScannerListResponse:
+    """Return every scanner record (active and deactivated)."""
+    scanners = await service.list_all()
+    return ScannerListResponse(scanners=[_scanner_summary(s) for s in scanners])
+
+
+@router.post(
+    "/scanners/{scanner_id}/rotate",
+    response_model=ScannerTokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Issue a fresh JWT for an existing scanner",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def rotate_scanner(
+    request: Request,
+    scanner_id: uuid.UUID,
+    body: ScannerRotateRequest,
+    admin: User = Depends(get_admin_user),
+    service: ScannerService = Depends(get_scanner_service),
+) -> ScannerTokenResponse:
+    """Mint a new credential for a scanner that's already registered."""
+    try:
+        scanner, token = await service.rotate(
+            admin.id, scanner_id, body.venue_id, body.event_id, body.date
+        )
+    except ScannerError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"message": exc.message, "field": exc.field},
+        ) from exc
+    return ScannerTokenResponse(
+        scanner_id=scanner.id,
+        token=token,
+        expires_in_hours=service.token_ttl_hours,
+    )
+
+
+@router.delete(
+    "/scanners/{scanner_id}",
+    response_model=ScannerDeactivateResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Deactivate a scanner",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def deactivate_scanner(
+    request: Request,
+    scanner_id: uuid.UUID,
+    admin: User = Depends(get_admin_user),
+    service: ScannerService = Depends(get_scanner_service),
+) -> ScannerDeactivateResponse:
+    """Mark the scanner as inactive; future JWTs and validations are refused."""
+    try:
+        await service.deactivate(admin.id, scanner_id)
+    except ScannerError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"message": exc.message, "field": exc.field},
+        ) from exc
+    return ScannerDeactivateResponse(message="Scanner deactivated.")
