@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     # Security
     hibp_enabled: bool = False
 
+    # Login lockout (per-account)
+    login_max_attempts: int = 5
+    login_lockout_base_seconds: int = 300
+
     # Cloudflare Turnstile
     captcha_enabled: bool = False
     captcha_secret_key: str = "1x0000000000000000000000000000000AA"  # noqa: S105

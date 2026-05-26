@@ -13,6 +13,8 @@ class AuditAction(enum.StrEnum):
     REGISTER = "register"
     LOGIN = "login"
     LOGIN_FAILED = "login_failed"
+    LOGIN_LOCKED = "login_locked"
+    LOGIN_UNLOCKED = "login_unlocked"
     LOGOUT = "logout"
     VERIFY_EMAIL = "verify_email"
     VERIFY_PHONE = "verify_phone"
