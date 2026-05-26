@@ -97,16 +97,20 @@ class RefreshService:
         if jti_key:
             await self._rotate_jti(jti_key, payload.get("exp"))
 
+        new_refresh_token = create_refresh_token(str(user.id))
+        new_jti = extract_jti(new_refresh_token)
         access_token = create_access_token(
             str(user.id),
             device_id=str(bound_device_id) if bound_device_id else None,
+            session_jti=new_jti,
         )
-        new_refresh_token = create_refresh_token(str(user.id))
 
-        if self._session_repo is not None and isinstance(jti, str):
-            new_jti = extract_jti(new_refresh_token)
-            if new_jti is not None:
-                await self._session_repo.update_jti(jti, new_jti)
+        if (
+            self._session_repo is not None
+            and isinstance(jti, str)
+            and new_jti is not None
+        ):
+            await self._session_repo.update_jti(jti, new_jti)
 
         await logger.ainfo("token_refreshed", user_id=str(user.id))
         try:

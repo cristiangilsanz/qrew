@@ -45,8 +45,10 @@ from com.qode.qrew.v1.service.settings import settings
 logger = structlog.get_logger(__name__)
 
 _CHALLENGE_TTL_SECONDS = 300
+_ASSERT_CHALLENGE_TTL_SECONDS = 30
 _CHALLENGE_PREFIX = "webauthn:challenge:"
 _AUTH_CHALLENGE_PREFIX = "webauthn:auth:challenge:"
+_ASSERT_CHALLENGE_PREFIX = "webauthn:assert:challenge:"
 
 
 def _challenge_key(user_id: uuid.UUID) -> str:
@@ -55,6 +57,10 @@ def _challenge_key(user_id: uuid.UUID) -> str:
 
 def _auth_challenge_key(user_id: uuid.UUID) -> str:
     return f"{_AUTH_CHALLENGE_PREFIX}{user_id}"
+
+
+def _assert_challenge_key(session_jti: str) -> str:
+    return f"{_ASSERT_CHALLENGE_PREFIX}{session_jti}"
 
 
 class PasskeyError(DomainError):
@@ -289,8 +295,9 @@ class PasskeyService:
         )
 
         if setup_complete:
-            access_token = create_access_token(str(user.id))
             refresh_token = create_refresh_token(str(user.id))
+            session_jti = extract_jti(refresh_token)
+            access_token = create_access_token(str(user.id), session_jti=session_jti)
             await self._persist_session(
                 user.id, refresh_token, ip_address, user_agent, device_fingerprint
             )
@@ -326,6 +333,117 @@ class PasskeyService:
             access_token=create_setup_token(str(user.id)),
             setup_required=True,
         )
+
+    async def begin_reassertion(self, user: User, session_jti: str) -> str:
+        """Generate a short-lived WebAuthn assertion challenge bound to the session."""
+        credentials = await self._passkey_repo.get_all_by_user_id(user.id)
+        if not credentials:
+            raise PasskeyError("No passkey registered for this account")
+
+        allowed = [
+            PublicKeyCredentialDescriptor(
+                id=c.credential_id,
+                type=PublicKeyCredentialType.PUBLIC_KEY,
+            )
+            for c in credentials
+        ]
+        options = webauthn.generate_authentication_options(
+            rp_id=settings.rp_id,
+            allow_credentials=allowed,
+            user_verification=UserVerificationRequirement.REQUIRED,
+        )
+        await self._redis.set(
+            _assert_challenge_key(session_jti),
+            options.challenge,
+            ex=_ASSERT_CHALLENGE_TTL_SECONDS,
+        )
+        await logger.ainfo("passkey_reassertion_begin", user_id=str(user.id))
+        return webauthn.options_to_json(options)
+
+    async def complete_reassertion(
+        self,
+        user: User,
+        session: Session,
+        request: PasskeyAuthenticationCompleteRequest,
+    ) -> datetime:
+        """Verify a re-assertion and stamp the session's last_asserted_at."""
+        raw_id = base64url_to_bytes(request.raw_id)
+
+        stored_credential = await self._passkey_repo.get_by_credential_id(raw_id)
+        if stored_credential is None or stored_credential.user_id != user.id:
+            raise PasskeyError("Passkey not recognised")
+
+        challenge_key = _assert_challenge_key(session.jti)
+        raw_challenge: bytes | None = await self._redis.get(challenge_key)
+        if raw_challenge is None:
+            raise PasskeyError("Re-assertion challenge expired. Please start again.")
+
+        await self._redis.delete(challenge_key)
+
+        user_handle = (
+            base64url_to_bytes(request.response.user_handle)
+            if request.response.user_handle
+            else None
+        )
+        credential = AuthenticationCredential(
+            id=request.id,
+            raw_id=raw_id,
+            response=AuthenticatorAssertionResponse(
+                client_data_json=base64url_to_bytes(request.response.client_data_json),
+                authenticator_data=base64url_to_bytes(
+                    request.response.authenticator_data
+                ),
+                signature=base64url_to_bytes(request.response.signature),
+                user_handle=user_handle,
+            ),
+            type=PublicKeyCredentialType.PUBLIC_KEY,
+        )
+
+        try:
+            verification = webauthn.verify_authentication_response(
+                credential=credential,
+                expected_challenge=raw_challenge,
+                expected_rp_id=settings.rp_id,
+                expected_origin=settings.rp_expected_origin,
+                credential_current_sign_count=stored_credential.sign_count,
+                credential_public_key=stored_credential.public_key,
+                require_user_verification=True,
+            )
+        except Exception as exc:
+            await logger.awarning(
+                "passkey_reassertion_failed",
+                reason="verification_failed",
+                user_id=str(user.id),
+                detail=str(exc),
+            )
+            msg = (
+                f"Passkey re-assertion failed: {exc}"
+                if settings.debug
+                else "Passkey re-assertion failed. Please try again."
+            )
+            raise PasskeyError(msg) from exc
+
+        stored_credential.sign_count = verification.new_sign_count
+        stored_credential.last_used_at = datetime.now(UTC)
+        await self._passkey_repo.save(stored_credential)
+
+        asserted_at = datetime.now(UTC)
+        if self._session_repo is not None:
+            await self._session_repo.update_last_asserted_at(session.jti, asserted_at)
+
+        await logger.ainfo("passkey_reasserted", user_id=str(user.id))
+        try:
+            await self._audit.record(
+                action=AuditAction.PASSKEY_REASSERTED,
+                actor_id=user.id,
+                entity_type="session",
+                entity_id=str(session.id),
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_REASSERTED
+            )
+        return asserted_at
 
     async def list_passkeys(self, user_id: uuid.UUID) -> PasskeyListResponse:
         """Return all passkeys registered by the given user."""
