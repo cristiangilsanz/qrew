@@ -9,6 +9,7 @@ from com.qode.qrew.v1.service.core.security import (
     create_setup_token,
     extract_jti,
     hash_password,
+    is_password_pwned,
     verify_password,
 )
 from com.qode.qrew.v1.service.models.audit import AuditAction
@@ -104,6 +105,10 @@ class LoginService:
         if self._lockout is not None:
             await self._lockout.reset(user.id)
 
+        password_compromised = await self._check_password_pwned(
+            user.id, request.password, ip_address
+        )
+
         if not user.email_verified:
             await logger.awarning(
                 "login_failed",
@@ -162,7 +167,11 @@ class LoginService:
                     await self._anomaly.check(user, ip_address, device_fingerprint)
                 except Exception:
                     await logger.awarning("anomaly_check_error", user_id=str(user.id))
-            return LoginResponse(access_token=access_token, refresh_token=refresh_token)
+            return LoginResponse(
+                access_token=access_token,
+                refresh_token=refresh_token,
+                password_compromised=password_compromised,
+            )
 
         await logger.ainfo("user_logged_in_setup_required", user_id=str(user.id))
         try:
@@ -178,7 +187,38 @@ class LoginService:
         return LoginResponse(
             access_token=create_setup_token(str(user.id)),
             setup_required=True,
+            password_compromised=password_compromised,
         )
+
+    async def _check_password_pwned(
+        self,
+        user_id: uuid.UUID,
+        password: str,
+        ip_address: str | None,
+    ) -> bool:
+        """Return True if the password appears in HIBP; swallow any error."""
+        try:
+            compromised = await is_password_pwned(password)
+        except Exception:
+            await logger.awarning("hibp_check_error", user_id=str(user_id))
+            return False
+        if not compromised:
+            return False
+
+        await logger.awarning("login_compromised_password", user_id=str(user_id))
+        try:
+            await self._audit.record(
+                action=AuditAction.LOGIN_COMPROMISED_PASSWORD,
+                actor_id=user_id,
+                entity_type="user",
+                entity_id=str(user_id),
+                ip_address=ip_address,
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.LOGIN_COMPROMISED_PASSWORD
+            )
+        return True
 
     async def _persist_session(
         self,
