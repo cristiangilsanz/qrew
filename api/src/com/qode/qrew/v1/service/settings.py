@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     twilio_auth_token: str = ""
     twilio_from_number: str = ""
 
+    # Scanner credentials (RS256)
+    scanner_token_expire_hours: int = 12
+    scanner_jwt_private_key: str = ""
+    scanner_jwt_public_key: str = ""
+
     # WebAuthn
     rp_id: str = "localhost"
     rp_name: str = "Qrew"

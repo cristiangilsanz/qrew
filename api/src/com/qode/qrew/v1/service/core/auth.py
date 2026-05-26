@@ -9,8 +9,11 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.service.core.database import get_db
+from com.qode.qrew.v1.service.core.scanner_security import decode_scanner_token
+from com.qode.qrew.v1.service.models.scanner import Scanner
 from com.qode.qrew.v1.service.models.session import Session
 from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.repositories.scanner import ScannerRepository
 from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.settings import settings
@@ -145,6 +148,37 @@ async def get_current_session(
         raise _CREDENTIALS_EXCEPTION
 
     return session
+
+
+async def get_scanner(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    db: AsyncSession = Depends(get_db),
+) -> Scanner:
+    """Validate a scanner Bearer JWT and return the active Scanner record."""
+    try:
+        payload = decode_scanner_token(credentials.credentials)
+    except (ExpiredSignatureError, InvalidTokenError) as exc:
+        raise _CREDENTIALS_EXCEPTION from exc
+
+    if payload.get("type") != "scanner":
+        raise _CREDENTIALS_EXCEPTION
+
+    scanner_id_raw = payload.get("scanner_id")
+    if not isinstance(scanner_id_raw, str):
+        raise _CREDENTIALS_EXCEPTION
+
+    try:
+        scanner_id = uuid.UUID(scanner_id_raw)
+    except ValueError as exc:
+        raise _CREDENTIALS_EXCEPTION from exc
+
+    repo = ScannerRepository(db)
+    scanner = await repo.get_by_id(scanner_id)
+    if scanner is None or not scanner.is_active:
+        raise _CREDENTIALS_EXCEPTION
+
+    await repo.touch_last_used(scanner)
+    return scanner
 
 
 async def get_admin_user(
