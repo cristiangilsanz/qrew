@@ -1,11 +1,14 @@
 import uuid
+from typing import Annotated
 
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.service.core.auth import get_admin_user
 from com.qode.qrew.v1.service.core.database import get_db
 from com.qode.qrew.v1.service.core.limiter import limiter
+from com.qode.qrew.v1.service.core.redis import get_redis
 from com.qode.qrew.v1.service.models.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.fingerprint import (
     DeviceFingerprintRepository,
@@ -34,6 +37,7 @@ from com.qode.qrew.v1.service.services.kyc_review import (
     KycReviewError,
     KycReviewService,
 )
+from com.qode.qrew.v1.service.services.login_lockout import LoginLockoutService
 from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
@@ -178,6 +182,30 @@ async def list_users(
         page=page,
         page_size=page_size,
     )
+
+
+def get_login_lockout_service(
+    redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+) -> LoginLockoutService:
+    """Build and return the login lockout service."""
+    return LoginLockoutService(redis, AuditService())
+
+
+@router.post(
+    "/users/{user_id}/unlock",
+    status_code=status.HTTP_200_OK,
+    summary="Clear a per-account login lockout",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def unlock_user(
+    request: Request,
+    user_id: uuid.UUID,
+    admin: User = Depends(get_admin_user),
+    lockout: LoginLockoutService = Depends(get_login_lockout_service),
+) -> dict[str, str]:
+    """Clear the Redis lockout counter for the given user (support tool)."""
+    await lockout.admin_unlock(user_id, admin.id)
+    return {"message": "User account unlocked."}
 
 
 def get_scanner_service(

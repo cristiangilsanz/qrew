@@ -113,6 +113,10 @@ from com.qode.qrew.v1.service.services.geoip import GeoIpService
 from com.qode.qrew.v1.service.services.kyc import KycError, KycService
 from com.qode.qrew.v1.service.services.login import LoginError, LoginService
 from com.qode.qrew.v1.service.services.login_anomaly import LoginAnomalyService
+from com.qode.qrew.v1.service.services.login_lockout import (
+    LoginLockoutError,
+    LoginLockoutService,
+)
 from com.qode.qrew.v1.service.services.logout import LogoutError, LogoutService
 from com.qode.qrew.v1.service.services.notification import (
     NotificationDispatcher,
@@ -203,6 +207,7 @@ def get_login_service(
         notifier=notifier,
         redis=redis,
     )
+    lockout = LoginLockoutService(redis, AuditService())
     return LoginService(
         UserRepository(db),
         PasskeyCredentialRepository(db),
@@ -210,6 +215,7 @@ def get_login_service(
         session_repo,
         anomaly,
         DeviceRepository(db),
+        lockout,
     )
 
 
@@ -494,6 +500,12 @@ async def login(
         return await service.login(
             body, ip_address, user_agent, device_fingerprint, device_id
         )
+    except LoginLockoutError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={"message": "Invalid email or password", "field": None},
+            headers={"Retry-After": str(exc.retry_after_seconds)},
+        ) from exc
     except LoginError as exc:
         raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
 

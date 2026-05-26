@@ -21,6 +21,7 @@ from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import LoginRequest, LoginResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.login_anomaly import LoginAnomalyService
+from com.qode.qrew.v1.service.services.login_lockout import LoginLockoutService
 
 logger = structlog.get_logger(__name__)
 
@@ -40,6 +41,7 @@ class LoginService:
         session_repo: SessionRepository | None = None,
         anomaly: LoginAnomalyService | None = None,
         device_repo: DeviceRepository | None = None,
+        lockout: LoginLockoutService | None = None,
     ) -> None:
         self._repo = repo
         self._passkey_repo = passkey_repo
@@ -47,8 +49,9 @@ class LoginService:
         self._session_repo = session_repo
         self._anomaly = anomaly
         self._device_repo = device_repo
+        self._lockout = lockout
 
-    async def login(
+    async def login(  # noqa: PLR0912, PLR0915
         self,
         request: LoginRequest,
         ip_address: str | None = None,
@@ -73,6 +76,9 @@ class LoginService:
                 )
             raise LoginError("Invalid email or password")
 
+        if self._lockout is not None:
+            await self._lockout.check_not_locked(user.id)
+
         if not verify_password(request.password, user.hashed_password):
             await logger.awarning(
                 "login_failed",
@@ -91,7 +97,12 @@ class LoginService:
                 await logger.awarning(
                     "audit_write_failed", action=AuditAction.LOGIN_FAILED
                 )
+            if self._lockout is not None:
+                await self._lockout.record_failure(user.id, ip_address)
             raise LoginError("Invalid email or password")
+
+        if self._lockout is not None:
+            await self._lockout.reset(user.id)
 
         if not user.email_verified:
             await logger.awarning(
