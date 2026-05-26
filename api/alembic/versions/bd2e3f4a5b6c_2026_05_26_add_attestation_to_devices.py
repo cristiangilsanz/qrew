@@ -1,4 +1,4 @@
-"""add attestation fields to devices
+"""2026_05_26_add_attestation_to_devices
 
 Revision ID: bd2e3f4a5b6c
 Revises: ad1e2f3a4b5c

@@ -1,4 +1,4 @@
-"""add last_asserted_at to sessions
+"""2026_05_26_add_last_asserted_at_to_sessions
 
 Revision ID: 8b9c0d1e2f3a
 Revises: 7a8b9c0d1e2f

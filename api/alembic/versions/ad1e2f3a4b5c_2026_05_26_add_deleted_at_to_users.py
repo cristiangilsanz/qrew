@@ -1,4 +1,4 @@
-"""add deleted_at to users
+"""2026_05_26_add_deleted_at_to_users
 
 Revision ID: ad1e2f3a4b5c
 Revises: 9c0d1e2f3a4b

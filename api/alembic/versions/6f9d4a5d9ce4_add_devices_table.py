@@ -1,4 +1,4 @@
-"""add devices table
+"""2026_05_24_add_devices_table
 
 Revision ID: 6f9d4a5d9ce4
 Revises: eab10f45b3a7
