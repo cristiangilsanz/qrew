@@ -4,7 +4,7 @@ import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.service.core.database import AsyncSessionLocal, engine
+from com.qode.qrew.v1.service.core.infra.database import AsyncSessionLocal, engine
 
 
 @pytest_asyncio.fixture(autouse=True)

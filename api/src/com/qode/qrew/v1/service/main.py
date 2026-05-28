@@ -2,9 +2,12 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from com.qode.qrew.v1.service.core.exceptions import register_exception_handlers
-from com.qode.qrew.v1.service.core.limiter import limiter
-from com.qode.qrew.v1.service.core.middleware import RequestIDMiddleware
+from com.qode.qrew.v1.service.core.infra.exceptions import register_exception_handlers
+from com.qode.qrew.v1.service.core.infra.limiter import limiter
+from com.qode.qrew.v1.service.core.infra.middleware import (
+    RequestIDMiddleware,
+    SecurityHeadersMiddleware,
+)
 from com.qode.qrew.v1.service.lifespan import lifespan
 from com.qode.qrew.v1.service.routers import router as v1_router
 from com.qode.qrew.v1.service.settings import settings
@@ -44,5 +47,6 @@ app.add_middleware(
 )
 
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(v1_router)
