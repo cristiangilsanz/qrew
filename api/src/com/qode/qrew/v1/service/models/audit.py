@@ -31,6 +31,7 @@ class AuditAction(enum.StrEnum):
     PASSKEY_RENAMED = "passkey_renamed"
     TOKEN_REFRESHED = "token_refreshed"  # noqa: S105
     TOKEN_THEFT_DETECTED = "token_theft_detected"  # noqa: S105
+    REFRESH_SIGNATURE_INVALID = "refresh_signature_invalid"
     SETUP_COMPLETED = "setup_completed"
     PASSWORD_CHANGED = "password_changed"  # noqa: S105
     EMAIL_CHANGE_REQUESTED = "email_change_requested"

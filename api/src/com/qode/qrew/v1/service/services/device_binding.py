@@ -96,7 +96,7 @@ class DeviceBindingService:
                 "Invalid signature encoding.", field="signature"
             ) from exc
 
-        _verify_ecdsa(pub_key, sig_bytes, challenge_str.encode())
+        verify_ecdsa(pub_key, sig_bytes, challenge_str.encode())
 
         existing = await self._device_repo.get_by_public_key(public_key_bytes)
         if existing is not None:
@@ -146,7 +146,7 @@ def _pad_b64(value: str) -> str:
     return value + "=" * (-len(value) % 4)
 
 
-def _verify_ecdsa(
+def verify_ecdsa(
     pub_key: EllipticCurvePublicKey,
     sig_bytes: bytes,
     data: bytes,
