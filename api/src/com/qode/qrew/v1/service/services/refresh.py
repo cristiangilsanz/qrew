@@ -1,9 +1,12 @@
+import base64
 import uuid
 from datetime import UTC, datetime
 
 import jwt
 import redis.asyncio as aioredis
 import structlog
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+from cryptography.hazmat.primitives.serialization import load_der_public_key
 from jwt import ExpiredSignatureError, InvalidTokenError
 
 from com.qode.qrew.v1.service.core.errors import DomainError
@@ -13,10 +16,15 @@ from com.qode.qrew.v1.service.core.security import (
     extract_jti,
 )
 from com.qode.qrew.v1.service.models.audit import AuditAction
+from com.qode.qrew.v1.service.repositories.device import DeviceRepository
 from com.qode.qrew.v1.service.repositories.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.user import UserRepository
 from com.qode.qrew.v1.service.schemas.auth import RefreshRequest, RefreshResponse
 from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.device_binding import (
+    DeviceBindingError,
+    verify_ecdsa,
+)
 from com.qode.qrew.v1.service.services.logout import (
     BLACKLIST_JTI_PREFIX,
     BLACKLIST_USER_PREFIX,
@@ -28,6 +36,26 @@ logger = structlog.get_logger(__name__)
 _ROTATED = b"rotated"
 
 
+def signature_payload(jti: str, iat: int) -> bytes:
+    """Return the bytes the client must ECDSA-sign for a device-bound refresh.
+
+    Format: ``<jti>|<iat>`` — a short challenge that rotates on every refresh
+    (jti is fresh on each issue; iat is the token's issue time).
+    """
+    return f"{jti}|{iat}".encode()
+
+
+def decode_signature_header(raw: str | None) -> bytes | None:
+    """Decode an ``X-Device-Signature`` header (base64url, padding optional)."""
+    if raw is None:
+        return None
+    padded = raw + "=" * (-len(raw) % 4)
+    try:
+        return base64.urlsafe_b64decode(padded)
+    except Exception:
+        return None
+
+
 class RefreshError(DomainError):
     """A business-rule violation raised when a token refresh cannot be completed."""
 
@@ -36,19 +64,21 @@ class RefreshService:
     def __init__(
         self,
         repo: UserRepository,
-        redis: aioredis.Redis,
-        audit: AuditService,  # type: ignore[type-arg]
+        redis: aioredis.Redis,  # type: ignore[type-arg]
+        audit: AuditService,
         session_repo: SessionRepository | None = None,
+        device_repo: DeviceRepository | None = None,
     ) -> None:
         self._repo = repo
         self._redis = redis
         self._audit = audit
         self._session_repo = session_repo
+        self._device_repo = device_repo
 
     async def refresh(
         self,
         request: RefreshRequest,
-        device_id: uuid.UUID | None = None,
+        device_signature: bytes | None = None,
     ) -> RefreshResponse:
         """Issue a new access + refresh token pair, invalidating the old one."""
         try:
@@ -92,7 +122,9 @@ class RefreshService:
             await logger.awarning("refresh_failed", reason="user_not_found_or_inactive")
             raise RefreshError("Invalid refresh token")
 
-        bound_device_id = await self.check_device_binding(jti, device_id)
+        bound_device_id = await self.check_device_binding(
+            jti, payload.get("iat"), device_signature, user_id
+        )
 
         if jti_key:
             await self._rotate_jti(jti_key, payload.get("exp"))
@@ -183,22 +215,71 @@ class RefreshService:
             raise RefreshError("Refresh token has been revoked")
 
     async def check_device_binding(
-        self, jti: object, device_id: uuid.UUID | None
+        self,
+        jti: object,
+        iat: object,
+        signature: bytes | None,
+        actor_id: uuid.UUID,
     ) -> uuid.UUID | None:
-        """If the session is device-bound, require a matching X-Device-Id."""
+        """If the session is device-bound, verify the ECDSA signature over jti||iat."""
         if self._session_repo is None or not isinstance(jti, str):
             return None
         session = await self._session_repo.get_by_jti(jti)
         if session is None or session.device_id is None:
             return None
-        if device_id is None or device_id != session.device_id:
+        if not isinstance(iat, (int, float)):
+            raise RefreshError("Invalid refresh token")
+
+        if signature is None:
+            await self._audit_signature_failure(actor_id, jti, "missing_signature")
             await logger.awarning(
-                "refresh_failed",
-                reason="device_mismatch",
-                session_device_id=str(session.device_id),
+                "refresh_failed", reason="missing_device_signature", jti=jti
             )
-            raise RefreshError("Refresh token is bound to a different device")
+            raise RefreshError("Refresh requires a device signature")
+
+        if self._device_repo is None:
+            return session.device_id
+        device = await self._device_repo.get_by_id(session.device_id)
+        if device is None or device.revoked_at is not None:
+            await self._audit_signature_failure(actor_id, jti, "device_missing")
+            raise RefreshError("Bound device is no longer valid")
+
+        signed_payload = signature_payload(jti, int(iat))
+        try:
+            pub_key = load_der_public_key(device.public_key)
+        except Exception as exc:
+            await self._audit_signature_failure(actor_id, jti, "bad_public_key")
+            raise RefreshError("Invalid bound device public key") from exc
+        if not isinstance(pub_key, EllipticCurvePublicKey):
+            await self._audit_signature_failure(actor_id, jti, "bad_public_key")
+            raise RefreshError("Invalid bound device public key")
+
+        try:
+            verify_ecdsa(pub_key, signature, signed_payload)
+        except DeviceBindingError as exc:
+            await self._audit_signature_failure(actor_id, jti, "bad_signature")
+            await logger.awarning(
+                "refresh_failed", reason="device_signature_invalid", jti=jti
+            )
+            raise RefreshError("Refresh device signature invalid") from exc
         return session.device_id
+
+    async def _audit_signature_failure(
+        self, actor_id: uuid.UUID, jti: str, reason: str
+    ) -> None:
+        try:
+            await self._audit.record(
+                action=AuditAction.REFRESH_SIGNATURE_INVALID,
+                actor_id=actor_id,
+                entity_type="user",
+                entity_id=str(actor_id),
+                payload={"jti": jti, "reason": reason},
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed",
+                action=AuditAction.REFRESH_SIGNATURE_INVALID,
+            )
 
     async def _rotate_jti(self, jti_key: str, exp: object) -> None:
         """Blacklist the old JTI as rotated so any replay triggers theft detection."""

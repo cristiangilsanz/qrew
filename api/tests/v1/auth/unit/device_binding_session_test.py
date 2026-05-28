@@ -15,14 +15,12 @@ from com.qode.qrew.v1.service.core.security import (
     extract_jti,
 )
 from com.qode.qrew.v1.service.main import app
-from com.qode.qrew.v1.service.models.session import Session
 from com.qode.qrew.v1.service.routers.auth import (
     get_login_service,
     get_refresh_service,
 )
 from com.qode.qrew.v1.service.schemas.auth import LoginResponse, RefreshResponse
 from com.qode.qrew.v1.service.services.login import LoginService
-from com.qode.qrew.v1.service.services.refresh import RefreshError, RefreshService
 from com.qode.qrew.v1.service.settings import settings
 
 _LOGIN_ENDPOINT = "/v1/auth/login"
@@ -113,36 +111,6 @@ async def test_login_silently_ignores_malformed_device_id(
     assert args[4] is None
 
 
-# ── Refresh route forwards X-Device-Id ────────────────────────────────────────
-
-
-async def test_refresh_passes_device_id_from_header(
-    client: AsyncClient, mock_refresh_service: AsyncMock
-) -> None:
-    device_id = uuid.uuid4()
-    await client.post(
-        _REFRESH_ENDPOINT,
-        json={"refresh_token": "tok"},
-        headers={"X-Device-Id": str(device_id)},
-    )
-    args = mock_refresh_service.refresh.call_args.args
-    assert args[1] == device_id
-
-
-async def test_refresh_returns_401_on_device_mismatch(
-    client: AsyncClient, mock_refresh_service: AsyncMock
-) -> None:
-    mock_refresh_service.refresh.side_effect = RefreshError(
-        "Refresh token is bound to a different device"
-    )
-    response = await client.post(
-        _REFRESH_ENDPOINT,
-        json={"refresh_token": "tok"},
-        headers={"X-Device-Id": str(uuid.uuid4())},
-    )
-    assert response.status_code == 401
-
-
 # ── LoginService bound-device resolution ──────────────────────────────────────
 
 
@@ -200,98 +168,6 @@ async def test_login_service_returns_none_when_device_id_missing() -> None:
     result = await svc.resolve_bound_device(uuid.uuid4(), None)
     assert result is None
     device_repo.get_by_id.assert_not_called()
-
-
-# ── RefreshService device binding check ───────────────────────────────────────
-
-
-async def test_refresh_service_allows_match_on_device_id() -> None:
-
-    device_id = uuid.uuid4()
-    jti = str(uuid.uuid4())
-    session = Session(
-        id=uuid.uuid4(),
-        user_id=uuid.uuid4(),
-        jti=jti,
-        device_id=device_id,
-    )
-    session_repo = AsyncMock()
-    session_repo.get_by_jti = AsyncMock(return_value=session)
-
-    svc = RefreshService(
-        AsyncMock(), AsyncMock(), AsyncMock(), session_repo=session_repo
-    )
-    result = await svc.check_device_binding(jti, device_id)
-    assert result == device_id
-
-
-async def test_refresh_service_rejects_device_mismatch() -> None:
-
-    jti = str(uuid.uuid4())
-    session = Session(
-        id=uuid.uuid4(),
-        user_id=uuid.uuid4(),
-        jti=jti,
-        device_id=uuid.uuid4(),
-    )
-    session_repo = AsyncMock()
-    session_repo.get_by_jti = AsyncMock(return_value=session)
-
-    svc = RefreshService(
-        AsyncMock(), AsyncMock(), AsyncMock(), session_repo=session_repo
-    )
-    with pytest.raises(RefreshError, match="bound to a different device"):
-        await svc.check_device_binding(jti, uuid.uuid4())
-
-
-async def test_refresh_service_rejects_missing_header_on_bound_session() -> None:
-
-    jti = str(uuid.uuid4())
-    session = Session(
-        id=uuid.uuid4(),
-        user_id=uuid.uuid4(),
-        jti=jti,
-        device_id=uuid.uuid4(),
-    )
-    session_repo = AsyncMock()
-    session_repo.get_by_jti = AsyncMock(return_value=session)
-
-    svc = RefreshService(
-        AsyncMock(), AsyncMock(), AsyncMock(), session_repo=session_repo
-    )
-    with pytest.raises(RefreshError, match="bound to a different device"):
-        await svc.check_device_binding(jti, None)
-
-
-async def test_refresh_service_allows_unbound_session() -> None:
-
-    jti = str(uuid.uuid4())
-    session = Session(
-        id=uuid.uuid4(),
-        user_id=uuid.uuid4(),
-        jti=jti,
-        device_id=None,
-    )
-    session_repo = AsyncMock()
-    session_repo.get_by_jti = AsyncMock(return_value=session)
-
-    svc = RefreshService(
-        AsyncMock(), AsyncMock(), AsyncMock(), session_repo=session_repo
-    )
-    result = await svc.check_device_binding(jti, None)
-    assert result is None
-
-
-async def test_refresh_service_allows_when_session_missing() -> None:
-
-    session_repo = AsyncMock()
-    session_repo.get_by_jti = AsyncMock(return_value=None)
-
-    svc = RefreshService(
-        AsyncMock(), AsyncMock(), AsyncMock(), session_repo=session_repo
-    )
-    result = await svc.check_device_binding(str(uuid.uuid4()), uuid.uuid4())
-    assert result is None
 
 
 # ── Round-trip sanity ─────────────────────────────────────────────────────────

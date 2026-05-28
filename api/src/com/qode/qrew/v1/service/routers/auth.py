@@ -154,7 +154,11 @@ from com.qode.qrew.v1.service.services.phone_change import (
     PhoneChangeService,
 )
 from com.qode.qrew.v1.service.services.recovery import RecoveryError, RecoveryService
-from com.qode.qrew.v1.service.services.refresh import RefreshError, RefreshService
+from com.qode.qrew.v1.service.services.refresh import (
+    RefreshError,
+    RefreshService,
+    decode_signature_header,
+)
 from com.qode.qrew.v1.service.services.registration import (
     RegistrationError,
     RegistrationService,
@@ -247,7 +251,11 @@ def get_refresh_service(
 ) -> RefreshService:
     """Build and return the refresh service."""
     return RefreshService(
-        UserRepository(db), redis, AuditService(), SessionRepository(db)
+        UserRepository(db),
+        redis,
+        AuditService(),
+        SessionRepository(db),
+        DeviceRepository(db),
     )
 
 
@@ -568,13 +576,9 @@ async def refresh(
     service: RefreshService = Depends(get_refresh_service),
 ) -> RefreshResponse:
     """Issue a new access token from a valid refresh token."""
-    device_id: uuid.UUID | None = None
-    device_id_header = request.headers.get("X-Device-Id")
-    if device_id_header:
-        with contextlib.suppress(ValueError):
-            device_id = uuid.UUID(device_id_header)
+    signature = decode_signature_header(request.headers.get("X-Device-Signature"))
     try:
-        return await service.refresh(body, device_id)
+        return await service.refresh(body, signature)
     except RefreshError as exc:
         raise _domain_error(exc, status.HTTP_401_UNAUTHORIZED) from exc
 
