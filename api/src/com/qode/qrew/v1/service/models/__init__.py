@@ -1,11 +1,11 @@
-from com.qode.qrew.v1.service.core.database import Base
-from com.qode.qrew.v1.service.models.audit import AuditEvent
-from com.qode.qrew.v1.service.models.device import Device
-from com.qode.qrew.v1.service.models.fingerprint import DeviceFingerprint
-from com.qode.qrew.v1.service.models.passkey import PasskeyCredential
-from com.qode.qrew.v1.service.models.scanner import Scanner
-from com.qode.qrew.v1.service.models.session import Session
-from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.core.infra.database import Base
+from com.qode.qrew.v1.service.models.audit.audit import AuditEvent
+from com.qode.qrew.v1.service.models.auth.session import Session
+from com.qode.qrew.v1.service.models.auth.user import User
+from com.qode.qrew.v1.service.models.device.device import Device
+from com.qode.qrew.v1.service.models.device.fingerprint import DeviceFingerprint
+from com.qode.qrew.v1.service.models.passkey.passkey import PasskeyCredential
+from com.qode.qrew.v1.service.models.scanner.scanner import Scanner
 
 __all__ = [
     "AuditEvent",

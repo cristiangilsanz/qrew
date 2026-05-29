@@ -6,9 +6,10 @@ from pydantic import BaseModel
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.service.core.database import get_db
-from com.qode.qrew.v1.service.core.redis import get_redis
-from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.core.auth import pii_crypto
+from com.qode.qrew.v1.service.core.infra.database import get_db
+from com.qode.qrew.v1.service.core.infra.redis import get_redis
+from com.qode.qrew.v1.service.models.auth.user import User
 from com.qode.qrew.v1.service.services.audit import AuditService
 
 router = APIRouter(prefix="/dev", tags=["dev"])
@@ -30,7 +31,9 @@ async def dev_get_user(
     email: str,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> DevUserResponse:
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(
+        select(User).where(User.email_hash == pii_crypto.hash_lookup(email))
+    )
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -67,7 +70,9 @@ async def dev_make_admin(
     email: str,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(
+        select(User).where(User.email_hash == pii_crypto.hash_lookup(email))
+    )
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

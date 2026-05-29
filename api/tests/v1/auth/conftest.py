@@ -5,11 +5,11 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from com.qode.qrew.v1.service.core.auth import get_current_user
-from com.qode.qrew.v1.service.core.limiter import limiter
-from com.qode.qrew.v1.service.core.security import create_access_token
+from com.qode.qrew.v1.service.core.auth.auth import get_current_user
+from com.qode.qrew.v1.service.core.auth.security import create_access_token
+from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.main import app
-from com.qode.qrew.v1.service.models.user import User
+from com.qode.qrew.v1.service.models.auth.user import User
 
 
 @pytest.fixture(autouse=True)

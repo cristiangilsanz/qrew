@@ -1,6 +1,6 @@
 import pytest
 
-from com.qode.qrew.v1.service.core.limiter import limiter
+from com.qode.qrew.v1.service.core.infra.limiter import limiter
 
 
 @pytest.fixture(autouse=True)
