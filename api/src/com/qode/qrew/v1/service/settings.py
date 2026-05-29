@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     email_verification_token_expire_hours: int = 24
     phone_number_otp_expire_minutes: int = 10
 
-    kyc_auto_approve: bool = False
+    kyc_auto_approve: bool = False  #!
     national_id_encryption_key: str = "c2VrcmV0c2VrcmV0c2VrcmV0c2VrcmV0c2VrcmV0c2U="
     pii_encryption_key: str = "c2VrcmV0c2VrcmV0c2VrcmV0c2VrcmV0c2VrcmV0c2U="
     pii_encryption_previous_keys: str = ""
