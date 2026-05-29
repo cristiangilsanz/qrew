@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.8.0...qrew-api/v1.9.0) (2026-05-29)
+
+
+### Features
+
+* require per-refresh device-key signature on bound sessions ([#115](https://github.com/cristiangilsanz/qrew/issues/115)) ([0977faa](https://github.com/cristiangilsanz/qrew/commit/0977faa5390f23879e435d66cf12cc3b7b26a870))
+
 ## [1.8.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.7.0...qrew-api/v1.8.0) (2026-05-26)
 
 
