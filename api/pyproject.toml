@@ -32,6 +32,7 @@ dependencies = [
     "mailchecker>=4.1",
     "zxcvbn>=4.4",
     "opentelemetry-sdk>=1.24",
+    "arq>=0.26",
     "webauthn>=2.0",
     "python-multipart>=0.0.9",
     "pytesseract>=0.3",
@@ -55,6 +56,7 @@ dev = [
     "pyright>=1.1",
     "ruff>=0.4",
     "pre-commit>=3.7",
+    "fakeredis>=2.20",
 ]
 
 [tool.hatch.build.targets.wheel]

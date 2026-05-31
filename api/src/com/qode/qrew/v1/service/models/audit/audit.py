@@ -52,6 +52,9 @@ class AuditAction(enum.StrEnum):
     SCANNER_ROTATED = "scanner_rotated"
     SCANNER_DEACTIVATED = "scanner_deactivated"
     GENESIS = "genesis"
+    AUDIT_CHAIN_VERIFIED = "audit_chain_verified"
+    AUDIT_CHAIN_TAMPERED = "audit_chain_tampered"
+    EXPIRED_TOKENS_CLEANED = "expired_tokens_cleaned"
 
 
 class AuditEvent(Base):

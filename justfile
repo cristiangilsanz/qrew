@@ -37,6 +37,10 @@ dev:
     just db-upgrade
     cd api && uv run dev
 
+# Run background job worker
+worker:
+    cd api && uv run arq com.qode.qrew.v1.service.core.jobs.worker.WorkerSettings
+
 # Verify linter
 lint-check:
     cd api && uv run ruff check .
