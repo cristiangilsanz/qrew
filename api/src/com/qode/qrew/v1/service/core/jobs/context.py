@@ -3,13 +3,12 @@ from typing import Any
 
 import structlog
 from arq.worker import Retry
-from opentelemetry import trace
 
 from com.qode.qrew.v1.service.core.jobs.dlq import push_to_dlq
 from com.qode.qrew.v1.service.core.jobs.registry import JobSpec
+from com.qode.qrew.v1.service.core.observability import tracer
 
 logger = structlog.get_logger(__name__)
-_tracer = trace.get_tracer(__name__)
 
 JobRunner = Callable[..., Awaitable[Any]]
 
@@ -31,7 +30,7 @@ def wrap_handler(spec: JobSpec) -> JobRunner:
             job_name=spec.name, job_id=job_id, attempt=attempt
         )
         try:
-            with _tracer.start_as_current_span(f"job.{spec.name}") as span:
+            with tracer.start_as_current_span(f"job.{spec.name}") as span:
                 span.set_attribute("job.name", spec.name)
                 span.set_attribute("job.id", job_id)
                 span.set_attribute("job.attempt", attempt)

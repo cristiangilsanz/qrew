@@ -12,6 +12,7 @@ from com.qode.qrew.v1.service.core.auth.security import (
     verify_password,
 )
 from com.qode.qrew.v1.service.core.infra.errors import DomainError
+from com.qode.qrew.v1.service.core.observability import traced
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 from com.qode.qrew.v1.service.models.auth.session import Session
 from com.qode.qrew.v1.service.models.auth.user import KycStatus, User
@@ -63,6 +64,7 @@ class LoginService:
         self._session_cap = session_cap
         self._breach_checker = breach_checker
 
+    @traced("auth.login")
     async def login(
         self,
         request: LoginRequest,

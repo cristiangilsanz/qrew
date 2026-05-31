@@ -12,6 +12,7 @@ from com.qode.qrew.v1.service.core.auth.security import (
     phone_number_otp_expiry,
 )
 from com.qode.qrew.v1.service.core.infra.errors import DomainError
+from com.qode.qrew.v1.service.core.observability import traced
 from com.qode.qrew.v1.service.core.registration.captcha import CaptchaService
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 from com.qode.qrew.v1.service.models.auth.user import User
@@ -69,6 +70,7 @@ class RegistrationService:
         self._captcha = captcha
         self._audit = audit
 
+    @traced("auth.register")
     async def register(
         self,
         request: RegisterRequest,

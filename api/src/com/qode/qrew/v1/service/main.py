@@ -8,6 +8,7 @@ from com.qode.qrew.v1.service.core.infra.middleware import (
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
 )
+from com.qode.qrew.v1.service.core.observability import add_trace_context, setup_tracing
 from com.qode.qrew.v1.service.lifespan import lifespan
 from com.qode.qrew.v1.service.routers import router as v1_router
 from com.qode.qrew.v1.service.settings import settings
@@ -15,6 +16,7 @@ from com.qode.qrew.v1.service.settings import settings
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
+        add_trace_context,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.dev.ConsoleRenderer()
@@ -33,6 +35,8 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs" if settings.debug else None,
 )
+
+setup_tracing(app)
 
 register_exception_handlers(app)
 

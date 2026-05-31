@@ -32,6 +32,12 @@ dependencies = [
     "mailchecker>=4.1",
     "zxcvbn>=4.4",
     "opentelemetry-sdk>=1.24",
+    "opentelemetry-api>=1.24",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.48b0",
+    "opentelemetry-instrumentation-redis>=0.48b0",
+    "opentelemetry-instrumentation-httpx>=0.48b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.24",
     "arq>=0.26",
     "webauthn>=2.0",
     "python-multipart>=0.0.9",
@@ -70,6 +76,7 @@ typeCheckingMode = "strict"
 include = ["src", "tests"]
 venvPath = ".."
 venv = ".venv"
+reportMissingTypeStubs = false
 
 # ── Pytest ────────────────────────────────────────────────────────────────────
 

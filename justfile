@@ -41,6 +41,11 @@ dev:
 worker:
     cd api && uv run arq com.qode.qrew.v1.service.core.jobs.worker.WorkerSettings
 
+# Launch Jaeger for local trace viewing
+trace:
+    docker compose -f docker-compose.observability.yml up -d jaeger
+    @echo "Jaeger UI: http://localhost:16686"
+
 # Verify linter
 lint-check:
     cd api && uv run ruff check .

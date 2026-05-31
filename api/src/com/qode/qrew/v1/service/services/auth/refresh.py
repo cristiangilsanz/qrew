@@ -15,6 +15,7 @@ from com.qode.qrew.v1.service.core.auth.security import (
     extract_jti,
 )
 from com.qode.qrew.v1.service.core.infra.errors import DomainError
+from com.qode.qrew.v1.service.core.observability import traced
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 from com.qode.qrew.v1.service.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.auth.user import UserRepository
@@ -74,6 +75,7 @@ class RefreshService:
         self._session_repo = session_repo
         self._device_repo = device_repo
 
+    @traced("auth.refresh")
     async def refresh(
         self,
         request: RefreshRequest,
