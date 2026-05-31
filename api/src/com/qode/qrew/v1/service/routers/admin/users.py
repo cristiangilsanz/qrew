@@ -3,49 +3,52 @@ import uuid
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from com.qode.qrew.v1.service.core.api import Page, clamp_limit, cursor_paginate
 from com.qode.qrew.v1.service.core.auth.auth import get_admin_user
 from com.qode.qrew.v1.service.core.infra.database import get_db
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.models.auth.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.auth.user import UserRepository
-from com.qode.qrew.v1.service.schemas.admin.admin import (
-    UserListResponse,
-    UserSummaryResponse,
-)
+from com.qode.qrew.v1.service.schemas.admin.admin import UserSummaryResponse
 from com.qode.qrew.v1.service.services.auth.login_lockout import LoginLockoutService
 
 from ._deps import get_login_lockout_service
 
 router = APIRouter()
 
-_DEFAULT_PAGE_SIZE = 20
-_MAX_PAGE_SIZE = 100
+_DEFAULT_LIMIT = 20
 
 
 @router.get(
     "/users",
-    response_model=UserListResponse,
+    response_model=Page[UserSummaryResponse],
     status_code=status.HTTP_200_OK,
     summary="List and search users",
 )
 @limiter.limit("60/minute")  # type: ignore[misc]
 async def list_users(
     request: Request,
-    page: int = 1,
-    page_size: int = 20,
+    cursor: str | None = None,
+    limit: int = _DEFAULT_LIMIT,
     search: str | None = None,
     kyc_status: KycStatus | None = None,
     _admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
-) -> UserListResponse:
-    """List and search users with optional filters."""
-    page = max(page, 1)
-    if page_size < 1 or page_size > _MAX_PAGE_SIZE:
-        page_size = _DEFAULT_PAGE_SIZE
+) -> Page[UserSummaryResponse]:
+    """List and search users, newest first."""
+    page_limit = clamp_limit(limit, default=_DEFAULT_LIMIT)
     repo = UserRepository(db)
-    users, total = await repo.search_paginated(page, page_size, search, kyc_status)
-    return UserListResponse(
-        users=[
+    stmt = repo.search_query(search=search, kyc_status=kyc_status)
+    users, next_cursor = await cursor_paginate(
+        db,
+        stmt,
+        sort_column=User.created_at,
+        id_column=User.id,
+        limit=page_limit,
+        cursor=cursor,
+    )
+    return Page[UserSummaryResponse](
+        items=[
             UserSummaryResponse(
                 id=u.id,
                 email=u.email,
@@ -58,9 +61,7 @@ async def list_users(
             )
             for u in users
         ],
-        total=total,
-        page=page,
-        page_size=page_size,
+        next_cursor=next_cursor,
     )
 
 

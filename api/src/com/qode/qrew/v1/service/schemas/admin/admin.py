@@ -42,10 +42,3 @@ class UserSummaryResponse(BaseModel):
     phone_verified: bool
     is_admin: bool
     created_at: datetime
-
-
-class UserListResponse(BaseModel):
-    users: list[UserSummaryResponse]
-    total: int
-    page: int
-    page_size: int

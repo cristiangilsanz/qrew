@@ -57,9 +57,10 @@ async def test_list_passkeys_returns_200(
 
     assert response.status_code == 200
     body = response.json()
-    assert len(body["passkeys"]) == 1
-    assert body["passkeys"][0]["id"] == _PASSKEY_ID
-    assert body["passkeys"][0]["name"] == "My iPhone"
+    assert len(body["items"]) == 1
+    assert body["items"][0]["id"] == _PASSKEY_ID
+    assert body["items"][0]["name"] == "My iPhone"
+    assert body["next_cursor"] is None
 
 
 async def test_list_passkeys_returns_empty_list(
@@ -70,7 +71,7 @@ async def test_list_passkeys_returns_empty_list(
     response = await authenticated_client.get(_ENDPOINT_LIST)
 
     assert response.status_code == 200
-    assert response.json()["passkeys"] == []
+    assert response.json()["items"] == []
 
 
 async def test_list_passkeys_requires_auth(client: AsyncClient) -> None:

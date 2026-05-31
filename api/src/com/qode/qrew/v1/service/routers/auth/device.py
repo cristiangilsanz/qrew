@@ -3,6 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, Request, status
 
+from com.qode.qrew.v1.service.core.api import Page
 from com.qode.qrew.v1.service.core.auth.auth import get_current_user
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.models.auth.user import User
@@ -12,7 +13,6 @@ from com.qode.qrew.v1.service.schemas.device.device import (
     DeviceBindBeginResponse,
     DeviceBindCompleteRequest,
     DeviceBindCompleteResponse,
-    DeviceListResponse,
     DeviceResponse,
     DeviceRevokeAllResponse,
     DeviceRevokeResponse,
@@ -133,7 +133,7 @@ async def device_attest(
 
 @router.get(
     "/devices",
-    response_model=DeviceListResponse,
+    response_model=Page[DeviceResponse],
     status_code=status.HTTP_200_OK,
     summary="List the current user's bound devices",
 )
@@ -142,20 +142,19 @@ async def list_devices(
     request: Request,
     current_user: User = Depends(get_current_user),
     service: DeviceService = Depends(get_device_service),
-) -> DeviceListResponse:
+) -> Page[DeviceResponse]:
     """List the current user's bound devices."""
     devices = await service.list_devices(current_user)
-    return DeviceListResponse(
-        devices=[
-            DeviceResponse(
-                id=d.id,
-                name=d.name,
-                created_at=d.created_at,
-                last_seen_at=d.last_seen_at,
-            )
-            for d in devices
-        ]
-    )
+    items = [
+        DeviceResponse(
+            id=d.id,
+            name=d.name,
+            created_at=d.created_at,
+            last_seen_at=d.last_seen_at,
+        )
+        for d in devices
+    ]
+    return Page[DeviceResponse](items=items, next_cursor=None)
 
 
 @router.post(

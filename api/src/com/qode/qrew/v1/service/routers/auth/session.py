@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, Request, status
 
+from com.qode.qrew.v1.service.core.api import Page
 from com.qode.qrew.v1.service.core.auth.auth import get_current_user
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.models.auth.user import User
 from com.qode.qrew.v1.service.schemas.auth.session import (
     RevokeAllResponse,
-    SessionListResponse,
+    SessionResponse,
 )
 from com.qode.qrew.v1.service.services.session.session import (
     SessionError,
@@ -19,7 +20,7 @@ router = APIRouter()
 
 @router.get(
     "/sessions",
-    response_model=SessionListResponse,
+    response_model=Page[SessionResponse],
     status_code=status.HTTP_200_OK,
     summary="List all active sessions for the current user",
 )
@@ -28,10 +29,10 @@ async def list_sessions(
     request: Request,
     current_user: User = Depends(get_current_user),
     service: SessionService = Depends(get_session_service),
-) -> SessionListResponse:
+) -> Page[SessionResponse]:
     """List all active sessions for the current user."""
     sessions = await service.list_sessions(current_user.id)
-    return SessionListResponse(sessions=sessions)
+    return Page[SessionResponse](items=sessions, next_cursor=None)
 
 
 @router.delete(

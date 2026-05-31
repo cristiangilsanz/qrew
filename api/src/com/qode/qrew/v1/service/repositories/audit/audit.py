@@ -3,7 +3,7 @@ import json
 import uuid
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction, AuditEvent
@@ -97,34 +97,19 @@ class AuditRepository:
         )
         return list(result.scalars().all())
 
-    async def list_for_user(
+    def query_for_user(
         self,
         user_id: uuid.UUID,
-        limit: int,
         action: str | None = None,
         since: datetime | None = None,
-        cursor_created_at: datetime | None = None,
-        cursor_id: uuid.UUID | None = None,
-    ) -> list[AuditEvent]:
-        """List the user's audit events with optional filters and pagination."""
+    ) -> Select[tuple[AuditEvent]]:
+        """Build a filtered audit query for use by the pagination helper."""
         stmt = select(AuditEvent).where(AuditEvent.actor_id == user_id)
         if action is not None:
             stmt = stmt.where(AuditEvent.action == action)
         if since is not None:
             stmt = stmt.where(AuditEvent.created_at >= since)
-        if cursor_created_at is not None and cursor_id is not None:
-            stmt = stmt.where(
-                (AuditEvent.created_at < cursor_created_at)
-                | (
-                    (AuditEvent.created_at == cursor_created_at)
-                    & (AuditEvent.id < cursor_id)
-                )
-            )
-        stmt = stmt.order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc()).limit(
-            limit
-        )
-        result = await self._session.execute(stmt)
-        return list(result.scalars().all())
+        return stmt
 
     async def get_recent_login_events(
         self,
