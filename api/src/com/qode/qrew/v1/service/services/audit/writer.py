@@ -5,6 +5,7 @@ import structlog
 from sqlalchemy import text
 
 from com.qode.qrew.v1.service.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.service.core.observability import traced
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction, AuditEvent
 from com.qode.qrew.v1.service.repositories.audit.audit import (
     AuditRepository,
@@ -19,6 +20,7 @@ ADVISORY_LOCK = "SELECT pg_advisory_xact_lock(hashtext('audit_events'))"
 class AuditService:
     """Append-only audit log writer."""
 
+    @traced("audit.record")
     async def record(
         self,
         action: str,

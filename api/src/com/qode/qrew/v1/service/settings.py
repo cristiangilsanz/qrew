@@ -83,5 +83,9 @@ class Settings(BaseSettings):
     rp_name: str = "Qrew"
     rp_expected_origin: str = "http://localhost:3000"
 
+    otel_enabled: bool = False
+    otel_endpoint: str = "http://localhost:4317"
+    otel_environment: str = "dev"
+
 
 settings = Settings()
