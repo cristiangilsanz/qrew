@@ -29,6 +29,16 @@ def decrypt(ciphertext: bytes) -> str:
     return _multifernet().decrypt(ciphertext).decode()
 
 
+def encrypt_bytes(plaintext: bytes) -> bytes:
+    """Encrypt a raw byte payload using the PII key pool."""
+    return _multifernet().encrypt(plaintext)
+
+
+def decrypt_bytes(ciphertext: bytes) -> bytes:
+    """Decrypt a payload produced by encrypt_bytes."""
+    return _multifernet().decrypt(ciphertext)
+
+
 def hash_lookup(plaintext: str) -> str:
     """Return a deterministic lookup hash for a PII string."""
     normalised = plaintext.strip().lower().encode()

@@ -81,6 +81,9 @@ class User(Base):
         Enum(KycStatus, name="kyc_status"),
         default=KycStatus.not_submitted,
     )
+    kyc_document_object_key: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
 
     terms_accepted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
