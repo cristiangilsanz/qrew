@@ -9,7 +9,7 @@ import structlog
 
 from com.qode.qrew.v1.service.core.ratelimit.errors import RateLimitedError
 from com.qode.qrew.v1.service.core.ratelimit.lua_script import LUA_SCRIPT
-from com.qode.qrew.v1.service.settings import settings
+from com.qode.qrew.v1.service.settings import settings as _settings
 
 logger = structlog.get_logger(__name__)
 
@@ -33,7 +33,7 @@ class RateLimiter:
         self._redis = redis_client
         self._key_prefix = key_prefix
         self._fail_open = (
-            settings.ratelimit_fail_open if fail_open is None else fail_open
+            _settings.ratelimit_fail_open if fail_open is None else fail_open
         )
         self._sha: str | None = None
 
@@ -63,8 +63,6 @@ class RateLimiter:
 
     async def check(self, scope_key: str, limit: int, window_seconds: int) -> Decision:
         """Record an attempt and return whether it is allowed."""
-        if not settings.ratelimit_enabled:
-            return Decision(allowed=True, retry_after_seconds=0)
         now_ms = int(time.time() * 1000)
         window_ms = window_seconds * 1000
         member = f"{now_ms}-{uuid.uuid4().hex}"

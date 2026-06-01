@@ -13,6 +13,7 @@ from com.qode.qrew.v1.service.core.ratelimit.scopes import (
     build_scope_key,
     resolve_scope_value,
 )
+from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -35,6 +36,8 @@ def rate_limit(
     def decorator(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            if not settings.ratelimit_enabled:
+                return await func(*args, **kwargs)
             request = _find_request(args, kwargs)
             if request is None or limiter_factory is None:
                 return await func(*args, **kwargs)
