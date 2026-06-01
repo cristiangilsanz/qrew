@@ -95,5 +95,10 @@ class Settings(BaseSettings):
     idempotency_default_ttl_seconds: int = 86_400
     idempotency_lock_seconds: int = 60
 
+    ws_enabled: bool = True
+    ws_heartbeat_seconds: int = 30
+    ws_pong_timeout_seconds: int = 10
+    ws_send_queue_size: int = 64
+
 
 settings = Settings()

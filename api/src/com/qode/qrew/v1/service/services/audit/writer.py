@@ -6,7 +6,9 @@ from sqlalchemy import text
 
 from com.qode.qrew.v1.service.core.infra.database import AsyncSessionLocal
 from com.qode.qrew.v1.service.core.observability import traced
+from com.qode.qrew.v1.service.core.ws import publish as ws_publish
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction, AuditEvent
+from com.qode.qrew.v1.service.realtime import me_channel_key
 from com.qode.qrew.v1.service.repositories.audit.audit import (
     AuditRepository,
     build_event,
@@ -56,6 +58,17 @@ class AuditService:
             action=action,
             actor_id=str(actor_id) if actor_id else None,
         )
+        if actor_id is not None:
+            await ws_publish(
+                me_channel_key(str(actor_id)),
+                {
+                    "type": "audit_event_created",
+                    "action": str(action),
+                    "entity_type": entity_type,
+                    "entity_id": entity_id,
+                    "created_at": now.isoformat(),
+                },
+            )
 
     async def ensure_genesis(self) -> None:
         """Write the genesis record once at startup."""
