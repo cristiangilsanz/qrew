@@ -7,6 +7,7 @@ from com.qode.qrew.v1.service.core.api import (
     probes_router,
     register_exception_handlers,
 )
+from com.qode.qrew.v1.service.core.idempotency import IdempotencyMiddleware
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.core.infra.middleware import (
     RequestIDMiddleware,
@@ -55,6 +56,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(IdempotencyMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 

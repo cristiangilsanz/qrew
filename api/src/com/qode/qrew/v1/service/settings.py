@@ -91,5 +91,9 @@ class Settings(BaseSettings):
     ratelimit_fail_open: bool = True
     ratelimit_audit_debounce_seconds: int = 60
 
+    idempotency_enabled: bool = True
+    idempotency_default_ttl_seconds: int = 86_400
+    idempotency_lock_seconds: int = 60
+
 
 settings = Settings()
