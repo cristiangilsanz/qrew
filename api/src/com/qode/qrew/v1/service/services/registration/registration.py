@@ -22,7 +22,7 @@ from com.qode.qrew.v1.service.schemas.registration.registration import (
     RegisterResponse,
 )
 from com.qode.qrew.v1.service.services.audit import AuditService
-from com.qode.qrew.v1.service.services.infra.notification import NotificationService
+from com.qode.qrew.v1.service.services.infra.notification import NotificationDispatcher
 
 logger = structlog.get_logger(__name__)
 
@@ -61,7 +61,7 @@ class RegistrationService:
     def __init__(
         self,
         repo: UserRepository,
-        notifier: NotificationService,
+        notifier: NotificationDispatcher,
         captcha: CaptchaService,
         audit: AuditService,
     ) -> None:

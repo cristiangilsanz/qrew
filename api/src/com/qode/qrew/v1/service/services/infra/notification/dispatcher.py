@@ -1,41 +1,36 @@
-from typing import Protocol
-
-from com.qode.qrew.v1.service.settings import settings
-
-from .email import EmailService, SmtpEmailService, StubEmailService
-from .sms import SmsService, StubSmsService, TwilioSmsService
-
-
-class NotificationService(Protocol):
-    """Dispatch transactional notifications across channels."""
-
-    async def send_email_verification_link(
-        self, to_email: str, full_name: str, token: str
-    ) -> None:
-        """Dispatch a verification link email."""
-        ...
-
-    async def send_sms_otp(self, to_phone_number: str, otp: str) -> None:
-        """Dispatch an OTP SMS."""
-        ...
+from com.qode.qrew.v1.service.models.notification import NotificationChannel
+from com.qode.qrew.v1.service.services.notification import NotificationService
 
 
 class NotificationDispatcher:
-    """Fan transactional events out to the configured email and SMS services."""
+    """Backwards-compatible shim around the unified notification service.
 
-    def __init__(self, email: EmailService, sms: SmsService) -> None:
-        self._email = email
-        self._sms = sms
+    Existing callers keep using the same method names; everything now flows
+    through persisted notification rows and the background delivery worker.
+    """
+
+    def __init__(self, service: NotificationService | None = None) -> None:
+        self._service = service or NotificationService()
 
     async def send_email_verification_link(
         self, to_email: str, full_name: str, token: str
     ) -> None:
         """Dispatch an email verification link."""
-        await self._email.send_verification_link(to_email, full_name, token)
+        await self._service.send(
+            template_key="email_verification_link",
+            payload={"full_name": full_name, "token": token},
+            channels=[NotificationChannel.email],
+            destinations={NotificationChannel.email: to_email},
+        )
 
     async def send_sms_otp(self, to_phone_number: str, otp: str) -> None:
         """Dispatch an SMS OTP."""
-        await self._sms.send_otp(to_phone_number, otp)
+        await self._service.send(
+            template_key="phone_otp",
+            payload={"otp": otp},
+            channels=[NotificationChannel.sms],
+            destinations={NotificationChannel.sms: to_phone_number},
+        )
 
     async def send_kyc_status_update(
         self,
@@ -45,23 +40,43 @@ class NotificationDispatcher:
         reason: str | None,
     ) -> None:
         """Dispatch a KYC approval or rejection email."""
-        await self._email.send_kyc_status(to_email, full_name, status, reason)
+        await self._service.send(
+            template_key="kyc_status_email",
+            payload={"full_name": full_name, "status": status, "reason": reason},
+            channels=[NotificationChannel.email],
+            destinations={NotificationChannel.email: to_email},
+        )
 
     async def send_email_change_verification(
         self, to_email: str, full_name: str, token: str
     ) -> None:
         """Dispatch a confirmation link to a new email address."""
-        await self._email.send_email_change_verification(to_email, full_name, token)
+        await self._service.send(
+            template_key="email_change_verify",
+            payload={"full_name": full_name, "token": token},
+            channels=[NotificationChannel.email],
+            destinations={NotificationChannel.email: to_email},
+        )
 
     async def send_email_change_alert(
         self, to_email: str, full_name: str, new_email: str
     ) -> None:
         """Dispatch a security notice about an email change."""
-        await self._email.send_email_change_alert(to_email, full_name, new_email)
+        await self._service.send(
+            template_key="email_change_alert",
+            payload={"full_name": full_name, "new_email": new_email},
+            channels=[NotificationChannel.email],
+            destinations={NotificationChannel.email: to_email},
+        )
 
     async def send_account_recovery(self, to_email: str, full_name: str) -> None:
         """Dispatch an account recovery security notice."""
-        await self._email.send_account_recovery(to_email, full_name)
+        await self._service.send(
+            template_key="account_recovery",
+            payload={"full_name": full_name},
+            channels=[NotificationChannel.email],
+            destinations={NotificationChannel.email: to_email},
+        )
 
     async def send_login_anomaly_alert(
         self,
@@ -71,31 +86,18 @@ class NotificationDispatcher:
         ip_address: str | None,
     ) -> None:
         """Dispatch a login anomaly security alert."""
-        await self._email.send_login_anomaly_alert(
-            to_email, full_name, reason, ip_address
+        await self._service.send(
+            template_key="login_anomaly_alert",
+            payload={
+                "full_name": full_name,
+                "reason": reason,
+                "ip_address": ip_address,
+            },
+            channels=[NotificationChannel.email],
+            destinations={NotificationChannel.email: to_email},
         )
 
 
 def build_notification_dispatcher() -> NotificationDispatcher:
-    """Build the notification dispatcher configured by settings."""
-    email: EmailService = (
-        SmtpEmailService(
-            settings.smtp_host,
-            settings.smtp_port,
-            settings.smtp_user,
-            settings.smtp_password,
-            settings.smtp_from_address,
-        )
-        if settings.smtp_enabled
-        else StubEmailService()
-    )
-    sms: SmsService = (
-        TwilioSmsService(
-            settings.twilio_account_sid,
-            settings.twilio_auth_token,
-            settings.twilio_from_number,
-        )
-        if settings.twilio_enabled
-        else StubSmsService()
-    )
-    return NotificationDispatcher(email, sms)
+    """Build a NotificationDispatcher wired to the unified service."""
+    return NotificationDispatcher()

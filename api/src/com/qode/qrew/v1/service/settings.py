@@ -105,5 +105,8 @@ class Settings(BaseSettings):
     storage_signed_url_ttl_seconds: int = 300
     kyc_document_retention_days: int = 30
 
+    notification_enabled: bool = True
+    notification_max_attempts: int = 5
+
 
 settings = Settings()
