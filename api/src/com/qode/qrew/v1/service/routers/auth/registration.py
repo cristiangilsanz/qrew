@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from com.qode.qrew.v1.service.core.auth.auth import get_setup_or_full_user
+from com.qode.qrew.v1.service.core.idempotency import idempotent
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.core.registration.captcha import CaptchaError
 from com.qode.qrew.v1.service.models.auth.user import User
@@ -48,6 +49,7 @@ router = APIRouter()
     summary="Register a new user account",
 )
 @limiter.limit("5/hour")  # type: ignore[misc]
+@idempotent(scope="global", ttl_seconds=300)
 async def register(
     request: Request,
     body: RegisterRequest,
