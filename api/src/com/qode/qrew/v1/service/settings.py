@@ -100,5 +100,10 @@ class Settings(BaseSettings):
     ws_pong_timeout_seconds: int = 10
     ws_send_queue_size: int = 64
 
+    storage_root: str = "./var/storage"
+    storage_signing_key: str = "c2VrcmV0c3RvcmFnZXNpZ25pbmdrZXlmb3JkZXY="
+    storage_signed_url_ttl_seconds: int = 300
+    kyc_document_retention_days: int = 30
+
 
 settings = Settings()

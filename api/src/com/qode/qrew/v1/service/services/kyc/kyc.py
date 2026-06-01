@@ -4,6 +4,7 @@ import structlog
 from cryptography.fernet import Fernet
 
 from com.qode.qrew.v1.service.core.infra.errors import DomainError
+from com.qode.qrew.v1.service.core.storage import storage
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 from com.qode.qrew.v1.service.models.auth.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.auth.user import UserRepository
@@ -85,8 +86,23 @@ class KycService:
         fernet = Fernet(settings.national_id_encryption_key.encode())
         user.national_id_hash = id_hash
         user.national_id_number = fernet.encrypt(id_number.encode()).decode()
+        previous_key = user.kyc_document_object_key
+        object_key = await storage.put(
+            kind="kyc",
+            tenant=f"user:{user.id}",
+            content=content,
+            content_type="application/octet-stream",
+        )
+        user.kyc_document_object_key = object_key
         user.kyc_status = KycStatus.pending
         await self._repo.save(user)
+        if previous_key:
+            try:
+                await storage.delete(previous_key)
+            except Exception:
+                await logger.awarning(
+                    "kyc_previous_doc_delete_failed", user_id=str(user.id)
+                )
 
         if settings.kyc_auto_approve:
             user.kyc_status = KycStatus.approved
