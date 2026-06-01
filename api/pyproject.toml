@@ -62,7 +62,7 @@ dev = [
     "pyright>=1.1",
     "ruff>=0.4",
     "pre-commit>=3.7",
-    "fakeredis>=2.20",
+    "fakeredis[lua]>=2.20",
 ]
 
 [tool.hatch.build.targets.wheel]

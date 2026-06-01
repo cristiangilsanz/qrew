@@ -55,6 +55,7 @@ class AuditAction(enum.StrEnum):
     AUDIT_CHAIN_VERIFIED = "audit_chain_verified"
     AUDIT_CHAIN_TAMPERED = "audit_chain_tampered"
     EXPIRED_TOKENS_CLEANED = "expired_tokens_cleaned"
+    RATE_LIMIT_HIT = "rate_limit_hit"
 
 
 class AuditEvent(Base):
