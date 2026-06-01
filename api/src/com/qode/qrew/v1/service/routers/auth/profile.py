@@ -1,26 +1,22 @@
-import base64
-import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from com.qode.qrew.v1.service.core.api import Page, clamp_limit, cursor_paginate
 from com.qode.qrew.v1.service.core.auth.auth import (
     get_current_user,
     get_setup_or_full_user,
 )
 from com.qode.qrew.v1.service.core.infra.database import get_db
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
+from com.qode.qrew.v1.service.models.audit.audit import AuditEvent
 from com.qode.qrew.v1.service.models.auth.user import KycStatus, User
 from com.qode.qrew.v1.service.repositories.audit.audit import AuditRepository
 from com.qode.qrew.v1.service.repositories.passkey.passkey import (
     PasskeyCredentialRepository,
 )
-from com.qode.qrew.v1.service.schemas.audit.audit import (
-    UserAuditCursor,
-    UserAuditEventResponse,
-    UserAuditListResponse,
-)
+from com.qode.qrew.v1.service.schemas.audit.audit import UserAuditEventResponse
 from com.qode.qrew.v1.service.schemas.auth.auth import (
     OnboardingStatusResponse,
     UserProfileResponse,
@@ -29,20 +25,6 @@ from com.qode.qrew.v1.service.schemas.auth.auth import (
 router = APIRouter()
 
 _AUDIT_PAGE_SIZE = 50
-
-
-def _decode_audit_cursor(raw: str | None) -> tuple[datetime, uuid.UUID] | None:
-    if raw is None:
-        return None
-    try:
-        decoded = base64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4)).decode()
-        parsed = UserAuditCursor.model_validate_json(decoded)
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"message": "Invalid cursor", "field": "cursor"},
-        ) from exc
-    return parsed.created_at, parsed.id
 
 
 @router.get(
@@ -99,7 +81,7 @@ async def get_onboarding_status(
 
 @router.get(
     "/audit",
-    response_model=UserAuditListResponse,
+    response_model=Page[UserAuditEventResponse],
     status_code=status.HTTP_200_OK,
     summary="Return the current user's audit history",
 )
@@ -109,30 +91,23 @@ async def list_user_audit(
     action: str | None = None,
     since: datetime | None = None,
     cursor: str | None = None,
+    limit: int = _AUDIT_PAGE_SIZE,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> UserAuditListResponse:
+) -> Page[UserAuditEventResponse]:
     """Return the current user's audit history."""
-    cursor_pair = _decode_audit_cursor(cursor)
-    cursor_created_at = cursor_pair[0] if cursor_pair else None
-    cursor_id = cursor_pair[1] if cursor_pair else None
+    page_limit = clamp_limit(limit, default=_AUDIT_PAGE_SIZE)
     repo = AuditRepository(db)
-    events = await repo.list_for_user(
-        current_user.id,
-        limit=_AUDIT_PAGE_SIZE + 1,
-        action=action,
-        since=since,
-        cursor_created_at=cursor_created_at,
-        cursor_id=cursor_id,
+    stmt = repo.query_for_user(current_user.id, action=action, since=since)
+    events, next_cursor = await cursor_paginate(
+        db,
+        stmt,
+        sort_column=AuditEvent.created_at,
+        id_column=AuditEvent.id,
+        limit=page_limit,
+        cursor=cursor,
     )
-    next_cursor = None
-    if len(events) > _AUDIT_PAGE_SIZE:
-        last_visible = events[_AUDIT_PAGE_SIZE - 1]
-        events = events[:_AUDIT_PAGE_SIZE]
-        next_cursor = UserAuditCursor(
-            created_at=last_visible.created_at, id=last_visible.id
-        )
-    return UserAuditListResponse(
-        events=[UserAuditEventResponse.from_event(e) for e in events],
+    return Page[UserAuditEventResponse](
+        items=[UserAuditEventResponse.from_event(e) for e in events],
         next_cursor=next_cursor,
     )

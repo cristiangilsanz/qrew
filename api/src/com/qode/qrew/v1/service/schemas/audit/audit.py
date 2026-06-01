@@ -75,13 +75,3 @@ class UserAuditEventResponse(BaseModel):
             device_fingerprint_hash=event.device_fingerprint_hash,
             created_at=event.created_at,
         )
-
-
-class UserAuditCursor(BaseModel):
-    created_at: datetime
-    id: uuid.UUID
-
-
-class UserAuditListResponse(BaseModel):
-    events: list[UserAuditEventResponse]
-    next_cursor: UserAuditCursor | None = None

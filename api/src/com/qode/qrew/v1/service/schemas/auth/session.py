@@ -13,9 +13,5 @@ class SessionResponse(BaseModel):
     last_used_at: datetime
 
 
-class SessionListResponse(BaseModel):
-    sessions: list[SessionResponse]
-
-
 class RevokeAllResponse(BaseModel):
     message: str

@@ -1,6 +1,4 @@
-"""Tests for admin user listing endpoint:
-GET /v1/admin/users
-"""
+"""Tests for the admin user listing endpoint at GET /v1/admin/users."""
 
 import uuid
 from collections.abc import Iterator
@@ -16,6 +14,7 @@ from com.qode.qrew.v1.service.models.auth.user import KycStatus
 
 _ENDPOINT = "/v1/admin/users"
 _USER_REPO = "com.qode.qrew.v1.service.routers.admin.users.UserRepository"
+_PAGINATE = "com.qode.qrew.v1.service.routers.admin.users.cursor_paginate"
 
 
 def _mock_admin() -> MagicMock:
@@ -47,28 +46,20 @@ def override_admin() -> Iterator[None]:
 
 async def test_list_users_returns_200(client: AsyncClient) -> None:
     users = [_mock_user_row(), _mock_user_row()]
-    with patch(_USER_REPO) as mock_repo_cls:
-        mock_repo_cls.return_value.search_paginated = AsyncMock(return_value=(users, 2))
-
+    with patch(_PAGINATE, new=AsyncMock(return_value=(users, None))):
         response = await client.get(_ENDPOINT)
 
     assert response.status_code == 200
     body = response.json()
-    assert body["total"] == 2
-    assert len(body["users"]) == 2
-    assert body["page"] == 1
-    assert body["page_size"] == 20
+    assert len(body["items"]) == 2
+    assert body["next_cursor"] is None
 
 
 async def test_list_users_returns_user_fields(client: AsyncClient) -> None:
-    with patch(_USER_REPO) as mock_repo_cls:
-        mock_repo_cls.return_value.search_paginated = AsyncMock(
-            return_value=([_mock_user_row()], 1)
-        )
-
+    with patch(_PAGINATE, new=AsyncMock(return_value=([_mock_user_row()], None))):
         response = await client.get(_ENDPOINT)
 
-    user = response.json()["users"][0]
+    user = response.json()["items"][0]
     assert user["email"] == "user@example.com"
     assert user["full_name"] == "Test User"
     assert user["kyc_status"] == KycStatus.approved
@@ -80,46 +71,46 @@ async def test_list_users_returns_user_fields(client: AsyncClient) -> None:
 
 
 async def test_list_users_empty_result(client: AsyncClient) -> None:
-    with patch(_USER_REPO) as mock_repo_cls:
-        mock_repo_cls.return_value.search_paginated = AsyncMock(return_value=([], 0))
-
+    with patch(_PAGINATE, new=AsyncMock(return_value=([], None))):
         response = await client.get(_ENDPOINT)
 
     assert response.status_code == 200
-    assert response.json()["users"] == []
-    assert response.json()["total"] == 0
+    assert response.json()["items"] == []
+    assert response.json()["next_cursor"] is None
 
 
-async def test_list_users_passes_pagination_params(client: AsyncClient) -> None:
-    with patch(_USER_REPO) as mock_repo_cls:
-        mock_repo = mock_repo_cls.return_value
-        mock_repo.search_paginated = AsyncMock(return_value=([], 0))
+async def test_list_users_returns_next_cursor_when_more_pages(
+    client: AsyncClient,
+) -> None:
+    users = [_mock_user_row()]
+    with patch(_PAGINATE, new=AsyncMock(return_value=(users, "next-token"))):
+        response = await client.get(_ENDPOINT)
 
-        await client.get(_ENDPOINT, params={"page": 3, "page_size": 50})
-
-        mock_repo.search_paginated.assert_awaited_once_with(3, 50, None, None)
+    assert response.json()["next_cursor"] == "next-token"
 
 
-async def test_list_users_passes_search_param(client: AsyncClient) -> None:
-    with patch(_USER_REPO) as mock_repo_cls:
-        mock_repo = mock_repo_cls.return_value
-        mock_repo.search_paginated = AsyncMock(return_value=([], 0))
-
+async def test_list_users_passes_search_param_to_repo(client: AsyncClient) -> None:
+    with (
+        patch(_USER_REPO) as mock_repo_cls,
+        patch(_PAGINATE, new=AsyncMock(return_value=([], None))),
+    ):
+        mock_repo_cls.return_value.search_query = MagicMock(return_value=MagicMock())
         await client.get(_ENDPOINT, params={"search": "alice"})
 
-        call_args = mock_repo.search_paginated.call_args[0]
-        assert call_args[2] == "alice"
+    kwargs = mock_repo_cls.return_value.search_query.call_args.kwargs
+    assert kwargs["search"] == "alice"
 
 
 async def test_list_users_passes_kyc_status_filter(client: AsyncClient) -> None:
-    with patch(_USER_REPO) as mock_repo_cls:
-        mock_repo = mock_repo_cls.return_value
-        mock_repo.search_paginated = AsyncMock(return_value=([], 0))
-
+    with (
+        patch(_USER_REPO) as mock_repo_cls,
+        patch(_PAGINATE, new=AsyncMock(return_value=([], None))),
+    ):
+        mock_repo_cls.return_value.search_query = MagicMock(return_value=MagicMock())
         await client.get(_ENDPOINT, params={"kyc_status": "pending"})
 
-        call_args = mock_repo.search_paginated.call_args[0]
-        assert call_args[3] == KycStatus.pending
+    kwargs = mock_repo_cls.return_value.search_query.call_args.kwargs
+    assert kwargs["kyc_status"] == KycStatus.pending
 
 
 async def test_list_users_requires_admin(client: AsyncClient) -> None:

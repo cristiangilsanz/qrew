@@ -56,8 +56,9 @@ async def test_list_sessions_returns_200(
 
     assert response.status_code == 200
     body = response.json()
-    assert len(body["sessions"]) == 1
-    assert body["sessions"][0]["jti"] == _JTI
+    assert len(body["items"]) == 1
+    assert body["items"][0]["jti"] == _JTI
+    assert body["next_cursor"] is None
 
 
 async def test_list_sessions_returns_empty_list(
@@ -68,7 +69,7 @@ async def test_list_sessions_returns_empty_list(
     response = await authenticated_client.get(_ENDPOINT_LIST)
 
     assert response.status_code == 200
-    assert response.json()["sessions"] == []
+    assert response.json()["items"] == []
 
 
 async def test_list_sessions_requires_auth(client: AsyncClient) -> None:

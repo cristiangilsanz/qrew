@@ -11,10 +11,6 @@ class DeviceResponse(BaseModel):
     last_seen_at: datetime | None = None
 
 
-class DeviceListResponse(BaseModel):
-    devices: list[DeviceResponse]
-
-
 class DeviceRevokeResponse(BaseModel):
     message: str
 

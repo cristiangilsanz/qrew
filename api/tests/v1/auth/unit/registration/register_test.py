@@ -88,7 +88,7 @@ async def test_rejects_disposable_email(client: AsyncClient) -> None:
     )
 
     assert response.status_code == 422
-    assert any("disposable" in str(e).lower() for e in response.json()["detail"])
+    assert "disposable" in response.json()["detail"]["message"].lower()
 
 
 async def test_rejects_password_too_short(client: AsyncClient) -> None:
@@ -113,7 +113,11 @@ async def test_rejects_terms_not_accepted(client: AsyncClient) -> None:
     )
 
     assert response.status_code == 422
-    assert any("terms" in str(e).lower() for e in response.json()["detail"])
+    body = response.json()
+    assert (
+        "terms" in body["detail"]["message"].lower()
+        or "terms" in (body["detail"].get("field") or "").lower()
+    )
 
 
 async def test_rejects_invalid_phone_number(client: AsyncClient) -> None:

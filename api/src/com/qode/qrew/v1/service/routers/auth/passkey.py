@@ -2,6 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
+from com.qode.qrew.v1.service.core.api import Page
 from com.qode.qrew.v1.service.core.auth.auth import (
     get_current_session,
     get_current_user,
@@ -16,7 +17,6 @@ from com.qode.qrew.v1.service.schemas.passkey.passkey import (
     PasskeyAssertCompleteResponse,
     PasskeyAuthenticationBeginRequest,
     PasskeyAuthenticationCompleteRequest,
-    PasskeyListResponse,
     PasskeyRegistrationCompleteRequest,
     PasskeyRegistrationCompleteResponse,
     PasskeyRenameRequest,
@@ -166,7 +166,7 @@ async def passkey_assert_complete(
 
 @router.get(
     "/passkeys",
-    response_model=PasskeyListResponse,
+    response_model=Page[PasskeyResponse],
     status_code=status.HTTP_200_OK,
     summary="List all passkeys for the current user",
 )
@@ -175,9 +175,10 @@ async def list_passkeys(
     request: Request,
     current_user: User = Depends(get_current_user),
     service: PasskeyManagementService = Depends(get_passkey_management_service),
-) -> PasskeyListResponse:
+) -> Page[PasskeyResponse]:
     """List all passkeys for the current user."""
-    return await service.list_passkeys(current_user.id)
+    listing = await service.list_passkeys(current_user.id)
+    return Page[PasskeyResponse](items=listing.passkeys, next_cursor=None)
 
 
 @router.delete(

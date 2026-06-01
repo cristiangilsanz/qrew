@@ -67,10 +67,11 @@ async def test_list_devices_returns_200_with_devices(
 
     assert response.status_code == 200
     body = response.json()
-    assert len(body["devices"]) == 2
-    assert body["devices"][0]["name"] == "Test Phone"
-    assert "id" in body["devices"][0]
-    assert "created_at" in body["devices"][0]
+    assert len(body["items"]) == 2
+    assert body["items"][0]["name"] == "Test Phone"
+    assert "id" in body["items"][0]
+    assert "created_at" in body["items"][0]
+    assert body["next_cursor"] is None
 
 
 async def test_list_devices_calls_service(
@@ -89,7 +90,7 @@ async def test_list_devices_returns_empty_list_when_no_devices(
     response = await client.get(_LIST_ENDPOINT)
 
     assert response.status_code == 200
-    assert response.json()["devices"] == []
+    assert response.json()["items"] == []
 
 
 async def test_list_devices_requires_auth(client: AsyncClient) -> None:

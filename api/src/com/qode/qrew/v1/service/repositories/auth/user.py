@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.service.core.auth import pii_crypto
@@ -88,28 +88,15 @@ class UserRepository:
         await self._session.refresh(user)
         return user
 
-    async def search_paginated(
+    def search_query(
         self,
-        page: int,
-        page_size: int,
         search: str | None = None,
         kyc_status: KycStatus | None = None,
-    ) -> tuple[list[User], int]:
-        """Return a page of users matching optional filters, plus the total count."""
-        base = select(User)
+    ) -> Select[tuple[User]]:
+        """Build a filtered users query for use by the pagination helper."""
+        stmt = select(User)
         if search:
-            base = base.where(User.email_hash == pii_crypto.hash_lookup(search))
+            stmt = stmt.where(User.email_hash == pii_crypto.hash_lookup(search))
         if kyc_status is not None:
-            base = base.where(User.kyc_status == kyc_status)
-
-        count_result = await self._session.execute(
-            select(func.count()).select_from(base.subquery())
-        )
-        total = count_result.scalar_one()
-
-        rows = await self._session.execute(
-            base.order_by(User.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-        )
-        return list(rows.scalars().all()), total
+            stmt = stmt.where(User.kyc_status == kyc_status)
+        return stmt

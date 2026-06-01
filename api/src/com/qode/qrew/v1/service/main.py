@@ -2,7 +2,11 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from com.qode.qrew.v1.service.core.infra.exceptions import register_exception_handlers
+from com.qode.qrew.v1.service.core.api import (
+    default_responses,
+    probes_router,
+    register_exception_handlers,
+)
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.core.infra.middleware import (
     RequestIDMiddleware,
@@ -34,6 +38,7 @@ app = FastAPI(
     debug=settings.debug,
     lifespan=lifespan,
     docs_url="/docs" if settings.debug else None,
+    responses=default_responses,
 )
 
 setup_tracing(app)
@@ -53,4 +58,5 @@ app.add_middleware(
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
+app.include_router(probes_router)
 app.include_router(v1_router)

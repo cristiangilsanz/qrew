@@ -532,7 +532,7 @@ async def test_login_creates_session(
     )
 
     assert r.status_code == 200
-    sessions = r.json()["sessions"]
+    sessions = r.json()["items"]
     assert len(sessions) == 1
     assert sessions[0]["jti"] is not None
 
@@ -551,14 +551,14 @@ async def test_revoke_session_invalidates_refresh_token(
     auth = {"Authorization": f"Bearer {access_token}"}
 
     r = await client.get("/v1/auth/sessions", headers=auth)
-    jti = r.json()["sessions"][0]["jti"]
+    jti = r.json()["items"][0]["jti"]
 
     r = await client.delete(f"/v1/auth/sessions/{jti}", headers=auth)
 
     assert r.status_code == 204
 
     r = await client.get("/v1/auth/sessions", headers=auth)
-    assert r.json()["sessions"] == []
+    assert r.json()["items"] == []
 
 
 @pytest.mark.integration
@@ -580,7 +580,7 @@ async def test_revoke_all_sessions(
     assert "revoked" in r.json()["message"].lower()
 
     r = await client.get("/v1/auth/sessions", headers=auth)
-    assert r.json()["sessions"] == []
+    assert r.json()["items"] == []
 
 
 @pytest.mark.integration
