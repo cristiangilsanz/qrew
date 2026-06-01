@@ -87,5 +87,9 @@ class Settings(BaseSettings):
     otel_endpoint: str = "http://localhost:4317"
     otel_environment: str = "dev"
 
+    ratelimit_enabled: bool = True
+    ratelimit_fail_open: bool = True
+    ratelimit_audit_debounce_seconds: int = 60
+
 
 settings = Settings()

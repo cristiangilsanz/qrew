@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from com.qode.qrew.v1.service.core.jobs.pool import close_pool
 from com.qode.qrew.v1.service.core.observability import shutdown_tracing
+from com.qode.qrew.v1.service.core.ratelimit.dependencies import close_ratelimiter
 from com.qode.qrew.v1.service.services.audit import AuditService
 
 logger = structlog.get_logger(__name__)
@@ -17,5 +18,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await AuditService().ensure_genesis()
     yield
     await close_pool()
+    await close_ratelimiter()
     shutdown_tracing()
     await logger.ainfo("shutdown")

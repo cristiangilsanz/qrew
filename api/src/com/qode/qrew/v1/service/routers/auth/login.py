@@ -4,6 +4,11 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
+from com.qode.qrew.v1.service.core.ratelimit import rate_limit
+from com.qode.qrew.v1.service.core.ratelimit.dependencies import (
+    audit_on_rejection,
+    limiter_for,
+)
 from com.qode.qrew.v1.service.schemas.auth.auth import (
     LoginRequest,
     LoginResponse,
@@ -38,6 +43,11 @@ router = APIRouter()
     summary="Log in as a registered user",
 )
 @limiter.limit("10/minute")  # type: ignore[misc]
+@rate_limit(
+    [("ip", 10, 60)],
+    limiter_factory=limiter_for,
+    on_rejection=audit_on_rejection,
+)
 async def login(
     request: Request,
     body: LoginRequest,
