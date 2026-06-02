@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.10.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.9.0...qrew-api/v1.10.0) (2026-06-02)
+
+
+### Features
+
+* add arq-based background job runner with retries and dlq ([#127](https://github.com/cristiangilsanz/qrew/issues/127)) ([34077dc](https://github.com/cristiangilsanz/qrew/commit/34077dca4dabd950579e8a92222ea351f472c499))
+* add idempotency-key middleware for unsafe post operations ([#132](https://github.com/cristiangilsanz/qrew/issues/132)) ([88f9df5](https://github.com/cristiangilsanz/qrew/commit/88f9df57fa578393f730bf99ea67e962c9d404b0))
+* add postgres tsvector full-text search for events ([#136](https://github.com/cristiangilsanz/qrew/issues/136)) ([7cbca36](https://github.com/cristiangilsanz/qrew/commit/7cbca364a24a4b29ca479e2762553afc3c35046e))
+* add redis sliding-window rate limiter with composable scopes ([#131](https://github.com/cristiangilsanz/qrew/issues/131)) ([6e6b5c2](https://github.com/cristiangilsanz/qrew/commit/6e6b5c2c4b69ca591efecbf4b2275903a95b26e0))
+* implement file storage abstraction with local filesystem backend ([#134](https://github.com/cristiangilsanz/qrew/issues/134)) ([b093f56](https://github.com/cristiangilsanz/qrew/commit/b093f569a70ab2c528e8a90345a6d3aebfc185e2))
+* instrument the api with opentelemetry traces across http, db, redis ([#129](https://github.com/cristiangilsanz/qrew/issues/129)) ([4fe3e69](https://github.com/cristiangilsanz/qrew/commit/4fe3e697b3f776463a25ff52b920efe55a5c14ef))
+* introduce notification model and unified notificationservice ([#135](https://github.com/cristiangilsanz/qrew/issues/135)) ([a0ec280](https://github.com/cristiangilsanz/qrew/commit/a0ec2806f76e31ba3360cb4fbe8d33a40c428e7e))
+* scaffold authenticated websocket infrastructure for realtime channels ([#133](https://github.com/cristiangilsanz/qrew/issues/133)) ([245aef1](https://github.com/cristiangilsanz/qrew/commit/245aef1574dbdc9e8c5f800a6b72f4105537a8c3))
+* standardise api conventions with cursor pagination and shared error schema ([#130](https://github.com/cristiangilsanz/qrew/issues/130)) ([f4c11d6](https://github.com/cristiangilsanz/qrew/commit/f4c11d6c04857bc88d819ceea3fc503a3a8d2d20))
+
 ## [1.9.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.8.0...qrew-api/v1.9.0) (2026-05-29)
 
 
