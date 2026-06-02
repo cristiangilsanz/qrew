@@ -1,8 +1,6 @@
-from .dispatcher import (
-    NotificationDispatcher,
-    NotificationService,
-    build_notification_dispatcher,
-)
+from com.qode.qrew.v1.service.services.notification import NotificationService
+
+from .dispatcher import NotificationDispatcher, build_notification_dispatcher
 from .email import EmailService, SmtpEmailService, StubEmailService
 from .sms import SmsService, StubSmsService, TwilioSmsService
 

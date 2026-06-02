@@ -8,7 +8,7 @@ from com.qode.qrew.v1.service.core.auth.security import (
 )
 from com.qode.qrew.v1.service.core.infra.errors import DomainError
 from com.qode.qrew.v1.service.repositories.auth.user import UserRepository
-from com.qode.qrew.v1.service.services.infra.notification import NotificationService
+from com.qode.qrew.v1.service.services.infra.notification import NotificationDispatcher
 
 logger = structlog.get_logger(__name__)
 
@@ -18,7 +18,7 @@ class ResendError(DomainError):
 
 
 class ResendEmailVerificationService:
-    def __init__(self, repo: UserRepository, notifier: NotificationService) -> None:
+    def __init__(self, repo: UserRepository, notifier: NotificationDispatcher) -> None:
         self._repo = repo
         self._notifier = notifier
 
@@ -49,7 +49,7 @@ class ResendEmailVerificationService:
 
 
 class ResendPhoneOtpService:
-    def __init__(self, repo: UserRepository, notifier: NotificationService) -> None:
+    def __init__(self, repo: UserRepository, notifier: NotificationDispatcher) -> None:
         self._repo = repo
         self._notifier = notifier
 
