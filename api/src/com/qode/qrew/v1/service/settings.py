@@ -108,5 +108,8 @@ class Settings(BaseSettings):
     notification_enabled: bool = True
     notification_max_attempts: int = 5
 
+    search_default_limit: int = 20
+    search_max_limit: int = 100
+
 
 settings = Settings()
