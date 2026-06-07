@@ -115,5 +115,9 @@ class Settings(BaseSettings):
     locking_default_retry_attempts: int = 3
     locking_default_retry_delay_ms: int = 200
 
+    outbox_batch_size: int = 50
+    outbox_max_attempts: int = 5
+    outbox_backoff_delays_seconds: list[int] = [1, 5, 25, 125, 625]
+
 
 settings = Settings()
