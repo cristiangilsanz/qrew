@@ -111,5 +111,9 @@ class Settings(BaseSettings):
     search_default_limit: int = 20
     search_max_limit: int = 100
 
+    locking_default_ttl_seconds: float = 10.0
+    locking_default_retry_attempts: int = 3
+    locking_default_retry_delay_ms: int = 200
+
 
 settings = Settings()

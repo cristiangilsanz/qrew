@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from com.qode.qrew.v1.service.core.idempotency import close_idempotency_store
 from com.qode.qrew.v1.service.core.jobs.pool import close_pool
+from com.qode.qrew.v1.service.core.locking import close_locking
 from com.qode.qrew.v1.service.core.observability import shutdown_tracing
 from com.qode.qrew.v1.service.core.ratelimit.dependencies import close_ratelimiter
 from com.qode.qrew.v1.service.core.ws import start_hub, stop_hub
@@ -24,5 +25,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_pool()
     await close_ratelimiter()
     await close_idempotency_store()
+    await close_locking()
     shutdown_tracing()
     await logger.ainfo("shutdown")
