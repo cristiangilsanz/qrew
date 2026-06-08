@@ -36,12 +36,19 @@ async def _events_table_exists(db: AsyncSession) -> bool:
 
 
 @router.get(
+    "",
+    response_model=Page[EventSearchResult],
+    status_code=status.HTTP_200_OK,
+    summary="Public catalog list of events with cursor pagination and search",
+)
+@router.get(
     "/search",
     response_model=Page[EventSearchResult],
     status_code=status.HTTP_200_OK,
     summary="Search published events by text and filters",
+    include_in_schema=False,
 )
-@limiter.limit("60/minute")  # type: ignore[misc]
+@limiter.limit("120/minute")  # type: ignore[misc]
 async def search_events(
     request: Request,
     q: str | None = Query(default=None, max_length=256),
@@ -59,7 +66,7 @@ async def search_events(
     page_limit = min(page_limit, settings.search_max_limit)
 
     if not await _events_table_exists(db):
-        await logger.ainfo("search_events_skipped", reason="events_table_missing")
+        await logger.ainfo("events.search.miss", reason="events_table_missing")
         return Page[EventSearchResult](items=[], next_cursor=None)
 
     clause = build_search_clause(
@@ -120,4 +127,10 @@ async def search_events(
         )
         for row in rows
     ]
+    await logger.ainfo(
+        "events.search.indexed",
+        result_count=len(items),
+        has_query=q is not None,
+        page_limit=page_limit,
+    )
     return Page[EventSearchResult](items=items, next_cursor=next_cursor)
