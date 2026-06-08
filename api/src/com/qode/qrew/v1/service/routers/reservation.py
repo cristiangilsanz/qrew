@@ -11,6 +11,7 @@ from com.qode.qrew.v1.service.core.infra.database import get_db
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.core.locking.errors import LockUnavailableError
 from com.qode.qrew.v1.service.core.queue import consume_reservation_token
+from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 from com.qode.qrew.v1.service.models.auth.user import User
 from com.qode.qrew.v1.service.models.reservation import Reservation
 from com.qode.qrew.v1.service.models.ticket import Ticket
@@ -23,6 +24,11 @@ from com.qode.qrew.v1.service.schemas.reservation import (
     ReservationTicketItem,
 )
 from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.fraud import (
+    FraudDecision,
+    PurchaseContext,
+)
+from com.qode.qrew.v1.service.services.fraud.dependencies import build_engine
 from com.qode.qrew.v1.service.services.reservation import (
     ReservationError,
     ReservationService,
@@ -90,7 +96,6 @@ async def reserve_event(
     db: AsyncSession = Depends(get_db),
 ) -> ReservationResponse:
     """Atomic capacity-guarded reservation against an event tier."""
-    del request
     event = await EventRepository(db).get_by_id(event_id)
     if event is None:
         raise HTTPException(
@@ -126,12 +131,48 @@ async def reserve_event(
                     "field": "reservation_window_token",
                 },
             )
+    from datetime import datetime, timezone
+
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        ip_address: str | None = forwarded.split(",", 1)[0].strip()
+    else:
+        ip_address = request.client.host if request.client else None
+    fingerprint = request.headers.get("X-Device-Fingerprint")
+    fraud_context = PurchaseContext(
+        user_id=current_user.id,
+        user_created_at=current_user.created_at,
+        phone_number=None,
+        ip_address=ip_address,
+        device_fingerprint_hash=fingerprint,
+        now=datetime.now(timezone.utc),
+    )
+    engine = build_engine(db)
+    evaluation = await engine.evaluate(fraud_context)
+    audit = AuditService()
+    if evaluation.decision == FraudDecision.block:
+        try:
+            await audit.record(
+                action=AuditAction.RESERVATION_BLOCKED,
+                actor_id=current_user.id,
+                entity_type="event",
+                entity_id=str(event_id),
+                payload=evaluation.to_payload(),
+            )
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"message": "Reservation rejected for risk", "field": None},
+        )
     try:
         reservation = await _service(db).reserve(
             user_id=current_user.id,
             event_id=event_id,
             ticket_type_id=body.ticket_type_id,
             quantity=body.quantity,
+            risk_score=evaluation.score,
+            requires_review=evaluation.decision == FraudDecision.review,
         )
     except ReservationError as exc:
         raise _bad_request(exc) from exc
@@ -151,6 +192,17 @@ async def reserve_event(
                 "field": None,
             },
         ) from exc
+    if evaluation.decision == FraudDecision.review:
+        try:
+            await audit.record(
+                action=AuditAction.RESERVATION_FLAGGED,
+                actor_id=current_user.id,
+                entity_type="reservation",
+                entity_id=str(reservation.id),
+                payload=evaluation.to_payload(),
+            )
+        except Exception:
+            pass
     tickets = await ReservationRepository(db).list_tickets(reservation.id)
     return _to_response(reservation, tickets)
 
