@@ -3,11 +3,14 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jwt import InvalidTokenError
+
 from com.qode.qrew.v1.service.core.auth.auth import get_current_user
 from com.qode.qrew.v1.service.core.idempotency import idempotent
 from com.qode.qrew.v1.service.core.infra.database import get_db
 from com.qode.qrew.v1.service.core.infra.limiter import limiter
 from com.qode.qrew.v1.service.core.locking.errors import LockUnavailableError
+from com.qode.qrew.v1.service.core.queue import consume_reservation_token
 from com.qode.qrew.v1.service.models.auth.user import User
 from com.qode.qrew.v1.service.models.reservation import Reservation
 from com.qode.qrew.v1.service.models.ticket import Ticket
@@ -88,6 +91,41 @@ async def reserve_event(
 ) -> ReservationResponse:
     """Atomic capacity-guarded reservation against an event tier."""
     del request
+    event = await EventRepository(db).get_by_id(event_id)
+    if event is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Event not found", "field": "event_id"},
+        )
+    if event.queue_required:
+        if body.reservation_window_token is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "message": "Reservation window token is required for this event",
+                    "field": "reservation_window_token",
+                },
+            )
+        try:
+            token_event = await consume_reservation_token(
+                token=body.reservation_window_token, user_id=current_user.id
+            )
+        except InvalidTokenError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "message": "Reservation window token is invalid",
+                    "field": "reservation_window_token",
+                },
+            ) from exc
+        if token_event != event_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "message": "Reservation window token is for a different event",
+                    "field": "reservation_window_token",
+                },
+            )
     try:
         reservation = await _service(db).reserve(
             user_id=current_user.id,

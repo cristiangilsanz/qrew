@@ -24,10 +24,12 @@ class Settings(BaseSettings):
     setup_jwt_private_key: str = ""
     recovery_jwt_private_key: str = ""
     refresh_jwt_private_key: str = ""
+    queue_jwt_private_key: str = ""
     access_jwt_previous_public_keys: str = ""
     setup_jwt_previous_public_keys: str = ""
     recovery_jwt_previous_public_keys: str = ""
     refresh_jwt_previous_public_keys: str = ""
+    queue_jwt_previous_public_keys: str = ""
     access_token_expire_minutes: int = 30
     setup_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
@@ -121,6 +123,11 @@ class Settings(BaseSettings):
 
     reservation_ttl_seconds: int = 600
     reservation_sweep_batch_size: int = 200
+
+    queue_redeem_window_seconds: int = 90
+    queue_reservation_window_seconds: int = 120
+    queue_admit_default_rate_per_minute: int = 60
+    queue_join_lead_seconds: int = 900
 
 
 settings = Settings()
