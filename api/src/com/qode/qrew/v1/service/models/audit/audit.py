@@ -57,6 +57,9 @@ class AuditAction(enum.StrEnum):
     EXPIRED_TOKENS_CLEANED = "expired_tokens_cleaned"
     RATE_LIMIT_HIT = "rate_limit_hit"
     NOTIFICATION_FAILED = "notification_failed"
+    ORGANISATION_CREATED = "organisation_created"
+    ORGANISATION_MEMBER_ADDED = "organisation_member_added"
+    ORGANISATION_MEMBER_REMOVED = "organisation_member_removed"
 
 
 class AuditEvent(Base):
