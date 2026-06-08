@@ -76,6 +76,10 @@ class AuditAction(enum.StrEnum):
     QUEUE_REDEEM_FAILED = "queue_redeem_failed"
     RESERVATION_FLAGGED = "reservation_flagged"
     RESERVATION_BLOCKED = "reservation_blocked"
+    PAYMENT_INITIATED = "payment_initiated"  # noqa: S105
+    PAYMENT_SUCCEEDED = "payment_succeeded"  # noqa: S105
+    PAYMENT_FAILED = "payment_failed"  # noqa: S105
+    WEBHOOK_INVALID_SIGNATURE = "webhook_invalid_signature"
 
 
 class AuditEvent(Base):

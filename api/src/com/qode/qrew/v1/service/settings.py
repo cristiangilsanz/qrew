@@ -124,6 +124,12 @@ class Settings(BaseSettings):
     reservation_ttl_seconds: int = 600
     reservation_sweep_batch_size: int = 200
 
+    stripe_secret_key: str = ""
+    stripe_webhook_signing_secret: str = ""
+    stripe_api_version: str = "2024-06-20"
+    payments_default_currency: str = "EUR"
+    payments_webhook_idempotency_ttl_seconds: int = 86400
+
     fraud_signals_enabled: bool = True
     fraud_score_review_threshold: int = 40
     fraud_score_block_threshold: int = 70
