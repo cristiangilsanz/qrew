@@ -1,4 +1,5 @@
 import asyncio
+import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
@@ -32,6 +33,7 @@ class Connection:
 
     def __post_init__(self) -> None:
         self._queue = asyncio.Queue(maxsize=self.queue_size)
+        self._last_pong = time.monotonic()
 
     @property
     def closed(self) -> bool:
@@ -74,3 +76,7 @@ class Connection:
     @property
     def last_pong(self) -> float:
         return self._last_pong
+
+    def is_stale(self, now: float, max_silence_seconds: float) -> bool:
+        """Return whether the connection has missed pongs beyond the grace window."""
+        return now - self._last_pong > max_silence_seconds

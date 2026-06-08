@@ -144,17 +144,11 @@ async def _read_loop(connection: Connection) -> None:
 
 async def _heartbeat(connection: Connection) -> None:
     ping_interval = settings.ws_heartbeat_seconds
-    pong_timeout = settings.ws_pong_timeout_seconds
-    connection.record_pong(time.monotonic())
     try:
         while not connection.closed:
             await asyncio.sleep(ping_interval)
             if connection.closed:
                 return
             await connection.enqueue(_PING)
-            await asyncio.sleep(pong_timeout)
-            if time.monotonic() - connection.last_pong > ping_interval + pong_timeout:
-                await connection.close(WS_CLOSE_INTERNAL, "heartbeat timeout")
-                return
     except asyncio.CancelledError:
         raise

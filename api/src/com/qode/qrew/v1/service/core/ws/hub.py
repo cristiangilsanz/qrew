@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import json
+import time
 from typing import Any
 
 import redis.asyncio as aioredis
@@ -13,8 +14,12 @@ from com.qode.qrew.v1.service.core.observability import (
     take_carrier,
     tracer,
 )
-from com.qode.qrew.v1.service.core.ws.close_codes import WS_CLOSE_OVERLOAD
+from com.qode.qrew.v1.service.core.ws.close_codes import (
+    WS_CLOSE_INTERNAL,
+    WS_CLOSE_OVERLOAD,
+)
 from com.qode.qrew.v1.service.core.ws.connection import Connection
+from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -33,6 +38,7 @@ class Hub:
         self._local: dict[str, set[Connection]] = {}
         self._pubsub: Any = None
         self._task: asyncio.Task[None] | None = None
+        self._reaper_task: asyncio.Task[None] | None = None
         self._lock = asyncio.Lock()
         self._running = False
 
@@ -42,6 +48,7 @@ class Hub:
         self._pubsub = self._redis.pubsub()  # type: ignore[misc]
         self._running = True
         self._task = asyncio.create_task(self._dispatcher())
+        self._reaper_task = asyncio.create_task(self._reaper())
 
     async def stop(self) -> None:
         self._running = False
@@ -50,6 +57,11 @@ class Hub:
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self._task
             self._task = None
+        if self._reaper_task is not None:
+            self._reaper_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await self._reaper_task
+            self._reaper_task = None
         if self._pubsub is not None:
             with contextlib.suppress(Exception):
                 await self._pubsub.aclose()  # type: ignore[misc]
@@ -147,3 +159,53 @@ class Hub:
                     await self.deliver_local(channel_key, payload)
         except asyncio.CancelledError:
             raise
+
+    def _reaper_interval_seconds(self) -> float:
+        """Half the pong timeout, never below one second."""
+        return max(1.0, settings.ws_pong_timeout_seconds / 2)
+
+    def _max_silence_seconds(self) -> float:
+        return float(settings.ws_heartbeat_seconds + settings.ws_pong_timeout_seconds)
+
+    async def _reaper(self) -> None:
+        interval = self._reaper_interval_seconds()
+        try:
+            while self._running:
+                await asyncio.sleep(interval)
+                if not self._running:
+                    return
+                try:
+                    await self.reap_stale()
+                except Exception as exc:  # noqa: BLE001
+                    await logger.awarning("ws_reaper_error", error=repr(exc))
+        except asyncio.CancelledError:
+            raise
+
+    async def reap_stale(self) -> int:
+        """Close every connection whose last pong is older than the grace window."""
+        now = time.monotonic()
+        max_silence = self._max_silence_seconds()
+        stale: set[Connection] = set()
+        async with self._lock:
+            for subscribers in self._local.values():
+                for connection in subscribers:
+                    if connection.is_stale(now, max_silence):
+                        stale.add(connection)
+        for connection in stale:
+            await self._reap_one(connection)
+        return len(stale)
+
+    async def _reap_one(self, connection: Connection) -> None:
+        channel_keys: list[str] = []
+        async with self._lock:
+            for channel_key, subscribers in self._local.items():
+                if connection in subscribers:
+                    channel_keys.append(channel_key)
+        for channel_key in channel_keys:
+            await self.unsubscribe(channel_key, connection)
+        await connection.close(WS_CLOSE_INTERNAL, "heartbeat lost")
+        await logger.awarning(
+            "ws_connection_reaped",
+            connection_id=connection.id,
+            user_id=str(connection.user.id),
+        )
