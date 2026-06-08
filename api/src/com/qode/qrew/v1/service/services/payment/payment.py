@@ -181,6 +181,104 @@ class PaymentService:
             payload={"failure_code": failure_code},
         )
 
+    @traced("payment.apply_refund")
+    async def apply_refund(
+        self, *, intent_id: str, amount_refunded: int, amount_total: int
+    ) -> None:
+        """Handle charge.refunded; full refund cancels reservation and tickets."""
+        payment = await self._repo.get_by_intent_id(intent_id)
+        if payment is None:
+            return
+        if amount_refunded < amount_total:
+            await self._record(
+                AuditAction.PAYMENT_PARTIAL_REFUND,
+                actor_id=uuid.uuid4(),
+                payment_id=payment.id,
+                payload={
+                    "amount_refunded": amount_refunded,
+                    "amount_total": amount_total,
+                },
+            )
+            return
+        await self._cancel_for_payment(payment, reason=AuditAction.PAYMENT_REFUNDED)
+
+    @traced("payment.apply_chargeback")
+    async def apply_chargeback(self, *, intent_id: str) -> None:
+        """Handle charge.dispute.created; cancel issued tickets immediately."""
+        payment = await self._repo.get_by_intent_id(intent_id)
+        if payment is None:
+            return
+        await self._cancel_for_payment(payment, reason=AuditAction.CHARGEBACK_OPENED)
+
+    @traced("payment.record_chargeback_closed")
+    async def record_chargeback_closed(self, *, intent_id: str) -> None:
+        """Log the dispute closing; the FSM has already moved."""
+        payment = await self._repo.get_by_intent_id(intent_id)
+        if payment is None:
+            return
+        reservation = await self._reservation_repo.get_by_id(payment.reservation_id)
+        actor_id = reservation.user_id if reservation else uuid.uuid4()
+        await self._record(
+            AuditAction.CHARGEBACK_CLOSED,
+            actor_id=actor_id,
+            payment_id=payment.id,
+            payload={},
+        )
+
+    async def _cancel_for_payment(
+        self, payment: Payment, *, reason: AuditAction
+    ) -> None:
+        reservation = await self._reservation_repo.get_by_id(payment.reservation_id)
+        if reservation is None:
+            return
+        async with redlock(f"reservation:{reservation.id}:lifecycle", ttl_seconds=10):
+            tickets = await self._reservation_repo.list_tickets(reservation.id)
+            used = [t for t in tickets if t.state == TicketState.used]
+            if used:
+                await self._record(
+                    AuditAction.CHARGEBACK_ON_USED_TICKET,
+                    actor_id=reservation.user_id,
+                    payment_id=payment.id,
+                    payload={
+                        "used_ticket_ids": [str(t.id) for t in used],
+                        "reason": reason.value,
+                    },
+                )
+            cancellable_states = {TicketState.reserved, TicketState.issued}
+            qty_to_release = 0
+            for ticket in tickets:
+                if ticket.state in cancellable_states:
+                    ticket.state = TicketState.cancelled
+                    qty_to_release += 1
+            if qty_to_release > 0:
+                tier = await self._tier_repo.get_by_id(reservation.ticket_type_id)
+                if tier is not None:
+                    tier.reserved_count = max(0, tier.reserved_count - qty_to_release)
+            reservation.status = ReservationStatus.cancelled
+            payment.status = PaymentStatus.refunded
+            await self._repo.flush()
+            job_name = (
+                "notifications.ticket_cancelled_chargeback"
+                if reason == AuditAction.CHARGEBACK_OPENED
+                else "notifications.ticket_cancelled_refund"
+            )
+            await publish_via_outbox(
+                self._session,
+                aggregate_type="payment",
+                aggregate_id=str(payment.id),
+                job_name=job_name,
+                payload={
+                    "reservation_id": str(reservation.id),
+                    "reason": reason.value,
+                },
+            )
+            await self._record(
+                reason,
+                actor_id=reservation.user_id,
+                payment_id=payment.id,
+                payload={"reservation_id": str(reservation.id)},
+            )
+
     async def update_intermediate(self, *, intent_id: str, status: str) -> None:
         payment = await self._repo.get_by_intent_id(intent_id)
         if payment is None:

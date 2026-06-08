@@ -80,6 +80,11 @@ class AuditAction(enum.StrEnum):
     PAYMENT_SUCCEEDED = "payment_succeeded"  # noqa: S105
     PAYMENT_FAILED = "payment_failed"  # noqa: S105
     WEBHOOK_INVALID_SIGNATURE = "webhook_invalid_signature"
+    PAYMENT_REFUNDED = "payment_refunded"  # noqa: S105
+    PAYMENT_PARTIAL_REFUND = "payment_partial_refund"  # noqa: S105
+    CHARGEBACK_OPENED = "chargeback_opened"
+    CHARGEBACK_CLOSED = "chargeback_closed"
+    CHARGEBACK_ON_USED_TICKET = "chargeback_on_used_ticket"  # noqa: S105
 
 
 class AuditEvent(Base):

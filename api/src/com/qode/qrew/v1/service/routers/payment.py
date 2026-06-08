@@ -165,11 +165,16 @@ def _read_dict(d: dict[str, Any], key: str) -> dict[str, Any]:
     return cast(dict[str, Any], value) if isinstance(value, dict) else {}
 
 
+def _read_int(d: dict[str, Any], key: str) -> int | None:
+    value: Any = d.get(key)
+    return value if isinstance(value, int) else None
+
+
 async def _dispatch_event(service: PaymentService, event: dict[str, Any]) -> None:
     event_type = _read_str(event, "type") or ""
     data_section = _read_dict(event, "data")
     data_object = _read_dict(data_section, "object")
-    intent_id = _read_str(data_object, "id")
+    intent_id = _payment_intent_id_for(event_type, data_object)
     if intent_id is None:
         return
     try:
@@ -191,7 +196,26 @@ async def _dispatch_event(service: PaymentService, event: dict[str, Any]) -> Non
                 await service.update_intermediate(
                     intent_id=intent_id, status=stripe_status
                 )
+        elif event_type == "charge.refunded":
+            amount = _read_int(data_object, "amount") or 0
+            amount_refunded = _read_int(data_object, "amount_refunded") or 0
+            await service.apply_refund(
+                intent_id=intent_id,
+                amount_refunded=amount_refunded,
+                amount_total=amount,
+            )
+        elif event_type == "charge.dispute.created":
+            await service.apply_chargeback(intent_id=intent_id)
+        elif event_type == "charge.dispute.closed":
+            await service.record_chargeback_closed(intent_id=intent_id)
     except LockUnavailableError:
         await logger.awarning(
             "webhook_lock_unavailable", event_type=event_type, intent_id=intent_id
         )
+
+
+def _payment_intent_id_for(event_type: str, data_object: dict[str, Any]) -> str | None:
+    """Charge events carry the intent id on payment_intent; intent events on id."""
+    if event_type.startswith("charge."):
+        return _read_str(data_object, "payment_intent")
+    return _read_str(data_object, "id")
