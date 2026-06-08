@@ -6,7 +6,11 @@ from arq.worker import Retry
 
 from com.qode.qrew.v1.service.core.jobs.dlq import push_to_dlq
 from com.qode.qrew.v1.service.core.jobs.registry import JobSpec
-from com.qode.qrew.v1.service.core.observability import tracer
+from com.qode.qrew.v1.service.core.observability import (
+    extract_context,
+    take_carrier,
+    tracer,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -19,6 +23,19 @@ def _payload_from_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[st
     return {"args": list(args), "kwargs": kwargs}
 
 
+def _take_propagation_context(
+    args: tuple[Any, ...], kwargs: dict[str, Any]
+) -> tuple[tuple[Any, ...], dict[str, str] | None]:
+    """Strip and return the OTel carrier from the leading dict payload, if any."""
+    if not args:
+        return args, take_carrier(kwargs)
+    head = args[0]
+    if isinstance(head, dict):
+        carrier = take_carrier(head)  # type: ignore[arg-type]
+        return args, carrier
+    return args, take_carrier(kwargs)
+
+
 def wrap_handler(spec: JobSpec) -> JobRunner:
     """Wrap a job handler with structlog binding, OTel span, retry, and DLQ push."""
 
@@ -29,8 +46,12 @@ def wrap_handler(spec: JobSpec) -> JobRunner:
         structlog.contextvars.bind_contextvars(
             job_name=spec.name, job_id=job_id, attempt=attempt
         )
+        args, carrier = _take_propagation_context(args, kwargs)
+        parent_context = extract_context(carrier)
         try:
-            with tracer.start_as_current_span(f"job.{spec.name}") as span:
+            with tracer.start_as_current_span(
+                f"job.{spec.name}", context=parent_context
+            ) as span:
                 span.set_attribute("job.name", spec.name)
                 span.set_attribute("job.id", job_id)
                 span.set_attribute("job.attempt", attempt)

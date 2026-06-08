@@ -6,6 +6,13 @@ from typing import Any
 import redis.asyncio as aioredis
 import structlog
 
+from com.qode.qrew.v1.service.core.observability import (
+    CARRIER_KEY,
+    extract_context,
+    inject_current_context,
+    take_carrier,
+    tracer,
+)
 from com.qode.qrew.v1.service.core.ws.close_codes import WS_CLOSE_OVERLOAD
 from com.qode.qrew.v1.service.core.ws.connection import Connection
 
@@ -74,8 +81,12 @@ class Hub:
             await self._pubsub.unsubscribe(_redis_channel(channel_key))  # type: ignore[misc]
 
     async def publish(self, channel_key: str, payload: dict[str, Any]) -> None:
+        envelope = dict(payload)
+        carrier = inject_current_context()
+        if carrier and CARRIER_KEY not in envelope:
+            envelope[CARRIER_KEY] = carrier
         try:
-            await self._redis.publish(_redis_channel(channel_key), json.dumps(payload))  # type: ignore[misc]
+            await self._redis.publish(_redis_channel(channel_key), json.dumps(envelope))  # type: ignore[misc]
         except aioredis.RedisError as exc:
             await logger.awarning("ws_publish_failed", error=repr(exc))
 
@@ -129,6 +140,10 @@ class Hub:
                 if not isinstance(parsed, dict):
                     continue
                 payload: dict[str, Any] = dict(parsed)  # type: ignore[arg-type]
-                await self.deliver_local(channel_key, payload)
+                carrier = take_carrier(payload)
+                parent = extract_context(carrier)
+                with tracer.start_as_current_span("ws.deliver", context=parent) as span:
+                    span.set_attribute("ws.channel", channel_key)
+                    await self.deliver_local(channel_key, payload)
         except asyncio.CancelledError:
             raise
