@@ -32,25 +32,25 @@ def update_one_sql(config: SearchConfig) -> str:
     )
 
 
-def create_trigger_sql(config: SearchConfig) -> str:
-    """Return SQL that installs a trigger to keep the vector up to date."""
+def create_trigger_sql(config: SearchConfig) -> list[str]:
+    """Return the statements that install a trigger to keep the vector up to date."""
     body = vector_sql(config).replace("coalesce(", "coalesce(NEW.")
-    return (
+    return [
         f"CREATE OR REPLACE FUNCTION {config.trigger_function_name}() "
         "RETURNS trigger AS $$ BEGIN "
         f"NEW.{config.vector_column} := {body}; "
         "RETURN NEW; "
-        "END; $$ LANGUAGE plpgsql; "
-        f"DROP TRIGGER IF EXISTS {config.trigger_name} ON {config.table}; "
+        "END; $$ LANGUAGE plpgsql",
+        f"DROP TRIGGER IF EXISTS {config.trigger_name} ON {config.table}",
         f"CREATE TRIGGER {config.trigger_name} BEFORE INSERT OR UPDATE "
         f"ON {config.table} FOR EACH ROW "
-        f"EXECUTE FUNCTION {config.trigger_function_name}();"
-    )
+        f"EXECUTE FUNCTION {config.trigger_function_name}()",
+    ]
 
 
-def drop_trigger_sql(config: SearchConfig) -> str:
-    """Return SQL that removes the trigger and its function."""
-    return (
-        f"DROP TRIGGER IF EXISTS {config.trigger_name} ON {config.table}; "
-        f"DROP FUNCTION IF EXISTS {config.trigger_function_name}();"
-    )
+def drop_trigger_sql(config: SearchConfig) -> list[str]:
+    """Return the statements that remove the trigger and its function."""
+    return [
+        f"DROP TRIGGER IF EXISTS {config.trigger_name} ON {config.table}",
+        f"DROP FUNCTION IF EXISTS {config.trigger_function_name}()",
+    ]
