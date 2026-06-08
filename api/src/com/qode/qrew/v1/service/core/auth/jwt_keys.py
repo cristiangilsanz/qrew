@@ -15,7 +15,8 @@ ACCESS: Final = "access"
 SETUP: Final = "setup"
 RECOVERY: Final = "recovery"
 REFRESH: Final = "refresh"
-PURPOSES: Final = (ACCESS, SETUP, RECOVERY, REFRESH)
+QUEUE: Final = "queue"
+PURPOSES: Final = (ACCESS, SETUP, RECOVERY, REFRESH, QUEUE)
 
 
 @dataclass(frozen=True)

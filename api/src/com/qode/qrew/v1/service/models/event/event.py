@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -35,6 +36,10 @@ class Event(Base):
         CheckConstraint(
             "max_tickets_per_user >= 1 AND max_tickets_per_user <= 20",
             name="ck_events_max_tickets_per_user",
+        ),
+        CheckConstraint(
+            "queue_admit_rate_per_minute >= 1 AND queue_admit_rate_per_minute <= 600",
+            name="ck_events_queue_admit_rate",
         ),
         Index("ix_events_organisation_id", "organisation_id"),
         Index("ix_events_venue_id", "venue_id"),
@@ -72,6 +77,12 @@ class Event(Base):
     )
     organiser_name: Mapped[str] = mapped_column(String(128), nullable=False)
     venue_city: Mapped[str] = mapped_column(String(96), nullable=False)
+    queue_required: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    queue_admit_rate_per_minute: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="60"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

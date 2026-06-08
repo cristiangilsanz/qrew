@@ -29,6 +29,8 @@ _MUTABLE_FIELDS: frozenset[str] = frozenset(
         "sale_starts_at",
         "sale_ends_at",
         "max_tickets_per_user",
+        "queue_required",
+        "queue_admit_rate_per_minute",
     }
 )
 

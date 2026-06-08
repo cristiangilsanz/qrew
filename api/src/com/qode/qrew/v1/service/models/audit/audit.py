@@ -71,6 +71,9 @@ class AuditAction(enum.StrEnum):
     RESERVATION_CREATED = "reservation_created"
     RESERVATION_CANCELLED = "reservation_cancelled"
     RESERVATION_EXPIRED = "reservation_expired"
+    QUEUE_JOINED = "queue_joined"
+    QUEUE_REDEEMED = "queue_redeemed"
+    QUEUE_REDEEM_FAILED = "queue_redeem_failed"
 
 
 class AuditEvent(Base):
