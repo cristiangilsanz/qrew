@@ -273,23 +273,23 @@ async def cancel_event(
 
 
 @router.get(
-    "/events/{event_id}",
+    "/organisations/{organisation_id}/events/{event_id}",
     response_model=EventResponse,
     status_code=status.HTTP_200_OK,
-    summary="Read a single event",
+    summary="Read a single event the caller's organisation owns",
 )
 @limiter.limit("120/minute")  # type: ignore[misc]
-async def get_event(
+async def get_org_event(
     request: Request,
+    organisation_id: uuid.UUID,
     event_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    _actor: OrganisationMember = Depends(get_org_member(OrganisationRole.member)),
     db: AsyncSession = Depends(get_db),
 ) -> EventResponse:
-    """Read a single event the caller can see."""
+    """Organiser-side single event read; returns any status the caller owns."""
     del request
-    del current_user
     event = await EventRepository(db).get_by_id(event_id)
-    if event is None:
+    if event is None or event.organisation_id != organisation_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"message": "Event not found", "field": "event_id"},
