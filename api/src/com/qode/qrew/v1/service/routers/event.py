@@ -286,7 +286,7 @@ async def get_org_event(
     _actor: OrganisationMember = Depends(get_org_member(OrganisationRole.member)),
     db: AsyncSession = Depends(get_db),
 ) -> EventResponse:
-    """Organiser-side single event read; returns any status the caller owns."""
+    """Organiser-side single event read and returns any status the caller owns."""
     del request
     event = await EventRepository(db).get_by_id(event_id)
     if event is None or event.organisation_id != organisation_id:
