@@ -40,7 +40,8 @@ def upgrade() -> None:
         [EVENTS_SEARCH_CONFIG.vector_column],
         postgresql_using="gin",
     )
-    op.execute(create_trigger_sql(EVENTS_SEARCH_CONFIG))
+    for statement in create_trigger_sql(EVENTS_SEARCH_CONFIG):
+        op.execute(statement)
 
 
 def downgrade() -> None:
@@ -48,7 +49,8 @@ def downgrade() -> None:
     inspector = sa.inspect(bind)
     if EVENTS_SEARCH_CONFIG.table not in inspector.get_table_names():
         return
-    op.execute(drop_trigger_sql(EVENTS_SEARCH_CONFIG))
+    for statement in drop_trigger_sql(EVENTS_SEARCH_CONFIG):
+        op.execute(statement)
     op.drop_index(
         EVENTS_SEARCH_CONFIG.index_name, table_name=EVENTS_SEARCH_CONFIG.table
     )

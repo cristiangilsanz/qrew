@@ -49,13 +49,16 @@ def test_update_one_sql_binds_row_id() -> None:
 
 
 def test_create_trigger_sql_references_new_columns() -> None:
-    sql = create_trigger_sql(_events_config())
-    assert "NEW.name" in sql
-    assert "NEW.description" in sql
-    assert "events_search_vector_trigger" in sql
+    statements = create_trigger_sql(_events_config())
+    joined = " ".join(statements)
+    assert "NEW.name" in joined
+    assert "NEW.description" in joined
+    assert "events_search_vector_trigger" in joined
+    assert len(statements) >= 2
 
 
 def test_drop_trigger_sql_drops_function_and_trigger() -> None:
-    sql = drop_trigger_sql(_events_config())
-    assert "DROP TRIGGER IF EXISTS" in sql
-    assert "DROP FUNCTION IF EXISTS" in sql
+    statements = drop_trigger_sql(_events_config())
+    joined = " ".join(statements)
+    assert "DROP TRIGGER IF EXISTS" in joined
+    assert "DROP FUNCTION IF EXISTS" in joined

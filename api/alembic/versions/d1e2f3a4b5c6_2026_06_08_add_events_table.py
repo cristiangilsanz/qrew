@@ -109,11 +109,13 @@ def upgrade() -> None:
         [EVENTS_SEARCH_CONFIG.vector_column],
         postgresql_using="gin",
     )
-    op.execute(create_trigger_sql(EVENTS_SEARCH_CONFIG))
+    for statement in create_trigger_sql(EVENTS_SEARCH_CONFIG):
+        op.execute(statement)
 
 
 def downgrade() -> None:
-    op.execute(drop_trigger_sql(EVENTS_SEARCH_CONFIG))
+    for statement in drop_trigger_sql(EVENTS_SEARCH_CONFIG):
+        op.execute(statement)
     op.drop_index("ix_events_status_starts_at", table_name="events")
     op.drop_index("ix_events_venue_id", table_name="events")
     op.drop_index("ix_events_organisation_id", table_name="events")
