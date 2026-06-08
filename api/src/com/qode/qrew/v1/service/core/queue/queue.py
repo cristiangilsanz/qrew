@@ -118,7 +118,7 @@ def _build_reservation_token(*, event_id: uuid.UUID, user_id: str) -> tuple[str,
 
 @traced("queue.admit")
 async def admit_batch(*, event_id: uuid.UUID, batch_size: int) -> list[AdmittedSlot]:
-    """Pop up to `batch_size` users from the head and mint redeem tokens."""
+    """Pop up to batch size users from the head and mint redeem tokens."""
     if batch_size <= 0:
         return []
     redis = _shared_client()
