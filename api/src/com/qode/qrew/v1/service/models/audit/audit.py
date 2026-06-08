@@ -74,6 +74,8 @@ class AuditAction(enum.StrEnum):
     QUEUE_JOINED = "queue_joined"
     QUEUE_REDEEMED = "queue_redeemed"
     QUEUE_REDEEM_FAILED = "queue_redeem_failed"
+    RESERVATION_FLAGGED = "reservation_flagged"
+    RESERVATION_BLOCKED = "reservation_blocked"
 
 
 class AuditEvent(Base):

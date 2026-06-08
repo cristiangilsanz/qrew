@@ -124,6 +124,28 @@ class Settings(BaseSettings):
     reservation_ttl_seconds: int = 600
     reservation_sweep_batch_size: int = 200
 
+    fraud_signals_enabled: bool = True
+    fraud_score_review_threshold: int = 40
+    fraud_score_block_threshold: int = 70
+    fraud_ip_velocity_window_seconds: int = 60
+    fraud_ip_velocity_threshold: int = 10
+    fraud_fingerprint_lookback_hours: int = 24
+    fraud_fingerprint_threshold: int = 2
+    fraud_weight_account_age_recent: int = 40
+    fraud_weight_account_age_young: int = 20
+    fraud_weight_voip_phone: int = 25
+    fraud_weight_time_to_purchase_immediate: int = 50
+    fraud_weight_time_to_purchase_fast: int = 30
+    fraud_weight_ip_velocity: int = 35
+    fraud_weight_fingerprint_reuse: int = 30
+    fraud_voip_phone_prefixes: list[str] = [
+        "+1844",
+        "+1855",
+        "+1866",
+        "+1877",
+        "+1888",
+    ]
+
     queue_redeem_window_seconds: int = 90
     queue_reservation_window_seconds: int = 120
     queue_admit_default_rate_per_minute: int = 60

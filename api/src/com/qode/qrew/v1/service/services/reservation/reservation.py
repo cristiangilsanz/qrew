@@ -84,6 +84,8 @@ class ReservationService:
         event_id: uuid.UUID,
         ticket_type_id: uuid.UUID,
         quantity: int,
+        risk_score: int = 0,
+        requires_review: bool = False,
     ) -> Reservation:
         """Atomically reserve `quantity` seats; raise on capacity or limit breach."""
         if quantity < 1:
@@ -123,6 +125,8 @@ class ReservationService:
                 quantity=quantity,
                 status=ReservationStatus.reserved,
                 expires_at=expires_at,
+                risk_score=risk_score,
+                requires_review=requires_review,
             )
             reservation = await self._repo.insert(reservation)
             for _ in range(quantity):
