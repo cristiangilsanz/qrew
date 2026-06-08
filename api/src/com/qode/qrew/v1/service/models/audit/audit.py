@@ -61,6 +61,10 @@ class AuditAction(enum.StrEnum):
     ORGANISATION_MEMBER_ADDED = "organisation_member_added"
     ORGANISATION_MEMBER_REMOVED = "organisation_member_removed"
     VENUE_CREATED = "venue_created"
+    EVENT_CREATED = "event_created"
+    EVENT_UPDATED = "event_updated"
+    EVENT_PUBLISHED = "event_published"
+    EVENT_CANCELLED = "event_cancelled"
 
 
 class AuditEvent(Base):

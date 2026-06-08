@@ -1,0 +1,297 @@
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from com.qode.qrew.v1.service.core.api import Page, clamp_limit, cursor_paginate
+from com.qode.qrew.v1.service.core.auth.auth import get_current_user
+from com.qode.qrew.v1.service.core.auth.organisation_acl import get_org_member
+from com.qode.qrew.v1.service.core.idempotency import idempotent
+from com.qode.qrew.v1.service.core.infra.database import get_db
+from com.qode.qrew.v1.service.core.infra.limiter import limiter
+from com.qode.qrew.v1.service.core.locking.errors import LockUnavailableError
+from com.qode.qrew.v1.service.core.ratelimit import rate_limit
+from com.qode.qrew.v1.service.core.ratelimit.dependencies import (
+    audit_on_rejection,
+    limiter_for,
+)
+from com.qode.qrew.v1.service.models.auth.user import User
+from com.qode.qrew.v1.service.models.event import Event
+from com.qode.qrew.v1.service.models.organisation import (
+    OrganisationMember,
+    OrganisationRole,
+)
+from com.qode.qrew.v1.service.repositories.event import EventRepository
+from com.qode.qrew.v1.service.repositories.organisation import (
+    OrganisationMemberRepository,
+    OrganisationRepository,
+)
+from com.qode.qrew.v1.service.repositories.venue import VenueRepository
+from com.qode.qrew.v1.service.schemas.event import (
+    EventCreateRequest,
+    EventResponse,
+    EventUpdateRequest,
+)
+from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.event import EventError, EventService
+
+router = APIRouter(tags=["events"])
+
+
+def _service(db: AsyncSession) -> EventService:
+    return EventService(
+        db,
+        EventRepository(db),
+        OrganisationRepository(db),
+        VenueRepository(db),
+        AuditService(),
+    )
+
+
+def _to_response(event: Event) -> EventResponse:
+    return EventResponse(
+        id=event.id,
+        organisation_id=event.organisation_id,
+        venue_id=event.venue_id,
+        name=event.name,
+        description=event.description,
+        starts_at=event.starts_at,
+        ends_at=event.ends_at,
+        sale_starts_at=event.sale_starts_at,
+        sale_ends_at=event.sale_ends_at,
+        max_tickets_per_user=event.max_tickets_per_user,
+        status=event.status,
+        organiser_name=event.organiser_name,
+        venue_city=event.venue_city,
+        created_at=event.created_at,
+        published_at=event.published_at,
+        cancelled_at=event.cancelled_at,
+    )
+
+
+def _bad_request(error: EventError) -> HTTPException:
+    code = (
+        status.HTTP_404_NOT_FOUND
+        if error.field in {"event_id", "organisation_id", "venue_id"}
+        else status.HTTP_400_BAD_REQUEST
+    )
+    return HTTPException(
+        status_code=code,
+        detail={"message": error.message, "field": error.field},
+    )
+
+
+async def _load_event_for_actor(
+    db: AsyncSession, event_id: uuid.UUID, user: User
+) -> tuple[Event, OrganisationMember]:
+    """Load an event and verify the caller is a manager+ in its organisation."""
+    event = await EventRepository(db).get_by_id(event_id)
+    if event is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Event not found", "field": "event_id"},
+        )
+    member = await OrganisationMemberRepository(db).get(event.organisation_id, user.id)
+    from com.qode.qrew.v1.service.models.organisation import role_rank
+
+    if member is None or role_rank(member.role) < role_rank(OrganisationRole.manager):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "message": "Not a manager of this organisation",
+                "field": None,
+            },
+        )
+    return event, member
+
+
+@router.post(
+    "/organisations/{organisation_id}/events",
+    response_model=EventResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a draft event under an organisation",
+)
+@limiter.limit("60/hour")  # type: ignore[misc]
+@idempotent(scope="user", ttl_seconds=300)
+@rate_limit(
+    [("org", 100, 3600)],
+    limiter_factory=limiter_for,
+    on_rejection=audit_on_rejection,
+)
+async def create_event(
+    request: Request,
+    organisation_id: uuid.UUID,
+    body: EventCreateRequest,
+    actor: OrganisationMember = Depends(get_org_member(OrganisationRole.manager)),
+    db: AsyncSession = Depends(get_db),
+) -> EventResponse:
+    """Create a draft event under an organisation."""
+    del request
+    try:
+        event = await _service(db).create_event(
+            actor_id=actor.user_id,
+            organisation_id=organisation_id,
+            venue_id=body.venue_id,
+            name=body.name,
+            description=body.description,
+            starts_at=body.starts_at,
+            ends_at=body.ends_at,
+            sale_starts_at=body.sale_starts_at,
+            sale_ends_at=body.sale_ends_at,
+            max_tickets_per_user=body.max_tickets_per_user,
+        )
+    except EventError as exc:
+        raise _bad_request(exc) from exc
+    return _to_response(event)
+
+
+@router.get(
+    "/organisations/{organisation_id}/events",
+    response_model=Page[EventResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List events under an organisation",
+)
+@limiter.limit("120/minute")  # type: ignore[misc]
+async def list_org_events(
+    request: Request,
+    organisation_id: uuid.UUID,
+    cursor: str | None = None,
+    limit: int = 20,
+    _actor: OrganisationMember = Depends(get_org_member(OrganisationRole.member)),
+    db: AsyncSession = Depends(get_db),
+) -> Page[EventResponse]:
+    """List the events belonging to the organisation the caller is a member of."""
+    del request
+    page_limit = clamp_limit(limit, default=20)
+    stmt = EventRepository(db).list_for_org_query(organisation_id)
+    rows, next_cursor = await cursor_paginate(
+        db,
+        stmt,
+        sort_column=Event.created_at,
+        id_column=Event.id,
+        limit=page_limit,
+        cursor=cursor,
+    )
+    return Page[EventResponse](
+        items=[_to_response(event) for event in rows], next_cursor=next_cursor
+    )
+
+
+@router.patch(
+    "/events/{event_id}",
+    response_model=EventResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Edit a draft event",
+)
+@limiter.limit("60/hour")  # type: ignore[misc]
+async def update_event(
+    request: Request,
+    event_id: uuid.UUID,
+    body: EventUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EventResponse:
+    """Edit a draft event in place."""
+    del request
+    _, actor = await _load_event_for_actor(db, event_id, current_user)
+    changes = body.model_dump(exclude_unset=True)
+    try:
+        event = await _service(db).update_event(
+            actor_id=actor.user_id, event_id=event_id, changes=changes
+        )
+    except EventError as exc:
+        raise _bad_request(exc) from exc
+    return _to_response(event)
+
+
+@router.post(
+    "/events/{event_id}/publish",
+    response_model=EventResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Publish a draft event",
+)
+@limiter.limit("60/hour")  # type: ignore[misc]
+@idempotent(scope="user", ttl_seconds=300)
+async def publish_event(
+    request: Request,
+    event_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EventResponse:
+    """Flip a draft event to published and enqueue search reindex."""
+    del request
+    _, actor = await _load_event_for_actor(db, event_id, current_user)
+    try:
+        event = await _service(db).publish_event(
+            actor_id=actor.user_id, event_id=event_id
+        )
+    except EventError as exc:
+        raise _bad_request(exc) from exc
+    except LockUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "message": "Another lifecycle change is in progress",
+                "field": None,
+            },
+        ) from exc
+    return _to_response(event)
+
+
+@router.post(
+    "/events/{event_id}/cancel",
+    response_model=EventResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Cancel an event",
+)
+@limiter.limit("60/hour")  # type: ignore[misc]
+@idempotent(scope="user", ttl_seconds=300)
+async def cancel_event(
+    request: Request,
+    event_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EventResponse:
+    """Move an event to cancelled and record the intent to notify holders."""
+    del request
+    _, actor = await _load_event_for_actor(db, event_id, current_user)
+    try:
+        event = await _service(db).cancel_event(
+            actor_id=actor.user_id, event_id=event_id
+        )
+    except EventError as exc:
+        raise _bad_request(exc) from exc
+    except LockUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "message": "Another lifecycle change is in progress",
+                "field": None,
+            },
+        ) from exc
+    return _to_response(event)
+
+
+@router.get(
+    "/events/{event_id}",
+    response_model=EventResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Read a single event",
+)
+@limiter.limit("120/minute")  # type: ignore[misc]
+async def get_event(
+    request: Request,
+    event_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> EventResponse:
+    """Read a single event the caller can see."""
+    del request
+    del current_user
+    event = await EventRepository(db).get_by_id(event_id)
+    if event is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Event not found", "field": "event_id"},
+        )
+    return _to_response(event)

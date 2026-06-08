@@ -4,7 +4,7 @@ from fastapi import Request
 
 ScopeResolver = Callable[[Request], Awaitable[str | None]]
 
-ALLOWED_SCOPES = frozenset({"ip", "user", "device", "fingerprint"})
+ALLOWED_SCOPES = frozenset({"ip", "user", "device", "fingerprint", "org"})
 
 
 async def _resolve_ip(request: Request) -> str | None:
@@ -28,11 +28,17 @@ async def _resolve_fingerprint(request: Request) -> str | None:
     return request.headers.get("X-Device-Fingerprint")
 
 
+async def _resolve_org(request: Request) -> str | None:
+    org_id = request.path_params.get("organisation_id")
+    return str(org_id) if org_id else None
+
+
 _RESOLVERS: dict[str, ScopeResolver] = {
     "ip": _resolve_ip,
     "user": _resolve_user,
     "device": _resolve_device,
     "fingerprint": _resolve_fingerprint,
+    "org": _resolve_org,
 }
 
 
