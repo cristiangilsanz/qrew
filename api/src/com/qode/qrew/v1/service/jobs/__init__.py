@@ -3,6 +3,7 @@ from com.qode.qrew.v1.service.jobs import (
     auth_cleanup,
     notification_delivery,
     outbox_drain,
+    reservation_sweep,
     search_reindex,
     storage_retention,
 )
@@ -12,6 +13,7 @@ __all__ = [
     "auth_cleanup",
     "notification_delivery",
     "outbox_drain",
+    "reservation_sweep",
     "search_reindex",
     "storage_retention",
 ]

@@ -68,6 +68,9 @@ class AuditAction(enum.StrEnum):
     TICKET_TYPE_CREATED = "ticket_type_created"  # noqa: S105
     TICKET_TYPE_UPDATED = "ticket_type_updated"  # noqa: S105
     TICKET_TYPE_DELETED = "ticket_type_deleted"  # noqa: S105
+    RESERVATION_CREATED = "reservation_created"
+    RESERVATION_CANCELLED = "reservation_cancelled"
+    RESERVATION_EXPIRED = "reservation_expired"
 
 
 class AuditEvent(Base):

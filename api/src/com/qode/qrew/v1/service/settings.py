@@ -119,5 +119,8 @@ class Settings(BaseSettings):
     outbox_max_attempts: int = 5
     outbox_backoff_delays_seconds: list[int] = [1, 5, 25, 125, 625]
 
+    reservation_ttl_seconds: int = 600
+    reservation_sweep_batch_size: int = 200
+
 
 settings = Settings()
