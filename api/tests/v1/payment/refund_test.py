@@ -16,6 +16,7 @@ from com.qode.qrew.v1.service.models.reservation import (
 from com.qode.qrew.v1.service.models.ticket import Ticket, TicketState
 from com.qode.qrew.v1.service.models.ticket_type import TicketType
 from com.qode.qrew.v1.service.services.payment import PaymentService
+from tests.v1.conftest import register_test_tickets
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -69,6 +70,7 @@ def _setup(
         )
         for state in ticket_states
     ]
+    register_test_tickets(*tickets)
     payment = Payment(
         id=uuid.uuid4(),
         reservation_id=reservation.id,

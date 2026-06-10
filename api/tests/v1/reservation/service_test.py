@@ -248,6 +248,9 @@ async def test_cancel_flips_reservation_and_frees_capacity() -> None:
         for _ in range(2)
     ]
     repo.list_tickets = AsyncMock(return_value=held_tickets)
+    from tests.v1.conftest import register_test_tickets
+
+    register_test_tickets(*held_tickets)
     cancelled = await service.cancel(actor_id=user_id, reservation_id=reservation.id)
     assert cancelled.status == ReservationStatus.cancelled
     assert tier.reserved_count == 3  # was 5 after reserve, back to 3 after cancel
