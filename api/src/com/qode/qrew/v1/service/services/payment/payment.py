@@ -21,6 +21,7 @@ from com.qode.qrew.v1.service.repositories.payment import PaymentRepository
 from com.qode.qrew.v1.service.repositories.reservation import ReservationRepository
 from com.qode.qrew.v1.service.repositories.ticket_type import TicketTypeRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.ticket import transition_ticket
 from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -131,7 +132,14 @@ class PaymentService:
             fresh.status = ReservationStatus.paid
             for ticket in await self._reservation_repo.list_tickets(fresh.id):
                 if ticket.state == TicketState.reserved:
-                    ticket.state = TicketState.issued
+                    await transition_ticket(
+                        self._session,
+                        ticket_id=ticket.id,
+                        to_state=TicketState.issued,
+                        reason="payment_succeeded",
+                        actor_id=fresh.user_id,
+                        audit=self._audit,
+                    )
             payment.status = PaymentStatus.succeeded
             await self._repo.flush()
             await publish_via_outbox(
@@ -248,7 +256,14 @@ class PaymentService:
             qty_to_release = 0
             for ticket in tickets:
                 if ticket.state in cancellable_states:
-                    ticket.state = TicketState.cancelled
+                    await transition_ticket(
+                        self._session,
+                        ticket_id=ticket.id,
+                        to_state=TicketState.cancelled,
+                        reason=reason.value,
+                        actor_id=reservation.user_id,
+                        audit=self._audit,
+                    )
                     qty_to_release += 1
             if qty_to_release > 0:
                 tier = await self._tier_repo.get_by_id(reservation.ticket_type_id)

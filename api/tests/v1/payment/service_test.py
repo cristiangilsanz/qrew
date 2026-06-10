@@ -208,6 +208,9 @@ async def test_apply_succeeded_transitions_reservation_and_tickets() -> None:
         )
         for _ in range(2)
     ]
+    from tests.v1.conftest import register_test_tickets
+
+    register_test_tickets(*tickets)
     payment = Payment(
         id=uuid.uuid4(),
         reservation_id=reservation.id,

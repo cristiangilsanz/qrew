@@ -22,6 +22,7 @@ from com.qode.qrew.v1.service.repositories.event import EventRepository
 from com.qode.qrew.v1.service.repositories.reservation import ReservationRepository
 from com.qode.qrew.v1.service.repositories.ticket_type import TicketTypeRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.ticket import transition_ticket
 from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -177,7 +178,14 @@ class ReservationService:
             reservation.status = ReservationStatus.cancelled
             for ticket in await self._repo.list_tickets(reservation.id):
                 if ticket.state == TicketState.reserved:
-                    ticket.state = TicketState.cancelled
+                    await transition_ticket(
+                        self._session,
+                        ticket_id=ticket.id,
+                        to_state=TicketState.cancelled,
+                        reason="reservation_cancelled",
+                        actor_id=actor_id,
+                        audit=self._audit,
+                    )
             tier.reserved_count = max(0, tier.reserved_count - reservation.quantity)
             await self._session.flush()
             await self._record(
