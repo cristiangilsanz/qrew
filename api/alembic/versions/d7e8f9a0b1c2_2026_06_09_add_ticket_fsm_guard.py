@@ -39,11 +39,11 @@ DECLARE
 BEGIN
     IF OLD.state IS DISTINCT FROM NEW.state THEN
         IF OLD.state IN ('used', 'cancelled') THEN
-            RAISE EXCEPTION 'ticket %% is in terminal state %%', OLD.id, OLD.state
+            RAISE EXCEPTION 'ticket % is in terminal state %', OLD.id, OLD.state
                 USING ERRCODE = 'check_violation';
         END IF;
         IF NOT (OLD.state || '->' || NEW.state = ANY(legal_pairs)) THEN
-            RAISE EXCEPTION 'illegal ticket transition %% -> %% on ticket %%',
+            RAISE EXCEPTION 'illegal ticket transition % -> % on ticket %',
                 OLD.state, NEW.state, OLD.id
                 USING ERRCODE = 'check_violation';
         END IF;
