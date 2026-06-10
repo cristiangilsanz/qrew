@@ -30,7 +30,7 @@ async def _payload_for_reservation(
 async def _payload_for_payment(  # pyright: ignore[reportUnusedFunction]
     payment_id: uuid.UUID,
 ) -> tuple[Any, str]:
-    """Reserved for future per-payment-only notifications; lookups via Payment."""
+    """Reserved for future per-payment-only notifications. Lookups via Payment."""
     async with AsyncSessionLocal() as session:
         payment = await session.get(Payment, payment_id)
         if payment is None:
