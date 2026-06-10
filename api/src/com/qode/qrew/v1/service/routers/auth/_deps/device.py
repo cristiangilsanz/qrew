@@ -49,5 +49,9 @@ def get_device_service(
 ) -> DeviceService:
     """Build the device management service."""
     return DeviceService(
-        DeviceRepository(db), SessionRepository(db), redis, AuditService()
+        DeviceRepository(db),
+        SessionRepository(db),
+        redis,
+        AuditService(),
+        session=db,
     )

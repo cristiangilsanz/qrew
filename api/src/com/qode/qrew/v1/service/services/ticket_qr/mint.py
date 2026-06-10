@@ -40,6 +40,8 @@ async def mint_qr(
     now: datetime,
 ) -> MintedQr:
     """Mint a fresh short-lived QR JWT for an already-gated ticket."""
+    if inputs.ticket.bound_device_id != device_id:
+        inputs.ticket.bound_device_id = device_id
     jti = uuid.uuid4().hex
     exp = now + timedelta(seconds=settings.ticket_qr_ttl_seconds)
     payload: dict[str, Any] = {
