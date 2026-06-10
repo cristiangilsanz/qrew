@@ -12,6 +12,8 @@ from com.qode.qrew.v1.service.core.observability import traced
 from com.qode.qrew.v1.service.core.outbox.model import OutboxEvent
 from com.qode.qrew.v1.service.settings import settings
 
+DLQ_UNKNOWN_JOB = "unknown_job_name"
+
 logger = structlog.get_logger(__name__)
 
 EnqueueFn = Callable[[str, dict[str, Any]], Awaitable[Any]]
@@ -57,6 +59,21 @@ async def drain_once(
                 row.dispatched_at = datetime.now(UTC)
                 row.last_error = None
                 drained += 1
+            except KeyError as exc:
+                row.attempt_count += 1
+                row.last_error = repr(exc)
+                if row.attempt_count >= settings.outbox_max_attempts:
+                    row.dispatched_at = datetime.now(UTC)
+                    row.dlq_reason = DLQ_UNKNOWN_JOB
+                    await logger.aerror(
+                        "outbox.dlq.unknown_job_name",
+                        outbox_id=str(row.id),
+                        job_name=row.job_name,
+                    )
+                else:
+                    row.next_attempt_at = datetime.now(UTC) + timedelta(
+                        seconds=_backoff_delay_seconds(row.attempt_count)
+                    )
             except Exception as exc:  # noqa: BLE001
                 row.attempt_count += 1
                 row.last_error = repr(exc)

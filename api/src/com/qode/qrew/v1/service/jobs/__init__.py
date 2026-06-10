@@ -1,6 +1,7 @@
 from com.qode.qrew.v1.service.jobs import (
     audit_verify,
     auth_cleanup,
+    lifecycle_notifications,
     notification_delivery,
     outbox_drain,
     queue_admit,
@@ -12,6 +13,7 @@ from com.qode.qrew.v1.service.jobs import (
 __all__ = [
     "audit_verify",
     "auth_cleanup",
+    "lifecycle_notifications",
     "notification_delivery",
     "outbox_drain",
     "queue_admit",
