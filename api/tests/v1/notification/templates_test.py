@@ -30,6 +30,32 @@ def _sample_payload(template_key: str) -> dict[str, object]:
             "ip_address": "127.0.0.1",
         },
         "phone_otp": {"otp": "123456"},
+        "payment_succeeded": {
+            "full_name": "Ada Lovelace",
+            "event_name": "Wembley Show",
+        },
+        "payment_failed": {
+            "full_name": "Ada Lovelace",
+            "event_name": "Wembley Show",
+            "failure_code": "card_declined",
+        },
+        "event_cancelled": {
+            "full_name": "Ada Lovelace",
+            "event_name": "Wembley Show",
+        },
+        "ticket_cancelled_chargeback": {
+            "full_name": "Ada Lovelace",
+            "event_name": "Wembley Show",
+        },
+        "ticket_cancelled_refund": {
+            "full_name": "Ada Lovelace",
+            "event_name": "Wembley Show",
+        },
+        "tickets_frozen_device_revoke": {
+            "full_name": "Ada Lovelace",
+            "ticket_count": 2,
+        },
+        "ticket_restored": {"full_name": "Ada Lovelace"},
     }
     return samples[template_key]
 

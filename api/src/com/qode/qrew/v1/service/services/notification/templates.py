@@ -7,6 +7,14 @@ from com.qode.qrew.v1.service.settings import settings
 from com.qode.qrew.v1.service.templates.email_change_alert_email import (
     email_change_alert_email,
 )
+from com.qode.qrew.v1.service.templates.lifecycle_emails import (
+    event_cancelled_email,
+    payment_failed_email,
+    payment_succeeded_email,
+    ticket_cancelled_email,
+    ticket_restored_email,
+    tickets_frozen_email,
+)
 from com.qode.qrew.v1.service.templates.email_change_verify_email import (
     email_change_verify_email,
 )
@@ -111,6 +119,76 @@ def _phone_otp(payload: dict[str, Any]) -> RenderedSms:
     )
 
 
+def _payment_succeeded(payload: dict[str, Any]) -> RenderedEmail:
+    return RenderedEmail(
+        subject="Your Qrew payment succeeded",
+        body_html=payment_succeeded_email(
+            full_name=payload.get("full_name", "there"),
+            event_name=payload.get("event_name", "your event"),
+        ),
+    )
+
+
+def _payment_failed(payload: dict[str, Any]) -> RenderedEmail:
+    return RenderedEmail(
+        subject="Your Qrew payment failed",
+        body_html=payment_failed_email(
+            full_name=payload.get("full_name", "there"),
+            event_name=payload.get("event_name", "your event"),
+            reason=payload.get("failure_code"),
+        ),
+    )
+
+
+def _event_cancelled(payload: dict[str, Any]) -> RenderedEmail:
+    return RenderedEmail(
+        subject="An event you reserved has been cancelled",
+        body_html=event_cancelled_email(
+            full_name=payload.get("full_name", "there"),
+            event_name=payload.get("event_name", "your event"),
+        ),
+    )
+
+
+def _ticket_cancelled_chargeback(payload: dict[str, Any]) -> RenderedEmail:
+    return RenderedEmail(
+        subject="Your Qrew ticket was cancelled (chargeback)",
+        body_html=ticket_cancelled_email(
+            full_name=payload.get("full_name", "there"),
+            event_name=payload.get("event_name", "your event"),
+            reason="chargeback opened",
+        ),
+    )
+
+
+def _ticket_cancelled_refund(payload: dict[str, Any]) -> RenderedEmail:
+    return RenderedEmail(
+        subject="Your Qrew ticket was refunded",
+        body_html=ticket_cancelled_email(
+            full_name=payload.get("full_name", "there"),
+            event_name=payload.get("event_name", "your event"),
+            reason="refund",
+        ),
+    )
+
+
+def _tickets_frozen_device_revoke(payload: dict[str, Any]) -> RenderedEmail:
+    return RenderedEmail(
+        subject="Tickets frozen on revoked device",
+        body_html=tickets_frozen_email(
+            full_name=payload.get("full_name", "there"),
+            ticket_count=int(payload.get("ticket_count", 0)),
+        ),
+    )
+
+
+def _ticket_restored(payload: dict[str, Any]) -> RenderedEmail:
+    return RenderedEmail(
+        subject="Your Qrew ticket is restored",
+        body_html=ticket_restored_email(full_name=payload.get("full_name", "there")),
+    )
+
+
 EMAIL_TEMPLATES: dict[str, Callable[[dict[str, Any]], RenderedEmail]] = {
     "email_verification_link": _verification_link,
     "kyc_status_email": _kyc_status,
@@ -118,6 +196,13 @@ EMAIL_TEMPLATES: dict[str, Callable[[dict[str, Any]], RenderedEmail]] = {
     "email_change_alert": _email_change_alert,
     "account_recovery": _account_recovery,
     "login_anomaly_alert": _login_anomaly_alert,
+    "payment_succeeded": _payment_succeeded,
+    "payment_failed": _payment_failed,
+    "event_cancelled": _event_cancelled,
+    "ticket_cancelled_chargeback": _ticket_cancelled_chargeback,
+    "ticket_cancelled_refund": _ticket_cancelled_refund,
+    "tickets_frozen_device_revoke": _tickets_frozen_device_revoke,
+    "ticket_restored": _ticket_restored,
 }
 
 SMS_TEMPLATES: dict[str, Callable[[dict[str, Any]], RenderedSms]] = {
