@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.11.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.10.0...qrew-api/v1.11.0) (2026-06-10)
+
+
+### Features
+
+* add event lifecycle with publish, cancel and full-text search wire-in ([#153](https://github.com/cristiangilsanz/qrew/issues/153)) ([f930bde](https://github.com/cristiangilsanz/qrew/commit/f930bde5fb8b1eaf7d690a3103d903180f43a2c8))
+* add organisations, organisation members and role-based acl dependency ([#151](https://github.com/cristiangilsanz/qrew/issues/151)) ([ff48495](https://github.com/cristiangilsanz/qrew/commit/ff484955454a7114881763fd0fd5b8644d3ad402))
+* add redis distributed lock primitive with safe release ([#141](https://github.com/cristiangilsanz/qrew/issues/141)) ([7c489b9](https://github.com/cristiangilsanz/qrew/commit/7c489b9670df375e4f0f381f76a663a571a5b29c))
+* add reservation FSM with atomic capacity guard and TTL sweeper ([#161](https://github.com/cristiangilsanz/qrew/issues/161)) ([fda5eb7](https://github.com/cristiangilsanz/qrew/commit/fda5eb7a456a8237e4794de450bf0a045099e63f))
+* add rotating ES256 QR with geofence, attestation and reassertion gates ([#171](https://github.com/cristiangilsanz/qrew/issues/171)) ([c86300f](https://github.com/cristiangilsanz/qrew/commit/c86300fb418f32c6ee165b6a6fda6d2387947766))
+* add stripe payment intent flow with 3DS2 webhook and idempotent transitions ([#164](https://github.com/cristiangilsanz/qrew/issues/164)) ([d48022a](https://github.com/cristiangilsanz/qrew/commit/d48022a76f3dd937ca18249b44849e37e854c271))
+* add stripe refund and chargeback webhook cancelling issued tickets ([#165](https://github.com/cristiangilsanz/qrew/issues/165)) ([9a9f806](https://github.com/cristiangilsanz/qrew/commit/9a9f8069ceb2585add2552f0e2d1d260b8b6abdb))
+* add synchronous fraud rule engine with composable signals before reservation ([#163](https://github.com/cristiangilsanz/qrew/issues/163)) ([93e7231](https://github.com/cristiangilsanz/qrew/commit/93e723146094d9d674f29d8eca0226203a4d3d26))
+* add ticket types with capacity and pricing under events ([#154](https://github.com/cristiangilsanz/qrew/issues/154)) ([18825a7](https://github.com/cristiangilsanz/qrew/commit/18825a7cc7d04ccf867989fceae5cc7cddce7d4e))
+* add venues with geofence radius and public read endpoint ([#152](https://github.com/cristiangilsanz/qrew/issues/152)) ([c558972](https://github.com/cristiangilsanz/qrew/commit/c558972389fe7240ae56b2f5446d44b41935cef9))
+* add virtual waiting room with redis queue and websocket position updates ([#162](https://github.com/cristiangilsanz/qrew/issues/162)) ([07d3deb](https://github.com/cristiangilsanz/qrew/commit/07d3debba78e61ba6297b41c9770f4fd4a441b45))
+* centralise ticket state transitions behind audited FSM function ([#170](https://github.com/cristiangilsanz/qrew/issues/170)) ([06baa7e](https://github.com/cristiangilsanz/qrew/commit/06baa7e8786c0891636fecfc509be4c8f94d7eb8))
+* enforce websocket heartbeat timeout and reap stale connections ([#145](https://github.com/cristiangilsanz/qrew/issues/145)) ([9edb62b](https://github.com/cristiangilsanz/qrew/commit/9edb62bd981448598c920e625e3312f8337014bd))
+* expose public catalog endpoints with cursor pagination and search ([#155](https://github.com/cristiangilsanz/qrew/issues/155)) ([87da4a4](https://github.com/cristiangilsanz/qrew/commit/87da4a480a99755c05d2f6faa1439a45fc2c2a4c))
+* freeze tickets on device revoke and restore after re-enrolment ([#172](https://github.com/cristiangilsanz/qrew/issues/172)) ([63f038b](https://github.com/cristiangilsanz/qrew/commit/63f038b6cab53729217cb41f2a27701fc0016c89))
+* introduce transactional outbox for atomic persist-and-enqueue ([#143](https://github.com/cristiangilsanz/qrew/issues/143)) ([8aa4f10](https://github.com/cristiangilsanz/qrew/commit/8aa4f10eec361eb4c77ec1db67b4bc73298e644c))
+* propagate opentelemetry context across arq jobs and websocket fan-out ([#144](https://github.com/cristiangilsanz/qrew/issues/144)) ([90cd6bd](https://github.com/cristiangilsanz/qrew/commit/90cd6bd6f43b04929d87d22ca5bd2c7db91c1322))
+* wire notification handlers and add outbox DLQ safety net ([#173](https://github.com/cristiangilsanz/qrew/issues/173)) ([dc4b0db](https://github.com/cristiangilsanz/qrew/commit/dc4b0db472c7d2a71a9c5d35dc1455f1ba61667f))
+
 ## [1.10.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.9.0...qrew-api/v1.10.0) (2026-06-02)
 
 
