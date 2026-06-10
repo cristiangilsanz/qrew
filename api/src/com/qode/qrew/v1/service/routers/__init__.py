@@ -12,6 +12,7 @@ from com.qode.qrew.v1.service.routers.public_catalog import (
 )
 from com.qode.qrew.v1.service.routers.payment import router as payment_router
 from com.qode.qrew.v1.service.routers.queue import router as queue_router
+from com.qode.qrew.v1.service.routers.ticket_qr import router as ticket_qr_router
 from com.qode.qrew.v1.service.routers.reservation import (
     router as reservation_router,
 )
@@ -33,6 +34,7 @@ router.include_router(public_catalog_router)
 router.include_router(reservation_router)
 router.include_router(queue_router)
 router.include_router(payment_router)
+router.include_router(ticket_qr_router)
 
 if settings.debug:
     from com.qode.qrew.v1.service.routers.dev import router as dev_router

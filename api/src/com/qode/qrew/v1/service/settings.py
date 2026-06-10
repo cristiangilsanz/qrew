@@ -25,11 +25,13 @@ class Settings(BaseSettings):
     recovery_jwt_private_key: str = ""
     refresh_jwt_private_key: str = ""
     queue_jwt_private_key: str = ""
+    ticket_qr_jwt_private_key: str = ""
     access_jwt_previous_public_keys: str = ""
     setup_jwt_previous_public_keys: str = ""
     recovery_jwt_previous_public_keys: str = ""
     refresh_jwt_previous_public_keys: str = ""
     queue_jwt_previous_public_keys: str = ""
+    ticket_qr_jwt_previous_public_keys: str = ""
     access_token_expire_minutes: int = 30
     setup_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
@@ -156,6 +158,13 @@ class Settings(BaseSettings):
     queue_reservation_window_seconds: int = 120
     queue_admit_default_rate_per_minute: int = 60
     queue_join_lead_seconds: int = 900
+
+    ticket_qr_ttl_seconds: int = 20
+    ticket_qr_reassert_window_seconds: int = 30
+    ticket_qr_mint_audit_sample_rate: int = 10
+    ticket_qr_attestation_max_age_hours: int = 24
+    ticket_qr_audience: str = "qrew.scan"
+    ticket_qr_stream_max_seconds: int = 1800
 
 
 settings = Settings()
