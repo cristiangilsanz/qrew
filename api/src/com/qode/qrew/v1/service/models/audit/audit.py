@@ -86,6 +86,8 @@ class AuditAction(enum.StrEnum):
     CHARGEBACK_CLOSED = "chargeback_closed"
     CHARGEBACK_ON_USED_TICKET = "chargeback_on_used_ticket"  # noqa: S105
     TICKET_STATE_CHANGED = "ticket_state_changed"  # noqa: S105
+    TICKET_QR_MINTED = "ticket_qr_minted"  # noqa: S105
+    TICKET_QR_DENIED = "ticket_qr_denied"  # noqa: S105
 
 
 class AuditEvent(Base):
