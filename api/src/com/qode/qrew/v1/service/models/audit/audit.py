@@ -88,6 +88,8 @@ class AuditAction(enum.StrEnum):
     TICKET_STATE_CHANGED = "ticket_state_changed"  # noqa: S105
     TICKET_QR_MINTED = "ticket_qr_minted"  # noqa: S105
     TICKET_QR_DENIED = "ticket_qr_denied"  # noqa: S105
+    TICKET_FROZEN_DEVICE_REVOKE = "ticket_frozen_device_revoke"  # noqa: S105
+    TICKET_RESTORED_AFTER_REENROL = "ticket_restored_after_reenrol"  # noqa: S105
 
 
 class AuditEvent(Base):

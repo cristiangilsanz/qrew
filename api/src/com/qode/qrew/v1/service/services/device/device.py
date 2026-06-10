@@ -3,14 +3,19 @@ from datetime import UTC, datetime
 
 import redis.asyncio as aioredis
 import structlog
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.service.core.infra.errors import DomainError
+from com.qode.qrew.v1.service.core.outbox import publish_via_outbox
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 from com.qode.qrew.v1.service.models.auth.user import User
 from com.qode.qrew.v1.service.models.device.device import Device
+from com.qode.qrew.v1.service.models.ticket import Ticket, TicketState
 from com.qode.qrew.v1.service.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.service.repositories.device.device import DeviceRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
+from com.qode.qrew.v1.service.services.ticket import transition_ticket
 from com.qode.qrew.v1.service.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -30,11 +35,13 @@ class DeviceService:
         session_repo: SessionRepository,
         redis: aioredis.Redis,  # type: ignore[type-arg]
         audit: AuditService,
+        session: AsyncSession | None = None,
     ) -> None:
         self._device_repo = device_repo
         self._session_repo = session_repo
         self._redis = redis
         self._audit = audit
+        self._session = session
 
     async def list_devices(self, user: User) -> list[Device]:
         """Return all non-revoked devices for the user."""
@@ -60,6 +67,8 @@ class DeviceService:
         device.revoked_at = datetime.now(UTC)
         await self._device_repo.save(device)
 
+        frozen_count = await self._freeze_bound_tickets(user.id, device_id)
+
         await self._kill_all_sessions(user.id)
 
         await logger.ainfo(
@@ -71,7 +80,7 @@ class DeviceService:
                 actor_id=user.id,
                 entity_type="device",
                 entity_id=str(device_id),
-                payload={"reason": "user_initiated"},
+                payload={"reason": "user_initiated", "frozen_tickets": frozen_count},
             )
         except Exception:
             await logger.awarning(
@@ -109,6 +118,64 @@ class DeviceService:
             )
 
         return revoked_count
+
+    async def _freeze_bound_tickets(
+        self, user_id: uuid.UUID, device_id: uuid.UUID
+    ) -> int:
+        """Transition `issued` tickets bound to this device to `frozen`.
+
+        Returns the count actually frozen. No-op when the service was built
+        without a DB session (legacy callers without ticket context).
+        """
+        if self._session is None:
+            return 0
+        result = await self._session.execute(
+            select(Ticket).where(
+                Ticket.owner_user_id == user_id,
+                Ticket.bound_device_id == device_id,
+                Ticket.state == TicketState.issued,
+            )
+        )
+        affected = list(result.scalars().all())
+        if not affected:
+            return 0
+        for ticket in affected:
+            await transition_ticket(
+                self._session,
+                ticket_id=ticket.id,
+                to_state=TicketState.frozen,
+                reason="device_revoked",
+                actor_id=user_id,
+                audit=self._audit,
+            )
+            try:
+                await self._audit.record(
+                    action=AuditAction.TICKET_FROZEN_DEVICE_REVOKE,
+                    actor_id=user_id,
+                    entity_type="ticket",
+                    entity_id=str(ticket.id),
+                    payload={"device_id": str(device_id)},
+                )
+            except Exception:
+                await logger.awarning(
+                    "audit_write_failed",
+                    action=AuditAction.TICKET_FROZEN_DEVICE_REVOKE,
+                )
+        try:
+            await publish_via_outbox(
+                self._session,
+                aggregate_type="device",
+                aggregate_id=str(device_id),
+                job_name="notifications.tickets_frozen_device_revoke",
+                payload={
+                    "user_id": str(user_id),
+                    "device_id": str(device_id),
+                    "ticket_count": len(affected),
+                },
+            )
+        except Exception:
+            await logger.awarning("outbox_publish_failed")
+        return len(affected)
 
     async def _kill_all_sessions(self, user_id: uuid.UUID) -> None:
         """Delete all sessions for the user and blacklist their JTIs in Redis."""

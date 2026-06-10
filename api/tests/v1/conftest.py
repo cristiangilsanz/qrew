@@ -37,16 +37,24 @@ def _stub_ticket_transition(  # pyright: ignore[reportUnusedFunction]
                 return ticket
         return None
 
+    import com.qode.qrew.v1.service.services.device.device as device_mod
     import com.qode.qrew.v1.service.services.payment.payment as payment_mod
     import com.qode.qrew.v1.service.services.reservation.reservation as reservation_mod
+    import com.qode.qrew.v1.service.services.ticket.restore as restore_mod
 
     original_payment = payment_mod.transition_ticket
     original_reservation = reservation_mod.transition_ticket
+    original_restore = restore_mod.transition_ticket
+    original_device = device_mod.transition_ticket
     payment_mod.transition_ticket = _stub  # type: ignore[assignment]
     reservation_mod.transition_ticket = _stub  # type: ignore[assignment]
+    restore_mod.transition_ticket = _stub  # type: ignore[assignment]
+    device_mod.transition_ticket = _stub  # type: ignore[assignment]
     try:
         yield
     finally:
         payment_mod.transition_ticket = original_payment
         reservation_mod.transition_ticket = original_reservation
+        restore_mod.transition_ticket = original_restore
+        device_mod.transition_ticket = original_device
         _REGISTRY.clear()
