@@ -80,10 +80,6 @@ class Settings(BaseSettings):
     twilio_auth_token: str = ""
     twilio_from_number: str = ""
 
-    scanner_token_expire_hours: int = 12
-    scanner_jwt_private_key: str = ""
-    scanner_jwt_public_key: str = ""
-
     rp_id: str = "localhost"
     rp_name: str = "Qrew"
     rp_expected_origin: str = "http://localhost:3000"
@@ -166,6 +162,8 @@ class Settings(BaseSettings):
     ticket_qr_attestation_max_age_hours: int = 24
     ticket_qr_audience: str = "qrew.scan"
     ticket_qr_stream_max_seconds: int = 1800
+
+    internal_api_key: str = "dev-internal-secret"
 
     entry_replay_grace_seconds: int = 10
     entry_stats_cache_ttl_seconds: int = 5
