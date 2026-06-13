@@ -166,5 +166,7 @@ class Settings(BaseSettings):
     ticket_qr_audience: str = "qrew.scan"
     ticket_qr_stream_max_seconds: int = 1800
 
+    entry_replay_grace_seconds: int = 10
+
 
 settings = Settings()
