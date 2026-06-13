@@ -1,8 +1,4 @@
-from com.qode.qrew.v1.service.core.search import (
-    SearchConfig,
-    SearchField,
-    Weight,
-)
+from com.qode.qrew.v1.service.core.search import SearchConfig, SearchField, Weight
 
 EVENTS_SEARCH_CONFIG = SearchConfig(
     name="events",

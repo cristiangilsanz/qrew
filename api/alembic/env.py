@@ -32,8 +32,23 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def _include_object(
+    object: object, name: str, type_: str, reflected: bool, compare_to: object
+) -> bool:
+    """Exclude catalog schema from autogenerate — catalog service owns those tables."""
+    if type_ == "table":
+        schema = getattr(object, "schema", None)
+        if schema == "catalog":
+            return False
+    return True
+
+
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=_include_object,
+    )
     with context.begin_transaction():
         context.run_migrations()
 

@@ -3,6 +3,7 @@ set shell := ["bash", "-c"]
 MONOLITH := "api"
 GATE := "services/gate"
 PAYMENTS := "services/payments"
+CATALOG := "services/catalog"
 
 default: help
 
@@ -135,3 +136,25 @@ payments-migrate message:
 # Type-check payments service
 payments-type-check:
     cd {{PAYMENTS}} && uv run pyright
+
+# ── Catalog service ───────────────────────────────────────────────────────────
+
+# Run catalog service with auto-reload
+catalog-dev:
+    cd {{CATALOG}} && uv run dev
+
+# Run catalog Arq worker
+catalog-worker:
+    cd {{CATALOG}} && uv run worker
+
+# Apply catalog migrations
+catalog-db-upgrade:
+    cd {{CATALOG}} && uv run alembic upgrade head
+
+# Create catalog migration
+catalog-migrate message:
+    cd {{CATALOG}} && uv run alembic revision --autogenerate -m "{{message}}"
+
+# Type-check catalog service
+catalog-type-check:
+    cd {{CATALOG}} && uv run pyright

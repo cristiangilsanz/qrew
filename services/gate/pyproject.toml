@@ -35,6 +35,9 @@ dependencies = [
     "common",
 ]
 
+[tool.uv.sources]
+common = { workspace = true }
+
 [project.scripts]
 dev = "com.qode.qrew.v1.gate.__main__:main"
 worker = "com.qode.qrew.v1.gate.worker.__main__:main"
