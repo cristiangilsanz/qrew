@@ -41,6 +41,9 @@ def scanner_public_key() -> str:
     return _PUBLIC_KEY
 
 
+SCANNER_AUDIENCE = "qrew.scan"
+
+
 def create_scanner_token(
     scanner_id: uuid.UUID,
     venue_id: uuid.UUID,
@@ -55,6 +58,7 @@ def create_scanner_token(
         "event_id": str(event_id),
         "date": date,
         "type": "scanner",
+        "aud": SCANNER_AUDIENCE,
         "iat": now,
         "exp": now + timedelta(hours=settings.scanner_token_expire_hours),
     }
@@ -63,4 +67,20 @@ def create_scanner_token(
 
 def decode_scanner_token(token: str) -> dict[str, object]:
     """Decode and validate a scanner token."""
-    return jwt.decode(token, _PUBLIC_KEY, algorithms=["RS256"])  # type: ignore[no-any-return]
+    return jwt.decode(  # type: ignore[no-any-return]
+        token,
+        _PUBLIC_KEY,
+        algorithms=["RS256"],
+        audience=SCANNER_AUDIENCE,
+        options={"verify_aud": False},
+    )
+
+
+def decode_scanner_token_for_refresh(token: str) -> dict[str, object]:
+    """Decode a scanner token for refresh — signature required, expiry ignored."""
+    return jwt.decode(  # type: ignore[no-any-return]
+        token,
+        _PUBLIC_KEY,
+        algorithms=["RS256"],
+        options={"verify_exp": False, "verify_aud": False},
+    )

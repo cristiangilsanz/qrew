@@ -1,5 +1,5 @@
 import uuid
-from datetime import date as date_type
+from datetime import UTC, date as date_type, datetime
 
 import structlog
 
@@ -117,6 +117,64 @@ class ScannerService:
                 "audit_write_failed", action=AuditAction.SCANNER_DEACTIVATED
             )
         return scanner
+
+    async def refresh_self(
+        self,
+        scanner_id: uuid.UUID,
+        venue_id: uuid.UUID,
+        event_id: uuid.UUID,
+        scan_date: date_type,
+    ) -> tuple[Scanner, str]:
+        """Re-mint a JWT using the original scoping; rejected if deactivated."""
+        scanner = await self._repo.get_by_id(scanner_id)
+        if scanner is None or not scanner.is_active:
+            await self._record_refresh_failure(scanner_id, reason="scanner_inactive")
+            raise ScannerError("Scanner is not active", field="scanner_id")
+        if scanner.venue_id != venue_id:
+            await self._record_refresh_failure(scanner_id, reason="venue_mismatch")
+            raise ScannerError(
+                "Refresh scope does not match registration", field="venue_id"
+            )
+        token = create_scanner_token(
+            scanner.id, venue_id, event_id, scan_date.isoformat()
+        )
+        scanner.last_refreshed_at = datetime.now(UTC)
+        await self._repo.save(scanner)
+        try:
+            await self._audit.record(
+                action=AuditAction.SCANNER_ROTATED,
+                actor_id=scanner.id,
+                entity_type="scanner",
+                entity_id=str(scanner.id),
+                payload={"event_id": str(event_id), "self_refresh": True},
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.SCANNER_ROTATED
+            )
+        return scanner, token
+
+    async def get_by_id(self, scanner_id: uuid.UUID) -> Scanner:
+        scanner = await self._repo.get_by_id(scanner_id)
+        if scanner is None:
+            raise ScannerError("Scanner not found", field="scanner_id")
+        return scanner
+
+    async def _record_refresh_failure(
+        self, scanner_id: uuid.UUID, *, reason: str
+    ) -> None:
+        try:
+            await self._audit.record(
+                action=AuditAction.SCANNER_REFRESH_FAILED,
+                actor_id=scanner_id,
+                entity_type="scanner",
+                entity_id=str(scanner_id),
+                payload={"reason": reason},
+            )
+        except Exception:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.SCANNER_REFRESH_FAILED
+            )
 
     @property
     def token_ttl_hours(self) -> int:
