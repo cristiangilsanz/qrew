@@ -10,13 +10,14 @@ from com.qode.qrew.v1.service.core.infra.database import Base
 
 class Session(Base):
     __tablename__ = "sessions"
+    __table_args__ = {"schema": "identity"}
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("identity.users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -28,7 +29,7 @@ class Session(Base):
     device_fingerprint: Mapped[str | None] = mapped_column(String(255), nullable=True)
     device_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("devices.id", ondelete="SET NULL"),
+        ForeignKey("identity.devices.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )

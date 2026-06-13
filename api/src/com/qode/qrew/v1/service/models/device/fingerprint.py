@@ -10,13 +10,14 @@ from com.qode.qrew.v1.service.core.infra.database import Base
 
 class DeviceFingerprint(Base):
     __tablename__ = "device_fingerprints"
+    __table_args__ = {"schema": "identity"}
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("identity.users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )

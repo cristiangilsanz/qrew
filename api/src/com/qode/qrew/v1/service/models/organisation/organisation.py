@@ -31,6 +31,7 @@ def role_rank(role: OrganisationRole) -> int:
 
 class Organisation(Base):
     __tablename__ = "organisations"
+    __table_args__ = {"schema": "catalog"}
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -60,16 +61,17 @@ class OrganisationMember(Base):
         UniqueConstraint(
             "organisation_id", "user_id", name="uq_organisation_members_org_user"
         ),
+        {"schema": "catalog"},
     )
 
     organisation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("organisations.id", ondelete="CASCADE"),
+        ForeignKey("catalog.organisations.id", ondelete="CASCADE"),
         primary_key=True,
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("identity.users.id", ondelete="CASCADE"),
         primary_key=True,
     )
     role: Mapped[OrganisationRole] = mapped_column(

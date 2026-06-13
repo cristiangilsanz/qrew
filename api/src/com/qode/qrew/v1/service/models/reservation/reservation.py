@@ -36,6 +36,7 @@ class Reservation(Base):
             "status",
             "expires_at",
         ),
+        {"schema": "sales"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -43,17 +44,17 @@ class Reservation(Base):
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="RESTRICT"),
+        ForeignKey("identity.users.id", ondelete="RESTRICT"),
         nullable=False,
     )
     event_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("events.id", ondelete="RESTRICT"),
+        ForeignKey("catalog.events.id", ondelete="RESTRICT"),
         nullable=False,
     )
     ticket_type_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("ticket_types.id", ondelete="RESTRICT"),
+        ForeignKey("catalog.ticket_types.id", ondelete="RESTRICT"),
         nullable=False,
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)

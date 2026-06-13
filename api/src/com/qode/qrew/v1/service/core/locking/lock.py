@@ -1,7 +1,7 @@
 import asyncio
 import random
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -119,7 +119,7 @@ async def redlock(
     retry_attempts: int | None = None,
     retry_delay_ms: int | None = None,
     redis_client: aioredis.Redis | None = None,  # type: ignore[type-arg]
-) -> AsyncIterator[RedisLock]:
+) -> AsyncGenerator[RedisLock, None]:
     """Acquire a Redis-backed mutex; release safely on context exit."""
     lock = RedisLock(
         key,

@@ -11,7 +11,10 @@ from com.qode.qrew.v1.service.core.infra.database import Base
 
 class Venue(Base):
     __tablename__ = "venues"
-    __table_args__ = (Index("ix_venues_city_country", "city", "country"),)
+    __table_args__ = (
+        Index("ix_venues_city_country", "city", "country"),
+        {"schema": "catalog"},
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4

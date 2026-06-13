@@ -44,6 +44,7 @@ class Event(Base):
         Index("ix_events_organisation_id", "organisation_id"),
         Index("ix_events_venue_id", "venue_id"),
         Index("ix_events_status_starts_at", "status", "starts_at"),
+        {"schema": "catalog"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -51,12 +52,12 @@ class Event(Base):
     )
     organisation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("organisations.id", ondelete="RESTRICT"),
+        ForeignKey("catalog.organisations.id", ondelete="RESTRICT"),
         nullable=False,
     )
     venue_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("venues.id", ondelete="RESTRICT"),
+        ForeignKey("catalog.venues.id", ondelete="RESTRICT"),
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(160), nullable=False)

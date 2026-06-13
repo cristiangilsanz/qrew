@@ -32,6 +32,7 @@ class Payment(Base):
     __table_args__ = (
         CheckConstraint("amount_cents >= 0", name="ck_payments_amount"),
         Index("ix_payments_provider_payment_intent_id", "provider_payment_intent_id"),
+        {"schema": "payments"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -39,7 +40,7 @@ class Payment(Base):
     )
     reservation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("reservations.id", ondelete="RESTRICT"),
+        ForeignKey("sales.reservations.id", ondelete="RESTRICT"),
         nullable=False,
         unique=True,
     )
