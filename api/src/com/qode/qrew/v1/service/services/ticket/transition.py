@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any
 
 import structlog
@@ -115,4 +115,43 @@ async def transition_ticket(
         await logger.awarning(
             "audit_write_failed", action=AuditAction.TICKET_STATE_CHANGED
         )
+    await _publish_state_changed(ticket, previous_state, to_state, actor_id)
     return ticket
+
+
+async def _publish_state_changed(
+    ticket: Ticket,
+    previous_state: TicketState,
+    to_state: TicketState,
+    actor_id: uuid.UUID,
+) -> None:
+    """Fire-and-forget NATS event so gate can update its ticket_context projection."""
+    try:
+        from common.broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
+        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+
+        event = EventEnvelope(
+            occurred_at=datetime.now(UTC),
+            aggregate_type="ticket",
+            aggregate_id=str(ticket.id),
+            actor_id=str(actor_id),
+            data={
+                "ticket_id": str(ticket.id),
+                "event_id": str(ticket.event_id),
+                "state": to_state.value,
+                "previous_state": previous_state.value,
+                "owner_user_id": str(ticket.owner_user_id)
+                if ticket.owner_user_id
+                else None,
+                "bound_device_id": str(ticket.bound_device_id)
+                if ticket.bound_device_id
+                else None,
+            },
+        )
+        await nats_publish("ticketing.ticket.state_changed", event)
+    except Exception as exc:
+        await logger.awarning(
+            "nats_publish_failed",
+            subject="ticketing.ticket.state_changed",
+            error=repr(exc),
+        )

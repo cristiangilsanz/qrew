@@ -10,7 +10,6 @@ from com.qode.qrew.v1.service.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.service.repositories.device.fingerprint import (
     DeviceFingerprintRepository,
 )
-from com.qode.qrew.v1.service.repositories.scanner.scanner import ScannerRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
 from com.qode.qrew.v1.service.services.auth.login_lockout import LoginLockoutService
 from com.qode.qrew.v1.service.services.device.fingerprint import FingerprintService
@@ -19,7 +18,6 @@ from com.qode.qrew.v1.service.services.infra.notification import (
     build_notification_dispatcher,
 )
 from com.qode.qrew.v1.service.services.kyc.kyc_review import KycReviewService
-from com.qode.qrew.v1.service.services.scanner.scanner import ScannerService
 
 
 def _get_notification_service() -> NotificationDispatcher:
@@ -47,10 +45,3 @@ def get_login_lockout_service(
 ) -> LoginLockoutService:
     """Build the login lockout service."""
     return LoginLockoutService(redis, AuditService())
-
-
-def get_scanner_service(
-    db: AsyncSession = Depends(get_db),
-) -> ScannerService:
-    """Build the scanner service."""
-    return ScannerService(ScannerRepository(db), AuditService())

@@ -19,9 +19,6 @@ from com.qode.qrew.v1.service.routers.ticket_restore import (
 from com.qode.qrew.v1.service.routers.reservation import (
     router as reservation_router,
 )
-from com.qode.qrew.v1.service.routers.entry import router as entry_router
-from com.qode.qrew.v1.service.routers.entry_stats import router as entry_stats_router
-from com.qode.qrew.v1.service.routers.scanner import router as scanner_router
 from com.qode.qrew.v1.service.routers.ticket_type import router as ticket_type_router
 from com.qode.qrew.v1.service.routers.venue import router as venue_router
 from com.qode.qrew.v1.service.settings import settings
@@ -42,9 +39,6 @@ router.include_router(queue_router)
 router.include_router(payment_router)
 router.include_router(ticket_qr_router)
 router.include_router(ticket_restore_router)
-router.include_router(scanner_router)
-router.include_router(entry_router)
-router.include_router(entry_stats_router)
 
 if settings.debug:
     from com.qode.qrew.v1.service.routers.dev import router as dev_router

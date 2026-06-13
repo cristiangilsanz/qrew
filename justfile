@@ -1,6 +1,7 @@
 set shell := ["bash", "-c"]
 
 MONOLITH := "api"
+GATE := "services/gate"
 
 default: help
 
@@ -93,3 +94,25 @@ db-downgrade:
 # Drop all tables and re-apply migrations from scratch
 db-clean:
     cd {{MONOLITH}} && uv run alembic downgrade base && uv run alembic upgrade head
+
+# ── Gate service ──────────────────────────────────────────────────────────────
+
+# Run gate service with auto-reload
+gate-dev:
+    cd {{GATE}} && uv run dev
+
+# Run gate NATS worker
+gate-worker:
+    cd {{GATE}} && uv run worker
+
+# Apply gate migrations
+gate-db-upgrade:
+    cd {{GATE}} && uv run alembic upgrade head
+
+# Create gate migration
+gate-migrate message:
+    cd {{GATE}} && uv run alembic revision --autogenerate -m "{{message}}"
+
+# Type-check gate service
+gate-type-check:
+    cd {{GATE}} && uv run pyright

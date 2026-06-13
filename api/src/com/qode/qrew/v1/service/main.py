@@ -17,9 +17,9 @@ from com.qode.qrew.v1.service.core.observability import add_trace_context, setup
 from com.qode.qrew.v1.service.core.ws import router as ws_router
 from com.qode.qrew.v1.service.lifespan import lifespan
 from com.qode.qrew.v1.service.realtime import me_channel as _me_channel
-from com.qode.qrew.v1.service.realtime import entry_channel as _entry_channel
 from com.qode.qrew.v1.service.realtime import queue_channel as _queue_channel
 from com.qode.qrew.v1.service.routers import router as v1_router
+from com.qode.qrew.v1.service.routers.internal import router as internal_router
 from com.qode.qrew.v1.service.settings import settings
 
 structlog.configure(
@@ -48,7 +48,6 @@ app = FastAPI(
 
 _ = _me_channel  # ensure the @channel decorator runs at import time
 _ = _queue_channel  # ensure the queue @channel decorator runs at import time
-_ = _entry_channel  # ensure the entry @channel decorator runs at import time
 
 setup_tracing(app)
 
@@ -71,3 +70,4 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(probes_router)
 app.include_router(ws_router)
 app.include_router(v1_router)
+app.include_router(internal_router)
