@@ -69,6 +69,31 @@ async def list_scanners(
     return ScannerListResponse(scanners=[_scanner_summary(s) for s in scanners])
 
 
+@router.get(
+    "/scanners/{scanner_id}",
+    response_model=ScannerSummaryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Read a single scanner including liveness",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def get_scanner_by_id(
+    request: Request,
+    scanner_id: uuid.UUID,
+    _admin: User = Depends(get_admin_user),
+    service: ScannerService = Depends(get_scanner_service),
+) -> ScannerSummaryResponse:
+    """Return one scanner's row including last-used and last-refreshed timestamps."""
+    del request
+    try:
+        scanner = await service.get_by_id(scanner_id)
+    except ScannerError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": exc.message, "field": exc.field},
+        ) from exc
+    return _scanner_summary(scanner)
+
+
 @router.post(
     "/scanners/{scanner_id}/rotate",
     response_model=ScannerTokenResponse,

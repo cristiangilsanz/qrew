@@ -91,6 +91,7 @@ class AuditAction(enum.StrEnum):
     TICKET_FROZEN_DEVICE_REVOKE = "ticket_frozen_device_revoke"  # noqa: S105
     TICKET_RESTORED_AFTER_REENROL = "ticket_restored_after_reenrol"  # noqa: S105
     OUTBOX_ROW_DLQ = "outbox_row_dlq"
+    SCANNER_REFRESH_FAILED = "scanner_refresh_failed"
 
 
 class AuditEvent(Base):

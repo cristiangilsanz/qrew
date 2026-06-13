@@ -38,3 +38,8 @@ class ScannerRepository:
     async def touch_last_used(self, scanner: Scanner) -> None:
         scanner.last_used_at = datetime.now(UTC)
         await self._session.flush()
+
+    async def save(self, scanner: Scanner) -> Scanner:
+        await self._session.flush()
+        await self._session.refresh(scanner)
+        return scanner

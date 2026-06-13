@@ -32,6 +32,7 @@ class ScannerSummaryResponse(BaseModel):
     created_by: uuid.UUID
     created_at: datetime
     last_used_at: datetime | None
+    last_refreshed_at: datetime | None = None
     is_active: bool
 
 
