@@ -74,9 +74,11 @@ packages = ["src/com"]
 
 # ── Ruff ──────────────────────────────────────────────────────────────────────
 
+[tool.uv.sources]
+common = { workspace = true }
+
 [tool.ruff.lint.per-file-ignores]
 "src/com/qode/qrew/v1/service/core/search/tsvector.py" = ["S608"]
-"src/com/qode/qrew/v1/service/routers/search.py" = ["S608"]
 
 # ── Pyright ───────────────────────────────────────────────────────────────────
 

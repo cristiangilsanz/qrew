@@ -36,6 +36,9 @@ dependencies = [
     "common",
 ]
 
+[tool.uv.sources]
+common = { workspace = true }
+
 [project.scripts]
 dev = "com.qode.qrew.v1.payments.__main__:main"
 

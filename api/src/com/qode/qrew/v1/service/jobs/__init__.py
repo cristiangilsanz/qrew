@@ -6,7 +6,6 @@ from com.qode.qrew.v1.service.jobs import (
     outbox_drain,
     queue_admit,
     reservation_sweep,
-    search_reindex,
     storage_retention,
 )
 
@@ -18,6 +17,5 @@ __all__ = [
     "outbox_drain",
     "queue_admit",
     "reservation_sweep",
-    "search_reindex",
     "storage_retention",
 ]
