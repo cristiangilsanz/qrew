@@ -14,6 +14,8 @@ from com.qode.qrew.v1.service.core.auth import jwt_keys
 from com.qode.qrew.v1.service.core.locking import redlock
 from com.qode.qrew.v1.service.core.locking.errors import LockUnavailableError
 from com.qode.qrew.v1.service.core.observability import traced
+from com.qode.qrew.v1.service.core.ws import publish as ws_publish
+from com.qode.qrew.v1.service.realtime.entry_channel import entry_channel_key
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 from com.qode.qrew.v1.service.models.scanner.scanner import Scanner
 from com.qode.qrew.v1.service.models.ticket import Ticket, TicketState
@@ -151,10 +153,14 @@ async def _evaluate(
         return _denied(EntryReason.signature)
 
     if scanner_event_id is not None and scanner_event_id != event_id:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.wrong_event)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.wrong_event, event_id=event_id
+        )
         return _denied(EntryReason.wrong_event, ticket_id=ticket_id)
     if scanner_venue_id != venue_id:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.wrong_venue)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.wrong_venue, event_id=event_id
+        )
         return _denied(EntryReason.wrong_venue, ticket_id=ticket_id)
 
     now_unix = int(_now().timestamp())
@@ -166,15 +172,21 @@ async def _evaluate(
         nx=True,
     )
     if not claimed:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.replay)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.replay, event_id=event_id
+        )
         return _denied(EntryReason.replay, ticket_id=ticket_id)
 
     ticket = await session.get(Ticket, ticket_id)
     if ticket is None:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.not_found)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.not_found, event_id=event_id
+        )
         return _denied(EntryReason.not_found, ticket_id=ticket_id)
     if ticket.event_id != event_id:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.wrong_owner)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.wrong_owner, event_id=event_id
+        )
         return _denied(EntryReason.wrong_owner, ticket_id=ticket_id)
     if ticket.state not in {TicketState.issued, TicketState.entry_pending}:
         await _audit_reject(
@@ -183,6 +195,7 @@ async def _evaluate(
             ticket_id,
             EntryReason.state,
             extra={"current_state": ticket.state.value},
+            event_id=event_id,
         )
         return _denied(EntryReason.state, ticket_id=ticket_id)
 
@@ -197,7 +210,9 @@ async def _evaluate(
                 audit=audit,
             )
     except (LockUnavailableError, TicketTransitionError):
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.busy)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.busy, event_id=event_id
+        )
         return _denied(EntryReason.busy, ticket_id=ticket_id)
 
     await audit.record(
@@ -211,6 +226,18 @@ async def _evaluate(
             "scanner_id": str(scanner.id),
         },
     )
+    try:
+        await ws_publish(
+            entry_channel_key(str(event_id)),
+            {
+                "type": "entry.validated",
+                "ticket_id": str(ticket_id),
+                "scanner_id": str(scanner.id),
+                "scanned_at": _now().isoformat(),
+            },
+        )
+    except Exception:
+        await logger.awarning("entry_ws_publish_failed", event_id=str(event_id))
     return EntryOutcome(
         allowed=True,
         reason=None,
@@ -237,10 +264,13 @@ async def _audit_reject(
     reason: EntryReason,
     *,
     extra: dict[str, Any] | None = None,
+    event_id: uuid.UUID | None = None,
 ) -> None:
     payload: dict[str, Any] = {"reason": reason.value, "scanner_id": str(scanner_id)}
     if extra:
         payload.update(extra)
+    if event_id is not None:
+        payload["event_id"] = str(event_id)
     try:
         await audit.record(
             action=AuditAction.ENTRY_REJECTED,
@@ -251,3 +281,15 @@ async def _audit_reject(
         )
     except Exception:
         await logger.awarning("audit_write_failed", action=AuditAction.ENTRY_REJECTED)
+    if event_id is not None:
+        try:
+            await ws_publish(
+                entry_channel_key(str(event_id)),
+                {
+                    "type": "entry.rejected",
+                    "reason": reason.value,
+                    "scanned_at": _now().isoformat(),
+                },
+            )
+        except Exception:
+            await logger.awarning("entry_ws_publish_failed", event_id=str(event_id))

@@ -167,6 +167,8 @@ class Settings(BaseSettings):
     ticket_qr_stream_max_seconds: int = 1800
 
     entry_replay_grace_seconds: int = 10
+    entry_stats_cache_ttl_seconds: int = 5
+    entry_stats_default_window_hours: int = 24
 
 
 settings = Settings()
