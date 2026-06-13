@@ -29,6 +29,21 @@ services:
       retries: 5
       start_period: 5s
 
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js", "-sd", "/data"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
   api:
     build:
       context: .
@@ -40,12 +55,15 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
       DEBUG: false
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      nats:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/health || exit 1"]
@@ -57,3 +75,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  nats_data:

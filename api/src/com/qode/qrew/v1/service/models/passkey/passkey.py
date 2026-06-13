@@ -10,12 +10,15 @@ from com.qode.qrew.v1.service.core.infra.database import Base
 
 class PasskeyCredential(Base):
     __tablename__ = "passkey_credentials"
+    __table_args__ = {"schema": "identity"}
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+        UUID(as_uuid=True),
+        ForeignKey("identity.users.id", ondelete="CASCADE"),
+        index=True,
     )
     credential_id: Mapped[bytes] = mapped_column(LargeBinary, unique=True, index=True)
     public_key: Mapped[bytes] = mapped_column(LargeBinary)

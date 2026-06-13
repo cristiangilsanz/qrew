@@ -35,6 +35,7 @@ class TicketType(Base):
             name="ck_ticket_types_price_cents",
         ),
         Index("ix_ticket_types_event_id", "event_id"),
+        {"schema": "catalog"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -42,7 +43,7 @@ class TicketType(Base):
     )
     event_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("events.id", ondelete="RESTRICT"),
+        ForeignKey("catalog.events.id", ondelete="RESTRICT"),
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(32), nullable=False)

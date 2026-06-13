@@ -10,6 +10,7 @@ from com.qode.qrew.v1.service.core.infra.database import Base
 
 class Scanner(Base):
     __tablename__ = "scanners"
+    __table_args__ = {"schema": "gate"}
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -20,7 +21,7 @@ class Scanner(Base):
     )
     created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="RESTRICT"),
+        ForeignKey("identity.users.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )

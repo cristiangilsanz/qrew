@@ -47,6 +47,8 @@ dependencies = [
     "cryptography>=42.0",
     "geoip2>=5.2.0",
     "stripe>=15.2.0",
+    "nats-py>=2.7",
+    "common",
 ]
 
 [project.scripts]
@@ -64,6 +66,7 @@ dev = [
     "ruff>=0.4",
     "pre-commit>=3.7",
     "fakeredis[lua]>=2.20",
+    "httpx2>=2.4.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -81,6 +84,7 @@ packages = ["src/com"]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src", "tests"]
+extraPaths = ["../packages/common/src"]
 venvPath = ".."
 venv = ".venv"
 reportMissingTypeStubs = false
@@ -90,7 +94,7 @@ reportMissingTypeStubs = false
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "../packages/common/src"]
 python_files = ["*_test.py"]
 markers = [
     "integration: mark test as integration test requiring Docker services (Postgres + Redis)",

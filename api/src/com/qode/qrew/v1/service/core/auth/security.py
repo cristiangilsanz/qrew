@@ -18,12 +18,12 @@ _pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
     """Hash a plaintext password."""
-    return _pwd_context.hash(password)
+    return _pwd_context.hash(password)  # type: ignore[no-any-return]
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Verify a plaintext password against a hash."""
-    return _pwd_context.verify(plain, hashed)
+    return _pwd_context.verify(plain, hashed)  # type: ignore[no-any-return]
 
 
 async def is_password_pwned(password: str) -> bool:

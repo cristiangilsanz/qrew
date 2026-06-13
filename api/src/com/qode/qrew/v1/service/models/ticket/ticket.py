@@ -27,6 +27,7 @@ class Ticket(Base):
         Index("ix_tickets_owner_user_id", "owner_user_id"),
         Index("ix_tickets_state", "state"),
         Index("ix_tickets_bound_device_id", "bound_device_id"),
+        {"schema": "ticketing"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -34,27 +35,27 @@ class Ticket(Base):
     )
     reservation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("reservations.id", ondelete="RESTRICT"),
+        ForeignKey("sales.reservations.id", ondelete="RESTRICT"),
         nullable=False,
     )
     event_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("events.id", ondelete="RESTRICT"),
+        ForeignKey("catalog.events.id", ondelete="RESTRICT"),
         nullable=False,
     )
     ticket_type_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("ticket_types.id", ondelete="RESTRICT"),
+        ForeignKey("catalog.ticket_types.id", ondelete="RESTRICT"),
         nullable=False,
     )
     owner_user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="RESTRICT"),
+        ForeignKey("identity.users.id", ondelete="RESTRICT"),
         nullable=False,
     )
     bound_device_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("devices.id", ondelete="SET NULL"),
+        ForeignKey("identity.devices.id", ondelete="SET NULL"),
         nullable=True,
     )
     state: Mapped[TicketState] = mapped_column(
