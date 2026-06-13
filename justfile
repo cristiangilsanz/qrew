@@ -2,6 +2,7 @@ set shell := ["bash", "-c"]
 
 MONOLITH := "api"
 GATE := "services/gate"
+PAYMENTS := "services/payments"
 
 default: help
 
@@ -116,3 +117,21 @@ gate-migrate message:
 # Type-check gate service
 gate-type-check:
     cd {{GATE}} && uv run pyright
+
+# ── Payments service ──────────────────────────────────────────────────────────
+
+# Run payments service with auto-reload
+payments-dev:
+    cd {{PAYMENTS}} && uv run dev
+
+# Apply payments migrations
+payments-db-upgrade:
+    cd {{PAYMENTS}} && uv run alembic upgrade head
+
+# Create payments migration
+payments-migrate message:
+    cd {{PAYMENTS}} && uv run alembic revision --autogenerate -m "{{message}}"
+
+# Type-check payments service
+payments-type-check:
+    cd {{PAYMENTS}} && uv run pyright

@@ -10,7 +10,6 @@ from com.qode.qrew.v1.service.routers.event import router as event_router
 from com.qode.qrew.v1.service.routers.public_catalog import (
     router as public_catalog_router,
 )
-from com.qode.qrew.v1.service.routers.payment import router as payment_router
 from com.qode.qrew.v1.service.routers.queue import router as queue_router
 from com.qode.qrew.v1.service.routers.ticket_qr import router as ticket_qr_router
 from com.qode.qrew.v1.service.routers.ticket_restore import (
@@ -36,7 +35,6 @@ router.include_router(ticket_type_router)
 router.include_router(public_catalog_router)
 router.include_router(reservation_router)
 router.include_router(queue_router)
-router.include_router(payment_router)
 router.include_router(ticket_qr_router)
 router.include_router(ticket_restore_router)
 
