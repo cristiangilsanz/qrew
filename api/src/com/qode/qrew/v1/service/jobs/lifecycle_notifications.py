@@ -6,7 +6,6 @@ import structlog
 from com.qode.qrew.v1.service.core.infra.database import AsyncSessionLocal
 from com.qode.qrew.v1.service.core.jobs import job
 from com.qode.qrew.v1.service.models.event import Event
-from com.qode.qrew.v1.service.models.payment import Payment
 from com.qode.qrew.v1.service.models.reservation import Reservation
 from com.qode.qrew.v1.service.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.service.services.notification.service import NotificationService
@@ -20,22 +19,6 @@ async def _payload_for_reservation(
     """Return (user, event_name) for a reservation id, or (None, '') if missing."""
     async with AsyncSessionLocal() as session:
         reservation = await session.get(Reservation, reservation_id)
-        if reservation is None:
-            return None, ""
-        event = await session.get(Event, reservation.event_id)
-        user = await UserRepository(session).get_by_id(reservation.user_id)
-        return user, event.name if event else ""
-
-
-async def _payload_for_payment(  # pyright: ignore[reportUnusedFunction]
-    payment_id: uuid.UUID,
-) -> tuple[Any, str]:
-    """Reserved for future per-payment-only notifications. Lookups via Payment."""
-    async with AsyncSessionLocal() as session:
-        payment = await session.get(Payment, payment_id)
-        if payment is None:
-            return None, ""
-        reservation = await session.get(Reservation, payment.reservation_id)
         if reservation is None:
             return None, ""
         event = await session.get(Event, reservation.event_id)
