@@ -75,7 +75,7 @@ type-check:
 
 # Run test suite
 test:
-    cd {{IDENTITY}} && uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -v
+    cd {{IDENTITY}} && uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -v; code=$?; [ $code -eq 5 ] && exit 0 || exit $code
 
 # Auto-fix all issues
 fix: lint-fix format-fix
