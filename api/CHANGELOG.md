@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.12.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.11.0...qrew-api/v1.12.0) (2026-06-14)
+
+
+### Features
+
+* add entry stats endpoint and realtime entry channel for organisers ([#180](https://github.com/cristiangilsanz/qrew/issues/180)) ([3f1dc4d](https://github.com/cristiangilsanz/qrew/commit/3f1dc4d4ef1802d7f27c0c900413d56ff167083e))
+* add entry validate endpoint with relay protection and FSM transition ([#179](https://github.com/cristiangilsanz/qrew/issues/179)) ([5a66783](https://github.com/cristiangilsanz/qrew/commit/5a66783ce732f7ef49fdb5c70f9ef084ad1d6ed8))
+* short-lived scanner JWT with self-refresh and admin deactivate ([#177](https://github.com/cristiangilsanz/qrew/issues/177)) ([b3116f1](https://github.com/cristiangilsanz/qrew/commit/b3116f18513b31b72d14d1bee51b7b7bdba9d28d))
+
 ## [1.11.0](https://github.com/cristiangilsanz/qrew/compare/qrew-api/v1.10.0...qrew-api/v1.11.0) (2026-06-10)
 
 
