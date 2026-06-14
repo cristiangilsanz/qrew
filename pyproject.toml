@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [tool.uv.workspace]
-members = ["api", "services/gate", "services/payments", "services/catalog", "services/ticketing", "packages/common"]
+members = ["api", "services/gate", "services/payments", "services/catalog", "services/ticketing", "services/sales", "packages/common"]
 
 [dependency-groups]
 dev = [

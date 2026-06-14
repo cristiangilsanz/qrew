@@ -5,6 +5,7 @@ GATE := "services/gate"
 PAYMENTS := "services/payments"
 CATALOG := "services/catalog"
 TICKETING := "services/ticketing"
+SALES := "services/sales"
 
 default: help
 
@@ -181,3 +182,23 @@ ticketing-migrate message:
 # Type-check ticketing service
 ticketing-type-check:
     cd {{TICKETING}} && uv run pyright
+
+# Run sales service with auto-reload
+sales-dev:
+    cd {{SALES}} && uv run dev
+
+# Run sales NATS worker
+sales-worker:
+    cd {{SALES}} && uv run python -m com.qode.qrew.v1.sales.worker
+
+# Apply sales migrations
+sales-db-upgrade:
+    cd {{SALES}} && uv run alembic upgrade head
+
+# Create sales migration
+sales-migrate message:
+    cd {{SALES}} && uv run alembic revision --autogenerate -m "{{message}}"
+
+# Type-check sales service
+sales-type-check:
+    cd {{SALES}} && uv run pyright
