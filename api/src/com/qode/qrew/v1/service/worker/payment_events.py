@@ -8,12 +8,9 @@ from typing import Any
 import structlog
 
 from com.qode.qrew.v1.service.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.service.core.locking import redlock
 from com.qode.qrew.v1.service.core.outbox import publish_via_outbox
 from com.qode.qrew.v1.service.models.audit.audit import AuditAction
-from com.qode.qrew.v1.service.models.reservation import ReservationStatus
 from com.qode.qrew.v1.service.repositories.reservation import ReservationRepository
-from com.qode.qrew.v1.service.repositories.ticket_type import TicketTypeRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
 
 logger = structlog.get_logger(__name__)
@@ -38,34 +35,30 @@ async def handle_payment_succeeded(raw: bytes) -> None:
         return
     try:
         reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
+        payment_id = str(data["data"].get("payment_id", ""))
     except (KeyError, ValueError):
         await logger.awarning("payment_events.succeeded.bad_payload")
         return
 
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:lifecycle", ttl_seconds=10):
-            repo = ReservationRepository(session)
-            reservation = await repo.get_by_id(reservation_id)
-            if reservation is None or reservation.status != ReservationStatus.reserved:
-                await session.commit()
-                return
-            reservation.status = ReservationStatus.paid
-            audit = AuditService()
-            await publish_via_outbox(
-                session,
-                aggregate_type="payment",
-                aggregate_id=str(data["data"].get("payment_id", "")),
-                job_name="notifications.payment_succeeded",
-                payload={"reservation_id": str(reservation_id)},
-            )
-            await audit.record(
-                action=AuditAction.PAYMENT_SUCCEEDED,
-                actor_id=reservation.user_id,
-                entity_type="payment",
-                entity_id=str(data["data"].get("payment_id", "")),
-                payload={"reservation_id": str(reservation_id)},
-            )
-            await session.commit()
+        repo = ReservationRepository(session)
+        reservation = await repo.get_by_id(reservation_id)
+        actor_id = reservation.user_id if reservation else uuid.uuid4()
+        await publish_via_outbox(
+            session,
+            aggregate_type="payment",
+            aggregate_id=payment_id,
+            job_name="notifications.payment_succeeded",
+            payload={"reservation_id": str(reservation_id)},
+        )
+        await AuditService().record(
+            action=AuditAction.PAYMENT_SUCCEEDED,
+            actor_id=actor_id,
+            entity_type="payment",
+            entity_id=payment_id,
+            payload={"reservation_id": str(reservation_id)},
+        )
+        await session.commit()
     await logger.ainfo("payment_events.succeeded", reservation_id=str(reservation_id))
 
 
@@ -187,40 +180,29 @@ async def _cancel_reservation(
     reason: AuditAction,
 ) -> None:
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:lifecycle", ttl_seconds=10):
-            repo = ReservationRepository(session)
-            reservation = await repo.get_by_id(reservation_id)
-            if reservation is None:
-                await session.commit()
-                return
-            audit = AuditService()
-            reservation.status = ReservationStatus.cancelled
-            qty = reservation.quantity
-            if qty > 0:
-                tier_repo = TicketTypeRepository(session)
-                tier = await tier_repo.get_by_id(reservation.ticket_type_id)
-                if tier is not None:
-                    tier.reserved_count = max(0, tier.reserved_count - qty)
-            job_name = (
-                "notifications.ticket_cancelled_chargeback"
-                if reason == AuditAction.CHARGEBACK_OPENED
-                else "notifications.ticket_cancelled_refund"
-            )
-            await publish_via_outbox(
-                session,
-                aggregate_type="payment",
-                aggregate_id=payment_id,
-                job_name=job_name,
-                payload={"reservation_id": str(reservation_id), "reason": reason.value},
-            )
-            await audit.record(
-                action=reason,
-                actor_id=reservation.user_id,
-                entity_type="payment",
-                entity_id=payment_id,
-                payload={"reservation_id": str(reservation_id)},
-            )
-            await session.commit()
+        repo = ReservationRepository(session)
+        reservation = await repo.get_by_id(reservation_id)
+        actor_id = reservation.user_id if reservation else uuid.uuid4()
+        job_name = (
+            "notifications.ticket_cancelled_chargeback"
+            if reason == AuditAction.CHARGEBACK_OPENED
+            else "notifications.ticket_cancelled_refund"
+        )
+        await publish_via_outbox(
+            session,
+            aggregate_type="payment",
+            aggregate_id=payment_id,
+            job_name=job_name,
+            payload={"reservation_id": str(reservation_id), "reason": reason.value},
+        )
+        await AuditService().record(
+            action=reason,
+            actor_id=actor_id,
+            entity_type="payment",
+            entity_id=payment_id,
+            payload={"reservation_id": str(reservation_id)},
+        )
+        await session.commit()
 
 
 _HANDLERS = {

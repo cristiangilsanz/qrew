@@ -4,8 +4,6 @@ from com.qode.qrew.v1.service.jobs import (
     lifecycle_notifications,
     notification_delivery,
     outbox_drain,
-    queue_admit,
-    reservation_sweep,
     storage_retention,
 )
 
@@ -15,7 +13,5 @@ __all__ = [
     "lifecycle_notifications",
     "notification_delivery",
     "outbox_drain",
-    "queue_admit",
-    "reservation_sweep",
     "storage_retention",
 ]
