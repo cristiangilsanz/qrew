@@ -4,6 +4,7 @@ MONOLITH := "api"
 GATE := "services/gate"
 PAYMENTS := "services/payments"
 CATALOG := "services/catalog"
+TICKETING := "services/ticketing"
 
 default: help
 
@@ -158,3 +159,25 @@ catalog-migrate message:
 # Type-check catalog service
 catalog-type-check:
     cd {{CATALOG}} && uv run pyright
+
+# ── Ticketing service ─────────────────────────────────────────────────────────
+
+# Run ticketing service with auto-reload
+ticketing-dev:
+    cd {{TICKETING}} && uv run dev
+
+# Run ticketing NATS worker
+ticketing-worker:
+    cd {{TICKETING}} && uv run python -m com.qode.qrew.v1.ticketing.worker
+
+# Apply ticketing migrations
+ticketing-db-upgrade:
+    cd {{TICKETING}} && uv run alembic upgrade head
+
+# Create ticketing migration
+ticketing-migrate message:
+    cd {{TICKETING}} && uv run alembic revision --autogenerate -m "{{message}}"
+
+# Type-check ticketing service
+ticketing-type-check:
+    cd {{TICKETING}} && uv run pyright

@@ -87,6 +87,7 @@ services:
       HOST: 0.0.0.0
       DEBUG: false
       MONOLITH_URL: http://api:8000
+      TICKETING_URL: http://ticketing:8004
     depends_on:
       postgres:
         condition: service_healthy
@@ -95,6 +96,8 @@ services:
       nats:
         condition: service_healthy
       api:
+        condition: service_healthy
+      ticketing:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8001/healthz || exit 1"]
@@ -200,6 +203,51 @@ services:
     command: ["python", "-m", "com.qode.qrew.v1.service.worker"]
     env_file:
       - ./api/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
+  ticketing:
+    build:
+      context: .
+      dockerfile: services/ticketing/Dockerfile
+    ports:
+      - "8004:8004"
+    env_file:
+      - ./services/ticketing/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8004/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  ticketing-worker:
+    build:
+      context: .
+      dockerfile: services/ticketing/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.ticketing.worker"]
+    env_file:
+      - ./services/ticketing/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0

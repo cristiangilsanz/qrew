@@ -232,8 +232,8 @@ class _MonolithUseError(Exception):
 
 
 async def _call_monolith_use(ticket_id: uuid.UUID, scanner_id: uuid.UUID) -> None:
-    """Call the monolith's internal FSM endpoint to transition the ticket to used."""
-    url = f"{settings.monolith_url}/internal/tickets/{ticket_id}/use"
+    """Call the ticketing service's internal FSM endpoint to transition the ticket to used."""
+    url = f"{settings.ticketing_url}/v1/_internal/tickets/{ticket_id}/use"
     async with httpx.AsyncClient(timeout=5.0) as client:
         resp = await client.post(
             url,

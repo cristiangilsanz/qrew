@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     internal_api_key: str = "dev-internal-secret"
     # URL of the monolith API
     monolith_url: str = "http://localhost:8000"
+    # URL of the ticketing service (owns ticket FSM)
+    ticketing_url: str = "http://localhost:8004"
 
     # Access JWT keys (same key material as monolith)
     access_jwt_private_key: str = ""
