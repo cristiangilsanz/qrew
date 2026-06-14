@@ -67,6 +67,8 @@ class TicketTypeInventoryRepository:
         ticket_type_id: uuid.UUID,
         event_id: uuid.UUID,
         capacity: int,
+        price_cents: int = 0,
+        currency: str = "EUR",
     ) -> None:
         inv = await self._session.get(TicketTypeInventory, ticket_type_id)
         if inv is None:
@@ -75,10 +77,14 @@ class TicketTypeInventoryRepository:
                 event_id=event_id,
                 capacity=capacity,
                 reserved_count=0,
+                price_cents=price_cents,
+                currency=currency,
             )
             self._session.add(inv)
         else:
             inv.capacity = capacity
+            inv.price_cents = price_cents
+            inv.currency = currency
         inv.updated_at = datetime.now(timezone.utc)
         await self._session.flush()
 

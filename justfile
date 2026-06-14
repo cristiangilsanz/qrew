@@ -1,6 +1,6 @@
 set shell := ["bash", "-c"]
 
-MONOLITH := "api"
+IDENTITY := "services/identity"
 GATE := "services/gate"
 PAYMENTS := "services/payments"
 CATALOG := "services/catalog"
@@ -18,7 +18,7 @@ setup:
     docker compose down --volumes --rmi local --remove-orphans
     docker compose up postgres redis nats -d
     uv venv --python 3.12
-    cd {{MONOLITH}} && uv sync --all-groups
+    cd {{IDENTITY}} && uv sync --all-groups
     just db-upgrade
 
 # Stop dev environment
@@ -36,17 +36,17 @@ shutdown:
 
 # Install dependencies
 install:
-    cd {{MONOLITH}} && uv sync --all-groups
+    cd {{IDENTITY}} && uv sync --all-groups
 
 # Run dev environment
 dev:
-    -fuser -k 8000/tcp
+    -fuser -k 8006/tcp
     just db-upgrade
-    cd {{MONOLITH}} && uv run dev
+    cd {{IDENTITY}} && uv run dev
 
 # Run background job worker
 worker:
-    cd {{MONOLITH}} && uv run arq com.qode.qrew.v1.service.core.jobs.worker.WorkerSettings
+    cd {{IDENTITY}} && uv run worker
 
 # Launch Jaeger for local trace viewing
 trace:
@@ -55,27 +55,27 @@ trace:
 
 # Verify linter
 lint-check:
-    cd {{MONOLITH}} && uv run ruff check .
+    cd {{IDENTITY}} && uv run ruff check .
 
 # Auto-fix linter errors
 lint-fix:
-    cd {{MONOLITH}} && uv run ruff check --fix .
+    cd {{IDENTITY}} && uv run ruff check --fix .
 
 # Verify formatter
 format-check:
-    cd {{MONOLITH}} && uv run ruff format --check .
+    cd {{IDENTITY}} && uv run ruff format --check .
 
 # Auto-fix format errors
 format-fix:
-    cd {{MONOLITH}} && uv run ruff format .
+    cd {{IDENTITY}} && uv run ruff format .
 
 # Verify type consistency
 type-check:
-    cd {{MONOLITH}} && uv run pyright
+    cd {{IDENTITY}} && uv run pyright
 
 # Run test suite
 test:
-    cd {{MONOLITH}} && uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -v
+    cd {{IDENTITY}} && uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -v
 
 # Auto-fix all issues
 fix: lint-fix format-fix
@@ -85,19 +85,41 @@ check: lint-check format-check type-check test
 
 # Create a new auto-generated migration
 migrate message:
-    cd {{MONOLITH}} && uv run alembic revision --autogenerate -m "{{message}}"
+    cd {{IDENTITY}} && uv run alembic revision --autogenerate -m "{{message}}"
 
 # Apply all pending migrations
 db-upgrade:
-    cd {{MONOLITH}} && uv run alembic upgrade head
+    cd {{IDENTITY}} && uv run alembic upgrade head
 
 # Rollback last migration
 db-downgrade:
-    cd {{MONOLITH}} && uv run alembic downgrade -1
+    cd {{IDENTITY}} && uv run alembic downgrade -1
 
 # Drop all tables and re-apply migrations from scratch
 db-clean:
-    cd {{MONOLITH}} && uv run alembic downgrade base && uv run alembic upgrade head
+    cd {{IDENTITY}} && uv run alembic downgrade base && uv run alembic upgrade head
+
+# ── Identity service ──────────────────────────────────────────────────────────
+
+# Run identity service with auto-reload
+identity-dev:
+    cd {{IDENTITY}} && uv run dev
+
+# Run identity NATS worker
+identity-worker:
+    cd {{IDENTITY}} && uv run worker
+
+# Apply identity migrations
+identity-db-upgrade:
+    cd {{IDENTITY}} && uv run alembic upgrade head
+
+# Create identity migration
+identity-migrate message:
+    cd {{IDENTITY}} && uv run alembic revision --autogenerate -m "{{message}}"
+
+# Type-check identity service
+identity-type-check:
+    cd {{IDENTITY}} && uv run pyright
 
 # ── Gate service ──────────────────────────────────────────────────────────────
 
