@@ -6,6 +6,7 @@ PAYMENTS := "services/payments"
 CATALOG := "services/catalog"
 TICKETING := "services/ticketing"
 SALES := "services/sales"
+AUDIT := "services/audit"
 
 default: help
 
@@ -224,3 +225,25 @@ sales-migrate message:
 # Type-check sales service
 sales-type-check:
     cd {{SALES}} && uv run pyright
+
+# ── Audit service ─────────────────────────────────────────────────────────────
+
+# Run audit service with auto-reload
+audit-dev:
+    cd {{AUDIT}} && uv run dev
+
+# Run audit NATS worker
+audit-worker:
+    cd {{AUDIT}} && uv run python -m com.qode.qrew.v1.audit.worker
+
+# Apply audit migrations
+audit-db-upgrade:
+    cd {{AUDIT}} && uv run alembic upgrade head
+
+# Create audit migration
+audit-migrate message:
+    cd {{AUDIT}} && uv run alembic revision --autogenerate -m "{{message}}"
+
+# Type-check audit service
+audit-type-check:
+    cd {{AUDIT}} && uv run pyright

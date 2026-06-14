@@ -1,18 +1,15 @@
-import hashlib
-import json
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.sales.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.sales.models.audit import AuditEvent
-
 logger = structlog.get_logger(__name__)
 
 
 class AuditService:
+    """Publishes audit events to NATS audit.events.v1 for the audit service to chain."""
+
     async def record(
         self,
         *,
@@ -22,30 +19,22 @@ class AuditService:
         entity_id: str | None = None,
         payload: dict[str, Any] | None = None,
     ) -> None:
-        payload = payload or {}
-        raw = json.dumps(
-            {
-                "action": action,
-                "actor_id": str(actor_id) if actor_id else None,
-                "entity_type": entity_type,
-                "entity_id": entity_id,
-                "payload": payload,
-                "occurred_at": datetime.now(UTC).isoformat(),
-            },
-            sort_keys=True,
-        ).encode()
-        digest = hashlib.sha256(raw).digest()
-        event = AuditEvent(
-            action=action,
-            actor_id=actor_id,
-            entity_type=entity_type,
-            entity_id=entity_id,
-            payload=payload,
-            hash=digest,
-        )
         try:
-            async with AsyncSessionLocal() as session:
-                session.add(event)
-                await session.commit()
+            from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+
+            envelope = EventEnvelope(
+                occurred_at=datetime.now(UTC),
+                aggregate_type=entity_type or "system",
+                aggregate_id=entity_id or "",
+                actor_id=str(actor_id) if actor_id else None,
+                data={
+                    "action": str(action),
+                    "entity_type": entity_type,
+                    "entity_id": entity_id,
+                    "payload": payload or {},
+                },
+            )
+            await nats_publish("audit.events.v1", envelope)
         except Exception as exc:
-            await logger.awarning("audit.write_failed", action=action, error=repr(exc))
+            await logger.awarning("audit_publish_failed", action=action, error=repr(exc))

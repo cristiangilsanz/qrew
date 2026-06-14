@@ -1,12 +1,15 @@
-import hashlib
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from com.qode.qrew.v1.ticketing.core.infra.database import AsyncSessionLocal
+import structlog
+
+logger = structlog.get_logger(__name__)
 
 
 class AuditService:
+    """Publishes audit events to NATS audit.events.v1 for the audit service to chain."""
+
     async def record(
         self,
         *,
@@ -16,21 +19,22 @@ class AuditService:
         entity_id: str | None = None,
         payload: dict[str, Any] | None = None,
     ) -> None:
-        from com.qode.qrew.v1.ticketing.models.audit import AuditEvent
+        try:
+            from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
 
-        event_id = uuid.uuid4()
-        now = datetime.now(UTC)
-        raw = f"{event_id}{action}{actor_id}{entity_type}{entity_id}{now.isoformat()}"
-        hash_bytes = hashlib.sha256(raw.encode()).digest()
-        event = AuditEvent(
-            id=event_id,
-            action=str(action),
-            actor_id=actor_id,
-            entity_type=entity_type,
-            entity_id=entity_id,
-            payload=payload or {},
-            occurred_at=now,
-            hash=hash_bytes,
-        )
-        async with AsyncSessionLocal() as session, session.begin():
-            session.add(event)
+            envelope = EventEnvelope(
+                occurred_at=datetime.now(UTC),
+                aggregate_type=entity_type or "system",
+                aggregate_id=entity_id or "",
+                actor_id=str(actor_id) if actor_id else None,
+                data={
+                    "action": str(action),
+                    "entity_type": entity_type,
+                    "entity_id": entity_id,
+                    "payload": payload or {},
+                },
+            )
+            await nats_publish("audit.events.v1", envelope)
+        except Exception as exc:
+            await logger.awarning("audit_publish_failed", action=action, error=repr(exc))

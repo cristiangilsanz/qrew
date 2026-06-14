@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.repositories.audit.audit import (
+from com.qode.qrew.v1.audit.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.audit.repositories.audit import (
     AuditRepository,
     compute_hash,
     event_to_hashable,
@@ -23,7 +23,6 @@ class AuditChainVerifier:
     """Verify the integrity of the append-only audit hash chain."""
 
     async def verify(self) -> ChainVerificationResult:
-        """Recompute every event hash and report tampered rows."""
         async with AsyncSessionLocal() as session:
             repo = AuditRepository(session)
             events = await repo.get_all_ordered()
