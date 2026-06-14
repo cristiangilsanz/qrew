@@ -44,14 +44,14 @@ services:
       retries: 5
       start_period: 5s
 
-  api:
+  identity:
     build:
       context: .
-      dockerfile: api/Dockerfile
+      dockerfile: services/identity/Dockerfile
     ports:
-      - "8000:8000"
+      - "8006:8006"
     env_file:
-      - ./api/.env
+      - ./services/identity/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -66,7 +66,7 @@ services:
       nats:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8006/v1/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -86,7 +86,6 @@ services:
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
       DEBUG: false
-      MONOLITH_URL: http://api:8000
       TICKETING_URL: http://ticketing:8004
     depends_on:
       postgres:
@@ -94,8 +93,6 @@ services:
       redis:
         condition: service_healthy
       nats:
-        condition: service_healthy
-      api:
         condition: service_healthy
       ticketing:
         condition: service_healthy
@@ -134,9 +131,11 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
-      MONOLITH_URL: http://api:8000
+      HOST: 0.0.0.0
+      DEBUG: false
+      SALES_URL: http://sales:8005
     depends_on:
-      api:
+      sales:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -196,13 +195,13 @@ services:
       nats:
         condition: service_healthy
 
-  api-worker:
+  identity-worker:
     build:
       context: .
-      dockerfile: api/Dockerfile
-    command: ["python", "-m", "com.qode.qrew.v1.service.worker"]
+      dockerfile: services/identity/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.identity.worker"]
     env_file:
-      - ./api/.env
+      - ./services/identity/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0

@@ -98,6 +98,8 @@ async def handle_ticket_type_created(raw: bytes) -> None:
         ticket_type_id = uuid.UUID(str(data["data"]["ticket_type_id"]))
         event_id = uuid.UUID(str(data["data"]["event_id"]))
         capacity = int(data["data"]["capacity"])
+        price_cents = int(data["data"].get("price_cents", 0))
+        currency = str(data["data"].get("currency", "EUR"))
     except (KeyError, ValueError):
         await logger.awarning("catalog_events.ticket_type_created.bad_payload")
         return
@@ -106,6 +108,8 @@ async def handle_ticket_type_created(raw: bytes) -> None:
             ticket_type_id=ticket_type_id,
             event_id=event_id,
             capacity=capacity,
+            price_cents=price_cents,
+            currency=currency,
         )
         await session.commit()
     await logger.ainfo(

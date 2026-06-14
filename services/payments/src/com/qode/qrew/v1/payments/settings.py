@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     nats_url: str = "nats://localhost:4222"
 
     internal_api_key: str = "dev-internal-secret"
-    monolith_url: str = "http://localhost:8000"
+    sales_url: str = "http://localhost:8005"
 
     access_jwt_private_key: str = ""
     access_jwt_previous_public_keys: str = ""

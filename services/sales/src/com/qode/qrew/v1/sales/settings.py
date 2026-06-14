@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     nats_url: str = "nats://localhost:4222"
 
     internal_api_key: str = "dev-internal-secret"
+    payments_default_currency: str = "EUR"
 
     # Access JWT (shared with monolith/identity)
     access_jwt_private_key: str = ""

@@ -38,9 +38,9 @@ class _ReservationContext:
 async def _get_reservation_context(
     reservation_id: uuid.UUID, user_id: uuid.UUID
 ) -> _ReservationContext:
-    async with httpx.AsyncClient(base_url=settings.monolith_url) as client:
+    async with httpx.AsyncClient(base_url=settings.sales_url) as client:
         resp = await client.post(
-            f"/internal/reservations/{reservation_id}/payment-context",
+            f"/_internal/reservations/{reservation_id}/payment-context",
             json={"user_id": str(user_id)},
             headers={"X-Internal-Key": settings.internal_api_key},
             timeout=5.0,
@@ -114,6 +114,7 @@ class PaymentService:
         )
         payment = existing or Payment(
             reservation_id=reservation_id,
+            user_id=actor_id,
             amount_cents=ctx.amount_cents,
             currency=ctx.currency,
         )
@@ -130,6 +131,7 @@ class PaymentService:
             {
                 "payment_id": str(payment.id),
                 "reservation_id": str(reservation_id),
+                "user_id": str(actor_id),
                 "amount_cents": ctx.amount_cents,
                 "currency": ctx.currency,
             },
@@ -155,6 +157,7 @@ class PaymentService:
             {
                 "payment_id": str(payment.id),
                 "reservation_id": str(payment.reservation_id),
+                "user_id": str(payment.user_id) if payment.user_id else "",
             },
         )
 
@@ -178,6 +181,7 @@ class PaymentService:
             {
                 "payment_id": str(payment.id),
                 "reservation_id": str(payment.reservation_id),
+                "user_id": str(payment.user_id) if payment.user_id else "",
                 "failure_code": failure_code,
                 "failure_message": failure_message,
             },
@@ -199,6 +203,7 @@ class PaymentService:
             {
                 "payment_id": str(payment.id),
                 "reservation_id": str(payment.reservation_id),
+                "user_id": str(payment.user_id) if payment.user_id else "",
                 "amount_refunded_cents": amount_refunded,
                 "amount_total_cents": amount_total,
                 "is_full_refund": is_full_refund,
@@ -217,6 +222,7 @@ class PaymentService:
             {
                 "payment_id": str(payment.id),
                 "reservation_id": str(payment.reservation_id),
+                "user_id": str(payment.user_id) if payment.user_id else "",
             },
         )
 
@@ -230,6 +236,7 @@ class PaymentService:
             {
                 "payment_id": str(payment.id),
                 "reservation_id": str(payment.reservation_id),
+                "user_id": str(payment.user_id) if payment.user_id else "",
             },
         )
 
