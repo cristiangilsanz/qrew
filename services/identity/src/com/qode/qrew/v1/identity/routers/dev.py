@@ -10,7 +10,6 @@ from com.qode.qrew.v1.identity.core.auth import pii_crypto
 from com.qode.qrew.v1.identity.core.infra.database import get_db
 from com.qode.qrew.v1.identity.core.infra.redis import get_redis
 from com.qode.qrew.v1.identity.models.auth.user import User
-from com.qode.qrew.v1.identity.services.audit import AuditService
 
 router = APIRouter(prefix="/dev", tags=["dev"])
 
@@ -57,7 +56,6 @@ async def dev_reset_db(
     )
     await db.commit()
     await redis.flushdb()  # type: ignore[no-untyped-call]
-    await AuditService().ensure_genesis()
 
 
 @router.post("/make-admin", status_code=204)

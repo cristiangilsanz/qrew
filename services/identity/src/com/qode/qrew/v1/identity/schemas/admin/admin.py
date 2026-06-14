@@ -21,12 +21,6 @@ class KycReviewResponse(BaseModel):
     message: str
 
 
-class AuditVerifyResponse(BaseModel):
-    valid: bool
-    event_count: int
-    tampered_ids: list[str]
-
-
 class FingerprintAdminResponse(BaseModel):
     fingerprint_hash: str
     user_ids: list[str]
