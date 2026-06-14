@@ -1,4 +1,4 @@
-"""Sales NATS worker: updates EventContext and TicketTypeInventory projections from catalog events."""
+"""Subscribes to catalog events and keeps local sales projection tables up to date."""
 
 import asyncio
 import json
@@ -8,7 +8,7 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.sales.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.sales.database import AsyncSessionLocal
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
     TicketTypeInventoryRepository,

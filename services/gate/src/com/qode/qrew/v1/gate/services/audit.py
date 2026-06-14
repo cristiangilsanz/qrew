@@ -7,7 +7,7 @@ logger = structlog.get_logger(__name__)
 
 
 class AuditService:
-    """Publishes audit events to NATS audit.events.v1 for the audit service to chain."""
+    """Forwards audit events to the message broker for central processing."""
 
     async def record(
         self,

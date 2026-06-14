@@ -6,11 +6,11 @@ from sqlalchemy import DateTime, Index, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.ticketing.core.infra.database import Base
+from com.qode.qrew.v1.ticketing.database import Base
 
 
 class EventVenueContext(Base):
-    """CQRS-lite projection of event + venue data for gate evaluation."""
+    """Read-only local projection of event and venue data used during gate evaluation."""
 
     __tablename__ = "event_venue_context"
     __table_args__ = ({"schema": "ticketing"},)
@@ -38,7 +38,7 @@ class EventVenueContext(Base):
 
 
 class DeviceContext(Base):
-    """CQRS-lite projection of device attestation / revocation state."""
+    """Read-only local projection of device attestation and revocation state."""
 
     __tablename__ = "device_context"
     __table_args__ = (

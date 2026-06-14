@@ -5,10 +5,11 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.infra.errors import DomainError
-from com.qode.qrew.v1.catalog.core.locking import redlock
-from com.qode.qrew.v1.catalog.core.observability import traced
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from infra.errors import DomainError
+from infra.locking import redlock
+from observability import traced
+from com.qode.qrew.v1.catalog.settings import settings
 from com.qode.qrew.v1.catalog.models.event import EventStatus
 from com.qode.qrew.v1.catalog.models.ticket_type import TicketType
 from com.qode.qrew.v1.catalog.repositories.event import EventRepository
@@ -103,7 +104,7 @@ class TicketTypeService:
         _validate_capacity(capacity)
         _validate_price(price_cents)
         _validate_currency(currency)
-        async with redlock(f"event:{event_id}:ticket-types", ttl_seconds=10):
+        async with redlock(f"event:{event_id}:ticket-types", redis_url=settings.redis_url, ttl_seconds=10):
             event = await self._event_repo.get_by_id(event_id)
             if event is None:
                 raise TicketTypeError("Event not found", field="event_id")
@@ -148,7 +149,7 @@ class TicketTypeService:
         unknown = set(changes) - _MUTABLE_FIELDS
         if unknown:
             raise TicketTypeError(f"Cannot edit fields: {sorted(unknown)}", field=None)
-        async with redlock(f"event:{event_id}:ticket-types", ttl_seconds=10):
+        async with redlock(f"event:{event_id}:ticket-types", redis_url=settings.redis_url, ttl_seconds=10):
             ticket_type = await self._repo.get_by_id(ticket_type_id)
             if ticket_type is None or ticket_type.event_id != event_id:
                 raise TicketTypeError("Ticket type not found", field="ticket_type_id")
@@ -192,7 +193,7 @@ class TicketTypeService:
         event_id: uuid.UUID,
         ticket_type_id: uuid.UUID,
     ) -> None:
-        async with redlock(f"event:{event_id}:ticket-types", ttl_seconds=10):
+        async with redlock(f"event:{event_id}:ticket-types", redis_url=settings.redis_url, ttl_seconds=10):
             ticket_type = await self._repo.get_by_id(ticket_type_id)
             if ticket_type is None or ticket_type.event_id != event_id:
                 raise TicketTypeError("Ticket type not found", field="ticket_type_id")

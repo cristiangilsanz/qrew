@@ -2,12 +2,12 @@ from datetime import UTC, datetime
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     generate_otp,
     phone_number_otp_expiry,
     verify_password,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository

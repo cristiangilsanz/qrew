@@ -3,12 +3,12 @@ import uuid
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.device.attestation import (
+from com.qode.qrew.v1.identity.services.device.attestation import (
     AttestationResult,
     AttestationVerifier,
     AttestationVerifierError,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.services.audit import AuditService
 from com.qode.qrew.v1.identity.settings import settings

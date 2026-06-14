@@ -11,7 +11,7 @@ _client: Client | None = None
 
 
 class NatsClient:
-    """Thin wrapper around the nats-py client with lifespan management."""
+    """Thin wrapper around the message broker client with lifespan management."""
 
     def __init__(self, url: str) -> None:
         self._url = url

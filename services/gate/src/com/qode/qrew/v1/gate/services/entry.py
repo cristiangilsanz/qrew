@@ -11,12 +11,12 @@ import redis.asyncio as aioredis
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.gate.core.auth import jwt_keys
-from com.qode.qrew.v1.gate.core.locking import LockUnavailableError, redlock
-from com.qode.qrew.v1.gate.core.observability import traced
+from com.qode.qrew.v1.gate.services.auth import jwt_keys
+from infra.locking import LockUnavailableError, redlock
+from observability import traced
 from com.qode.qrew.v1.gate.models.audit import AuditAction
 from com.qode.qrew.v1.gate.models.scanner import Scanner
-from com.qode.qrew.v1.gate.models.ticket_context import TicketContext, TicketState
+from com.qode.qrew.v1.gate.models.ticket_context import TicketState
 from com.qode.qrew.v1.gate.repositories.ticket_context import TicketContextRepository
 from com.qode.qrew.v1.gate.services.audit import AuditService
 from com.qode.qrew.v1.gate.settings import settings
@@ -184,7 +184,7 @@ async def _evaluate(
         return _denied(EntryReason.state, ticket_id=ticket_id)
 
     try:
-        async with redlock(f"ticket:{ticket_id}:entry", ttl_seconds=10):
+        async with redlock(f"ticket:{ticket_id}:entry", redis_url=settings.redis_url, ttl_seconds=10):
             await _call_monolith_use(ticket_id, scanner.id)
     except LockUnavailableError:
         await _audit_reject(audit, scanner.id, ticket_id, EntryReason.busy, event_id=event_id)
@@ -242,7 +242,7 @@ class _MonolithUseError(Exception):
 
 
 async def _call_monolith_use(ticket_id: uuid.UUID, scanner_id: uuid.UUID) -> None:
-    """Call the ticketing service's internal FSM endpoint to transition the ticket to used."""
+    """Forwards a ticket use request to the downstream ticketing service."""
     url = f"{settings.ticketing_url}/v1/_internal/tickets/{ticket_id}/use"
     async with httpx.AsyncClient(timeout=5.0) as client:
         resp = await client.post(

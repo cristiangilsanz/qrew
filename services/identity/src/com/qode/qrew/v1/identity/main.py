@@ -2,18 +2,18 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from com.qode.qrew.v1.identity.core.api import (
+from com.qode.qrew.v1.identity.routers import (
     default_responses,
     probes_router,
     register_exception_handlers,
 )
-from com.qode.qrew.v1.identity.core.idempotency import IdempotencyMiddleware
-from com.qode.qrew.v1.identity.core.infra.limiter import limiter
-from com.qode.qrew.v1.identity.core.infra.middleware import (
+from com.qode.qrew.v1.identity.services.idempotency.middleware import IdempotencyMiddleware
+from com.qode.qrew.v1.identity.services.infra.limiter import limiter
+from infra.middleware import (
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
 )
-from com.qode.qrew.v1.identity.core.observability import add_trace_context, setup_tracing
+from observability import add_trace_context, setup_tracing
 from com.qode.qrew.v1.identity.lifespan import lifespan
 from com.qode.qrew.v1.identity.routers import router as v1_router
 from com.qode.qrew.v1.identity.routers.internal import router as internal_router
@@ -41,7 +41,12 @@ app = FastAPI(
     responses=default_responses,
 )
 
-setup_tracing(app)
+setup_tracing(
+    service_name=settings.app_name,
+    version=settings.version,
+    environment="development" if settings.debug else "production",
+    app=app,
+)
 
 register_exception_handlers(app)
 

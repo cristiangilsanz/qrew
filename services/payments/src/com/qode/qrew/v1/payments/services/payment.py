@@ -1,4 +1,4 @@
-"""Payment service — owns Stripe lifecycle, publishes saga events to NATS."""
+"""Manages the full payment lifecycle and publishes saga events to the message broker."""
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -8,10 +8,10 @@ import httpx
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.payments.core.auth import pii_crypto
-from com.qode.qrew.v1.payments.core.infra.errors import DomainError
-from com.qode.qrew.v1.payments.core.observability import traced
-from com.qode.qrew.v1.payments.core.payments import StripeClient
+from com.qode.qrew.v1.payments.services.auth import pii_crypto
+from infra.errors import DomainError
+from observability import traced
+from com.qode.qrew.v1.payments.services import StripeClient
 from com.qode.qrew.v1.payments.models.payment import Payment, PaymentStatus
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
 from com.qode.qrew.v1.payments.settings import settings

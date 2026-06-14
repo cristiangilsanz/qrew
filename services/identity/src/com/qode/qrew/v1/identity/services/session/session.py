@@ -3,7 +3,7 @@ import uuid
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.schemas.auth.session import SessionResponse
 from com.qode.qrew.v1.identity.services.auth.logout import BLACKLIST_JTI_PREFIX
@@ -42,7 +42,7 @@ class SessionService:
         ]
 
     async def revoke_session(self, jti: str, user_id: uuid.UUID) -> None:
-        """Blacklist a specific session JTI and delete its row."""
+        """Invalidates and removes a single session belonging to the given user."""
         session = await self._repo.get_by_jti(jti)
         if session is None or session.user_id != user_id:
             raise SessionError("Session not found", field="jti")

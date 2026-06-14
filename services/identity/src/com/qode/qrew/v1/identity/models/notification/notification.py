@@ -6,8 +6,8 @@ from sqlalchemy import DateTime, Enum, Integer, LargeBinary, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.identity.core.auth import pii_crypto
-from com.qode.qrew.v1.identity.core.infra.database import Base
+from com.qode.qrew.v1.identity.services.auth import pii_crypto
+from com.qode.qrew.v1.identity.database import Base
 
 
 class NotificationChannel(enum.StrEnum):
@@ -48,7 +48,7 @@ class Notification(Base):
 
     @property
     def destination(self) -> str:
-        """Return the decrypted destination, used by the dispatcher."""
+        """Decrypts and returns the stored destination address."""
         return pii_crypto.decrypt(self.destination_ciphertext)
 
     @destination.setter

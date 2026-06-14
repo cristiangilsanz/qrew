@@ -3,13 +3,13 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.core.api import Page, clamp_limit, cursor_paginate
-from com.qode.qrew.v1.identity.core.auth.auth import (
+from com.qode.qrew.v1.identity.routers import Page, clamp_limit, cursor_paginate
+from com.qode.qrew.v1.identity.services.auth.auth import (
     get_current_user,
     get_setup_or_full_user,
 )
-from com.qode.qrew.v1.identity.core.infra.database import get_db
-from com.qode.qrew.v1.identity.core.infra.limiter import limiter
+from com.qode.qrew.v1.identity.database import get_db
+from com.qode.qrew.v1.identity.services.infra.limiter import limiter
 from com.qode.qrew.v1.identity.models.audit.audit import AuditEvent
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
 from com.qode.qrew.v1.identity.repositories.audit.audit import AuditRepository

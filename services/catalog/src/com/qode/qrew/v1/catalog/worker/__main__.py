@@ -4,8 +4,8 @@ import structlog
 from arq.cron import CronJob, cron
 from arq.worker import func
 
-from com.qode.qrew.v1.catalog.core.infra.redis import redis_settings_from_url
-from com.qode.qrew.v1.catalog.jobs.search_reindex import reindex_event, reindex_events
+from infra.redis import redis_settings_from_url
+from com.qode.qrew.v1.catalog.worker.jobs.search_reindex import reindex_event, reindex_events
 from com.qode.qrew.v1.catalog.settings import settings
 
 logger = structlog.get_logger(__name__)

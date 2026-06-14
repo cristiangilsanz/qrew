@@ -21,11 +21,7 @@ async def subscribe(
     *,
     ack_wait: int = 30,
 ) -> None:
-    """Register a durable push consumer and process messages with handler.
-
-    Each successfully processed message is acked. Errors are logged and the
-    message is nacked so JetStream retries with backoff.
-    """
+    """Registers a durable push consumer and dispatches each incoming message to the provided callable, retrying on failure."""
     js = get_nats().js
     config = ConsumerConfig(
         durable_name=durable,
@@ -60,7 +56,7 @@ async def iter_messages(
     durable: str,
     batch: int = 10,
 ) -> AsyncGenerator[Any, None]:
-    """Pull-based consumer for use in Arq jobs — fetches a batch and yields."""
+    """Fetches a batch of messages from a pull-based consumer and yields each one."""
     js = get_nats().js
     sub = await js.pull_subscribe(subject, durable=durable, stream=stream)  # type: ignore[misc]
     try:

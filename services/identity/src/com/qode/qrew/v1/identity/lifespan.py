@@ -4,11 +4,11 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 
-from com.qode.qrew.v1.identity.core.idempotency import close_idempotency_store
-from com.qode.qrew.v1.identity.core.jobs.pool import close_pool
-from com.qode.qrew.v1.identity.core.locking import close_locking
-from com.qode.qrew.v1.identity.core.observability import shutdown_tracing
-from com.qode.qrew.v1.identity.core.ratelimit.dependencies import close_ratelimiter
+from com.qode.qrew.v1.identity.services.idempotency.middleware import close_idempotency_store
+from jobs.pool import close_pool
+from infra.locking import close_locking
+from observability import shutdown_tracing
+from com.qode.qrew.v1.identity.services.ratelimit.dependencies import close_ratelimiter
 from com.qode.qrew.v1.identity.settings import settings
 
 logger = structlog.get_logger(__name__)

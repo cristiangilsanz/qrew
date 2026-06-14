@@ -6,7 +6,7 @@ from sqlalchemy import DateTime, LargeBinary, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.gate.core.infra.database import Base
+from com.qode.qrew.v1.gate.database import Base
 
 
 class AuditAction(enum.StrEnum):

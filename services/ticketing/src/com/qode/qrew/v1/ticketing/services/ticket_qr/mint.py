@@ -6,8 +6,8 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.auth import jwt_keys
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.services.auth import jwt_keys
 from com.qode.qrew.v1.ticketing.services.ticket_qr.gate import GateInputs
 from com.qode.qrew.v1.ticketing.settings import settings
 
@@ -54,7 +54,7 @@ async def mint_qr(
         "exp": exp,
         "aud": settings.ticket_qr_audience,
     }
-    token = jwt_keys.sign(jwt_keys.Purpose.TICKET_QR, payload)
+    token = jwt_keys.sign(jwt_keys.TICKET_QR, payload)
     if _sample_audit(settings.ticket_qr_mint_audit_sample_rate):
         try:
             await audit.record(

@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.models.device.device import Device
@@ -43,7 +43,7 @@ class DeviceBindingService:
         self._audit = audit
 
     async def begin(self, user: User) -> str:
-        """Generate a challenge nonce and store it in Redis. Returns the challenge."""
+        """Generates a short-lived challenge nonce and stores it for later verification."""
         challenge = str(uuid.uuid4())
         await self._redis.set(
             _CHALLENGE_PREFIX + str(user.id),
@@ -60,7 +60,7 @@ class DeviceBindingService:
         public_key_b64: str,
         signature_b64: str,
     ) -> Device:
-        """Verify ECDSA signature over the challenge, persist the device."""
+        """Verifies a cryptographic signature over the pending challenge and registers the device."""
         raw_challenge: bytes | None = await self._redis.get(_CHALLENGE_PREFIX + str(user.id))
         if raw_challenge is None:
             raise DeviceBindingError("Binding session expired. Please start again.", field=None)

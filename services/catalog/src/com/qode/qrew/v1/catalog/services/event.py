@@ -6,18 +6,19 @@ import structlog
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.infra.errors import DomainError
-from com.qode.qrew.v1.catalog.core.locking import redlock
-from com.qode.qrew.v1.catalog.core.observability import traced
-from com.qode.qrew.v1.catalog.core.search.tsvector import update_one_sql
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from infra.errors import DomainError
+from infra.locking import redlock
+from com.qode.qrew.v1.catalog.settings import settings
+from observability import traced
+from com.qode.qrew.v1.catalog.repositories.search.tsvector import update_one_sql
 from com.qode.qrew.v1.catalog.models.event import Event, EventStatus
 from com.qode.qrew.v1.catalog.models.organisation import Organisation
 from com.qode.qrew.v1.catalog.models.venue import Venue
 from com.qode.qrew.v1.catalog.repositories.event import EventRepository
 from com.qode.qrew.v1.catalog.repositories.organisation import OrganisationRepository
 from com.qode.qrew.v1.catalog.repositories.venue import VenueRepository
-from com.qode.qrew.v1.catalog.search.events import EVENTS_SEARCH_CONFIG
+from com.qode.qrew.v1.catalog.repositories.search.events import EVENTS_SEARCH_CONFIG
 
 logger = structlog.get_logger(__name__)
 
@@ -199,7 +200,7 @@ class EventService:
 
     @traced("event.publish")
     async def publish_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
-        async with redlock(f"event:{event_id}:lifecycle", ttl_seconds=10):
+        async with redlock(f"event:{event_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10):
             event = await self._repo.get_by_id(event_id)
             if event is None:
                 raise EventError("Event not found", field="event_id")
@@ -227,7 +228,7 @@ class EventService:
 
     @traced("event.cancel")
     async def cancel_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
-        async with redlock(f"event:{event_id}:lifecycle", ttl_seconds=10):
+        async with redlock(f"event:{event_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10):
             event = await self._repo.get_by_id(event_id)
             if event is None:
                 raise EventError("Event not found", field="event_id")

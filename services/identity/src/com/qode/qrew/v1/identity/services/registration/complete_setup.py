@@ -2,12 +2,12 @@ import uuid
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     create_access_token,
     create_refresh_token,
     extract_jti,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.session import Session
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User

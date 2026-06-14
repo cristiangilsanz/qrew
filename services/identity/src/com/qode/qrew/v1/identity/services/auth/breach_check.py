@@ -2,7 +2,7 @@ import uuid
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import is_password_pwned
+from com.qode.qrew.v1.identity.services.auth.security import is_password_pwned
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.services.audit import AuditService
 

@@ -3,12 +3,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.core.api import Page, clamp_limit, cursor_paginate
-from com.qode.qrew.v1.catalog.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.idempotency import idempotent
-from com.qode.qrew.v1.catalog.core.infra.database import get_db
-from com.qode.qrew.v1.catalog.core.infra.limiter import limiter
+from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
+from com.qode.qrew.v1.catalog.services.auth.auth import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from idempotency import idempotent
+from com.qode.qrew.v1.catalog.database import get_db
+from com.qode.qrew.v1.catalog.services.infra.limiter import limiter
 from com.qode.qrew.v1.catalog.models.venue import Venue
 from com.qode.qrew.v1.catalog.repositories.venue import VenueRepository
 from com.qode.qrew.v1.catalog.schemas.venue import (

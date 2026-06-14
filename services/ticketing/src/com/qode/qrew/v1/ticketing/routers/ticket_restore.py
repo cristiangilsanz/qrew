@@ -3,10 +3,10 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.ticketing.core.infra.database import get_db
-from com.qode.qrew.v1.ticketing.core.infra.limiter import limiter
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.services.auth.auth import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.ticketing.database import get_db
+from com.qode.qrew.v1.ticketing.services.infra.limiter import limiter
 from com.qode.qrew.v1.ticketing.services.ticket.restore import (
     TicketRestoreError,
     restore_frozen_ticket,
@@ -41,7 +41,7 @@ async def restore_ticket(
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
-    """Transition frozen → issued on a different, attested, fresh-reasserted device."""
+    """Restores a frozen ticket to active use on a newly enrolled device."""
     del request
     try:
         ticket = await restore_frozen_ticket(

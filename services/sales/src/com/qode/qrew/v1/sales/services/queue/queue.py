@@ -5,10 +5,10 @@ from typing import Any
 import structlog
 from jwt import InvalidTokenError
 
-from com.qode.qrew.v1.sales.core.audit import AuditService
-from com.qode.qrew.v1.sales.core.infra.errors import DomainError
-from com.qode.qrew.v1.sales.core.observability import traced
-from com.qode.qrew.v1.sales.core.queue.queue import (
+from com.qode.qrew.v1.sales.services.audit import AuditService
+from infra.errors import DomainError
+from observability import traced
+from com.qode.qrew.v1.sales.services.queue.redis_queue import (
     join_queue,
     queue_position,
     redeem_window_token,

@@ -88,7 +88,7 @@ def evaluate_gate(
     if now - attested > timedelta(hours=settings.ticket_qr_attestation_max_age_hours):
         return DenialReason.attestation
     if event_ctx := inputs.event_ctx:
-        if event_ctx.latitude is None or event_ctx.longitude is None or event_ctx.geofence_radius_m is None:
+        if event_ctx.latitude is None or event_ctx.longitude is None or event_ctx.geofence_radius_m is None:  # type: ignore[reportUnnecessaryComparison]
             return DenialReason.geofence
         distance = haversine_metres(
             lat1=latitude,

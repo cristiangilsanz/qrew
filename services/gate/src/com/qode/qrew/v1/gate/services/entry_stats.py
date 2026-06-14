@@ -8,7 +8,7 @@ import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.gate.core.observability import traced
+from observability import traced
 from com.qode.qrew.v1.gate.models.audit import AuditAction, AuditEvent
 from com.qode.qrew.v1.gate.models.ticket_context import TicketContext, TicketState
 from com.qode.qrew.v1.gate.settings import settings

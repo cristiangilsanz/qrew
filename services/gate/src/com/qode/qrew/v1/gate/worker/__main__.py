@@ -1,4 +1,4 @@
-"""Gate NATS worker: subscribes to ticketing events and updates ticket_context."""
+"""Subscribes to ticket state events and keeps the local projection up to date."""
 import asyncio
 
 import nats
@@ -11,7 +11,7 @@ logger = structlog.get_logger(__name__)
 
 
 async def _run() -> None:
-    nc = await nats.connect(settings.nats_url)
+    nc = await nats.connect(settings.nats_url)  # type: ignore[misc]
     await logger.ainfo("worker.connected", nats_url=settings.nats_url)
     await run_projector(nc)
     try:

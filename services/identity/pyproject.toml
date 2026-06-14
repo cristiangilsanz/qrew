@@ -40,6 +40,12 @@ dependencies = [
     "geoip2>=5.2.0",
     "nats-py>=2.7",
     "common",
+    "infra",
+    "observability",
+    "pagination",
+    "idempotency",
+    "jobs",
+    "security",
 ]
 
 [project.scripts]
@@ -63,6 +69,12 @@ dev = [
 
 [tool.uv.sources]
 common = { workspace = true }
+infra = { workspace = true }
+observability = { workspace = true }
+pagination = { workspace = true }
+idempotency = { workspace = true }
+jobs = { workspace = true }
+security = { workspace = true }
 
 [tool.uv]
 venvPath = "../.."

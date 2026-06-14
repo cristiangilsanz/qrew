@@ -4,11 +4,11 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.gate.core.infra.database import Base
+from com.qode.qrew.v1.gate.database import Base
 
 
 class Event(Base):
-    """Minimal read-only mapping of catalog.events."""
+    """Minimal read-only projection of a catalog event."""
 
     __tablename__ = "events"
     __table_args__ = {"schema": "catalog"}
@@ -18,7 +18,7 @@ class Event(Base):
 
 
 class OrganisationMember(Base):
-    """Minimal read-only mapping of catalog.organisation_members."""
+    """Minimal read-only projection of a catalog organisation membership."""
 
     __tablename__ = "organisation_members"
     __table_args__ = {"schema": "catalog"}

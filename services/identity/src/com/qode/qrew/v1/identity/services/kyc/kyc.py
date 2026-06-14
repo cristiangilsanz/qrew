@@ -3,8 +3,8 @@ import hashlib
 import structlog
 from cryptography.fernet import Fernet
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
-from com.qode.qrew.v1.identity.core.storage import storage
+from infra.errors import DomainError
+from com.qode.qrew.v1.identity.services.storage import storage
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository

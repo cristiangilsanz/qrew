@@ -3,7 +3,7 @@ from typing import NoReturn
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     create_access_token,
     create_refresh_token,
     create_setup_token,
@@ -11,8 +11,8 @@ from com.qode.qrew.v1.identity.core.auth.security import (
     hash_password,
     verify_password,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
-from com.qode.qrew.v1.identity.core.observability import traced
+from infra.errors import DomainError
+from observability import traced
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.session import Session
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
@@ -234,7 +234,7 @@ class LoginService:
             await logger.awarning("anomaly_check_error", user_id=str(user.id))
 
     async def _enforce_session_cap(self, user_id: uuid.UUID) -> None:
-        """Delegate session-cap enforcement to the dedicated enforcer."""
+        """Enforces the maximum allowed number of concurrent sessions per user."""
         if self._session_cap is None:
             return
         await self._session_cap.enforce(user_id)
@@ -269,7 +269,7 @@ class LoginService:
     async def resolve_bound_device(
         self, user_id: uuid.UUID, device_id: uuid.UUID | None
     ) -> uuid.UUID | None:
-        """Resolve an optional device hint to a bound non-revoked device id."""
+        """Looks up and validates an optional device hint against the user's registered devices."""
         if device_id is None or self._device_repo is None:
             return None
         device = await self._device_repo.get_by_id(device_id)

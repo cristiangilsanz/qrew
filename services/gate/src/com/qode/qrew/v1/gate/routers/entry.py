@@ -7,11 +7,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.gate.core.auth.auth import get_scanner
-from com.qode.qrew.v1.gate.core.infra.database import get_db
-from com.qode.qrew.v1.gate.core.infra.limiter import limiter
-from com.qode.qrew.v1.gate.core.infra.redis import get_redis
-from com.qode.qrew.v1.gate.core.scanner.security import decode_scanner_token
+from com.qode.qrew.v1.gate.services.auth.auth import get_scanner
+from com.qode.qrew.v1.gate.database import get_db
+from com.qode.qrew.v1.gate.services.infra.limiter import limiter
+from com.qode.qrew.v1.gate.redis import get_redis
+from com.qode.qrew.v1.gate.services.scanner.security import decode_scanner_token
 from com.qode.qrew.v1.gate.models.scanner import Scanner
 from com.qode.qrew.v1.gate.schemas.entry import EntryValidateRequest, EntryValidateResponse
 from com.qode.qrew.v1.gate.services.audit import AuditService

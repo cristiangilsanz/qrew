@@ -5,11 +5,11 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 
-from com.qode.qrew.v1.sales.core.idempotency import close_idempotency_store
-from com.qode.qrew.v1.sales.core.locking import close_locking
-from com.qode.qrew.v1.sales.core.observability import shutdown_tracing
-from com.qode.qrew.v1.sales.jobs.queue_admit import admit_next
-from com.qode.qrew.v1.sales.jobs.reservation_sweep import sweep_expired
+from com.qode.qrew.v1.sales.services.idempotency.middleware import close_idempotency_store
+from infra.locking import close_locking
+from observability import shutdown_tracing
+from com.qode.qrew.v1.sales.worker.jobs.queue_admit import admit_next
+from com.qode.qrew.v1.sales.worker.jobs.reservation_sweep import sweep_expired
 from com.qode.qrew.v1.sales.services.fraud.dependencies import close_fraud
 from com.qode.qrew.v1.sales.settings import settings
 

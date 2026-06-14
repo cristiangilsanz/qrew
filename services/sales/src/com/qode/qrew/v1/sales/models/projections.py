@@ -1,4 +1,4 @@
-"""CQRS-lite read models for sales: event context, inventory, and fraud projections."""
+"""Read models for the sales service covering event state, inventory, and fraud detection."""
 
 import uuid
 from datetime import datetime
@@ -7,7 +7,7 @@ from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.sales.core.infra.database import Base
+from com.qode.qrew.v1.sales.database import Base
 
 
 class EventContext(Base):
@@ -37,7 +37,7 @@ class EventContext(Base):
 
 
 class TicketTypeInventory(Base):
-    """Sales-owned inventory for a ticket type: capacity + reserved_count + price."""
+    """Sales-owned inventory projection tracking capacity, reservations, and pricing per ticket type."""
 
     __tablename__ = "ticket_type_inventory"
     __table_args__ = ({"schema": "sales"},)

@@ -15,7 +15,7 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.models.passkey.passkey import PasskeyCredential
 from com.qode.qrew.v1.identity.schemas.passkey.passkey import (
     PasskeyAuthenticationCompleteRequest,

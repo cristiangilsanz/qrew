@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.identity.database import AsyncSessionLocal
 from com.qode.qrew.v1.identity.models.audit.audit import AuditEvent
 from com.qode.qrew.v1.identity.repositories.audit.audit import AuditRepository
 
@@ -13,7 +13,7 @@ _ME_PATTERN = "me.{user_id}"
 
 
 class AuditService:
-    """Publishes audit events to NATS. audit.events.v1 → audit service chain. ws.fanout.v1 → hub."""
+    """Forwards audit events to the message broker and fans out real-time notifications to connected users."""
 
     async def record(
         self,
@@ -76,7 +76,7 @@ class AuditService:
                 await logger.awarning("ws_fanout_publish_failed", action=action, error=repr(exc))
 
     async def get_recent_login_events(self, user_id: uuid.UUID, limit: int = 5) -> list[AuditEvent]:
-        """List the most recent successful logins for a user (direct DB read)."""
+        """Returns the most recent successful login events for a given user."""
         async with AsyncSessionLocal() as session:
             repo = AuditRepository(session)
             return await repo.get_recent_login_events(user_id, limit)

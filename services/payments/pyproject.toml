@@ -34,10 +34,14 @@ dependencies = [
     "nats-py>=2.7",
     "stripe>=10.0",
     "common",
+    "infra",
+    "observability",
 ]
 
 [tool.uv.sources]
 common = { workspace = true }
+infra = { workspace = true }
+observability = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.payments.__main__:main"
@@ -60,13 +64,13 @@ packages = ["src/com"]
 # ── Pyright ───────────────────────────────────────────────────────────────────
 
 [tool.pyright]
+reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
 extraPaths = ["../../packages/common/src"]
 venvPath = "../.."
 venv = ".venv"
-reportMissingTypeStubs = false
 
 # ── Pytest ────────────────────────────────────────────────────────────────────
 

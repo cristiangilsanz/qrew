@@ -3,8 +3,8 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.core.jobs import enqueue
+from com.qode.qrew.v1.identity.database import AsyncSessionLocal
+from com.qode.qrew.v1.identity.worker.jobs.enqueue import enqueue
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.models.notification import (
     Notification,

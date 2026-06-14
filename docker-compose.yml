@@ -302,14 +302,14 @@ services:
       nats:
         condition: service_healthy
 
-  hub:
+  gateway:
     build:
       context: .
-      dockerfile: services/hub/Dockerfile
+      dockerfile: services/gateway/Dockerfile
     ports:
       - "8008:8008"
     env_file:
-      - ./services/hub/.env
+      - ./services/gateway/.env
     environment:
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
@@ -364,6 +364,17 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62
+    container_name: qrew-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
 
 volumes:
   postgres_data:

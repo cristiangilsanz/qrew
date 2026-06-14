@@ -5,11 +5,11 @@ from sqlalchemy import Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.gate.core.infra.database import Base
+from com.qode.qrew.v1.gate.database import Base
 
 
 class User(Base):
-    """Minimal read-only mapping of identity.users (gate never writes here)."""
+    """Read-only local projection of user identity state."""
 
     __tablename__ = "users"
     __table_args__ = {"schema": "identity"}

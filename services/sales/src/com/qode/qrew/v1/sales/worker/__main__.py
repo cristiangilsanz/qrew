@@ -1,4 +1,4 @@
-"""Sales NATS worker process: subscribes to payments, catalog, and identity streams."""
+"""Entry point for the sales background worker process."""
 
 import asyncio
 

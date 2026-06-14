@@ -47,7 +47,7 @@ class FingerprintService:
         user_agent: str | None,
         ip_address: str | None,
     ) -> bool:
-        """Upsert fingerprint record; flag if multi-account or headless."""
+        """Records a device fingerprint and flags suspicious activity patterns."""
         record = DeviceFingerprint(
             id=uuid.uuid4(),
             user_id=user.id,
@@ -148,5 +148,5 @@ class FingerprintService:
             )
 
     async def get_by_hash(self, fingerprint_hash: str) -> list[uuid.UUID]:
-        """Return all distinct user_ids linked to the given hash."""
+        """Returns all user identifiers associated with a given device fingerprint."""
         return await self._repo.get_user_ids_by_hash(fingerprint_hash)

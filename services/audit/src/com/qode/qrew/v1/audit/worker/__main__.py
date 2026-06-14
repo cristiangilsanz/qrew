@@ -1,4 +1,4 @@
-"""Audit NATS worker process: subscribes to audit.events.v1 and runs nightly verify."""
+"""Entry point for the audit worker process that consumes events and runs scheduled verification."""
 
 import asyncio
 
@@ -19,7 +19,7 @@ async def main() -> None:
         await logger.awarning("audit_worker.no_nats_url")
         return
 
-    from com.qode.qrew.v1.audit.jobs.verify_chain import run_nightly_verify
+    from com.qode.qrew.v1.audit.worker.jobs.verify_chain import run_nightly_verify
     from com.qode.qrew.v1.audit.worker.events import run_audit_event_subscriber
 
     await asyncio.gather(

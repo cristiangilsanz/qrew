@@ -1,4 +1,4 @@
-"""Ticketing NATS worker: subscribes to sales.reservation.* to drive ticket state transitions."""
+"""Subscribes to reservation lifecycle events and drives ticket state transitions."""
 
 import asyncio
 import json
@@ -7,9 +7,10 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.ticketing.core.locking import redlock
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.database import AsyncSessionLocal
+from infra.locking import redlock
+from com.qode.qrew.v1.ticketing.settings import settings
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
 from com.qode.qrew.v1.ticketing.repositories.ticket import TicketRepository
 from com.qode.qrew.v1.ticketing.services.ticket.transition import transition_ticket
@@ -31,7 +32,7 @@ async def _parse(raw: bytes) -> dict[str, Any] | None:
 
 
 async def handle_reservation_created(raw: bytes) -> None:
-    """Create ticket rows in `reserved` state when sales creates a reservation."""
+    """Creates tickets in the reserved state when a new reservation is received."""
     data = await _parse(raw)
     if data is None:
         return
@@ -46,7 +47,7 @@ async def handle_reservation_created(raw: bytes) -> None:
         return
 
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:tickets", ttl_seconds=10):
+        async with redlock(f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10):
             existing = await TicketRepository(session).list_by_reservation(reservation_id)
             if existing:
                 await logger.ainfo(
@@ -85,7 +86,7 @@ async def handle_reservation_paid(raw: bytes) -> None:
         return
 
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:tickets", ttl_seconds=10):
+        async with redlock(f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10):
             audit = AuditService()
             tickets = await TicketRepository(session).list_by_reservation(reservation_id)
             for ticket in tickets:
@@ -128,7 +129,7 @@ async def _cancel_tickets_for_reservation(
 ) -> None:
     cancellable = {TicketState.reserved, TicketState.issued}
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:tickets", ttl_seconds=10):
+        async with redlock(f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10):
             audit = AuditService()
             tickets = await TicketRepository(session).list_by_reservation(reservation_id)
             for ticket in tickets:

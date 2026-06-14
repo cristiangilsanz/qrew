@@ -1,4 +1,4 @@
-"""Monolith NATS worker: subscribes to catalog.* lifecycle events."""
+"""Subscribes to catalog lifecycle events from the message broker."""
 
 import asyncio
 import json
@@ -7,8 +7,8 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.core.outbox import publish_via_outbox
+from com.qode.qrew.v1.identity.database import AsyncSessionLocal
+from com.qode.qrew.v1.identity.services.outbox import publish_via_outbox
 
 logger = structlog.get_logger(__name__)
 

@@ -1,4 +1,4 @@
-"""Ticketing NATS worker: updates DeviceContext projection and freezes tickets on device revoke."""
+"""Handles device lifecycle events and updates the local device projection and ticket states accordingly."""
 
 import asyncio
 import json
@@ -8,8 +8,8 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.database import AsyncSessionLocal
 from com.qode.qrew.v1.ticketing.models.ticket import TicketState
 from com.qode.qrew.v1.ticketing.repositories.projections import DeviceContextRepository
 from com.qode.qrew.v1.ticketing.repositories.ticket import TicketRepository

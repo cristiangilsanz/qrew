@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 
-from com.qode.qrew.v1.catalog.core.idempotency import close_idempotency_store
-from com.qode.qrew.v1.catalog.core.locking import close_locking
-from com.qode.qrew.v1.catalog.core.observability import shutdown_tracing
+from com.qode.qrew.v1.catalog.services.idempotency.middleware import close_idempotency_store
+from infra.locking import close_locking
+from observability import shutdown_tracing
 from com.qode.qrew.v1.catalog.settings import settings
 
 logger = structlog.get_logger(__name__)

@@ -1,4 +1,4 @@
-"""Sales NATS worker: updates UserAgeContext and FingerprintContext projections from identity events."""
+"""Subscribes to identity events and updates user age and fingerprint context projections."""
 
 import asyncio
 import json
@@ -8,7 +8,7 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.sales.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.sales.database import AsyncSessionLocal
 from com.qode.qrew.v1.sales.repositories.projections import (
     FingerprintContextRepository,
     UserAgeContextRepository,

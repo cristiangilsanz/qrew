@@ -8,10 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.ticketing.core.infra.database import get_db
-from com.qode.qrew.v1.ticketing.core.infra.limiter import limiter
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.services.auth.auth import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.ticketing.database import get_db
+from com.qode.qrew.v1.ticketing.services.infra.limiter import limiter
 from com.qode.qrew.v1.ticketing.schemas.ticket_qr import QrIssueRequest, QrResponse
 from com.qode.qrew.v1.ticketing.services.ticket_qr.gate import (
     DenialReason,

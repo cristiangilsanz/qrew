@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
-from com.qode.qrew.v1.identity.core.auth import jwt_keys
+from com.qode.qrew.v1.identity.services.auth import jwt_keys
 from com.qode.qrew.v1.identity.settings import settings
 
 router = APIRouter(prefix="/internal", include_in_schema=False)
@@ -31,7 +31,7 @@ class _SignResponse(BaseModel):
 
 @router.post("/_internal/jwt/sign", response_model=_SignResponse)
 async def sign_jwt(body: _SignRequest, request: Request) -> _SignResponse:
-    """Sign a JWT for a given purpose; called by sibling services."""
+    """Issues a signed token for a given purpose on behalf of a sibling service."""
     _require_internal_key(request)
     if body.purpose not in _ALLOWED_PURPOSES:
         raise HTTPException(

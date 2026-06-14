@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 import structlog
 from sqlalchemy import text
 
-from com.qode.qrew.v1.audit.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.audit.database import AsyncSessionLocal
 from com.qode.qrew.v1.audit.models.audit_event import AuditAction
 from com.qode.qrew.v1.audit.repositories.audit import AuditRepository, build_event
 
@@ -14,7 +14,7 @@ ADVISORY_LOCK = "SELECT pg_advisory_xact_lock(hashtext('audit_events'))"
 
 
 class AuditService:
-    """Merkle-chained audit log writer. Only the audit service writes to audit.audit_events."""
+    """Writes tamper-evident audit records using a hash chain."""
 
     async def record(
         self,

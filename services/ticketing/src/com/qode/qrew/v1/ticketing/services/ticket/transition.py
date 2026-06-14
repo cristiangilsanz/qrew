@@ -7,8 +7,8 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.infra.errors import DomainError
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from infra.errors import DomainError
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
 
 logger = structlog.get_logger(__name__)

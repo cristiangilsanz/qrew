@@ -40,7 +40,7 @@ async def close_fraud() -> None:
 
 
 async def build_engine(session: AsyncSession) -> FraudRuleEngine:
-    """Compose the fraud engine; loads projection data for user-age and fingerprint signals."""
+    """Assembles the fraud detection engine with all available signals."""
     redis_client = _shared_redis()
 
     # Pre-load projections needed by signals (avoids per-signal async DB calls)
@@ -68,7 +68,7 @@ async def build_engine_for_user(
     user_id: uuid.UUID,
     fingerprint_hash: str | None,
 ) -> FraudRuleEngine:
-    """Build engine with pre-fetched projections for a specific user/fingerprint."""
+    """Assembles the fraud detection engine with projection data pre-loaded for a specific user."""
     redis_client = _shared_redis()
 
     age_repo = UserAgeContextRepository(session)

@@ -7,7 +7,7 @@ from com.qode.qrew.v1.sales.settings import settings
 
 
 class AccountAgeSignal:
-    """Younger accounts score higher; reads registered_at from UserAgeContext projection."""
+    """Scores fraud risk based on how recently the account was created, with newer accounts receiving higher scores."""
 
     name = "account_age"
 

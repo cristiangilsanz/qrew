@@ -6,14 +6,16 @@ import aiosmtplib
 import structlog
 
 from com.qode.qrew.v1.identity.settings import settings
-from com.qode.qrew.v1.identity.templates.email_change_alert_email import (
+from com.qode.qrew.v1.identity.services.notification.templates.email_change_alert_email import (
     email_change_alert_email,
 )
-from com.qode.qrew.v1.identity.templates.email_change_verify_email import (
+from com.qode.qrew.v1.identity.services.notification.templates.email_change_verify_email import (
     email_change_verify_email,
 )
-from com.qode.qrew.v1.identity.templates.kyc_status_email import kyc_status_email
-from com.qode.qrew.v1.identity.templates.verification_link_email import (
+from com.qode.qrew.v1.identity.services.notification.templates.kyc_status_email import (
+    kyc_status_email,
+)
+from com.qode.qrew.v1.identity.services.notification.templates.verification_link_email import (
     verification_link_email,
 )
 

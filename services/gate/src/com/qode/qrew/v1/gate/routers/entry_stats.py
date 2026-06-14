@@ -6,10 +6,10 @@ import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.gate.core.auth.auth import get_current_user
-from com.qode.qrew.v1.gate.core.infra.database import get_db
-from com.qode.qrew.v1.gate.core.infra.limiter import limiter
-from com.qode.qrew.v1.gate.core.infra.redis import get_redis
+from com.qode.qrew.v1.gate.services.auth.auth import get_current_user
+from com.qode.qrew.v1.gate.database import get_db
+from com.qode.qrew.v1.gate.services.infra.limiter import limiter
+from com.qode.qrew.v1.gate.redis import get_redis
 from com.qode.qrew.v1.gate.models.identity import User
 from com.qode.qrew.v1.gate.repositories.event import EventRepository
 from com.qode.qrew.v1.gate.repositories.organisation import OrganisationMemberRepository

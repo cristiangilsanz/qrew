@@ -1,4 +1,4 @@
-"""NATS subscriber that keeps gate.ticket_contexts in sync with ticketing.tickets."""
+"""Subscribes to ticket state change events and keeps the local ticket projection up to date."""
 import json
 import uuid
 from typing import Any
@@ -6,10 +6,8 @@ from typing import Any
 import structlog
 from nats.aio.client import Client as NatsClient
 
-from com.qode.qrew.v1.gate.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.gate.database import AsyncSessionLocal
 from com.qode.qrew.v1.gate.repositories.ticket_context import TicketContextRepository
-from com.qode.qrew.v1.gate.settings import settings
-
 logger = structlog.get_logger(__name__)
 
 SUBJECT = "ticketing.ticket.state_changed"
@@ -68,7 +66,7 @@ async def handle_ticket_state_changed(msg: Any) -> None:
 
 
 async def run_projector(nc: NatsClient) -> None:
-    js = nc.jetstream()
+    js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
     try:
         await js.subscribe(SUBJECT, cb=handle_ticket_state_changed, durable="gate-projector")
         await logger.ainfo("ticket_projector.subscribed", subject=SUBJECT)

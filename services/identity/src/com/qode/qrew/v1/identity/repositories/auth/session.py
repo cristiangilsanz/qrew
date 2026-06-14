@@ -12,14 +12,14 @@ class SessionRepository:
         self._session = session
 
     async def create(self, session: Session) -> Session:
-        """Persist a new Session."""
+        """Persist a new session record."""
         self._session.add(session)
         await self._session.flush()
         await self._session.refresh(session)
         return session
 
     async def get_by_jti(self, jti: str) -> Session | None:
-        """Return the session matching the given JTI."""
+        """Return the session matching the given token identifier."""
         result = await self._session.execute(select(Session).where(Session.jti == jti).limit(1))
         return result.scalar_one_or_none()
 
@@ -38,7 +38,7 @@ class SessionRepository:
         return int(result.scalar_one())
 
     async def get_oldest_by_user_id(self, user_id: uuid.UUID, limit: int) -> list[Session]:
-        """Return the user's oldest sessions, ordered by created_at ASC."""
+        """Return the oldest sessions for a user up to a specified count."""
         result = await self._session.execute(
             select(Session)
             .where(Session.user_id == user_id)
@@ -65,12 +65,12 @@ class SessionRepository:
             await self._session.flush()
 
     async def delete_by_jti(self, jti: str) -> None:
-        """Delete the session with the given JTI."""
+        """Delete the session matching the given token identifier."""
         await self._session.execute(delete(Session).where(Session.jti == jti))
         await self._session.flush()
 
     async def delete_all_by_user_id(self, user_id: uuid.UUID) -> list[str]:
-        """Delete all sessions for the user and return their JTIs."""
+        """Delete all sessions for a user and return their token identifiers."""
         result = await self._session.execute(select(Session.jti).where(Session.user_id == user_id))
         jtis = list(result.scalars().all())
         await self._session.execute(delete(Session).where(Session.user_id == user_id))

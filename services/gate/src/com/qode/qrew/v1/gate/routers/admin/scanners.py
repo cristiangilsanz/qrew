@@ -2,9 +2,9 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from com.qode.qrew.v1.gate.core.auth.auth import get_admin_user
-from com.qode.qrew.v1.gate.core.infra.database import get_db
-from com.qode.qrew.v1.gate.core.infra.limiter import limiter
+from com.qode.qrew.v1.gate.services.auth.auth import get_admin_user
+from com.qode.qrew.v1.gate.database import get_db
+from com.qode.qrew.v1.gate.services.infra.limiter import limiter
 from com.qode.qrew.v1.gate.models.identity import User
 from com.qode.qrew.v1.gate.repositories.scanner import ScannerRepository
 from com.qode.qrew.v1.gate.schemas.scanner import (

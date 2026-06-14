@@ -6,7 +6,7 @@ from sqlalchemy import DateTime, Index, Integer, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.catalog.core.infra.database import Base
+from com.qode.qrew.v1.catalog.database import Base
 
 
 class Venue(Base):

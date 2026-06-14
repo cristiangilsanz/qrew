@@ -7,10 +7,10 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.sales.core.audit import AuditService
-from com.qode.qrew.v1.sales.core.infra.errors import DomainError
-from com.qode.qrew.v1.sales.core.locking import redlock
-from com.qode.qrew.v1.sales.core.observability import traced
+from com.qode.qrew.v1.sales.services.audit import AuditService
+from infra.errors import DomainError
+from infra.locking import redlock
+from observability import traced
 from com.qode.qrew.v1.sales.models.projections import TicketTypeInventory
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
 from com.qode.qrew.v1.sales.repositories.projections import (
@@ -31,7 +31,7 @@ class ReservationError(DomainError):
 
 
 class TierBusyError(DomainError):
-    """Raised when the ticket-type inventory row is locked by another transaction."""
+    """Raised when the inventory record is temporarily unavailable due to a concurrent update."""
 
 
 def _now() -> datetime:
@@ -39,12 +39,7 @@ def _now() -> datetime:
 
 
 class ReservationService:
-    """Business logic for the reservation aggregate.
-
-    Uses local CQRS projections (EventContext, TicketTypeInventory) instead of
-    cross-schema reads.  After committing, publishes NATS events so ticketing
-    can create / cancel ticket rows asynchronously.
-    """
+    """Manages the full lifecycle of ticket reservations, including creation, cancellation, and inventory coordination."""
 
     def __init__(
         self,
@@ -92,7 +87,7 @@ class ReservationService:
     ) -> Reservation:
         if quantity < 1:
             raise ReservationError("Quantity must be at least 1", field="quantity")
-        async with redlock(f"event:{event_id}:reserve:{user_id}", ttl_seconds=10):
+        async with redlock(f"event:{event_id}:reserve:{user_id}", redis_url=settings.redis_url, ttl_seconds=10):
             event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
             if event_ctx is None:
                 raise ReservationError("Event not found", field="event_id")
@@ -162,10 +157,10 @@ class ReservationService:
         risk_score: int = 0,
         requires_review: bool = False,
     ) -> Reservation:
-        """Like reserve() but allows events that require a queue token (token already consumed)."""
+        """Creates a reservation for events that require prior queue admission, assuming the queue token has already been validated."""
         if quantity < 1:
             raise ReservationError("Quantity must be at least 1", field="quantity")
-        async with redlock(f"event:{event_id}:reserve:{user_id}", ttl_seconds=10):
+        async with redlock(f"event:{event_id}:reserve:{user_id}", redis_url=settings.redis_url, ttl_seconds=10):
             event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
             if event_ctx is None:
                 raise ReservationError("Event not found", field="event_id")
@@ -237,7 +232,7 @@ class ReservationService:
                 "Paid reservations must be refunded, not cancelled",
                 field="status",
             )
-        async with redlock(f"reservation:{reservation_id}:lifecycle", ttl_seconds=10):
+        async with redlock(f"reservation:{reservation_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10):
             inventory = await self._lock_inventory_nowait(reservation.ticket_type_id)
             if inventory is None:
                 raise ReservationError("Ticket type not found", field="ticket_type_id")

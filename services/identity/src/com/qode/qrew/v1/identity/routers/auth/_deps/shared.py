@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from com.qode.qrew.v1.identity.core.registration.captcha import (
+from com.qode.qrew.v1.identity.services.registration.captcha import (
     CaptchaService,
     build_captcha_service,
 )

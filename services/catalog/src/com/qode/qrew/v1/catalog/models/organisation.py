@@ -6,7 +6,7 @@ from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, UniqueConstrain
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.catalog.core.infra.database import Base
+from com.qode.qrew.v1.catalog.database import Base
 
 
 class OrganisationRole(enum.StrEnum):

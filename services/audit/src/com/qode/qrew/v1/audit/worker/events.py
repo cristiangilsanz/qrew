@@ -1,4 +1,4 @@
-"""Audit NATS worker: consumes audit.events.v1 and writes Merkle-chained rows."""
+"""Subscribes to incoming audit events from the message broker and persists them as tamper-evident records."""
 
 import asyncio
 import json

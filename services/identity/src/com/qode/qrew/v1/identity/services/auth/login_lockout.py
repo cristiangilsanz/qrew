@@ -3,7 +3,7 @@ import uuid
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.services.audit import AuditService
 from com.qode.qrew.v1.identity.settings import settings
@@ -49,7 +49,7 @@ class LoginLockoutService:
         self._audit = audit
 
     async def check_not_locked(self, user_id: uuid.UUID) -> None:
-        """Raise LoginLockoutError if the account is currently locked."""
+        """Raises an error if the account is currently locked out."""
         ttl: int = await self._redis.ttl(_lock_key(user_id))
         if ttl > 0:
             raise LoginLockoutError(
@@ -111,7 +111,7 @@ class LoginLockoutService:
 
     @staticmethod
     def _duration_for_attempts(attempts: int) -> int | None:
-        """Return the lockout duration in seconds for this attempt count, or None."""
+        """Returns the lockout duration in seconds for the given attempt count, or nothing if no threshold is matched."""
         match: int | None = None
         for threshold, duration in _backoff_schedule():
             if attempts == threshold:

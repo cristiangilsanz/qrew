@@ -33,10 +33,14 @@ dependencies = [
     "cryptography>=42.0",
     "nats-py>=2.7",
     "common",
+    "infra",
+    "observability",
 ]
 
 [tool.uv.sources]
 common = { workspace = true }
+infra = { workspace = true }
+observability = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.gate.__main__:main"
@@ -62,20 +66,20 @@ packages = ["src/com"]
 # ── Pyright ───────────────────────────────────────────────────────────────────
 
 [tool.pyright]
+reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/common/src"]
+extraPaths = ["../../packages/common/src", "../../packages/infra/src", "../../packages/observability/src"]
 venvPath = "../.."
 venv = ".venv"
-reportMissingTypeStubs = false
 
 # ── Pytest ────────────────────────────────────────────────────────────────────
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/common/src"]
+pythonpath = ["src", "../../packages/common/src", "../../packages/infra/src", "../../packages/observability/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
 

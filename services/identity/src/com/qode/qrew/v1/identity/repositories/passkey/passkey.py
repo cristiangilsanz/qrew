@@ -11,7 +11,7 @@ class PasskeyCredentialRepository:
         self._session = session
 
     async def create(self, credential: PasskeyCredential) -> PasskeyCredential:
-        """Persist a new PasskeyCredential."""
+        """Persists a new passkey credential to the database."""
         self._session.add(credential)
         await self._session.flush()
         await self._session.refresh(credential)
@@ -27,7 +27,7 @@ class PasskeyCredentialRepository:
         return result.scalar_one_or_none()
 
     async def save(self, credential: PasskeyCredential) -> PasskeyCredential:
-        """Flush pending changes for an already-tracked PasskeyCredential."""
+        """Persists pending changes for an already-tracked passkey credential."""
         await self._session.flush()
         await self._session.refresh(credential)
         return credential
@@ -61,7 +61,7 @@ class PasskeyCredentialRepository:
         await self._session.flush()
 
     async def has_passkey(self, user_id: uuid.UUID) -> bool:
-        """Return True if the user has at least one registered passkey."""
+        """Checks whether the user has at least one registered passkey."""
         result = await self._session.execute(
             select(PasskeyCredential.id).where(PasskeyCredential.user_id == user_id).limit(1)
         )

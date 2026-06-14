@@ -5,12 +5,12 @@ import structlog
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.payments.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.payments.core.infra.database import get_db
-from com.qode.qrew.v1.payments.core.infra.limiter import limiter
-from com.qode.qrew.v1.payments.core.locking.errors import LockUnavailableError
-from com.qode.qrew.v1.payments.core.payments import StripeClient, StripeRealClient
-from com.qode.qrew.v1.payments.core.payments.webhook_idempotency import claim_event
+from com.qode.qrew.v1.payments.services.auth.auth import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.payments.database import get_db
+from com.qode.qrew.v1.payments.services.infra.limiter import limiter
+from infra.locking import LockUnavailableError
+from com.qode.qrew.v1.payments.services import StripeClient, StripeRealClient
+from com.qode.qrew.v1.payments.services.webhook_idempotency import claim_event
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
 from com.qode.qrew.v1.payments.schemas.payment import PaymentInitiateResponse
 from com.qode.qrew.v1.payments.services.payment import (

@@ -5,15 +5,15 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from com.qode.qrew.v1.ticketing.core.api.errors import default_responses, register_exception_handlers
-from com.qode.qrew.v1.ticketing.core.api.probes import router as probes_router
-from com.qode.qrew.v1.ticketing.core.idempotency import IdempotencyMiddleware
-from com.qode.qrew.v1.ticketing.core.infra.limiter import limiter
-from com.qode.qrew.v1.ticketing.core.infra.middleware import (
+from com.qode.qrew.v1.ticketing.routers.errors import default_responses, register_exception_handlers
+from com.qode.qrew.v1.ticketing.routers.health import router as probes_router
+from com.qode.qrew.v1.ticketing.services.idempotency.middleware import IdempotencyMiddleware
+from com.qode.qrew.v1.ticketing.services.infra.limiter import limiter
+from infra.middleware import (
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
 )
-from com.qode.qrew.v1.ticketing.core.observability import setup_tracing
+from observability import setup_tracing
 from com.qode.qrew.v1.ticketing.lifespan import lifespan
 from com.qode.qrew.v1.ticketing.routers import router as v1_router
 from com.qode.qrew.v1.ticketing.settings import settings
@@ -41,7 +41,12 @@ app = FastAPI(
     responses=default_responses,
 )
 
-setup_tracing(app)
+setup_tracing(
+    service_name=settings.app_name,
+    version=settings.version,
+    environment="development" if settings.debug else "production",
+    app=app,
+)
 register_exception_handlers(app)
 
 app.state.limiter = limiter

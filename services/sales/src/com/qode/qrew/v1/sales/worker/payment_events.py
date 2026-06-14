@@ -1,4 +1,4 @@
-"""Sales NATS worker: subscribes to payments.* to drive reservation state transitions."""
+"""Listens for payment events from the message broker and drives reservation state transitions."""
 
 import asyncio
 import json
@@ -8,9 +8,10 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.sales.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.sales.core.locking import redlock
+from com.qode.qrew.v1.sales.database import AsyncSessionLocal
+from infra.locking import redlock
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
+from com.qode.qrew.v1.sales.settings import settings
 from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 
@@ -42,7 +43,7 @@ async def handle_payment_succeeded(raw: bytes) -> None:
         return
 
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:lifecycle", ttl_seconds=10):
+        async with redlock(f"reservation:{reservation_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10):
             repo = ReservationRepository(session)
             reservation = await repo.get_by_id(reservation_id)
             if reservation is None:
@@ -101,7 +102,7 @@ async def _cancel_reservation(
 ) -> None:
     reservation: Reservation | None = None
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:lifecycle", ttl_seconds=10):
+        async with redlock(f"reservation:{reservation_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10):
             repo = ReservationRepository(session)
             reservation = await repo.get_by_id(reservation_id)
             if reservation is None:

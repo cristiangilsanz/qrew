@@ -3,11 +3,7 @@ from com.qode.qrew.v1.identity.services.notification import NotificationService
 
 
 class NotificationDispatcher:
-    """Backwards-compatible shim around the unified notification service.
-
-    Existing callers keep using the same method names; everything now flows
-    through persisted notification rows and the background delivery worker.
-    """
+    """Routes notification requests through the unified notification service."""
 
     def __init__(self, service: NotificationService | None = None) -> None:
         self._service = service or NotificationService()
@@ -95,5 +91,5 @@ class NotificationDispatcher:
 
 
 def build_notification_dispatcher() -> NotificationDispatcher:
-    """Build a NotificationDispatcher wired to the unified service."""
+    """Constructs and returns a fully wired notification dispatcher."""
     return NotificationDispatcher()

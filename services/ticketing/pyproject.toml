@@ -24,10 +24,22 @@ dependencies = [
     "nats-py>=2.6",
     "arq>=0.25",
     "common",
+    "infra",
+    "observability",
+    "pagination",
+    "idempotency",
+    "jobs",
+    "security",
 ]
 
 [tool.uv.sources]
 common = { workspace = true }
+infra = { workspace = true }
+observability = { workspace = true }
+pagination = { workspace = true }
+idempotency = { workspace = true }
+jobs = { workspace = true }
+security = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.ticketing.__main__:main"
@@ -38,6 +50,7 @@ venvPath = "../.."
 venv = ".venv"
 
 [tool.pyright]
+reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]

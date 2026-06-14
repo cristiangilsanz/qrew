@@ -3,8 +3,8 @@ from datetime import UTC, datetime
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import verify_password
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.services.auth.security import verify_password
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
@@ -39,7 +39,7 @@ class AccountDeletionService:
         self._audit = audit
 
     async def delete(self, user: User, current_password: str) -> None:
-        """Re-auth, anonymise PII, kill sessions + passkeys, mark soft-deleted."""
+        """Verifies the current password then permanently removes all user data and active sessions."""
         if user.deleted_at is not None:
             raise AccountDeletionError("Account is already deleted")
 
@@ -69,7 +69,7 @@ class AccountDeletionService:
 
     @staticmethod
     def _anonymise(user: User) -> None:
-        """Replace PII with tombstone values; preserve uniqueness on email/phone."""
+        """Overwrites all personal data with placeholder values while keeping the account record intact."""
         tombstone = str(user.id)
         user.full_name = "Deleted User"
         user.email = f"deleted-{tombstone}@deleted.local"

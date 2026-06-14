@@ -4,7 +4,9 @@ import httpx
 import structlog
 
 from com.qode.qrew.v1.identity.settings import settings
-from com.qode.qrew.v1.identity.templates.verification_otp_sms import verification_otp_sms
+from com.qode.qrew.v1.identity.services.notification.templates.verification_otp_sms import (
+    verification_otp_sms,
+)
 
 from ._masking import mask_phone_number
 

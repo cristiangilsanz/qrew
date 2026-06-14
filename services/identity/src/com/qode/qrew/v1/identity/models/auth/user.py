@@ -6,8 +6,8 @@ from sqlalchemy import Boolean, DateTime, Enum, LargeBinary, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.identity.core.auth import pii_crypto
-from com.qode.qrew.v1.identity.core.infra.database import Base
+from com.qode.qrew.v1.identity.services.auth import pii_crypto
+from com.qode.qrew.v1.identity.database import Base
 
 
 class KycStatus(enum.StrEnum):

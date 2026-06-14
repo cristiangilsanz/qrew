@@ -3,9 +3,9 @@ import uuid
 
 import structlog
 
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.infra.errors import DomainError
-from com.qode.qrew.v1.catalog.core.observability import traced
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from infra.errors import DomainError
+from observability import traced
 from com.qode.qrew.v1.catalog.models.organisation import (
     Organisation,
     OrganisationMember,

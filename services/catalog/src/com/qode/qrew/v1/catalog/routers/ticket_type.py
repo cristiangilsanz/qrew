@@ -3,13 +3,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.core.api import Page, clamp_limit, cursor_paginate
-from com.qode.qrew.v1.catalog.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.idempotency import idempotent
-from com.qode.qrew.v1.catalog.core.infra.database import get_db
-from com.qode.qrew.v1.catalog.core.infra.limiter import limiter
-from com.qode.qrew.v1.catalog.core.locking.errors import LockUnavailableError
+from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
+from com.qode.qrew.v1.catalog.services.auth.auth import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from idempotency import idempotent
+from com.qode.qrew.v1.catalog.database import get_db
+from com.qode.qrew.v1.catalog.services.infra.limiter import limiter
+from infra.locking import LockUnavailableError
 from com.qode.qrew.v1.catalog.models.organisation import OrganisationRole, role_rank
 from com.qode.qrew.v1.catalog.models.ticket_type import TicketType
 from com.qode.qrew.v1.catalog.repositories.event import EventRepository

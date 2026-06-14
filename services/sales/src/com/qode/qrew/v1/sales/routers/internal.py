@@ -1,4 +1,4 @@
-"""Internal API routes consumed only by sibling services (payments, etc.)."""
+"""Internal API routes consumed only by sibling services."""
 
 import uuid
 from datetime import UTC, datetime
@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.sales.core.infra.database import get_db
-from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
+from com.qode.qrew.v1.sales.database import get_db
+from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
 from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 from com.qode.qrew.v1.sales.settings import settings
@@ -43,7 +43,7 @@ async def get_reservation_payment_context(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> _PaymentContextResponse:
-    """Return amount+currency for a reservation; called by the payments service."""
+    """Returns the billable amount and currency for a reservation."""
     _require_internal_key(request)
     reservation = await ReservationRepository(db).get_by_id(reservation_id)
     if reservation is None or reservation.user_id != body.user_id:

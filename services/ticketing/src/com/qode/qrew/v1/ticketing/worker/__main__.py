@@ -1,4 +1,4 @@
-"""Ticketing NATS worker process: subscribes to payments, catalog, and identity streams."""
+"""Entry point for the ticketing background worker that consumes events from external services."""
 
 import asyncio
 

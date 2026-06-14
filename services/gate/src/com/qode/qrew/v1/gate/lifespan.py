@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 
-from com.qode.qrew.v1.gate.core.locking import close_locking
-from com.qode.qrew.v1.gate.core.observability import shutdown_tracing
+from infra.locking import close_locking
+from observability import shutdown_tracing
 
 logger = structlog.get_logger(__name__)
 

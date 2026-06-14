@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from infra.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.models.device.device import Device
@@ -78,7 +78,7 @@ class DeviceService:
         user: User,
         calling_device_id: uuid.UUID | None = None,
     ) -> int:
-        """Revoke every device except the calling one; returns count revoked."""
+        """Revokes all devices for the user except the one currently in use."""
         revoked_count = await self._device_repo.revoke_all_by_user_id(
             user.id, exclude_id=calling_device_id
         )
@@ -104,7 +104,7 @@ class DeviceService:
         return revoked_count
 
     async def _kill_all_sessions(self, user_id: uuid.UUID) -> None:
-        """Delete all sessions for the user and blacklist their JTIs in Redis."""
+        """Removes all active sessions for a user and invalidates their tokens."""
         jtis = await self._session_repo.delete_all_by_user_id(user_id)
         for jti in jtis:
             await self._redis.setex(_BLACKLIST_JTI_PREFIX + jti, _JTI_TTL_SECONDS, "1")

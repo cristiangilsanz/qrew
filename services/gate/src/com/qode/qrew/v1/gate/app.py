@@ -2,17 +2,17 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from com.qode.qrew.v1.gate.core.api.errors import (
+from com.qode.qrew.v1.gate.routers.errors import (
     default_responses,
     register_exception_handlers,
 )
-from com.qode.qrew.v1.gate.core.api.probes import router as probes_router
-from com.qode.qrew.v1.gate.core.infra.limiter import limiter
-from com.qode.qrew.v1.gate.core.infra.middleware import (
+from com.qode.qrew.v1.gate.routers.health import router as probes_router
+from com.qode.qrew.v1.gate.services.infra.limiter import limiter
+from infra.middleware import (
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
 )
-from com.qode.qrew.v1.gate.core.observability import setup_tracing
+from observability import setup_tracing
 from com.qode.qrew.v1.gate.lifespan import lifespan
 from com.qode.qrew.v1.gate.routers import router as v1_router
 from com.qode.qrew.v1.gate.settings import settings
@@ -40,7 +40,12 @@ app = FastAPI(
     responses=default_responses,
 )
 
-setup_tracing(app)
+setup_tracing(
+    service_name=settings.app_name,
+    version=settings.version,
+    environment="development" if settings.debug else "production",
+    app=app,
+)
 register_exception_handlers(app)
 
 app.state.limiter = limiter

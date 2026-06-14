@@ -1,4 +1,4 @@
-"""Ticketing NATS worker: updates EventVenueContext projection from catalog events."""
+"""Subscribes to catalog events over a message broker and updates the local event and venue projection."""
 
 import asyncio
 import json
@@ -8,7 +8,7 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.ticketing.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.ticketing.database import AsyncSessionLocal
 from com.qode.qrew.v1.ticketing.repositories.projections import EventVenueContextRepository
 
 logger = structlog.get_logger(__name__)

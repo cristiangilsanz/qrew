@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 
-from com.qode.qrew.v1.payments.core.locking import close_locking
-from com.qode.qrew.v1.payments.core.observability import shutdown_tracing
-from com.qode.qrew.v1.payments.core.payments.webhook_idempotency import close_webhook_idempotency
+from infra.locking import close_locking
+from observability import shutdown_tracing
+from com.qode.qrew.v1.payments.services.webhook_idempotency import close_webhook_idempotency
 from com.qode.qrew.v1.payments.settings import settings
 
 logger = structlog.get_logger(__name__)

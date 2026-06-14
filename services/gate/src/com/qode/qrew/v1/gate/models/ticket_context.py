@@ -6,7 +6,7 @@ from sqlalchemy import DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.gate.core.infra.database import Base
+from com.qode.qrew.v1.gate.database import Base
 
 
 class TicketState(enum.StrEnum):
@@ -20,7 +20,7 @@ class TicketState(enum.StrEnum):
 
 
 class TicketContext(Base):
-    """Local projection of ticketing.tickets, kept current by NATS subscriber."""
+    """Read-only local projection of ticket state, updated via event subscription."""
 
     __tablename__ = "ticket_contexts"
     __table_args__ = {"schema": "gate"}

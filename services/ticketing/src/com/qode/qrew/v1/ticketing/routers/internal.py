@@ -1,4 +1,4 @@
-"""Internal API routes consumed only by sibling services (gate-svc, etc.)."""
+"""Internal API routes exposed only to other services within the same deployment."""
 
 import uuid
 
@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.core.infra.database import get_db
-from com.qode.qrew.v1.ticketing.core.locking import LockUnavailableError, redlock
+from com.qode.qrew.v1.ticketing.database import get_db
+from infra.locking import LockUnavailableError, redlock
 from com.qode.qrew.v1.ticketing.models.ticket import TicketState
 from com.qode.qrew.v1.ticketing.services.ticket.transition import (
     TicketTransitionError,
@@ -37,10 +37,10 @@ async def use_ticket(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Transition a ticket to `used` state; called by the gate service."""
+    """Marks a ticket as used after validating entry at the gate."""
     _require_internal_key(request)
     try:
-        async with redlock(f"ticket:{ticket_id}:entry", ttl_seconds=10):
+        async with redlock(f"ticket:{ticket_id}:entry", redis_url=settings.redis_url, ttl_seconds=10):
             await transition_ticket(
                 db,
                 ticket_id=ticket_id,
