@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from com.qode.qrew.v1.gate.core.auth import jwt_keys
 from com.qode.qrew.v1.gate.core.locking import LockUnavailableError, redlock
 from com.qode.qrew.v1.gate.core.observability import traced
-from com.qode.qrew.v1.gate.core.ws.publish import publish as ws_publish
 from com.qode.qrew.v1.gate.models.audit import AuditAction
 from com.qode.qrew.v1.gate.models.scanner import Scanner
 from com.qode.qrew.v1.gate.models.ticket_context import TicketContext, TicketState
@@ -206,14 +205,25 @@ async def _evaluate(
         },
     )
     try:
-        await ws_publish(
-            _entry_channel_key(str(event_id)),
-            {
-                "type": "entry.validated",
-                "ticket_id": str(ticket_id),
-                "scanner_id": str(scanner.id),
-                "scanned_at": _now().isoformat(),
-            },
+        from common.broker.publisher import publish as _nats_publish  # type: ignore[import-not-found]
+        from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+        from datetime import UTC as _UTC, datetime as _dt
+
+        _channel = _entry_channel_key(str(event_id))
+        _payload = {
+            "type": "entry.validated",
+            "ticket_id": str(ticket_id),
+            "scanner_id": str(scanner.id),
+            "scanned_at": _now().isoformat(),
+        }
+        await _nats_publish(
+            "ws.fanout.v1",
+            EventEnvelope(
+                occurred_at=_dt.now(_UTC),
+                aggregate_type="ws_fanout",
+                aggregate_id=_channel,
+                data={"channel": _channel, "payload": _payload},
+            ),
         )
     except Exception:
         await logger.awarning("entry_ws_publish_failed", event_id=str(event_id))
@@ -283,13 +293,24 @@ async def _audit_reject(
         await logger.awarning("audit_write_failed", action=AuditAction.ENTRY_REJECTED)
     if event_id is not None:
         try:
-            await ws_publish(
-                _entry_channel_key(str(event_id)),
-                {
-                    "type": "entry.rejected",
-                    "reason": reason.value,
-                    "scanned_at": _now().isoformat(),
-                },
+            from common.broker.publisher import publish as _nats_publish  # type: ignore[import-not-found]
+            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+            from datetime import UTC as _UTC, datetime as _dt
+
+            _channel = _entry_channel_key(str(event_id))
+            _payload = {
+                "type": "entry.rejected",
+                "reason": reason.value,
+                "scanned_at": _now().isoformat(),
+            }
+            await _nats_publish(
+                "ws.fanout.v1",
+                EventEnvelope(
+                    occurred_at=_dt.now(_UTC),
+                    aggregate_type="ws_fanout",
+                    aggregate_id=_channel,
+                    data={"channel": _channel, "payload": _payload},
+                ),
             )
         except Exception:
             await logger.awarning("entry_ws_publish_failed", event_id=str(event_id))

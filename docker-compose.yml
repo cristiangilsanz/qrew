@@ -302,6 +302,28 @@ services:
       nats:
         condition: service_healthy
 
+  hub:
+    build:
+      context: .
+      dockerfile: services/hub/Dockerfile
+    ports:
+      - "8008:8008"
+    env_file:
+      - ./services/hub/.env
+    environment:
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: false
+    depends_on:
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8008/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   audit:
     build:
       context: .

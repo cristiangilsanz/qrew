@@ -7,6 +7,7 @@ CATALOG := "services/catalog"
 TICKETING := "services/ticketing"
 SALES := "services/sales"
 AUDIT := "services/audit"
+HUB := "services/hub"
 
 default: help
 
@@ -247,3 +248,13 @@ audit-migrate message:
 # Type-check audit service
 audit-type-check:
     cd {{AUDIT}} && uv run pyright
+
+# ── Hub service ───────────────────────────────────────────────────────────────
+
+# Run hub service with auto-reload
+hub-dev:
+    cd {{HUB}} && uv run dev
+
+# Type-check hub service
+hub-type-check:
+    cd {{HUB}} && uv run pyright

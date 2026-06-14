@@ -4,16 +4,16 @@ from datetime import UTC, datetime
 import structlog
 
 from com.qode.qrew.v1.identity.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.core.ws import publish as ws_publish
 from com.qode.qrew.v1.identity.models.audit.audit import AuditEvent
-from com.qode.qrew.v1.identity.realtime import me_channel_key
 from com.qode.qrew.v1.identity.repositories.audit.audit import AuditRepository
 
 logger = structlog.get_logger(__name__)
 
+_ME_PATTERN = "me.{user_id}"
+
 
 class AuditService:
-    """Publishes audit events to NATS audit.events.v1 for the audit service to chain."""
+    """Publishes audit events to NATS. audit.events.v1 → audit service chain. ws.fanout.v1 → hub."""
 
     async def record(
         self,
@@ -50,16 +50,30 @@ class AuditService:
         except Exception as exc:
             await logger.awarning("audit_publish_failed", action=action, error=repr(exc))
         if actor_id is not None:
-            await ws_publish(
-                me_channel_key(str(actor_id)),
-                {
-                    "type": "audit_event_created",
-                    "action": str(action),
-                    "entity_type": entity_type,
-                    "entity_id": entity_id,
-                    "created_at": now.isoformat(),
-                },
-            )
+            channel_key = _ME_PATTERN.format(user_id=str(actor_id))
+            try:
+                from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+                from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+
+                ws_envelope = EventEnvelope(
+                    occurred_at=now,
+                    aggregate_type="ws_fanout",
+                    aggregate_id=channel_key,
+                    actor_id=str(actor_id),
+                    data={
+                        "channel": channel_key,
+                        "payload": {
+                            "type": "audit_event_created",
+                            "action": str(action),
+                            "entity_type": entity_type,
+                            "entity_id": entity_id,
+                            "created_at": now.isoformat(),
+                        },
+                    },
+                )
+                await nats_publish("ws.fanout.v1", ws_envelope)
+            except Exception as exc:
+                await logger.awarning("ws_fanout_publish_failed", action=action, error=repr(exc))
 
     async def get_recent_login_events(self, user_id: uuid.UUID, limit: int = 5) -> list[AuditEvent]:
         """List the most recent successful logins for a user (direct DB read)."""

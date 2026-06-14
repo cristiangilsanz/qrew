@@ -14,9 +14,7 @@ from com.qode.qrew.v1.identity.core.infra.middleware import (
     SecurityHeadersMiddleware,
 )
 from com.qode.qrew.v1.identity.core.observability import add_trace_context, setup_tracing
-from com.qode.qrew.v1.identity.core.ws import router as ws_router
 from com.qode.qrew.v1.identity.lifespan import lifespan
-from com.qode.qrew.v1.identity.realtime import me_channel as _me_channel
 from com.qode.qrew.v1.identity.routers import router as v1_router
 from com.qode.qrew.v1.identity.routers.internal import router as internal_router
 from com.qode.qrew.v1.identity.settings import settings
@@ -43,8 +41,6 @@ app = FastAPI(
     responses=default_responses,
 )
 
-_ = _me_channel  # ensure the @channel decorator runs at import time
-
 setup_tracing(app)
 
 register_exception_handlers(app)
@@ -64,6 +60,5 @@ app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(probes_router)
-app.include_router(ws_router)
 app.include_router(v1_router)
 app.include_router(internal_router)

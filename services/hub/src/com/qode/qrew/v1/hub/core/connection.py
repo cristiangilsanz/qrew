@@ -8,23 +8,17 @@ import structlog
 from fastapi import WebSocket
 from starlette.websockets import WebSocketState
 
-from com.qode.qrew.v1.identity.core.ws.close_codes import (
-    WS_CLOSE_INTERNAL,
-    WS_CLOSE_NORMAL,
-)
-from com.qode.qrew.v1.identity.models.auth.session import Session
-from com.qode.qrew.v1.identity.models.auth.user import User
+from com.qode.qrew.v1.hub.core.close_codes import WS_CLOSE_INTERNAL, WS_CLOSE_NORMAL
 
 logger = structlog.get_logger(__name__)
 
 
 @dataclass(eq=False)
 class Connection:
-    """One authenticated WebSocket bound to a user session."""
+    """One authenticated WebSocket connection."""
 
     socket: WebSocket
-    user: User
-    session: Session
+    claims: dict[str, object]
     queue_size: int = 64
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
     _queue: asyncio.Queue[dict[str, Any]] = field(init=False)
@@ -40,7 +34,6 @@ class Connection:
         return self._closed or self.socket.application_state != WebSocketState.CONNECTED
 
     async def enqueue(self, message: dict[str, Any]) -> bool:
-        """Try to enqueue a message; return False if the buffer is full."""
         if self.closed:
             return False
         try:
@@ -50,7 +43,6 @@ class Connection:
             return False
 
     async def writer(self) -> None:
-        """Drain the queue into the socket until the connection closes."""
         try:
             while not self.closed:
                 message = await self._queue.get()
@@ -60,7 +52,6 @@ class Connection:
             await self.close(WS_CLOSE_INTERNAL)
 
     async def close(self, code: int = WS_CLOSE_NORMAL, reason: str = "") -> None:
-        """Close the underlying socket once."""
         if self._closed:
             return
         self._closed = True
@@ -68,15 +59,10 @@ class Connection:
             if self.socket.application_state == WebSocketState.CONNECTED:
                 await self.socket.close(code=code, reason=reason)
         except Exception:
-            await logger.awarning("ws_close_error")
+            pass
 
     def record_pong(self, now: float) -> None:
         self._last_pong = now
 
-    @property
-    def last_pong(self) -> float:
-        return self._last_pong
-
     def is_stale(self, now: float, max_silence_seconds: float) -> bool:
-        """Return whether the connection has missed pongs beyond the grace window."""
         return now - self._last_pong > max_silence_seconds
