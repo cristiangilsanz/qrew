@@ -1,6 +1,6 @@
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any
 
 import structlog
@@ -15,6 +15,28 @@ from com.qode.qrew.v1.catalog.repositories.event import EventRepository
 from com.qode.qrew.v1.catalog.repositories.ticket_type import TicketTypeRepository
 
 logger = structlog.get_logger(__name__)
+
+
+async def _publish_nats(subject: str, ticket_type: TicketType) -> None:
+    try:
+        from common.broker.publisher import publish  # type: ignore[import-not-found]
+        from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+
+        envelope = EventEnvelope(
+            occurred_at=datetime.now(UTC),
+            aggregate_type="ticket_type",
+            aggregate_id=str(ticket_type.id),
+            data={
+                "ticket_type_id": str(ticket_type.id),
+                "event_id": str(ticket_type.event_id),
+                "capacity": ticket_type.capacity,
+                "price_cents": ticket_type.price_cents,
+                "currency": ticket_type.currency,
+            },
+        )
+        await publish(subject, envelope)
+    except Exception as exc:
+        await logger.awarning("nats_publish_failed", subject=subject, error=repr(exc))
 
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
 ALLOWED_CURRENCIES: frozenset[str] = frozenset({"EUR", "USD", "GBP"})
@@ -111,6 +133,7 @@ class TicketTypeService:
                 ticket_type_id=ticket_type.id,
                 payload={"event_id": str(event_id), "name": name},
             )
+            await _publish_nats("catalog.ticket_type.created.v1", ticket_type)
             return ticket_type
 
     @traced("ticket_type.update")
@@ -158,6 +181,7 @@ class TicketTypeService:
                 ticket_type_id=ticket_type.id,
                 payload={"fields": sorted(changes.keys())},
             )
+            await _publish_nats("catalog.ticket_type.updated.v1", ticket_type)
             return ticket_type
 
     @traced("ticket_type.delete")

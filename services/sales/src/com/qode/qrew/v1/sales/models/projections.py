@@ -37,7 +37,7 @@ class EventContext(Base):
 
 
 class TicketTypeInventory(Base):
-    """Sales-owned inventory for a ticket type: capacity + reserved_count."""
+    """Sales-owned inventory for a ticket type: capacity + reserved_count + price."""
 
     __tablename__ = "ticket_type_inventory"
     __table_args__ = ({"schema": "sales"},)
@@ -48,6 +48,8 @@ class TicketTypeInventory(Base):
     event_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     reserved_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    price_cents: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, server_default="EUR")
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

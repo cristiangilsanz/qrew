@@ -7,6 +7,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from com.qode.qrew.v1.sales.core.api.errors import default_responses, register_exception_handlers
 from com.qode.qrew.v1.sales.core.api.probes import router as probes_router
+from com.qode.qrew.v1.sales.routers.internal import router as internal_router
 from com.qode.qrew.v1.sales.core.idempotency import IdempotencyMiddleware
 from com.qode.qrew.v1.sales.core.infra.limiter import limiter
 from com.qode.qrew.v1.sales.core.infra.middleware import (
@@ -60,4 +61,5 @@ app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(probes_router)
+app.include_router(internal_router)
 app.include_router(v1_router)
