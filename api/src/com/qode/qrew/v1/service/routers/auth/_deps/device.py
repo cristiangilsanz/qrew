@@ -53,5 +53,4 @@ def get_device_service(
         SessionRepository(db),
         redis,
         AuditService(),
-        session=db,
     )

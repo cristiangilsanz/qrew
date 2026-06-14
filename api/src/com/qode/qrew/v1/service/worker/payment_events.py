@@ -9,14 +9,12 @@ import structlog
 
 from com.qode.qrew.v1.service.core.infra.database import AsyncSessionLocal
 from com.qode.qrew.v1.service.core.locking import redlock
+from com.qode.qrew.v1.service.core.outbox import publish_via_outbox
+from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 from com.qode.qrew.v1.service.models.reservation import ReservationStatus
-from com.qode.qrew.v1.service.models.ticket import TicketState
 from com.qode.qrew.v1.service.repositories.reservation import ReservationRepository
 from com.qode.qrew.v1.service.repositories.ticket_type import TicketTypeRepository
 from com.qode.qrew.v1.service.services.audit import AuditService
-from com.qode.qrew.v1.service.services.ticket import transition_ticket
-from com.qode.qrew.v1.service.core.outbox import publish_via_outbox
-from com.qode.qrew.v1.service.models.audit.audit import AuditAction
 
 logger = structlog.get_logger(__name__)
 
@@ -53,16 +51,6 @@ async def handle_payment_succeeded(raw: bytes) -> None:
                 return
             reservation.status = ReservationStatus.paid
             audit = AuditService()
-            for ticket in await repo.list_tickets(reservation_id):
-                if ticket.state == TicketState.reserved:
-                    await transition_ticket(
-                        session,
-                        ticket_id=ticket.id,
-                        to_state=TicketState.issued,
-                        reason="payment_succeeded",
-                        actor_id=reservation.user_id,
-                        audit=audit,
-                    )
             await publish_via_outbox(
                 session,
                 aggregate_type="payment",
@@ -148,7 +136,7 @@ async def handle_payment_refunded(raw: bytes) -> None:
             await session.commit()
         return
 
-    await _cancel_reservation_and_tickets(
+    await _cancel_reservation(
         reservation_id, payment_id, reason=AuditAction.PAYMENT_REFUNDED
     )
 
@@ -163,7 +151,7 @@ async def handle_chargeback_opened(raw: bytes) -> None:
     except (KeyError, ValueError):
         await logger.awarning("payment_events.chargeback_opened.bad_payload")
         return
-    await _cancel_reservation_and_tickets(
+    await _cancel_reservation(
         reservation_id, payment_id, reason=AuditAction.CHARGEBACK_OPENED
     )
 
@@ -192,7 +180,7 @@ async def handle_chargeback_closed(raw: bytes) -> None:
         await session.commit()
 
 
-async def _cancel_reservation_and_tickets(
+async def _cancel_reservation(
     reservation_id: uuid.UUID,
     payment_id: str,
     *,
@@ -206,38 +194,13 @@ async def _cancel_reservation_and_tickets(
                 await session.commit()
                 return
             audit = AuditService()
-            tickets = await repo.list_tickets(reservation_id)
-            used = [t for t in tickets if t.state == TicketState.used]
-            if used:
-                await audit.record(
-                    action=AuditAction.CHARGEBACK_ON_USED_TICKET,
-                    actor_id=reservation.user_id,
-                    entity_type="payment",
-                    entity_id=payment_id,
-                    payload={
-                        "used_ticket_ids": [str(t.id) for t in used],
-                        "reason": reason.value,
-                    },
-                )
-            cancellable = {TicketState.reserved, TicketState.issued}
-            qty_to_release = 0
-            for ticket in tickets:
-                if ticket.state in cancellable:
-                    await transition_ticket(
-                        session,
-                        ticket_id=ticket.id,
-                        to_state=TicketState.cancelled,
-                        reason=reason.value,
-                        actor_id=reservation.user_id,
-                        audit=audit,
-                    )
-                    qty_to_release += 1
-            if qty_to_release > 0:
+            reservation.status = ReservationStatus.cancelled
+            qty = reservation.quantity
+            if qty > 0:
                 tier_repo = TicketTypeRepository(session)
                 tier = await tier_repo.get_by_id(reservation.ticket_type_id)
                 if tier is not None:
-                    tier.reserved_count = max(0, tier.reserved_count - qty_to_release)
-            reservation.status = ReservationStatus.cancelled
+                    tier.reserved_count = max(0, tier.reserved_count - qty)
             job_name = (
                 "notifications.ticket_cancelled_chargeback"
                 if reason == AuditAction.CHARGEBACK_OPENED
