@@ -8,8 +8,8 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.services.audit import AuditService
-from infra.errors import DomainError
-from infra.locking import redlock
+from com.qode.qrew.v1.sales.core.errors import DomainError
+from locking import redlock
 from observability import traced
 from com.qode.qrew.v1.sales.models.projections import TicketTypeInventory
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
@@ -18,7 +18,7 @@ from com.qode.qrew.v1.sales.repositories.projections import (
     TicketTypeInventoryRepository,
 )
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -280,8 +280,8 @@ class ReservationService:
 
 async def _publish_reservation_created(reservation: Reservation) -> None:
     try:
-        from common.broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),
@@ -308,8 +308,8 @@ async def _publish_reservation_created(reservation: Reservation) -> None:
 
 async def _publish_reservation_cancelled(reservation: Reservation) -> None:
     try:
-        from common.broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),

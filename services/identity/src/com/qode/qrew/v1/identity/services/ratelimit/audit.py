@@ -5,10 +5,10 @@ from collections.abc import Awaitable, Callable
 import structlog
 from fastapi import Request
 
-from com.qode.qrew.v1.identity.services.ratelimit.errors import RateLimitedError
+from ratelimit.errors import RateLimitedError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

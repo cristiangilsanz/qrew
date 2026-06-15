@@ -3,8 +3,8 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from com.qode.qrew.v1.identity.services.infra.limiter import limiter
-from com.qode.qrew.v1.identity.services.ratelimit import rate_limit
+from com.qode.qrew.v1.identity.core.dependencies import limiter
+from ratelimit import rate_limit
 from com.qode.qrew.v1.identity.services.ratelimit.dependencies import (
     audit_on_rejection,
     limiter_for,

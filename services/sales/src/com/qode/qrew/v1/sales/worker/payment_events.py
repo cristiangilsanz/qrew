@@ -8,10 +8,10 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.sales.database import AsyncSessionLocal
-from infra.locking import redlock
+from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
+from locking import redlock
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 
@@ -133,8 +133,8 @@ async def _publish_reservation_paid(
     reservation: Reservation, user_id: uuid.UUID
 ) -> None:
     try:
-        from common.broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),
@@ -162,8 +162,8 @@ async def _publish_reservation_cancelled(
     reservation: Reservation, user_id: uuid.UUID
 ) -> None:
     try:
-        from common.broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),

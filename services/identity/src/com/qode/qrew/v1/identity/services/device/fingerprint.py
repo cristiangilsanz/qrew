@@ -9,7 +9,7 @@ from com.qode.qrew.v1.identity.repositories.device.fingerprint import (
     DeviceFingerprintRepository,
 )
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -125,8 +125,8 @@ class FingerprintService:
         try:
             from datetime import UTC, datetime
 
-            from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+            from broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+            from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
             now = datetime.now(UTC)
             envelope = EventEnvelope(

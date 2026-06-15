@@ -11,7 +11,7 @@ from com.qode.qrew.v1.identity.services.auth.security import (
     hash_password,
     verify_password,
 )
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from observability import traced
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.session import Session

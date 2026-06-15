@@ -7,15 +7,15 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from com.qode.qrew.v1.payments.routers.errors import default_responses, register_exception_handlers
 from com.qode.qrew.v1.payments.routers.health import router as probes_router
-from com.qode.qrew.v1.payments.services.infra.limiter import limiter
-from infra.middleware import (
+from com.qode.qrew.v1.payments.core.dependencies import limiter
+from middleware import (
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
 )
 from observability import setup_tracing
-from com.qode.qrew.v1.payments.lifespan import lifespan
+from com.qode.qrew.v1.payments.core.lifespan import lifespan
 from com.qode.qrew.v1.payments.routers import router as v1_router
-from com.qode.qrew.v1.payments.settings import settings
+from com.qode.qrew.v1.payments.core.config import settings
 
 structlog.configure(
     processors=[
@@ -51,6 +51,7 @@ register_exception_handlers(app)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
+app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -58,7 +59,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 

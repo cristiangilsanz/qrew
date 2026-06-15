@@ -1,10 +1,11 @@
 [project]
 name = "idempotency"
 version = "0.1.0"
-description = "Shared idempotency layer — request deduplication via Redis-backed key store"
+description = "Qrew idempotency."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
+    "starlette>=0.40",
     "redis[asyncio]>=5.0",
     "structlog>=24.0",
 ]

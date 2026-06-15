@@ -8,7 +8,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.ticketing.services.audit import AuditService
-from infra.errors import DomainError
+from com.qode.qrew.v1.ticketing.core.errors import DomainError
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
 
 logger = structlog.get_logger(__name__)
@@ -115,8 +115,8 @@ async def _publish_state_changed(
     actor_id: uuid.UUID,
 ) -> None:
     try:
-        from common.broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),

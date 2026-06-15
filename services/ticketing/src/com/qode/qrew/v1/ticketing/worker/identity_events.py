@@ -9,7 +9,7 @@ from typing import Any
 import structlog
 
 from com.qode.qrew.v1.ticketing.services.audit import AuditService
-from com.qode.qrew.v1.ticketing.database import AsyncSessionLocal
+from com.qode.qrew.v1.ticketing.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.ticketing.models.ticket import TicketState
 from com.qode.qrew.v1.ticketing.repositories.projections import DeviceContextRepository
 from com.qode.qrew.v1.ticketing.repositories.ticket import TicketRepository

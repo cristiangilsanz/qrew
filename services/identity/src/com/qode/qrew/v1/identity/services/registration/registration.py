@@ -11,7 +11,7 @@ from com.qode.qrew.v1.identity.services.auth.security import (
     is_password_pwned,
     phone_number_otp_expiry,
 )
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from observability import traced
 from com.qode.qrew.v1.identity.services.registration.captcha import CaptchaService
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
@@ -22,7 +22,7 @@ from com.qode.qrew.v1.identity.schemas.registration.registration import (
     RegisterResponse,
 )
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
 
 logger = structlog.get_logger(__name__)
 
@@ -118,8 +118,8 @@ class RegistrationService:
         try:
             from datetime import UTC, datetime
 
-            from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+            from broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+            from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
             envelope = EventEnvelope(
                 occurred_at=datetime.now(UTC),

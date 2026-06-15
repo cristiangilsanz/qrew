@@ -7,7 +7,7 @@ from com.qode.qrew.v1.identity.services.auth.security import (
     create_refresh_token,
     extract_jti,
 )
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.session import Session
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User

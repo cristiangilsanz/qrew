@@ -6,7 +6,7 @@ from sqlalchemy import DateTime, Index, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.ticketing.database import Base
+from com.qode.qrew.v1.ticketing.core.database import Base
 
 
 class EventVenueContext(Base):

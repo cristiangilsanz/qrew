@@ -7,7 +7,7 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.identity.database import AsyncSessionLocal
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.identity.services.outbox import publish_via_outbox
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.services.audit import AuditService

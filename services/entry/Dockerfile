@@ -1,0 +1,41 @@
+FROM python:3.12-slim AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+COPY pyproject.toml ./
+COPY services/gate/pyproject.toml services/gate/pyproject.toml
+COPY packages/broker/pyproject.toml packages/broker/pyproject.toml
+COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
+COPY packages/db/pyproject.toml packages/db/pyproject.toml
+COPY packages/locking/pyproject.toml packages/locking/pyproject.toml
+COPY packages/middleware/pyproject.toml packages/middleware/pyproject.toml
+COPY packages/observability/pyproject.toml packages/observability/pyproject.toml
+COPY packages/security/pyproject.toml packages/security/pyproject.toml
+COPY uv.lock ./
+
+RUN uv sync --package gate --no-dev --frozen
+
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+COPY --from=builder /app/.venv /app/.venv
+
+COPY services/gate/src/ ./src/
+COPY packages/broker/src/ ./src/
+COPY packages/contracts/src/ ./src/
+COPY packages/db/src/ ./src/
+COPY packages/locking/src/ ./src/
+COPY packages/middleware/src/ ./src/
+COPY packages/observability/src/ ./src/
+COPY packages/security/src/ ./src/
+
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="src"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+EXPOSE 8001
+
+CMD ["python", "-m", "com.qode.qrew.v1.gate"]

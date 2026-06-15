@@ -8,9 +8,9 @@ from typing import Any
 import structlog
 
 from com.qode.qrew.v1.ticketing.services.audit import AuditService
-from com.qode.qrew.v1.ticketing.database import AsyncSessionLocal
-from infra.locking import redlock
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.database import AsyncSessionLocal
+from locking import redlock
+from com.qode.qrew.v1.ticketing.core.config import settings
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
 from com.qode.qrew.v1.ticketing.repositories.ticket import TicketRepository
 from com.qode.qrew.v1.ticketing.services.ticket.transition import transition_ticket

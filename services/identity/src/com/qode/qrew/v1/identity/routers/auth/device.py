@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request, status
 
 from com.qode.qrew.v1.identity.routers import Page
 from com.qode.qrew.v1.identity.services.auth.auth import get_current_user
-from com.qode.qrew.v1.identity.services.infra.limiter import limiter
+from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.schemas.device.device import (
     DeviceAttestRequest,

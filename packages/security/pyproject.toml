@@ -1,7 +1,7 @@
 [project]
 name = "security"
 version = "0.1.0"
-description = "Shared stateless security primitives — PII encryption and JWT verification"
+description = "Qrew security."
 requires-python = ">=3.12"
 dependencies = [
     "cryptography>=42",

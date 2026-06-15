@@ -3,10 +3,10 @@ import uuid
 import redis.asyncio as aioredis
 import structlog
 
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

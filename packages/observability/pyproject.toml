@@ -1,7 +1,7 @@
 [project]
 name = "observability"
 version = "0.1.0"
-description = "Shared OpenTelemetry tracing, log correlation, and context propagation"
+description = "Qrew observability."
 requires-python = ">=3.12"
 dependencies = [
     "opentelemetry-sdk>=1.20",

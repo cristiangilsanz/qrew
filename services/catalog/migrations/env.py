@@ -7,9 +7,8 @@ from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "common", "src"))
 
-from com.qode.qrew.v1.catalog.database import Base
+from com.qode.qrew.v1.catalog.core.database import Base
 from com.qode.qrew.v1.catalog import models  # noqa: F401 — register all models
 
 config = context.config

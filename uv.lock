@@ -10,21 +10,30 @@ resolution-markers = [
 [manifest]
 members = [
     "audit",
+    "audit-publisher",
+    "broker",
     "catalog",
-    "common",
-    "gate",
+    "contracts",
+    "db",
+    "entry",
     "gateway",
+    "http-errors",
     "idempotency",
     "identity",
-    "infra",
     "jobs",
+    "locking",
+    "middleware",
     "observability",
+    "outbox",
     "pagination",
     "payments",
+    "probes",
     "qrew-workspace",
+    "ratelimit",
     "sales",
     "security",
     "ticketing",
+    "worker",
 ]
 
 [[package]]
@@ -324,9 +333,12 @@ source = { virtual = "services/audit" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
-    { name = "common" },
+    { name = "audit-publisher" },
+    { name = "broker" },
+    { name = "contracts" },
+    { name = "db" },
     { name = "fastapi" },
-    { name = "infra" },
+    { name = "http-errors" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
@@ -337,15 +349,19 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "worker" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "asyncpg", specifier = ">=0.29" },
-    { name = "common", editable = "packages/common" },
+    { name = "audit-publisher", editable = "packages/audit-publisher" },
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
+    { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
-    { name = "infra", editable = "packages/infra" },
+    { name = "http-errors", editable = "packages/http-errors" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
@@ -356,6 +372,24 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+    { name = "worker", editable = "packages/worker" },
+]
+
+[[package]]
+name = "audit-publisher"
+version = "0.1.0"
+source = { editable = "packages/audit-publisher" }
+dependencies = [
+    { name = "broker" },
+    { name = "contracts" },
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
+    { name = "structlog", specifier = ">=24.0" },
 ]
 
 [[package]]
@@ -380,6 +414,23 @@ wheels = [
 ]
 
 [[package]]
+name = "broker"
+version = "0.1.0"
+source = { editable = "packages/broker" }
+dependencies = [
+    { name = "contracts" },
+    { name = "nats-py" },
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "contracts", editable = "packages/contracts" },
+    { name = "nats-py", specifier = ">=2.7" },
+    { name = "structlog", specifier = ">=24.1" },
+]
+
+[[package]]
 name = "catalog"
 version = "0.1.0"
 source = { virtual = "services/catalog" }
@@ -387,13 +438,17 @@ dependencies = [
     { name = "alembic" },
     { name = "arq" },
     { name = "asyncpg" },
-    { name = "common" },
+    { name = "broker" },
+    { name = "contracts" },
     { name = "cryptography" },
+    { name = "db" },
     { name = "fastapi" },
+    { name = "http-errors" },
     { name = "httpx" },
     { name = "idempotency" },
-    { name = "infra" },
     { name = "jobs" },
+    { name = "locking" },
+    { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
@@ -402,6 +457,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
     { name = "pagination" },
+    { name = "probes" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
     { name = "redis", extra = ["hiredis"] },
@@ -410,6 +466,7 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "worker" },
 ]
 
 [package.metadata]
@@ -417,13 +474,17 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "arq", specifier = ">=0.25" },
     { name = "asyncpg", specifier = ">=0.29" },
-    { name = "common", editable = "packages/common" },
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42" },
+    { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "http-errors", editable = "packages/http-errors" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/idempotency" },
-    { name = "infra", editable = "packages/infra" },
     { name = "jobs", editable = "packages/jobs" },
+    { name = "locking", editable = "packages/locking" },
+    { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
@@ -432,6 +493,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
     { name = "pagination", editable = "packages/pagination" },
+    { name = "probes", editable = "packages/probes" },
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
@@ -440,6 +502,7 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+    { name = "worker", editable = "packages/worker" },
 ]
 
 [[package]]
@@ -642,39 +705,15 @@ wheels = [
 ]
 
 [[package]]
-name = "common"
+name = "contracts"
 version = "0.1.0"
-source = { editable = "packages/common" }
+source = { editable = "packages/contracts" }
 dependencies = [
-    { name = "fastapi" },
-    { name = "nats-py" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "opentelemetry-instrumentation-fastapi" },
-    { name = "opentelemetry-sdk" },
     { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "pyjwt", extra = ["crypto"] },
-    { name = "redis", extra = ["hiredis"] },
-    { name = "sqlalchemy", extra = ["asyncio"] },
-    { name = "structlog" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "fastapi", specifier = ">=0.115" },
-    { name = "nats-py", specifier = ">=2.7" },
-    { name = "opentelemetry-api", specifier = ">=1.20" },
-    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.20" },
-    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.41b0" },
-    { name = "opentelemetry-sdk", specifier = ">=1.20" },
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pydantic-settings", specifier = ">=2.4" },
-    { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
-    { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
-    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
-    { name = "structlog", specifier = ">=24.1" },
-]
+requires-dist = [{ name = "pydantic", specifier = ">=2.0" }]
 
 [[package]]
 name = "coverage"
@@ -814,6 +853,25 @@ wheels = [
 ]
 
 [[package]]
+name = "db"
+version = "0.1.0"
+source = { editable = "packages/db" }
+dependencies = [
+    { name = "arq" },
+    { name = "asyncpg" },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "arq", specifier = ">=0.26" },
+    { name = "asyncpg", specifier = ">=0.29" },
+    { name = "redis", extras = ["asyncio", "hiredis"], specifier = ">=5.0" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
+]
+
+[[package]]
 name = "deprecated"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -854,6 +912,101 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f5/22/900cb125c76b7aaa450ce02fd727f452243f2e91a61af068b40adba60ea9/email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426", size = 51238, upload-time = "2025-08-26T13:09:06.831Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl", hash = "sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4", size = 35604, upload-time = "2025-08-26T13:09:05.858Z" },
+]
+
+[[package]]
+name = "entry"
+version = "0.1.0"
+source = { editable = "services/entry" }
+dependencies = [
+    { name = "alembic" },
+    { name = "asyncpg" },
+    { name = "broker" },
+    { name = "contracts" },
+    { name = "cryptography" },
+    { name = "db" },
+    { name = "fastapi" },
+    { name = "http-errors" },
+    { name = "httpx" },
+    { name = "locking" },
+    { name = "middleware" },
+    { name = "nats-py" },
+    { name = "observability" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-exporter-otlp-proto-grpc" },
+    { name = "opentelemetry-instrumentation-fastapi" },
+    { name = "opentelemetry-instrumentation-httpx" },
+    { name = "opentelemetry-instrumentation-redis" },
+    { name = "opentelemetry-instrumentation-sqlalchemy" },
+    { name = "opentelemetry-sdk" },
+    { name = "probes" },
+    { name = "pydantic-settings" },
+    { name = "pyjwt", extra = ["crypto"] },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "slowapi" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "structlog" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "coverage" },
+    { name = "fakeredis", extra = ["lua"] },
+    { name = "httpx" },
+    { name = "httpx2" },
+    { name = "pre-commit" },
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.13" },
+    { name = "asyncpg", specifier = ">=0.29" },
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
+    { name = "cryptography", specifier = ">=42.0" },
+    { name = "db", editable = "packages/db" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "http-errors", editable = "packages/http-errors" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "locking", editable = "packages/locking" },
+    { name = "middleware", editable = "packages/middleware" },
+    { name = "nats-py", specifier = ">=2.7" },
+    { name = "observability", editable = "packages/observability" },
+    { name = "opentelemetry-api", specifier = ">=1.24" },
+    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.24" },
+    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.48b0" },
+    { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.48b0" },
+    { name = "opentelemetry-instrumentation-redis", specifier = ">=0.48b0" },
+    { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.48b0" },
+    { name = "opentelemetry-sdk", specifier = ">=1.24" },
+    { name = "probes", editable = "packages/probes" },
+    { name = "pydantic-settings", specifier = ">=2.4" },
+    { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
+    { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "slowapi", specifier = ">=0.1.9" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
+    { name = "structlog", specifier = ">=24.1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "coverage", extras = ["toml"], specifier = ">=7" },
+    { name = "fakeredis", extras = ["lua"], specifier = ">=2.20" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "httpx2", specifier = ">=2.4.0" },
+    { name = "pre-commit", specifier = ">=3.7" },
+    { name = "pyright", specifier = ">=1.1" },
+    { name = "pytest", specifier = ">=8" },
+    { name = "pytest-asyncio", specifier = ">=0.24" },
+    { name = "pytest-cov", specifier = ">=5" },
+    { name = "ruff", specifier = ">=0.4" },
 ]
 
 [[package]]
@@ -1013,98 +1166,15 @@ wheels = [
 ]
 
 [[package]]
-name = "gate"
-version = "0.1.0"
-source = { editable = "services/gate" }
-dependencies = [
-    { name = "alembic" },
-    { name = "asyncpg" },
-    { name = "common" },
-    { name = "cryptography" },
-    { name = "fastapi" },
-    { name = "httpx" },
-    { name = "infra" },
-    { name = "nats-py" },
-    { name = "observability" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "opentelemetry-instrumentation-fastapi" },
-    { name = "opentelemetry-instrumentation-httpx" },
-    { name = "opentelemetry-instrumentation-redis" },
-    { name = "opentelemetry-instrumentation-sqlalchemy" },
-    { name = "opentelemetry-sdk" },
-    { name = "pydantic-settings" },
-    { name = "pyjwt", extra = ["crypto"] },
-    { name = "redis", extra = ["hiredis"] },
-    { name = "slowapi" },
-    { name = "sqlalchemy", extra = ["asyncio"] },
-    { name = "structlog" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "coverage" },
-    { name = "fakeredis", extra = ["lua"] },
-    { name = "httpx" },
-    { name = "httpx2" },
-    { name = "pre-commit" },
-    { name = "pyright" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "alembic", specifier = ">=1.13" },
-    { name = "asyncpg", specifier = ">=0.29" },
-    { name = "common", editable = "packages/common" },
-    { name = "cryptography", specifier = ">=42.0" },
-    { name = "fastapi", specifier = ">=0.115" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "infra", editable = "packages/infra" },
-    { name = "nats-py", specifier = ">=2.7" },
-    { name = "observability", editable = "packages/observability" },
-    { name = "opentelemetry-api", specifier = ">=1.24" },
-    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.24" },
-    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.48b0" },
-    { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.48b0" },
-    { name = "opentelemetry-instrumentation-redis", specifier = ">=0.48b0" },
-    { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.48b0" },
-    { name = "opentelemetry-sdk", specifier = ">=1.24" },
-    { name = "pydantic-settings", specifier = ">=2.4" },
-    { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
-    { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
-    { name = "slowapi", specifier = ">=0.1.9" },
-    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
-    { name = "structlog", specifier = ">=24.1" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "coverage", extras = ["toml"], specifier = ">=7" },
-    { name = "fakeredis", extras = ["lua"], specifier = ">=2.20" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "httpx2", specifier = ">=2.4.0" },
-    { name = "pre-commit", specifier = ">=3.7" },
-    { name = "pyright", specifier = ">=1.1" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "pytest-asyncio", specifier = ">=0.24" },
-    { name = "pytest-cov", specifier = ">=5" },
-    { name = "ruff", specifier = ">=0.4" },
-]
-
-[[package]]
 name = "gateway"
 version = "0.1.0"
 source = { virtual = "services/gateway" }
 dependencies = [
-    { name = "common" },
+    { name = "broker" },
+    { name = "contracts" },
     { name = "cryptography" },
     { name = "fastapi" },
+    { name = "http-errors" },
     { name = "nats-py" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
@@ -1114,9 +1184,11 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "common", editable = "packages/common" },
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "http-errors", editable = "packages/http-errors" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
@@ -1332,6 +1404,25 @@ wheels = [
 ]
 
 [[package]]
+name = "http-errors"
+version = "0.1.0"
+source = { editable = "packages/http-errors" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "pydantic" },
+    { name = "slowapi" },
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.110" },
+    { name = "pydantic", specifier = ">=2.0" },
+    { name = "slowapi", specifier = ">=0.1.9" },
+    { name = "structlog", specifier = ">=24.0" },
+]
+
+[[package]]
 name = "httpcore"
 version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
@@ -1431,6 +1522,7 @@ source = { editable = "packages/idempotency" }
 dependencies = [
     { name = "fastapi" },
     { name = "redis" },
+    { name = "starlette" },
     { name = "structlog" },
 ]
 
@@ -1438,6 +1530,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "redis", extras = ["asyncio"], specifier = ">=5.0" },
+    { name = "starlette", specifier = ">=0.40" },
     { name = "structlog", specifier = ">=24.0" },
 ]
 
@@ -1461,16 +1554,20 @@ dependencies = [
     { name = "arq" },
     { name = "asyncpg" },
     { name = "bcrypt" },
-    { name = "common" },
+    { name = "broker" },
+    { name = "contracts" },
     { name = "cryptography" },
+    { name = "db" },
     { name = "email-validator" },
     { name = "fastapi" },
     { name = "geoip2" },
+    { name = "http-errors" },
     { name = "httpx" },
     { name = "idempotency" },
-    { name = "infra" },
     { name = "jobs" },
+    { name = "locking" },
     { name = "mailchecker" },
+    { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opencv-python-headless" },
@@ -1485,10 +1582,12 @@ dependencies = [
     { name = "passlib", extra = ["argon2", "bcrypt"] },
     { name = "phonenumbers" },
     { name = "pillow" },
+    { name = "probes" },
     { name = "pydantic-settings" },
     { name = "pyjwt", extra = ["crypto"] },
     { name = "pytesseract" },
     { name = "python-multipart" },
+    { name = "ratelimit" },
     { name = "redis", extra = ["hiredis"] },
     { name = "security" },
     { name = "slowapi" },
@@ -1496,6 +1595,7 @@ dependencies = [
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
     { name = "webauthn" },
+    { name = "worker" },
     { name = "zxcvbn" },
 ]
 
@@ -1522,16 +1622,20 @@ requires-dist = [
     { name = "arq", specifier = ">=0.26" },
     { name = "asyncpg", specifier = ">=0.29" },
     { name = "bcrypt", specifier = ">=3.2,<4.0" },
-    { name = "common", editable = "packages/common" },
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42.0" },
+    { name = "db", editable = "packages/db" },
     { name = "email-validator", specifier = ">=2.2" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "geoip2", specifier = ">=5.2.0" },
+    { name = "http-errors", editable = "packages/http-errors" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/idempotency" },
-    { name = "infra", editable = "packages/infra" },
     { name = "jobs", editable = "packages/jobs" },
+    { name = "locking", editable = "packages/locking" },
     { name = "mailchecker", specifier = ">=4.1" },
+    { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.7" },
     { name = "observability", editable = "packages/observability" },
     { name = "opencv-python-headless", specifier = ">=4.8" },
@@ -1546,10 +1650,12 @@ requires-dist = [
     { name = "passlib", extras = ["bcrypt", "argon2"], specifier = ">=1.7" },
     { name = "phonenumbers", specifier = ">=8.13" },
     { name = "pillow", specifier = ">=10.0" },
+    { name = "probes", editable = "packages/probes" },
     { name = "pydantic-settings", specifier = ">=2.4" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
     { name = "pytesseract", specifier = ">=0.3" },
     { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "ratelimit", editable = "packages/ratelimit" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
     { name = "security", editable = "packages/security" },
     { name = "slowapi", specifier = ">=0.1.9" },
@@ -1557,6 +1663,7 @@ requires-dist = [
     { name = "structlog", specifier = ">=24.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
     { name = "webauthn", specifier = ">=2.0" },
+    { name = "worker", editable = "packages/worker" },
     { name = "zxcvbn", specifier = ">=4.4" },
 ]
 
@@ -1582,29 +1689,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/cd/63/9496c57188a2ee585e0f1db071d75089a11e98aa86eb99d9d7618fc1edce/idna-3.18.tar.gz", hash = "sha256:ffb385a7e039654cef1ab9ef32c6fafe283c0c0467bba1d9029738ce4a14a848", size = 196711, upload-time = "2026-06-02T14:34:07.794Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/5e/d4e9f1a599fb8e573b7b87160658329fbf28d19eac2718f51fc3def3aa5a/idna-3.18-py3-none-any.whl", hash = "sha256:7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2", size = 65455, upload-time = "2026-06-02T14:34:06.319Z" },
-]
-
-[[package]]
-name = "infra"
-version = "0.1.0"
-source = { editable = "packages/infra" }
-dependencies = [
-    { name = "arq" },
-    { name = "asyncpg" },
-    { name = "redis" },
-    { name = "sqlalchemy", extra = ["asyncio"] },
-    { name = "starlette" },
-    { name = "structlog" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "arq", specifier = ">=0.26" },
-    { name = "asyncpg", specifier = ">=0.29" },
-    { name = "redis", extras = ["asyncio"], specifier = ">=5.0" },
-    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
-    { name = "starlette", specifier = ">=0.40" },
-    { name = "structlog", specifier = ">=24.0" },
 ]
 
 [[package]]
@@ -1647,6 +1731,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/71/69/826a5d1f45426c68d8f6539f8d275c0e4fcaa57f0c017ec3100986558a41/limits-5.8.0.tar.gz", hash = "sha256:c9e0d74aed837e8f6f50d1fcebcf5fd8130957287206bc3799adaee5092655da", size = 226104, upload-time = "2026-02-05T07:17:35.859Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b9/98/cb5ca20618d205a09d5bec7591fbc4130369c7e6308d9a676a28ff3ab22c/limits-5.8.0-py3-none-any.whl", hash = "sha256:ae1b008a43eb43073c3c579398bd4eb4c795de60952532dc24720ab45e1ac6b8", size = 60954, upload-time = "2026-02-05T07:17:34.425Z" },
+]
+
+[[package]]
+name = "locking"
+version = "0.1.0"
+source = { editable = "packages/locking" }
+dependencies = [
+    { name = "redis" },
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "redis", extras = ["asyncio"], specifier = ">=5.0" },
+    { name = "structlog", specifier = ">=24.0" },
 ]
 
 [[package]]
@@ -1839,6 +1938,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/04/ba/015d8608e8ab108b6c5e8c252f51155385a70224f439e898ae01cd3aeb67/maxminddb-3.1.1-cp314-cp314t-win32.whl", hash = "sha256:962edb5f23f9e8dfbdfc775d9e452e4017adae2fb12d1b0a955dbddb7747e781", size = 37499, upload-time = "2026-03-05T18:14:04.823Z" },
     { url = "https://files.pythonhosted.org/packages/39/67/8da91c3a89530209057e27f314859e17f8d93244b73945d01036e89cf819/maxminddb-3.1.1-cp314-cp314t-win_amd64.whl", hash = "sha256:6879a4d822b894d1717aeef20b3558fdf1d1f6cf1ce25a7ad46d0a43ed745f63", size = 39557, upload-time = "2026-03-05T18:14:06.334Z" },
     { url = "https://files.pythonhosted.org/packages/f1/3e/36c6010a302f822d054fed7ed7009d39dd0ed662c17a01e36dce956787ca/maxminddb-3.1.1-cp314-cp314t-win_arm64.whl", hash = "sha256:9cc4eb1d2648c0188d7649babe8df1236d22972a753676db3b7487646a65b0c7", size = 35396, upload-time = "2026-03-05T18:14:07.281Z" },
+]
+
+[[package]]
+name = "middleware"
+version = "0.1.0"
+source = { editable = "packages/middleware" }
+dependencies = [
+    { name = "starlette" },
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "starlette", specifier = ">=0.40" },
+    { name = "structlog", specifier = ">=24.0" },
 ]
 
 [[package]]
@@ -2267,6 +2381,21 @@ wheels = [
 ]
 
 [[package]]
+name = "outbox"
+version = "0.1.0"
+source = { virtual = "packages/outbox" }
+dependencies = [
+    { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
+    { name = "structlog", specifier = ">=24.0" },
+]
+
+[[package]]
 name = "packaging"
 version = "26.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2316,11 +2445,15 @@ source = { editable = "services/payments" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
-    { name = "common" },
+    { name = "broker" },
+    { name = "contracts" },
     { name = "cryptography" },
+    { name = "db" },
     { name = "fastapi" },
+    { name = "http-errors" },
     { name = "httpx" },
-    { name = "infra" },
+    { name = "locking" },
+    { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
@@ -2330,6 +2463,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-redis" },
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
+    { name = "probes" },
     { name = "pydantic-settings" },
     { name = "pyjwt", extra = ["crypto"] },
     { name = "redis", extra = ["hiredis"] },
@@ -2356,11 +2490,15 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "asyncpg", specifier = ">=0.29" },
-    { name = "common", editable = "packages/common" },
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42.0" },
+    { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "http-errors", editable = "packages/http-errors" },
     { name = "httpx", specifier = ">=0.27" },
-    { name = "infra", editable = "packages/infra" },
+    { name = "locking", editable = "packages/locking" },
+    { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.7" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
@@ -2370,6 +2508,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-redis", specifier = ">=0.48b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.48b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
+    { name = "probes", editable = "packages/probes" },
     { name = "pydantic-settings", specifier = ">=2.4" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
@@ -2502,6 +2641,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8e/22/2de9408ac81acbb8a7d05d4cc064a152ccf33b3d480ebe0cd292153db239/pre_commit-4.6.0.tar.gz", hash = "sha256:718d2208cef53fdc38206e40524a6d4d9576d103eb16f0fec11c875e7716e9d9", size = 198525, upload-time = "2026-04-21T20:31:41.613Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/80/6e/4b28b62ecb6aae56769c34a8ff1d661473ec1e9519e2d5f8b2c150086b26/pre_commit-4.6.0-py2.py3-none-any.whl", hash = "sha256:e2cf246f7299edcabcf15f9b0571fdce06058527f0a06535068a86d38089f29b", size = 226472, upload-time = "2026-04-21T20:31:40.092Z" },
+]
+
+[[package]]
+name = "probes"
+version = "0.1.0"
+source = { editable = "packages/probes" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "redis" },
+    { name = "sqlalchemy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.110" },
+    { name = "redis", extras = ["asyncio"], specifier = ">=5.0" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
 ]
 
 [[package]]
@@ -2957,6 +3113,23 @@ requires-dist = [
 dev = [{ name = "ruff", specifier = ">=0.4" }]
 
 [[package]]
+name = "ratelimit"
+version = "0.1.0"
+source = { editable = "packages/ratelimit" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "redis" },
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "redis", extras = ["asyncio"], specifier = ">=5.0" },
+    { name = "structlog", specifier = ">=24.0" },
+]
+
+[[package]]
 name = "redis"
 version = "5.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3021,13 +3194,17 @@ dependencies = [
     { name = "alembic" },
     { name = "arq" },
     { name = "asyncpg" },
-    { name = "common" },
+    { name = "broker" },
+    { name = "contracts" },
     { name = "cryptography" },
+    { name = "db" },
     { name = "fastapi" },
+    { name = "http-errors" },
     { name = "httpx" },
     { name = "idempotency" },
-    { name = "infra" },
     { name = "jobs" },
+    { name = "locking" },
+    { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
@@ -3036,6 +3213,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
     { name = "pagination" },
+    { name = "probes" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
     { name = "redis", extra = ["hiredis"] },
@@ -3044,6 +3222,7 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "worker" },
 ]
 
 [package.metadata]
@@ -3051,13 +3230,17 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "arq", specifier = ">=0.25" },
     { name = "asyncpg", specifier = ">=0.29" },
-    { name = "common", editable = "packages/common" },
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42" },
+    { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "http-errors", editable = "packages/http-errors" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/idempotency" },
-    { name = "infra", editable = "packages/infra" },
     { name = "jobs", editable = "packages/jobs" },
+    { name = "locking", editable = "packages/locking" },
+    { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
@@ -3066,6 +3249,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
     { name = "pagination", editable = "packages/pagination" },
+    { name = "probes", editable = "packages/probes" },
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
@@ -3074,6 +3258,7 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+    { name = "worker", editable = "packages/worker" },
 ]
 
 [[package]]
@@ -3201,13 +3386,17 @@ dependencies = [
     { name = "alembic" },
     { name = "arq" },
     { name = "asyncpg" },
-    { name = "common" },
+    { name = "broker" },
+    { name = "contracts" },
     { name = "cryptography" },
+    { name = "db" },
     { name = "fastapi" },
+    { name = "http-errors" },
     { name = "httpx" },
     { name = "idempotency" },
-    { name = "infra" },
     { name = "jobs" },
+    { name = "locking" },
+    { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
@@ -3216,6 +3405,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
     { name = "pagination" },
+    { name = "probes" },
     { name = "pydantic-settings" },
     { name = "pyjwt", extra = ["crypto"] },
     { name = "redis", extra = ["hiredis"] },
@@ -3224,6 +3414,7 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "worker" },
 ]
 
 [package.metadata]
@@ -3231,13 +3422,17 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "arq", specifier = ">=0.25" },
     { name = "asyncpg", specifier = ">=0.29" },
-    { name = "common", editable = "packages/common" },
+    { name = "broker", editable = "packages/broker" },
+    { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42" },
+    { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "http-errors", editable = "packages/http-errors" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/idempotency" },
-    { name = "infra", editable = "packages/infra" },
     { name = "jobs", editable = "packages/jobs" },
+    { name = "locking", editable = "packages/locking" },
+    { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
@@ -3246,6 +3441,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
     { name = "pagination", editable = "packages/pagination" },
+    { name = "probes", editable = "packages/probes" },
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
@@ -3254,6 +3450,7 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+    { name = "worker", editable = "packages/worker" },
 ]
 
 [[package]]
@@ -3521,6 +3718,17 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/9f/3e/28135a24e384493fa804216b79a6a6759a38cc4ff59118787b9fb693df93/websockets-16.0-cp314-cp314t-win_amd64.whl", hash = "sha256:b14dc141ed6d2dde437cddb216004bcac6a1df0935d79656387bd41632ba0bbd", size = 178531, upload-time = "2026-01-10T09:23:35.016Z" },
     { url = "https://files.pythonhosted.org/packages/6f/28/258ebab549c2bf3e64d2b0217b973467394a9cea8c42f70418ca2c5d0d2e/websockets-16.0-py3-none-any.whl", hash = "sha256:1637db62fad1dc833276dded54215f2c7fa46912301a24bd94d45d46a011ceec", size = 171598, upload-time = "2026-01-10T09:23:45.395Z" },
 ]
+
+[[package]]
+name = "worker"
+version = "0.1.0"
+source = { editable = "packages/worker" }
+dependencies = [
+    { name = "structlog" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "structlog", specifier = ">=24.0" }]
 
 [[package]]
 name = "wrapt"

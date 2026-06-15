@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from jwt import InvalidTokenError
 
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 ALGORITHM: Final = "ES256"
 

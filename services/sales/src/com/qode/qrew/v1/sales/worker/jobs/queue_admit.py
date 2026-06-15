@@ -3,10 +3,10 @@ import uuid
 import structlog
 from sqlalchemy import text
 
-from com.qode.qrew.v1.sales.database import AsyncSessionLocal
-from infra.locking import LockUnavailableError, redlock
+from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
+from locking import LockUnavailableError, redlock
 from com.qode.qrew.v1.sales.services.queue.redis_queue import admit_batch
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

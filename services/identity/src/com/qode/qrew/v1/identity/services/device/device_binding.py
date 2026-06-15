@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.models.device.device import Device
@@ -19,7 +19,7 @@ from com.qode.qrew.v1.identity.services.audit import AuditService
 from com.qode.qrew.v1.identity.services.device.device_attestation import (
     consume_attestation,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

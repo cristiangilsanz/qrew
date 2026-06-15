@@ -6,10 +6,10 @@ from typing import Any
 import structlog
 
 from com.qode.qrew.v1.catalog.services.audit import AuditService
-from infra.errors import DomainError
-from infra.locking import redlock
+from com.qode.qrew.v1.catalog.core.errors import DomainError
+from locking import redlock
 from observability import traced
-from com.qode.qrew.v1.catalog.settings import settings
+from com.qode.qrew.v1.catalog.core.config import settings
 from com.qode.qrew.v1.catalog.models.event import EventStatus
 from com.qode.qrew.v1.catalog.models.ticket_type import TicketType
 from com.qode.qrew.v1.catalog.repositories.event import EventRepository
@@ -20,8 +20,8 @@ logger = structlog.get_logger(__name__)
 
 async def _publish_nats(subject: str, ticket_type: TicketType) -> None:
     try:
-        from common.broker.publisher import publish  # type: ignore[import-not-found]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+        from broker.publisher import publish  # type: ignore[import-not-found]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),

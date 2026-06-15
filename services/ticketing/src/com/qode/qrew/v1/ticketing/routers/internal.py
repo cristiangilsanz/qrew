@@ -6,14 +6,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.database import get_db
-from infra.locking import LockUnavailableError, redlock
+from com.qode.qrew.v1.ticketing.core.database import get_db
+from locking import LockUnavailableError, redlock
 from com.qode.qrew.v1.ticketing.models.ticket import TicketState
 from com.qode.qrew.v1.ticketing.services.ticket.transition import (
     TicketTransitionError,
     transition_ticket,
 )
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 router = APIRouter(prefix="/_internal", include_in_schema=False)
 

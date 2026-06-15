@@ -3,8 +3,8 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.database import get_db
-from com.qode.qrew.v1.catalog.services.infra.limiter import limiter
+from com.qode.qrew.v1.catalog.core.database import get_db
+from com.qode.qrew.v1.catalog.core.dependencies import limiter
 from com.qode.qrew.v1.catalog.models.event import EventStatus
 from com.qode.qrew.v1.catalog.repositories.event import EventRepository
 from com.qode.qrew.v1.catalog.repositories.organisation import OrganisationRepository

@@ -1,7 +1,7 @@
 [project]
 name = "pagination"
 version = "0.1.0"
-description = "Shared keyset pagination utilities — page model and cursor encoding"
+description = "Qrew pagination."
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.0",

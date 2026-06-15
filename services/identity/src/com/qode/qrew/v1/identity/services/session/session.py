@@ -3,11 +3,11 @@ import uuid
 import redis.asyncio as aioredis
 import structlog
 
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.schemas.auth.session import SessionResponse
 from com.qode.qrew.v1.identity.services.auth.logout import BLACKLIST_JTI_PREFIX
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

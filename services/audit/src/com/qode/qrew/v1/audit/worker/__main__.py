@@ -4,8 +4,9 @@ import asyncio
 
 import structlog
 
+from worker import run_nats_subscribers
 from com.qode.qrew.v1.audit.services.writer import AuditService
-from com.qode.qrew.v1.audit.settings import settings
+from com.qode.qrew.v1.audit.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -14,16 +15,16 @@ async def main() -> None:
     await logger.ainfo("audit_worker.startup")
     await AuditService().ensure_genesis()
 
-    nats_url = settings.nats_url
-    if not nats_url:
+    if not settings.nats_url:
         await logger.awarning("audit_worker.no_nats_url")
         return
 
     from com.qode.qrew.v1.audit.worker.jobs.verify_chain import run_nightly_verify
     from com.qode.qrew.v1.audit.worker.events import run_audit_event_subscriber
 
-    await asyncio.gather(
-        run_audit_event_subscriber(nats_url),
+    await run_nats_subscribers(
+        "audit",
+        run_audit_event_subscriber(settings.nats_url),
         run_nightly_verify(),
     )
 

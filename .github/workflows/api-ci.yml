@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Run Linter
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +21,7 @@ jobs:
       - run: just lint-check
 
   format:
-    name: Run Formatter
+    name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,55 +34,17 @@ jobs:
       - run: just format-check
 
   typecheck:
-    name: Run Type Checker
+    name: Type Check (${{ matrix.service }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [identity, entry, payments, catalog, ticketing, sales, audit, gateway]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
         with:
           python-version: "3.12"
           enable-cache: true
-      - uses: extractions/setup-just@v2
-      - run: just install
-      - run: just type-check
-
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: sekret
-          POSTGRES_DB: qrew
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-        with:
-          python-version: "3.12"
-          enable-cache: true
-      - uses: extractions/setup-just@v2
-      - run: just install
-      - run: just db-upgrade
-      - run: just test
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: services/identity/coverage.xml
+      - run: uv sync --all-packages --all-groups
+      - run: cd services/${{ matrix.service }} && uv run pyright

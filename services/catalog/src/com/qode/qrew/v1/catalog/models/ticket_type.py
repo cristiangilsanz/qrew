@@ -15,7 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.catalog.database import Base
+from com.qode.qrew.v1.catalog.core.database import Base
 
 
 class TicketType(Base):

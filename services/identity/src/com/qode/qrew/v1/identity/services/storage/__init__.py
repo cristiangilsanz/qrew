@@ -6,7 +6,7 @@ from com.qode.qrew.v1.identity.services.storage.errors import (
 from com.qode.qrew.v1.identity.services.storage.keys import is_valid_key
 from com.qode.qrew.v1.identity.services.storage.local import LocalFilesystemBackend
 from com.qode.qrew.v1.identity.services.storage.service import StorageService, constraint_for
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 storage = StorageService(
     LocalFilesystemBackend(

@@ -5,7 +5,7 @@ from typing import Final
 
 from cryptography.fernet import Fernet, MultiFernet
 
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 _HASH_PREFIX: Final = b"qrew-pii-v1:"
 

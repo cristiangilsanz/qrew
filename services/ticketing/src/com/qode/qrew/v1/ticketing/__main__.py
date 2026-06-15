@@ -1,6 +1,6 @@
 import uvicorn
 
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 
 def main() -> None:

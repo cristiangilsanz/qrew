@@ -6,11 +6,11 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.database import AsyncSessionLocal
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.identity.worker.jobs.enqueue import enqueue as default_enqueue
 from observability import traced
 from com.qode.qrew.v1.identity.services.outbox.model import OutboxEvent
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 DLQ_UNKNOWN_JOB = "unknown_job_name"
 

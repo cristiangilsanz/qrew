@@ -7,7 +7,7 @@ from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.sales.database import Base
+from com.qode.qrew.v1.sales.core.database import Base
 
 
 class EventContext(Base):

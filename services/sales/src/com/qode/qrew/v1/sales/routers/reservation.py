@@ -6,11 +6,11 @@ from jwt import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.services.audit import AuditService
-from com.qode.qrew.v1.sales.services.auth.auth import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.sales.core.principals import AuthenticatedUser, get_current_user
 from idempotency import idempotent
-from com.qode.qrew.v1.sales.database import get_db
-from com.qode.qrew.v1.sales.services.infra.limiter import limiter
-from infra.locking import LockUnavailableError
+from com.qode.qrew.v1.sales.core.database import get_db
+from com.qode.qrew.v1.sales.core.dependencies import limiter
+from locking import LockUnavailableError
 from com.qode.qrew.v1.sales.services.queue.redis_queue import consume_reservation_token
 from com.qode.qrew.v1.sales.models.reservation import Reservation
 from com.qode.qrew.v1.sales.repositories.projections import (

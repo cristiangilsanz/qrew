@@ -6,9 +6,9 @@ from com.qode.qrew.v1.identity.services.auth.security import (
     generate_token,
     phone_number_otp_expiry,
 )
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
 
 logger = structlog.get_logger(__name__)
 

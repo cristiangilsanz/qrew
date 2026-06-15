@@ -15,12 +15,12 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.passkey.passkey import PasskeyCredential
 from com.qode.qrew.v1.identity.schemas.passkey.passkey import (
     PasskeyAuthenticationCompleteRequest,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

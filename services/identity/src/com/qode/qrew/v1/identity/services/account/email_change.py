@@ -6,13 +6,13 @@ from com.qode.qrew.v1.identity.services.auth.security import (
     generate_token,
     verify_password,
 )
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

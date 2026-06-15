@@ -8,13 +8,13 @@ import httpx
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.payments.services.auth import pii_crypto
-from infra.errors import DomainError
+from com.qode.qrew.v1.payments.core import crypto as pii_crypto
+from com.qode.qrew.v1.payments.core.errors import DomainError
 from observability import traced
 from com.qode.qrew.v1.payments.services import StripeClient
 from com.qode.qrew.v1.payments.models.payment import Payment, PaymentStatus
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
-from com.qode.qrew.v1.payments.settings import settings
+from com.qode.qrew.v1.payments.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -66,8 +66,8 @@ async def _get_reservation_context(
 
 async def _publish_event(subject: str, data: dict[str, Any], *, actor_id: uuid.UUID | None = None) -> None:
     try:
-        from common.broker.publisher import publish as nats_publish
-        from common.events.envelope import EventEnvelope
+        from broker.publisher import publish as nats_publish
+        from contracts.envelope import EventEnvelope
 
         event = EventEnvelope(
             occurred_at=datetime.now(UTC),

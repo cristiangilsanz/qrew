@@ -9,8 +9,8 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.identity.services.auth import jwt_keys
-from com.qode.qrew.v1.identity.database import get_db
-from com.qode.qrew.v1.identity.redis import get_redis
+from com.qode.qrew.v1.identity.core.database import get_db
+from com.qode.qrew.v1.identity.core.dependencies import get_redis
 from com.qode.qrew.v1.identity.models.auth.session import Session
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository

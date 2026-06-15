@@ -2,7 +2,7 @@ from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel
 
 from com.qode.qrew.v1.audit.services import AuditChainVerifier
-from com.qode.qrew.v1.audit.settings import settings
+from com.qode.qrew.v1.audit.core.config import settings
 
 router = APIRouter(prefix="/v1/admin/audit")
 

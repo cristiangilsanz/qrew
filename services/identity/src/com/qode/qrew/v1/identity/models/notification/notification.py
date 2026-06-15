@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from com.qode.qrew.v1.identity.services.auth import pii_crypto
-from com.qode.qrew.v1.identity.database import Base
+from com.qode.qrew.v1.identity.core.database import Base
 
 
 class NotificationChannel(enum.StrEnum):

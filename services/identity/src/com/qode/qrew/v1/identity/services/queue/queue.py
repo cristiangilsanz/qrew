@@ -9,7 +9,7 @@ import structlog
 
 from com.qode.qrew.v1.identity.services.auth import jwt_keys
 from observability import traced
-from com.qode.qrew.v1.identity.settings import settings as _settings
+from com.qode.qrew.v1.identity.core.config import settings as _settings
 
 logger = structlog.get_logger(__name__)
 

@@ -1,6 +1,6 @@
 import uvicorn
 
-from com.qode.qrew.v1.payments.settings import settings
+from com.qode.qrew.v1.payments.core.config import settings
 
 
 def main() -> None:

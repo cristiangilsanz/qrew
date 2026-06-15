@@ -2,10 +2,10 @@ import redis.asyncio as aioredis
 from fastapi import Request
 
 from com.qode.qrew.v1.identity.services.ratelimit.audit import make_audit_rejection_handler
-from com.qode.qrew.v1.identity.services.ratelimit.errors import RateLimitedError
-from com.qode.qrew.v1.identity.services.ratelimit.limiter import RateLimiter
+from ratelimit.errors import RateLimitedError
+from ratelimit.limiter import RateLimiter
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 
 class _State:

@@ -28,7 +28,7 @@ from com.qode.qrew.v1.identity.services.passkey._common import (
     PasskeyError,
     challenge_key,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

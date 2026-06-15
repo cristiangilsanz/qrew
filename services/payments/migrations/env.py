@@ -7,9 +7,8 @@ from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "common", "src"))
 
-from com.qode.qrew.v1.payments.database import Base
+from com.qode.qrew.v1.payments.core.database import Base
 from com.qode.qrew.v1.payments import models  # noqa: F401
 
 config = context.config

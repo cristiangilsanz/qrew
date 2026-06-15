@@ -2,11 +2,12 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from com.qode.qrew.v1.gateway.services.channels import entry as _entry_channel  # noqa: F401  # type: ignore[reportUnusedImport]
-from com.qode.qrew.v1.gateway.services.channels import me as _me_channel  # noqa: F401  # type: ignore[reportUnusedImport]
-from com.qode.qrew.v1.gateway.lifespan import lifespan
+from com.qode.qrew.v1.gateway.routing import entry as _entry_channel  # noqa: F401  # type: ignore[reportUnusedImport]
+from com.qode.qrew.v1.gateway.routing import me as _me_channel  # noqa: F401  # type: ignore[reportUnusedImport]
+from com.qode.qrew.v1.gateway.core.lifespan import lifespan
 from com.qode.qrew.v1.gateway.routers.ws import router as ws_router
-from com.qode.qrew.v1.gateway.settings import settings
+from com.qode.qrew.v1.gateway.routers.errors import register_exception_handlers
+from com.qode.qrew.v1.gateway.core.config import settings
 
 structlog.configure(
     processors=[
@@ -37,6 +38,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+register_exception_handlers(app)
 
 app.include_router(ws_router)
 

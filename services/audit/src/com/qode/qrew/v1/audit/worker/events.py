@@ -7,13 +7,13 @@ from typing import Any
 
 import structlog
 
+from audit_publisher import AUDIT_EVENTS_SUBJECT as SUBJECT
 from com.qode.qrew.v1.audit.services.writer import AuditService
 
 logger = structlog.get_logger(__name__)
 
 STREAM = "AUDIT"
 DURABLE = "audit-events-handler"
-SUBJECT = "audit.events.v1"
 
 
 async def _parse(raw: bytes) -> dict[str, Any] | None:

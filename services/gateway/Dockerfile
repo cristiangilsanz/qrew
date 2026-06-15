@@ -6,7 +6,9 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY services/gateway/pyproject.toml services/gateway/pyproject.toml
-COPY packages/common/pyproject.toml packages/common/pyproject.toml
+COPY packages/broker/pyproject.toml packages/broker/pyproject.toml
+COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
+COPY packages/security/pyproject.toml packages/security/pyproject.toml
 COPY uv.lock ./
 
 RUN uv sync --package gateway --no-dev --frozen
@@ -17,7 +19,9 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 
 COPY services/gateway/src/ ./src/
-COPY packages/common/src/ ./src/
+COPY packages/broker/src/ ./src/
+COPY packages/contracts/src/ ./src/
+COPY packages/security/src/ ./src/
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="src"

@@ -6,7 +6,7 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.gateway.services.hub.hub import get_hub
+from com.qode.qrew.v1.gateway.hub.hub import get_hub
 
 logger = structlog.get_logger(__name__)
 

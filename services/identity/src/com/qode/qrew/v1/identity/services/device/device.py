@@ -4,14 +4,14 @@ from datetime import UTC, datetime
 import redis.asyncio as aioredis
 import structlog
 
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.models.device.device import Device
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.repositories.device.device import DeviceRepository
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

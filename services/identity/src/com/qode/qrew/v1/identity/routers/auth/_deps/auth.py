@@ -4,8 +4,8 @@ import redis.asyncio as aioredis
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.database import get_db
-from com.qode.qrew.v1.identity.redis import get_redis
+from com.qode.qrew.v1.identity.core.database import get_db
+from com.qode.qrew.v1.identity.core.dependencies import get_redis
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.identity.repositories.device.device import DeviceRepository
@@ -20,8 +20,8 @@ from com.qode.qrew.v1.identity.services.auth.login_lockout import LoginLockoutSe
 from com.qode.qrew.v1.identity.services.auth.logout import LogoutService
 from com.qode.qrew.v1.identity.services.auth.refresh import RefreshService
 from com.qode.qrew.v1.identity.services.auth.session_cap import SessionCapEnforcer
-from com.qode.qrew.v1.identity.services.infra.geoip import GeoIpService
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.core.geoip import GeoIpService
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
 from com.qode.qrew.v1.identity.services.session.session import SessionService
 
 from .shared import get_geoip_service, get_notification_service

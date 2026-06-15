@@ -5,11 +5,11 @@ import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.ticketing.services.audit import AuditService
-from infra.errors import DomainError
+from com.qode.qrew.v1.ticketing.core.errors import DomainError
 from com.qode.qrew.v1.ticketing.models.projections import DeviceContext
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
 from com.qode.qrew.v1.ticketing.services.ticket.transition import transition_ticket
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -93,8 +93,8 @@ async def restore_frozen_ticket(
 
 async def _publish_restored(ticket: Ticket, actor_id: uuid.UUID) -> None:
     try:
-        from common.broker.publisher import publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),

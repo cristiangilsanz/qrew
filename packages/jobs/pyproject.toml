@@ -1,7 +1,7 @@
 [project]
 name = "jobs"
 version = "0.1.0"
-description = "Shared Arq job runner infrastructure — pool, registry, context, cron, and DLQ"
+description = "Qrew jobs."
 requires-python = ">=3.12"
 dependencies = [
     "arq>=0.26",

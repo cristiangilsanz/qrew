@@ -3,7 +3,7 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.identity.database import AsyncSessionLocal
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.identity.worker.jobs.enqueue import enqueue
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.models.notification import (
@@ -15,7 +15,7 @@ from com.qode.qrew.v1.identity.repositories.notification import NotificationRepo
 from com.qode.qrew.v1.identity.services.notification.templates import (
     channel_for_template,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

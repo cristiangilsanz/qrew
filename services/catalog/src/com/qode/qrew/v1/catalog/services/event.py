@@ -7,9 +7,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.catalog.services.audit import AuditService
-from infra.errors import DomainError
-from infra.locking import redlock
-from com.qode.qrew.v1.catalog.settings import settings
+from com.qode.qrew.v1.catalog.core.errors import DomainError
+from locking import redlock
+from com.qode.qrew.v1.catalog.core.config import settings
 from observability import traced
 from com.qode.qrew.v1.catalog.repositories.search.tsvector import update_one_sql
 from com.qode.qrew.v1.catalog.models.event import Event, EventStatus
@@ -70,8 +70,8 @@ async def _publish_nats(
     subject: str, aggregate_type: str, aggregate_id: str, data: dict[str, Any]
 ) -> None:
     try:
-        from common.broker.publisher import publish  # type: ignore[import-not-found]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+        from broker.publisher import publish  # type: ignore[import-not-found]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),

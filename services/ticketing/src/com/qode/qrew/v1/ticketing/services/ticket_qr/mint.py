@@ -7,9 +7,9 @@ from typing import Any
 import structlog
 
 from com.qode.qrew.v1.ticketing.services.audit import AuditService
-from com.qode.qrew.v1.ticketing.services.auth import jwt_keys
+from com.qode.qrew.v1.ticketing.core import principals as jwt_keys
 from com.qode.qrew.v1.ticketing.services.ticket_qr.gate import GateInputs
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

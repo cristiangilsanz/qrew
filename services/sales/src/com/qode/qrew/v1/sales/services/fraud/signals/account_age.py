@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from com.qode.qrew.v1.sales.services.fraud.context import PurchaseContext
 from com.qode.qrew.v1.sales.services.fraud.signals.base import SignalResult
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
 
 class AccountAgeSignal:

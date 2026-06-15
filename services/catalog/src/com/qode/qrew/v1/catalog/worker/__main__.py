@@ -1,27 +1,13 @@
 import asyncio
 
-import structlog
-from arq.cron import CronJob, cron
-from arq.worker import func
+from db.redis import redis_settings_from_url
+from jobs import build_worker_settings
+from com.qode.qrew.v1.catalog.core.config import settings
 
-from infra.redis import redis_settings_from_url
-from com.qode.qrew.v1.catalog.worker.jobs.search_reindex import reindex_event, reindex_events
-from com.qode.qrew.v1.catalog.settings import settings
-
-logger = structlog.get_logger(__name__)
+import com.qode.qrew.v1.catalog.worker.jobs.search_reindex  # noqa: F401 — registers @job decorators
 
 
-class WorkerSettings:
-    functions = [
-        func(reindex_event, name="search.reindex_event", max_tries=3),
-    ]
-    cron_jobs: list[CronJob] = [
-        cron(reindex_events, name="cron:search.reindex_events", hour={5}, minute={0}, max_tries=1),
-    ]
-    redis_settings = redis_settings_from_url(settings.redis_url)
-    max_jobs = 5
-    job_timeout = 300
-    keep_result = 60
+WorkerSettings = build_worker_settings(redis_settings_from_url(settings.redis_url))
 
 
 def main() -> None:

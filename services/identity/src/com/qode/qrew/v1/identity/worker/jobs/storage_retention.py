@@ -4,18 +4,18 @@ from typing import Any
 import structlog
 from sqlalchemy import or_, select, update
 
-from com.qode.qrew.v1.identity.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.worker.jobs.registry import job
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
+from jobs import job, parse_crontab
 from com.qode.qrew.v1.identity.services.storage import storage
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
 
-@job(name="storage.kyc_retention", cron="0 4 * * *", max_attempts=1)
+@job("storage.kyc_retention", cron=parse_crontab("0 4 * * *"), max_attempts=1)
 async def purge_old_kyc_documents(ctx: dict[str, Any]) -> dict[str, int]:
     """Delete KYC documents older than the configured retention window."""
     del ctx

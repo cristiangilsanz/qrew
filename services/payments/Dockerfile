@@ -6,7 +6,13 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY services/payments/pyproject.toml services/payments/pyproject.toml
-COPY packages/common/pyproject.toml packages/common/pyproject.toml
+COPY packages/broker/pyproject.toml packages/broker/pyproject.toml
+COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
+COPY packages/db/pyproject.toml packages/db/pyproject.toml
+COPY packages/locking/pyproject.toml packages/locking/pyproject.toml
+COPY packages/middleware/pyproject.toml packages/middleware/pyproject.toml
+COPY packages/observability/pyproject.toml packages/observability/pyproject.toml
+COPY packages/security/pyproject.toml packages/security/pyproject.toml
 COPY uv.lock ./
 
 RUN uv sync --package payments --no-dev --frozen
@@ -17,7 +23,13 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 
 COPY services/payments/src/ ./src/
-COPY packages/common/src/ ./src/
+COPY packages/broker/src/ ./src/
+COPY packages/contracts/src/ ./src/
+COPY packages/db/src/ ./src/
+COPY packages/locking/src/ ./src/
+COPY packages/middleware/src/ ./src/
+COPY packages/observability/src/ ./src/
+COPY packages/security/src/ ./src/
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="src"

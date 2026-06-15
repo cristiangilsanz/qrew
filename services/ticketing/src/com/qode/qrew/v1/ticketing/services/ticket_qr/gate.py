@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.ticketing.models.projections import DeviceContext, EventVenueContext
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 _EARTH_RADIUS_M = 6_371_000.0
 

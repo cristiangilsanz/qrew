@@ -8,7 +8,7 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.sales.database import AsyncSessionLocal
+from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.sales.repositories.projections import (
     FingerprintContextRepository,
     UserAgeContextRepository,

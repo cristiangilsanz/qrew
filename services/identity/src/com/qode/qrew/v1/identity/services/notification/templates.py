@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from com.qode.qrew.v1.identity.models.notification import NotificationChannel
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.services.notification.templates.email_change_alert_email import (
     email_change_alert_email,
 )

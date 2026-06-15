@@ -6,7 +6,7 @@ import structlog
 from jwt import InvalidTokenError
 
 from com.qode.qrew.v1.sales.services.audit import AuditService
-from infra.errors import DomainError
+from com.qode.qrew.v1.sales.core.errors import DomainError
 from observability import traced
 from com.qode.qrew.v1.sales.services.queue.redis_queue import (
     join_queue,
@@ -14,7 +14,7 @@ from com.qode.qrew.v1.sales.services.queue.redis_queue import (
     redeem_window_token,
 )
 from com.qode.qrew.v1.sales.repositories.projections import EventContextRepository
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

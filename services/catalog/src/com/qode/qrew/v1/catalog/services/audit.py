@@ -20,8 +20,8 @@ class AuditService:
         payload: dict[str, Any] | None = None,
     ) -> None:
         try:
-            from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+            from broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+            from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
             envelope = EventEnvelope(
                 occurred_at=datetime.now(UTC),

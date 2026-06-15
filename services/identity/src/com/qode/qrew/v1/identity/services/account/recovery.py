@@ -17,7 +17,7 @@ from webauthn.helpers.structs import (
 from webauthn.registration.verify_registration_response import VerifiedRegistration
 
 from com.qode.qrew.v1.identity.services.auth.security import create_recovery_token
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.models.passkey.passkey import PasskeyCredential
@@ -30,9 +30,9 @@ from com.qode.qrew.v1.identity.schemas.passkey.passkey import (
     PasskeyRegistrationCompleteRequest,
 )
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
 from com.qode.qrew.v1.identity.services.kyc.ocr import OcrError, OcrService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

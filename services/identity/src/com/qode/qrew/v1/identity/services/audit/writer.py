@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 import structlog
 
-from com.qode.qrew.v1.identity.database import AsyncSessionLocal
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.identity.models.audit.audit import AuditEvent
 from com.qode.qrew.v1.identity.repositories.audit.audit import AuditRepository
 
@@ -28,8 +28,8 @@ class AuditService:
     ) -> None:
         now = datetime.now(UTC)
         try:
-            from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+            from broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+            from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
             envelope = EventEnvelope(
                 occurred_at=now,
@@ -52,8 +52,8 @@ class AuditService:
         if actor_id is not None:
             channel_key = _ME_PATTERN.format(user_id=str(actor_id))
             try:
-                from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
-                from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+                from broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+                from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
                 ws_envelope = EventEnvelope(
                     occurred_at=now,

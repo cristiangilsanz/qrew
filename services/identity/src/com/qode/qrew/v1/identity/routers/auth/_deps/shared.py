@@ -4,13 +4,13 @@ from com.qode.qrew.v1.identity.services.registration.captcha import (
     CaptchaService,
     build_captcha_service,
 )
-from com.qode.qrew.v1.identity.services.infra.geoip import GeoIpService
-from com.qode.qrew.v1.identity.services.infra.notification import (
+from com.qode.qrew.v1.identity.core.geoip import GeoIpService
+from com.qode.qrew.v1.identity.services.notification import (
     NotificationDispatcher,
     build_notification_dispatcher,
 )
 from com.qode.qrew.v1.identity.services.kyc.ocr import OcrService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 
 def get_captcha_service() -> CaptchaService:

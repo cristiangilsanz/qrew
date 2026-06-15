@@ -1,7 +1,7 @@
 [project]
 name = "gateway"
 version = "0.1.0"
-description = "qrew WebSocket gateway — NATS fanout to authenticated client connections"
+description = "Qrew gateway service."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -11,11 +11,15 @@ dependencies = [
     "PyJWT>=2.8",
     "cryptography>=42",
     "nats-py>=2.6",
-    "common",
+    "broker",
+    "contracts",
+    "http-errors",
 ]
 
 [tool.uv.sources]
-common = { workspace = true }
+broker = { workspace = true }
+contracts = { workspace = true }
+http-errors = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.gateway.__main__:main"
@@ -29,7 +33,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/common/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/security/src"]
 
 [tool.ruff]
 line-length = 100

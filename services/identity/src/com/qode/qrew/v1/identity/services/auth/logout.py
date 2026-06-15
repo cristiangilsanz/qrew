@@ -6,7 +6,7 @@ import structlog
 from jwt import ExpiredSignatureError, InvalidTokenError
 
 from com.qode.qrew.v1.identity.services.auth.security import decode_refresh_token
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.services.audit import AuditService

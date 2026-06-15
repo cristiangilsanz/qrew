@@ -7,11 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.sales.database import get_db
+from com.qode.qrew.v1.sales.core.database import get_db
 from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
 from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
 router = APIRouter(prefix="/_internal", include_in_schema=False)
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import Response
 
 from com.qode.qrew.v1.identity.services.auth.auth import get_setup_or_full_user
-from com.qode.qrew.v1.identity.services.infra.limiter import limiter
+from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.services.storage import (
     ObjectNotFoundError,
     SignatureExpiredError,
@@ -18,7 +18,7 @@ from com.qode.qrew.v1.identity.schemas.storage.upload import (
     SignUploadRequest,
     SignUploadResponse,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 

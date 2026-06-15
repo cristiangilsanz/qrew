@@ -4,8 +4,8 @@ from typing import Any
 import structlog
 from sqlalchemy import update
 
-from com.qode.qrew.v1.identity.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.worker.jobs.registry import job
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
+from jobs import job, parse_crontab
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.services.audit import AuditService
@@ -13,7 +13,7 @@ from com.qode.qrew.v1.identity.services.audit import AuditService
 logger = structlog.get_logger(__name__)
 
 
-@job(name="auth.cleanup_expired_tokens", cron="*/15 * * * *", max_attempts=3)
+@job("auth.cleanup_expired_tokens", cron=parse_crontab("*/15 * * * *"), max_attempts=3)
 async def cleanup_expired_tokens(ctx: dict[str, Any]) -> dict[str, int]:
     """Null out expired verification tokens and OTPs to keep the users table tidy."""
     del ctx

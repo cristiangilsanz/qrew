@@ -1,8 +1,8 @@
 import structlog
 from sqlalchemy import text
 
-from com.qode.qrew.v1.sales.database import AsyncSessionLocal
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
+from com.qode.qrew.v1.sales.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

@@ -14,7 +14,7 @@ from com.qode.qrew.v1.identity.services.auth.security import (
     create_refresh_token,
     extract_jti,
 )
-from infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from observability import traced
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
@@ -33,7 +33,7 @@ from com.qode.qrew.v1.identity.services.device.device_binding import (
     DeviceBindingError,
     verify_ecdsa,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

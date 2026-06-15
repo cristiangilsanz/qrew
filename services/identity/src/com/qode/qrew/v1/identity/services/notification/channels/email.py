@@ -3,12 +3,12 @@ from email.message import EmailMessage
 import aiosmtplib
 import structlog
 
-from com.qode.qrew.v1.identity.services.infra.notification._masking import mask_email
+from com.qode.qrew.v1.identity.services.notification._masking import mask_email
 from com.qode.qrew.v1.identity.services.notification.templates import (
     RenderedEmail,
     render_email,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

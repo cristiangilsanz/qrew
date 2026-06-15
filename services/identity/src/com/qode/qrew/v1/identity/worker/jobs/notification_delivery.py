@@ -4,8 +4,8 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.identity.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.worker.jobs.registry import job
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
+from jobs import job
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.notification import NotificationStatus
 from com.qode.qrew.v1.identity.repositories.notification import NotificationRepository
@@ -13,12 +13,12 @@ from com.qode.qrew.v1.identity.services.audit import AuditService
 from com.qode.qrew.v1.identity.services.notification.channels import (
     deliver as deliver_channel,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
 
-@job(name="notification.deliver")
+@job("notification.deliver")
 async def deliver(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     """Deliver one persisted notification, marking the row and retrying on failure."""
     notification_id = uuid.UUID(payload["notification_id"])

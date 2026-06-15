@@ -8,7 +8,7 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.ticketing.database import AsyncSessionLocal
+from com.qode.qrew.v1.ticketing.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.ticketing.repositories.projections import EventVenueContextRepository
 
 logger = structlog.get_logger(__name__)

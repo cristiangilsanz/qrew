@@ -9,7 +9,7 @@ import structlog
 from passlib.context import CryptContext
 
 from com.qode.qrew.v1.identity.services.auth import jwt_keys
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

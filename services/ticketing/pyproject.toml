@@ -1,7 +1,7 @@
 [project]
 name = "ticketing"
 version = "0.1.0"
-description = "qrew ticketing service (ticket FSM, rotating QR, CQRS projections)"
+description = "Qrew ticketing service."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -23,23 +23,35 @@ dependencies = [
     "cryptography>=42",
     "nats-py>=2.6",
     "arq>=0.25",
-    "common",
-    "infra",
+    "broker",
+    "contracts",
+    "db",
+    "locking",
+    "middleware",
     "observability",
     "pagination",
     "idempotency",
     "jobs",
     "security",
+    "http-errors",
+    "probes",
+    "worker",
 ]
 
 [tool.uv.sources]
-common = { workspace = true }
-infra = { workspace = true }
+broker = { workspace = true }
+contracts = { workspace = true }
+db = { workspace = true }
+locking = { workspace = true }
+middleware = { workspace = true }
 observability = { workspace = true }
 pagination = { workspace = true }
 idempotency = { workspace = true }
 jobs = { workspace = true }
 security = { workspace = true }
+http-errors = { workspace = true }
+probes = { workspace = true }
+worker = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.ticketing.__main__:main"
@@ -54,7 +66,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/common/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/jobs/src", "../../packages/security/src"]
 
 [tool.ruff]
 line-length = 100

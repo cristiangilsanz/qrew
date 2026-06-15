@@ -5,17 +5,17 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from com.qode.qrew.v1.gateway.services.channels.registry import resolve
-from com.qode.qrew.v1.gateway.services.auth.auth import WebSocketAuthError, authenticate
-from com.qode.qrew.v1.gateway.services.hub.close_codes import (
+from com.qode.qrew.v1.gateway.routing.registry import resolve
+from com.qode.qrew.v1.gateway.core.principals import WebSocketAuthError, authenticate
+from com.qode.qrew.v1.gateway.hub.close_codes import (
     WS_CLOSE_FORBIDDEN,
     WS_CLOSE_INTERNAL,
     WS_CLOSE_NORMAL,
     WS_CLOSE_UNAUTHORIZED,
 )
-from com.qode.qrew.v1.gateway.services.hub.connection import Connection
-from com.qode.qrew.v1.gateway.services.hub.hub import get_hub
-from com.qode.qrew.v1.gateway.settings import settings
+from com.qode.qrew.v1.gateway.hub.connection import Connection
+from com.qode.qrew.v1.gateway.hub.hub import get_hub
+from com.qode.qrew.v1.gateway.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

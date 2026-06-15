@@ -8,7 +8,7 @@ from com.qode.qrew.v1.identity.routers.page import Page, clamp_limit
 from com.qode.qrew.v1.identity.routers.pagination import cursor_paginate
 from com.qode.qrew.v1.identity.routers.probes import router as probes_router
 from com.qode.qrew.v1.identity.routers.uploads import router as uploads_router
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 router = APIRouter(prefix="/v1")
 router.include_router(health_router)

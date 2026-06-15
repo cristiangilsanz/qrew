@@ -15,7 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.payments.database import Base
+from com.qode.qrew.v1.payments.core.database import Base
 
 
 class PaymentStatus(enum.StrEnum):

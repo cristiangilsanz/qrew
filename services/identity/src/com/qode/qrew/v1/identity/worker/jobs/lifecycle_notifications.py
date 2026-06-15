@@ -3,8 +3,8 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.identity.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.worker.jobs.registry import job
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
+from jobs import job
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.identity.services.notification.service import NotificationService
 
@@ -32,7 +32,7 @@ async def _send(template_key: str, user: Any, payload: dict[str, Any]) -> None:
     )
 
 
-@job(name="notifications.payment_succeeded", max_attempts=3)
+@job("notifications.payment_succeeded", max_attempts=3)
 async def payment_succeeded(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     """Notify the buyer that their payment succeeded."""
     del ctx
@@ -44,7 +44,7 @@ async def payment_succeeded(ctx: dict[str, Any], payload: dict[str, Any]) -> Non
     )
 
 
-@job(name="notifications.payment_failed", max_attempts=3)
+@job("notifications.payment_failed", max_attempts=3)
 async def payment_failed(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     """Notify the buyer that their payment failed."""
     del ctx
@@ -59,7 +59,7 @@ async def payment_failed(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     )
 
 
-@job(name="notifications.event_cancelled", max_attempts=3)
+@job("notifications.event_cancelled", max_attempts=3)
 async def event_cancelled(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     """Phase 3 stub — fan-out to reservation holders is handled in a future phase."""
     del ctx
@@ -67,7 +67,7 @@ async def event_cancelled(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     await logger.ainfo("event_cancelled_notification_pending", event_id=event_id)
 
 
-@job(name="notifications.ticket_cancelled_chargeback", max_attempts=3)
+@job("notifications.ticket_cancelled_chargeback", max_attempts=3)
 async def ticket_cancelled_chargeback(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     del ctx
     user = await _get_user(payload.get("user_id", ""))
@@ -78,7 +78,7 @@ async def ticket_cancelled_chargeback(ctx: dict[str, Any], payload: dict[str, An
     )
 
 
-@job(name="notifications.ticket_cancelled_refund", max_attempts=3)
+@job("notifications.ticket_cancelled_refund", max_attempts=3)
 async def ticket_cancelled_refund(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     del ctx
     user = await _get_user(payload.get("user_id", ""))
@@ -89,7 +89,7 @@ async def ticket_cancelled_refund(ctx: dict[str, Any], payload: dict[str, Any]) 
     )
 
 
-@job(name="notifications.tickets_frozen_device_revoke", max_attempts=3)
+@job("notifications.tickets_frozen_device_revoke", max_attempts=3)
 async def tickets_frozen_device_revoke(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     del ctx
     user = await _get_user(payload.get("user_id", ""))
@@ -100,19 +100,8 @@ async def tickets_frozen_device_revoke(ctx: dict[str, Any], payload: dict[str, A
     )
 
 
-@job(name="notifications.ticket_restored", max_attempts=3)
+@job("notifications.ticket_restored", max_attempts=3)
 async def ticket_restored(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     del ctx
     user = await _get_user(payload.get("user_id", ""))
     await _send("ticket_restored", user, {"ticket_id": payload.get("ticket_id")})
-
-
-_ = (
-    payment_succeeded,
-    payment_failed,
-    event_cancelled,
-    ticket_cancelled_chargeback,
-    ticket_cancelled_refund,
-    tickets_frozen_device_revoke,
-    ticket_restored,
-)

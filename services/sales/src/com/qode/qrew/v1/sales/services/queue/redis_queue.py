@@ -7,9 +7,9 @@ from typing import Any
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.sales.services.auth import jwt_keys
+from com.qode.qrew.v1.sales.core import principals as jwt_keys
 from observability import traced
-from com.qode.qrew.v1.sales.settings import settings as _settings
+from com.qode.qrew.v1.sales.core.config import settings as _settings
 
 logger = structlog.get_logger(__name__)
 

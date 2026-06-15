@@ -7,12 +7,12 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.catalog.routers import Page, clamp_limit
-from com.qode.qrew.v1.catalog.database import get_db
-from com.qode.qrew.v1.catalog.services.infra.limiter import limiter
+from com.qode.qrew.v1.catalog.core.database import get_db
+from com.qode.qrew.v1.catalog.core.dependencies import limiter
 from com.qode.qrew.v1.catalog.repositories.search import build_search_clause, encode_next_cursor
 from com.qode.qrew.v1.catalog.schemas.search import EventSearchResult
 from com.qode.qrew.v1.catalog.repositories.search.events import EVENTS_SEARCH_CONFIG
-from com.qode.qrew.v1.catalog.settings import settings
+from com.qode.qrew.v1.catalog.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

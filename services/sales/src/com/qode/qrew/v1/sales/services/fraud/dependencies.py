@@ -18,7 +18,7 @@ from com.qode.qrew.v1.sales.services.fraud.signals.time_to_purchase import (
     TimeToPurchaseSignal,
 )
 from com.qode.qrew.v1.sales.services.fraud.signals.voip_phone import VoipPhoneSignal
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
 
 class _ClientState:

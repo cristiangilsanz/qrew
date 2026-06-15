@@ -1,7 +1,7 @@
 [project]
 name = "audit"
 version = "0.1.0"
-description = "qrew audit microservice (Merkle chain event projection)"
+description = "Qrew audit service."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -16,15 +16,23 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-http>=1.24",
     "opentelemetry-instrumentation-fastapi>=0.45b0",
     "nats-py>=2.6",
-    "common",
-    "infra",
+    "broker",
+    "contracts",
+    "db",
     "observability",
+    "http-errors",
+    "audit-publisher",
+    "worker",
 ]
 
 [tool.uv.sources]
-common = { workspace = true }
-infra = { workspace = true }
+broker = { workspace = true }
+contracts = { workspace = true }
+db = { workspace = true }
 observability = { workspace = true }
+http-errors = { workspace = true }
+audit-publisher = { workspace = true }
+worker = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.audit.__main__:main"
@@ -39,7 +47,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/common/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/observability/src"]
 
 [tool.ruff]
 line-length = 100

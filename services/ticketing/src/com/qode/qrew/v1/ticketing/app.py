@@ -7,16 +7,16 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from com.qode.qrew.v1.ticketing.routers.errors import default_responses, register_exception_handlers
 from com.qode.qrew.v1.ticketing.routers.health import router as probes_router
-from com.qode.qrew.v1.ticketing.services.idempotency.middleware import IdempotencyMiddleware
-from com.qode.qrew.v1.ticketing.services.infra.limiter import limiter
-from infra.middleware import (
+from idempotency.middleware import IdempotencyMiddleware
+from com.qode.qrew.v1.ticketing.core.dependencies import limiter
+from middleware import (
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
 )
 from observability import setup_tracing
-from com.qode.qrew.v1.ticketing.lifespan import lifespan
+from com.qode.qrew.v1.ticketing.core.lifespan import lifespan
 from com.qode.qrew.v1.ticketing.routers import router as v1_router
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 structlog.configure(
     processors=[
@@ -52,6 +52,7 @@ register_exception_handlers(app)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
+app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -59,8 +60,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(SlowAPIMiddleware)
-app.add_middleware(IdempotencyMiddleware)
+app.add_middleware(
+    IdempotencyMiddleware,
+    redis_url=settings.redis_url,
+    lock_seconds=settings.idempotency_lock_seconds,
+    enabled=settings.idempotency_enabled,
+)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
