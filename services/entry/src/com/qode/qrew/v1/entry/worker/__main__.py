@@ -1,5 +1,3 @@
-"""Subscribes to ticket state events and keeps the local projection up to date."""
-
 import asyncio
 
 import structlog

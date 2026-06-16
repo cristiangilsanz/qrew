@@ -1,5 +1,3 @@
-"""Subscribes to the fanout subject and delivers incoming messages to local WebSocket connections."""
-
 import asyncio
 import json
 from typing import Any

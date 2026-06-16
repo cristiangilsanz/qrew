@@ -1,5 +1,3 @@
-"""Arq worker entrypoint — runs all registered background jobs for the identity service."""
-
 import asyncio
 
 from db.redis import redis_settings_from_url

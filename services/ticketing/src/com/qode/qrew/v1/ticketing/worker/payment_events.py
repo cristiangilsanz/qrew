@@ -1,5 +1,3 @@
-"""Subscribes to reservation lifecycle events and drives ticket state transitions."""
-
 import asyncio
 import json
 import uuid

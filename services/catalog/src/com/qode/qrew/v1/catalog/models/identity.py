@@ -1,5 +1,3 @@
-"""Read-only user stub for catalog email lookups."""
-
 import uuid
 from datetime import datetime
 

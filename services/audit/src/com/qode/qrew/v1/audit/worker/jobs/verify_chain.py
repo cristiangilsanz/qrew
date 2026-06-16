@@ -1,5 +1,3 @@
-"""Nightly audit chain verification job."""
-
 import asyncio
 
 import structlog

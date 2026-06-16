@@ -1,8 +1,3 @@
-"""FastAPI auth dependencies that need DB access.
-
-Kept in routers/ so that core/ stays free of repository imports.
-"""
-
 import uuid
 from typing import Annotated
 

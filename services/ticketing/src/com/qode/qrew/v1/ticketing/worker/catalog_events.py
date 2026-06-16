@@ -1,5 +1,3 @@
-"""Subscribes to catalog events over a message broker and updates the local event and venue projection."""
-
 import asyncio
 import json
 import uuid

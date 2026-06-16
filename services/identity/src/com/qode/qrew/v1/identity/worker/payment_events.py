@@ -1,5 +1,3 @@
-"""Listens for payment saga events from the message broker and triggers notifications and audit records."""
-
 import asyncio
 import json
 import uuid

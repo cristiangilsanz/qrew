@@ -1,5 +1,3 @@
-"""Subscribes to catalog events and keeps local sales projection tables up to date."""
-
 import asyncio
 import uuid
 from datetime import UTC, datetime

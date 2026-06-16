@@ -1,5 +1,3 @@
-"""Subscribes to incoming audit events from the message broker and persists them as tamper-evident records."""
-
 import asyncio
 import json
 import uuid

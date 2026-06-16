@@ -1,5 +1,3 @@
-"""Manages the full payment lifecycle and publishes saga events via NATS."""
-
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime

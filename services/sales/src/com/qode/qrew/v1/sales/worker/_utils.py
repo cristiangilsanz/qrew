@@ -1,5 +1,3 @@
-"""Shared helpers for sales worker subscribers."""
-
 import json
 from typing import Any
 

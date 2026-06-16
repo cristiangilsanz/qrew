@@ -1,5 +1,3 @@
-"""Verifies JWT credentials for incoming WebSocket connections without database access."""
-
 from dataclasses import dataclass
 
 import jwt

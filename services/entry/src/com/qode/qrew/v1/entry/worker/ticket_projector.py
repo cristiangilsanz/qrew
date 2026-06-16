@@ -1,5 +1,3 @@
-"""Subscribes to ticket state changes and maintains the local ticket projection."""
-
 import asyncio
 import contextlib
 import json

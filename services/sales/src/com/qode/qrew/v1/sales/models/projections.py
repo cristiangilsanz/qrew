@@ -1,5 +1,3 @@
-"""Read models for the sales service covering event state, inventory, and fraud detection."""
-
 import uuid
 from datetime import datetime
 

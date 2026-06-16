@@ -1,5 +1,3 @@
-"""Internal API routes consumed only by sibling services."""
-
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status

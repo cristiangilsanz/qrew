@@ -1,5 +1,3 @@
-"""Subscribes to identity events and updates user age and fingerprint context projections."""
-
 import asyncio
 import uuid
 from datetime import UTC, datetime

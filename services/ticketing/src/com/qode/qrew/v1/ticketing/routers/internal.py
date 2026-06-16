@@ -1,5 +1,3 @@
-"""Internal API routes exposed only to other services within the same deployment."""
-
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status

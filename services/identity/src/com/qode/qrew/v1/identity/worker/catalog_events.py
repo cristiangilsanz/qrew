@@ -1,5 +1,3 @@
-"""Subscribes to catalog lifecycle events from the message broker."""
-
 import asyncio
 import json
 import uuid

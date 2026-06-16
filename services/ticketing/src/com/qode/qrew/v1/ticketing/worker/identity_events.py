@@ -1,5 +1,3 @@
-"""Handles device lifecycle events and updates the local device projection and ticket states accordingly."""
-
 import asyncio
 import json
 import uuid

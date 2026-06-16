@@ -1,5 +1,3 @@
-"""Read-only catalog schema models for the entry service."""
-
 import uuid
 
 from sqlalchemy.dialects.postgresql import UUID

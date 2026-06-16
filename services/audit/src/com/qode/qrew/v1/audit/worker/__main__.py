@@ -1,5 +1,3 @@
-"""Entry point for the audit worker process that consumes events and runs scheduled verification."""
-
 import asyncio
 
 import structlog

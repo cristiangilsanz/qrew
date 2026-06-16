@@ -1,5 +1,3 @@
-"""Internal API routes consumed only by sibling services."""
-
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Request, status

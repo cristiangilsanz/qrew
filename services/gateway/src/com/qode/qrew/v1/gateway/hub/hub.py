@@ -1,5 +1,3 @@
-"""Tracks active WebSocket connections grouped by channel for in-process message delivery."""
-
 import asyncio
 import contextlib
 import time

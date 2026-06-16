@@ -1,5 +1,3 @@
-"""Listens for payment events from the message broker and drives reservation state transitions."""
-
 import asyncio
 import uuid
 from datetime import UTC, datetime
