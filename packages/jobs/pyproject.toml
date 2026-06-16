@@ -1,0 +1,23 @@
+[project]
+name = "jobs"
+version = "0.1.0"
+description = "Qrew jobs."
+requires-python = ">=3.12"
+dependencies = [
+    "arq>=0.26",
+    "redis[asyncio]>=5.0",
+    "structlog>=24.0",
+    "observability",
+]
+
+[tool.uv.sources]
+observability = { workspace = true }
+
+[tool.uv]
+venvPath = "../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]

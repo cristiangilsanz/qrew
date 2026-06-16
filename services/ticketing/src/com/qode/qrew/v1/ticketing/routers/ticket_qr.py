@@ -8,10 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.ticketing.core.infra.database import get_db
-from com.qode.qrew.v1.ticketing.core.infra.limiter import limiter
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.core.principals import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.ticketing.core.database import get_db
+from com.qode.qrew.v1.ticketing.core.dependencies import limiter
 from com.qode.qrew.v1.ticketing.schemas.ticket_qr import QrIssueRequest, QrResponse
 from com.qode.qrew.v1.ticketing.services.ticket_qr.gate import (
     DenialReason,
@@ -20,9 +20,14 @@ from com.qode.qrew.v1.ticketing.services.ticket_qr.gate import (
     load_inputs,
 )
 from com.qode.qrew.v1.ticketing.services.ticket_qr.mint import mint_qr, record_denial
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 router = APIRouter(tags=["ticket-qr"])
+
+
+def _audit_service() -> AuditService:
+    return AuditService()
+
 
 _REASON_TO_STATUS: dict[DenialReason, int] = {
     DenialReason.not_found: status.HTTP_404_NOT_FOUND,
@@ -75,7 +80,7 @@ async def _resolve_or_deny(
         raise _denied_exception(resolved)
     reason = evaluate_gate(
         resolved,
-        last_asserted_at=current_user.last_asserted_at,
+        last_asserted_at=current_user.last_asserted_at,  # type: ignore[arg-type]
         latitude=latitude,
         longitude=longitude,
         now=now,
@@ -106,9 +111,9 @@ async def issue_qr(
     longitude: float = Query(..., ge=-180.0, le=180.0),
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    audit: AuditService = Depends(_audit_service),
 ) -> QrResponse:
     del request
-    audit = AuditService()
     now = datetime.now(UTC)
     device_id = current_user.device_id
     inputs = await _resolve_or_deny(
@@ -149,9 +154,9 @@ async def stream_qr(
     body: QrIssueRequest,
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    audit: AuditService = Depends(_audit_service),
 ) -> StreamingResponse:
     del request
-    audit = AuditService()
     latitude = float(body.latitude)
     longitude = float(body.longitude)
     device_id = current_user.device_id

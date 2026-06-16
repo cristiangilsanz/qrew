@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import structlog
 
-from com.qode.qrew.v1.audit.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.audit.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.audit.repositories.audit import (
     AuditRepository,
     compute_hash,

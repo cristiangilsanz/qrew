@@ -15,7 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.payments.core.infra.database import Base
+from com.qode.qrew.v1.payments.core.database import Base
 
 
 class PaymentStatus(enum.StrEnum):
@@ -40,9 +40,7 @@ class Payment(Base):
     reservation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, unique=True
     )
-    user_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     provider: Mapped[str] = mapped_column(
         String(32), nullable=False, server_default="stripe"
     )

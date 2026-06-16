@@ -3,10 +3,10 @@ import uuid
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -49,7 +49,7 @@ class LoginLockoutService:
         self._audit = audit
 
     async def check_not_locked(self, user_id: uuid.UUID) -> None:
-        """Raise LoginLockoutError if the account is currently locked."""
+        """Raises an error if the account is currently locked out."""
         ttl: int = await self._redis.ttl(_lock_key(user_id))
         if ttl > 0:
             raise LoginLockoutError(
@@ -89,8 +89,10 @@ class LoginLockoutService:
                 ip_address=ip_address,
                 payload={"attempts": attempts, "duration_seconds": duration},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.LOGIN_LOCKED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.LOGIN_LOCKED, error=repr(exc)
+            )
 
     async def reset(self, user_id: uuid.UUID) -> None:
         """Clear the failure counter and any active lock."""
@@ -106,12 +108,14 @@ class LoginLockoutService:
                 entity_type="user",
                 entity_id=str(user_id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.LOGIN_UNLOCKED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.LOGIN_UNLOCKED, error=repr(exc)
+            )
 
     @staticmethod
     def _duration_for_attempts(attempts: int) -> int | None:
-        """Return the lockout duration in seconds for this attempt count, or None."""
+        """Returns the lockout duration in seconds for the given attempt count, or nothing if no threshold is matched."""
         match: int | None = None
         for threshold, duration in _backoff_schedule():
             if attempts == threshold:

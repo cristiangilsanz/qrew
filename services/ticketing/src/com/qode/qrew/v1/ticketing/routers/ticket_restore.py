@@ -3,16 +3,20 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.ticketing.core.infra.database import get_db
-from com.qode.qrew.v1.ticketing.core.infra.limiter import limiter
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.core.principals import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.ticketing.core.database import get_db
+from com.qode.qrew.v1.ticketing.core.dependencies import limiter
 from com.qode.qrew.v1.ticketing.services.ticket.restore import (
     TicketRestoreError,
     restore_frozen_ticket,
 )
 
 router = APIRouter(tags=["ticket-restore"])
+
+
+def _audit_service() -> AuditService:
+    return AuditService()
 
 
 def _domain_to_http(error: TicketRestoreError) -> HTTPException:
@@ -40,8 +44,9 @@ async def restore_ticket(
     ticket_id: uuid.UUID,
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    audit: AuditService = Depends(_audit_service),
 ) -> dict[str, str]:
-    """Transition frozen → issued on a different, attested, fresh-reasserted device."""
+    """Restores a frozen ticket to active use on a newly enrolled device."""
     del request
     try:
         ticket = await restore_frozen_ticket(
@@ -49,8 +54,8 @@ async def restore_ticket(
             actor_id=current_user.id,
             ticket_id=ticket_id,
             session_device_id=current_user.device_id,
-            last_asserted_at=current_user.last_asserted_at,
-            audit=AuditService(),
+            last_asserted_at=current_user.last_asserted_at,  # type: ignore[arg-type]
+            audit=audit,
         )
     except TicketRestoreError as exc:
         raise _domain_to_http(exc) from exc

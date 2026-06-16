@@ -9,7 +9,7 @@ build-backend = "hatchling.build"
 [project]
 name = "payments"
 version = "0.1.0"
-description = "qrew payments service (Stripe + saga events)"
+description = "Qrew payments service."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -33,11 +33,25 @@ dependencies = [
     "cryptography>=42.0",
     "nats-py>=2.7",
     "stripe>=10.0",
-    "common",
+    "broker",
+    "contracts",
+    "db",
+    "idempotency",
+    "middleware",
+    "observability",
+    "http-errors",
+    "probes",
 ]
 
 [tool.uv.sources]
-common = { workspace = true }
+broker = { workspace = true }
+contracts = { workspace = true }
+db = { workspace = true }
+idempotency = { workspace = true }
+middleware = { workspace = true }
+observability = { workspace = true }
+http-errors = { workspace = true }
+probes = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.payments.__main__:main"
@@ -60,20 +74,20 @@ packages = ["src/com"]
 # ── Pyright ───────────────────────────────────────────────────────────────────
 
 [tool.pyright]
+reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/common/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/idempotency/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/security/src"]
 venvPath = "../.."
 venv = ".venv"
-reportMissingTypeStubs = false
 
 # ── Pytest ────────────────────────────────────────────────────────────────────
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/common/src"]
+pythonpath = ["src", "../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/observability/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
 

@@ -2,12 +2,12 @@ import uuid
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     create_access_token,
     create_refresh_token,
     extract_jti,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.session import Session
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
@@ -83,8 +83,10 @@ class CompleteSetupService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.SETUP_COMPLETED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.SETUP_COMPLETED, error=repr(exc)
+            )
 
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 

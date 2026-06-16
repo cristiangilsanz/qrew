@@ -25,17 +25,11 @@ class ReservationRepository:
     async def flush(self) -> None:
         await self._session.flush()
 
-    async def active_quantity_for_user(
-        self, user_id: uuid.UUID, event_id: uuid.UUID
-    ) -> int:
+    async def active_quantity_for_user(self, user_id: uuid.UUID, event_id: uuid.UUID) -> int:
         total = await self._session.execute(
             select(func.coalesce(func.sum(Reservation.quantity), 0))
             .where(Reservation.user_id == user_id)
             .where(Reservation.event_id == event_id)
-            .where(
-                Reservation.status.in_(
-                    [ReservationStatus.reserved, ReservationStatus.paid]
-                )
-            )
+            .where(Reservation.status.in_([ReservationStatus.reserved, ReservationStatus.paid]))
         )
         return int(total.scalar_one() or 0)

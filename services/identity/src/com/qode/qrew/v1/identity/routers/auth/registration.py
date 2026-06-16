@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from com.qode.qrew.v1.identity.core.auth.auth import get_setup_or_full_user
-from com.qode.qrew.v1.identity.core.idempotency import idempotent
-from com.qode.qrew.v1.identity.core.infra.limiter import limiter
-from com.qode.qrew.v1.identity.core.registration.captcha import CaptchaError
+from com.qode.qrew.v1.identity.services.auth.auth import get_setup_or_full_user
+from idempotency import idempotent
+from com.qode.qrew.v1.identity.core.dependencies import limiter
+from com.qode.qrew.v1.identity.services.registration.captcha import CaptchaError
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.schemas.registration.registration import (
     RegisterRequest,

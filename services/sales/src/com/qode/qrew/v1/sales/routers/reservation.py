@@ -1,17 +1,18 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from jwt import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.sales.core.audit import AuditService
-from com.qode.qrew.v1.sales.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.sales.core.idempotency import idempotent
-from com.qode.qrew.v1.sales.core.infra.database import get_db
-from com.qode.qrew.v1.sales.core.infra.limiter import limiter
-from com.qode.qrew.v1.sales.core.locking.errors import LockUnavailableError
-from com.qode.qrew.v1.sales.core.queue.queue import consume_reservation_token
+from com.qode.qrew.v1.sales.services.audit import AuditService
+from com.qode.qrew.v1.sales.core.principals import AuthenticatedUser, get_current_user
+from idempotency import idempotent
+from com.qode.qrew.v1.sales.core.database import get_db
+from com.qode.qrew.v1.sales.core.dependencies import limiter
+from locking import LockUnavailableError
+from com.qode.qrew.v1.sales.services.queue.redis_queue import consume_reservation_token
 from com.qode.qrew.v1.sales.models.reservation import Reservation
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
@@ -31,10 +32,9 @@ from com.qode.qrew.v1.sales.services.reservation.reservation import (
     TierBusyError,
 )
 
-router = APIRouter(tags=["reservations"])
+logger = structlog.get_logger(__name__)
 
-_RESERVATION_BLOCKED = "RESERVATION_BLOCKED"
-_RESERVATION_FLAGGED = "RESERVATION_FLAGGED"
+router = APIRouter(tags=["reservations"])
 
 
 def _make_service(db: AsyncSession) -> ReservationService:
@@ -95,36 +95,28 @@ async def reserve_event(
         ip_address = request.client.host if request.client else None
     fingerprint = request.headers.get("X-Device-Fingerprint")
 
-    engine = await build_engine_for_user(
-        db, user_id=current_user.id, fingerprint_hash=fingerprint
-    )
+    engine = await build_engine_for_user(db, user_id=current_user.id, fingerprint_hash=fingerprint)
     fraud_context = PurchaseContext(
         user_id=current_user.id,
         ip_address=ip_address,
         device_fingerprint_hash=fingerprint,
-        now=datetime.now(timezone.utc),
+        now=datetime.now(UTC),
     )
     evaluation = await engine.evaluate(fraud_context)
-    audit = AuditService()
+    service = _make_service(db)
 
     if evaluation.decision == FraudDecision.block:
-        try:
-            await audit.record(
-                action=_RESERVATION_BLOCKED,
-                actor_id=current_user.id,
-                entity_type="event",
-                entity_id=str(event_id),
-                payload=evaluation.to_payload(),
-            )
-        except Exception:
-            pass
+        await service.record_blocked(
+            actor_id=current_user.id,
+            event_id=event_id,
+            payload=evaluation.to_payload(),
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"message": "Reservation rejected for risk", "field": None},
         )
 
-    service = _make_service(db)
-    event_ctx = await EventContextRepository(db).get_by_event_id(event_id)
+    event_ctx = await service.get_event_context(event_id)
     if event_ctx is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -217,16 +209,11 @@ async def reserve_event(
             ) from exc
 
     if evaluation.decision == FraudDecision.review:
-        try:
-            await audit.record(
-                action=_RESERVATION_FLAGGED,
-                actor_id=current_user.id,
-                entity_type="reservation",
-                entity_id=str(reservation.id),
-                payload=evaluation.to_payload(),
-            )
-        except Exception:
-            pass
+        await service.record_flagged(
+            actor_id=current_user.id,
+            reservation_id=reservation.id,
+            payload=evaluation.to_payload(),
+        )
 
     return _to_response(reservation)
 

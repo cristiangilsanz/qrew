@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.core.auth import pii_crypto
+from com.qode.qrew.v1.identity.core import pii as pii_crypto
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
 
 
@@ -12,19 +12,19 @@ class UserRepository:
         self._session = session
 
     async def get_by_id(self, user_id: uuid.UUID) -> User | None:
-        """Return the user matching the given UUID."""
+        """Return the user matching the given identifier."""
         result = await self._session.execute(select(User).where(User.id == user_id).limit(1))
         return result.scalar_one_or_none()
 
     async def exists_by_email(self, email: str) -> bool:
-        """Return True if a user with the given email exists."""
+        """Check whether a user with the given email already exists."""
         result = await self._session.execute(
             select(User.id).where(User.email_hash == pii_crypto.hash_lookup(email)).limit(1)
         )
         return result.scalar() is not None
 
     async def exists_by_phone(self, phone_number: str) -> bool:
-        """Return True if a user with the given phone number exists."""
+        """Check whether a user with the given phone number already exists."""
         result = await self._session.execute(
             select(User.id)
             .where(User.phone_number_hash == pii_crypto.hash_lookup(phone_number))
@@ -56,7 +56,7 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     async def create(self, user: User) -> User:
-        """Persist a new User."""
+        """Persist a new user record to the database."""
         self._session.add(user)
         await self._session.flush()
         await self._session.refresh(user)
@@ -70,14 +70,14 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     async def get_by_national_id_hash(self, national_id_hash: str) -> User | None:
-        """Return the user matching the given national ID hash, or None."""
+        """Return the user matching the given national ID hash."""
         result = await self._session.execute(
             select(User).where(User.national_id_hash == national_id_hash).limit(1)
         )
         return result.scalar_one_or_none()
 
     async def save(self, user: User) -> User:
-        """Flush pending changes for an already-tracked User."""
+        """Persist pending changes for an already-tracked user."""
         await self._session.flush()
         await self._session.refresh(user)
         return user

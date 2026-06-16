@@ -3,8 +3,8 @@ from datetime import UTC, datetime
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import verify_password
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.services.auth.security import verify_password
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
@@ -14,7 +14,7 @@ from com.qode.qrew.v1.identity.repositories.passkey.passkey import (
 )
 from com.qode.qrew.v1.identity.services.audit import AuditService
 from com.qode.qrew.v1.identity.services.auth.logout import BLACKLIST_JTI_PREFIX
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -39,7 +39,7 @@ class AccountDeletionService:
         self._audit = audit
 
     async def delete(self, user: User, current_password: str) -> None:
-        """Re-auth, anonymise PII, kill sessions + passkeys, mark soft-deleted."""
+        """Verifies the current password then permanently removes all user data and active sessions."""
         if user.deleted_at is not None:
             raise AccountDeletionError("Account is already deleted")
 
@@ -64,12 +64,14 @@ class AccountDeletionService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.ACCOUNT_DELETED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.ACCOUNT_DELETED, error=repr(exc)
+            )
 
     @staticmethod
     def _anonymise(user: User) -> None:
-        """Replace PII with tombstone values; preserve uniqueness on email/phone."""
+        """Overwrites all personal data with placeholder values while keeping the account record intact."""
         tombstone = str(user.id)
         user.full_name = "Deleted User"
         user.email = f"deleted-{tombstone}@deleted.local"

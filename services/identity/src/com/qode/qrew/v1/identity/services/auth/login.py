@@ -3,7 +3,7 @@ from typing import NoReturn
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     create_access_token,
     create_refresh_token,
     create_setup_token,
@@ -11,8 +11,8 @@ from com.qode.qrew.v1.identity.core.auth.security import (
     hash_password,
     verify_password,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
-from com.qode.qrew.v1.identity.core.observability import traced
+from com.qode.qrew.v1.identity.core.errors import DomainError
+from observability import traced
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.session import Session
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
@@ -230,11 +230,11 @@ class LoginService:
             return
         try:
             await self._anomaly.check(user, ip_address, device_fingerprint)
-        except Exception:
-            await logger.awarning("anomaly_check_error", user_id=str(user.id))
+        except Exception as exc:
+            await logger.awarning("anomaly_check_error", user_id=str(user.id), error=repr(exc))
 
     async def _enforce_session_cap(self, user_id: uuid.UUID) -> None:
-        """Delegate session-cap enforcement to the dedicated enforcer."""
+        """Enforces the maximum allowed number of concurrent sessions per user."""
         if self._session_cap is None:
             return
         await self._session_cap.enforce(user_id)
@@ -269,7 +269,7 @@ class LoginService:
     async def resolve_bound_device(
         self, user_id: uuid.UUID, device_id: uuid.UUID | None
     ) -> uuid.UUID | None:
-        """Resolve an optional device hint to a bound non-revoked device id."""
+        """Looks up and validates an optional device hint against the user's registered devices."""
         if device_id is None or self._device_repo is None:
             return None
         device = await self._device_repo.get_by_id(device_id)
@@ -281,5 +281,5 @@ class LoginService:
         """Record an audit event without letting failure propagate."""
         try:
             await self._audit.record(action=action, **kwargs)  # type: ignore[arg-type]
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

@@ -1,18 +1,17 @@
-"""Sales NATS worker: subscribes to payments.* to drive reservation state transitions."""
-
 import asyncio
-import json
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.sales.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.sales.core.locking import redlock
+from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
+from locking import redlock
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
+from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
+from com.qode.qrew.v1.sales.worker._utils import parse
 
 logger = structlog.get_logger(__name__)
 
@@ -20,18 +19,8 @@ STREAM = "PAYMENTS"
 DURABLE = "sales-payment-handler"
 
 
-async def _parse(raw: bytes) -> dict[str, Any] | None:
-    try:
-        data = json.loads(raw.decode())
-        assert isinstance(data, dict)
-        return data  # type: ignore[return-value]
-    except Exception:
-        await logger.awarning("payment_events.parse_error")
-        return None
-
-
 async def handle_payment_succeeded(raw: bytes) -> None:
-    data = await _parse(raw)
+    data = await parse(raw)
     if data is None:
         return
     try:
@@ -42,7 +31,9 @@ async def handle_payment_succeeded(raw: bytes) -> None:
         return
 
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:lifecycle", ttl_seconds=10):
+        async with redlock(
+            f"reservation:{reservation_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             repo = ReservationRepository(session)
             reservation = await repo.get_by_id(reservation_id)
             if reservation is None:
@@ -62,13 +53,11 @@ async def handle_payment_succeeded(raw: bytes) -> None:
             await session.flush()
             await session.commit()
     await _publish_reservation_paid(reservation, user_id)
-    await logger.ainfo(
-        "payment_events.succeeded", reservation_id=str(reservation_id)
-    )
+    await logger.ainfo("payment_events.succeeded", reservation_id=str(reservation_id))
 
 
 async def handle_payment_refunded(raw: bytes) -> None:
-    data = await _parse(raw)
+    data = await parse(raw)
     if data is None:
         return
     try:
@@ -84,7 +73,7 @@ async def handle_payment_refunded(raw: bytes) -> None:
 
 
 async def handle_chargeback_opened(raw: bytes) -> None:
-    data = await _parse(raw)
+    data = await parse(raw)
     if data is None:
         return
     try:
@@ -101,7 +90,9 @@ async def _cancel_reservation(
 ) -> None:
     reservation: Reservation | None = None
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:lifecycle", ttl_seconds=10):
+        async with redlock(
+            f"reservation:{reservation_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             repo = ReservationRepository(session)
             reservation = await repo.get_by_id(reservation_id)
             if reservation is None:
@@ -115,9 +106,7 @@ async def _cancel_reservation(
             inventory = await inventory_repo.get_by_id(reservation.ticket_type_id)
             reservation.status = ReservationStatus.cancelled
             if inventory is not None:
-                inventory.reserved_count = max(
-                    0, inventory.reserved_count - reservation.quantity
-                )
+                inventory.reserved_count = max(0, inventory.reserved_count - reservation.quantity)
             await session.flush()
             await session.commit()
     await _publish_reservation_cancelled(reservation, user_id)
@@ -128,12 +117,10 @@ async def _cancel_reservation(
     )
 
 
-async def _publish_reservation_paid(
-    reservation: Reservation, user_id: uuid.UUID
-) -> None:
+async def _publish_reservation_paid(reservation: Reservation, user_id: uuid.UUID) -> None:
     try:
-        from common.broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),
@@ -157,12 +144,10 @@ async def _publish_reservation_paid(
         )
 
 
-async def _publish_reservation_cancelled(
-    reservation: Reservation, user_id: uuid.UUID
-) -> None:
+async def _publish_reservation_cancelled(reservation: Reservation, user_id: uuid.UUID) -> None:
     try:
-        from common.broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish as nats_publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),
@@ -197,6 +182,7 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
 
+    _tasks: list[asyncio.Task[None]] = []
     nc = await nats.connect(nats_url)  # type: ignore[reportUnknownMemberType]
     js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
 
@@ -212,9 +198,7 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
             deliver_policy=DeliverPolicy.ALL,
             filter_subject=subject,
         )
-        psub = await js.subscribe(
-            subject, durable=durable, config=config, stream=STREAM
-        )  # type: ignore[misc]
+        psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("payment_events.subscribed", subject=subject)
 
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
@@ -222,11 +206,12 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
                 try:
                     await h(msg.data)  # type: ignore[attr-defined]
                     await msg.ack()  # type: ignore[attr-defined]
-                except Exception:
-                    await logger.awarning("payment_events.handler_error")
+                except Exception as exc:
+                    await logger.awarning("payment_events.handler_error", error=repr(exc))
                     await msg.nak()  # type: ignore[attr-defined]
 
-        asyncio.create_task(_consume())
+        t = asyncio.create_task(_consume())
+        _tasks.append(t)
 
     await logger.ainfo("payment_events.all_subscribed")
     try:
@@ -235,4 +220,10 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
     except asyncio.CancelledError:
         pass
     finally:
-        await nc.drain()
+        for t in _tasks:
+            t.cancel()
+        await asyncio.gather(*_tasks, return_exceptions=True)
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("payment_events.drain_failed", error=repr(exc))

@@ -2,10 +2,11 @@ import re
 import uuid
 
 import structlog
+from sqlalchemy import Select
 
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.infra.errors import DomainError
-from com.qode.qrew.v1.catalog.core.observability import traced
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from com.qode.qrew.v1.catalog.core.errors import DomainError
+from observability import traced
 from com.qode.qrew.v1.catalog.models.organisation import (
     Organisation,
     OrganisationMember,
@@ -38,6 +39,12 @@ class OrganisationService:
         self._members = member_repo
         self._users = user_repo
         self._audit = audit
+
+    def list_for_user_query(self, user_id: uuid.UUID) -> Select[tuple[Organisation]]:
+        return self._orgs.list_for_user_query(user_id)
+
+    async def get_by_id(self, organisation_id: uuid.UUID) -> Organisation | None:
+        return await self._orgs.get_by_id(organisation_id)
 
     @traced("organisation.create")
     async def create_organisation(
@@ -82,9 +89,7 @@ class OrganisationService:
             raise OrganisationError("No user with this email", field="email")
         existing = await self._members.get(organisation_id, invitee.id)
         if existing is not None:
-            raise OrganisationError(
-                "User is already a member of this organisation", field="email"
-            )
+            raise OrganisationError("User is already a member of this organisation", field="email")
         member = await self._members.insert(
             organisation_id=organisation_id, user_id=invitee.id, role=role
         )
@@ -106,9 +111,7 @@ class OrganisationService:
     ) -> None:
         member = await self._members.get(organisation_id, member_user_id)
         if member is None:
-            raise OrganisationError(
-                "User is not a member of this organisation", field="user_id"
-            )
+            raise OrganisationError("User is not a member of this organisation", field="user_id")
         if member.role == OrganisationRole.owner:
             owners = await self._members.count_owners(organisation_id)
             if owners <= 1:
@@ -139,5 +142,5 @@ class OrganisationService:
                 entity_id=str(organisation_id),
                 payload=payload,
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

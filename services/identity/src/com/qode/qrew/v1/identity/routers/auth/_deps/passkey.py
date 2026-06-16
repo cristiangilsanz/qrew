@@ -4,8 +4,8 @@ import redis.asyncio as aioredis
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.core.infra.database import get_db
-from com.qode.qrew.v1.identity.core.infra.redis import get_redis
+from com.qode.qrew.v1.identity.core.database import get_db
+from com.qode.qrew.v1.identity.core.dependencies import get_redis
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.identity.repositories.passkey.passkey import (

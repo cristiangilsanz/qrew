@@ -1,19 +1,19 @@
-"""Internal API routes consumed only by sibling services (gate-svc, etc.)."""
-
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.core.infra.database import get_db
-from com.qode.qrew.v1.ticketing.core.locking import LockUnavailableError, redlock
+from com.qode.qrew.v1.ticketing.core.database import get_db
+from locking import LockUnavailableError, redlock
 from com.qode.qrew.v1.ticketing.models.ticket import TicketState
 from com.qode.qrew.v1.ticketing.services.ticket.transition import (
+    TicketBusyError,
+    TicketNotFoundError,
     TicketTransitionError,
     transition_ticket,
 )
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 router = APIRouter(prefix="/_internal", include_in_schema=False)
 
@@ -21,9 +21,7 @@ router = APIRouter(prefix="/_internal", include_in_schema=False)
 def _require_internal_key(request: Request) -> None:
     key = request.headers.get("X-Internal-Key", "")
     if not key or key != settings.internal_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
 class _UseBody(BaseModel):
@@ -37,10 +35,12 @@ async def use_ticket(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Transition a ticket to `used` state; called by the gate service."""
+    """Marks a ticket as used after validating entry at the gate."""
     _require_internal_key(request)
     try:
-        async with redlock(f"ticket:{ticket_id}:entry", ttl_seconds=10):
+        async with redlock(
+            f"ticket:{ticket_id}:entry", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             await transition_ticket(
                 db,
                 ticket_id=ticket_id,
@@ -52,6 +52,16 @@ async def use_ticket(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={"message": "Ticket is busy", "field": "ticket_id"},
+        ) from exc
+    except TicketNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": exc.message, "field": exc.field},
+        ) from exc
+    except TicketBusyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": exc.message, "field": exc.field},
         ) from exc
     except TicketTransitionError as exc:
         if "terminal" in exc.message.lower() or "used" in exc.message.lower():

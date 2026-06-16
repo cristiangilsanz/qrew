@@ -1,7 +1,7 @@
 [project]
 name = "sales"
 version = "0.1.0"
-description = "qrew sales service (reservations, queue, fraud engine, inventory)"
+description = "Qrew sales service."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -16,18 +16,31 @@ dependencies = [
     "structlog>=24.0",
     "opentelemetry-api>=1.24",
     "opentelemetry-sdk>=1.24",
-    "opentelemetry-exporter-otlp-proto-http>=1.24",
     "opentelemetry-instrumentation-fastapi>=0.45b0",
     "opentelemetry-instrumentation-sqlalchemy>=0.45b0",
-    "httpx>=0.27",
     "cryptography>=42",
     "nats-py>=2.6",
-    "arq>=0.25",
-    "common",
+    "broker",
+    "contracts",
+    "locking",
+    "middleware",
+    "observability",
+    "idempotency",
+    "http-errors",
+    "probes",
+    "worker",
 ]
 
 [tool.uv.sources]
-common = { workspace = true }
+broker = { workspace = true }
+contracts = { workspace = true }
+locking = { workspace = true }
+middleware = { workspace = true }
+observability = { workspace = true }
+idempotency = { workspace = true }
+http-errors = { workspace = true }
+probes = { workspace = true }
+worker = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.sales.__main__:main"
@@ -38,10 +51,11 @@ venvPath = "../.."
 venv = ".venv"
 
 [tool.pyright]
+reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/common/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/idempotency/src"]
 
 [tool.ruff]
 line-length = 100

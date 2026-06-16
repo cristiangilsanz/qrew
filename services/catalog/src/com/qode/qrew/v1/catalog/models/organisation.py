@@ -6,7 +6,7 @@ from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, UniqueConstrain
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.catalog.core.infra.database import Base
+from com.qode.qrew.v1.catalog.core.database import Base
 
 
 class OrganisationRole(enum.StrEnum):
@@ -30,9 +30,7 @@ class Organisation(Base):
     __tablename__ = "organisations"
     __table_args__ = {"schema": "catalog"}
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     slug: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -45,17 +43,13 @@ class Organisation(Base):
         onupdate=func.now(),
         nullable=False,
     )
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class OrganisationMember(Base):
     __tablename__ = "organisation_members"
     __table_args__ = (
-        UniqueConstraint(
-            "organisation_id", "user_id", name="uq_organisation_members_org_user"
-        ),
+        UniqueConstraint("organisation_id", "user_id", name="uq_organisation_members_org_user"),
         {"schema": "catalog"},
     )
 

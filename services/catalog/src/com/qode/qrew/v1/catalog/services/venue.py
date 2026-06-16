@@ -3,10 +3,11 @@ from decimal import Decimal
 from zoneinfo import available_timezones
 
 import structlog
+from sqlalchemy import Select
 
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.infra.errors import DomainError
-from com.qode.qrew.v1.catalog.core.observability import traced
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from com.qode.qrew.v1.catalog.core.errors import DomainError
+from observability import traced
 from com.qode.qrew.v1.catalog.models.venue import Venue
 from com.qode.qrew.v1.catalog.repositories.venue import VenueRepository
 
@@ -51,6 +52,14 @@ class VenueService:
         self._repo = repo
         self._audit = audit
 
+    def list_query(
+        self, city: str | None = None, country: str | None = None
+    ) -> Select[tuple[Venue]]:
+        return self._repo.list_query(city=city, country=country)
+
+    async def get_by_id(self, venue_id: uuid.UUID) -> Venue | None:
+        return await self._repo.get_by_id(venue_id)
+
     @traced("venue.create")
     async def create_venue(
         self,
@@ -90,6 +99,6 @@ class VenueService:
                 entity_id=str(venue.id),
                 payload={"name": venue.name, "city": venue.city, "country": venue.country},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action="venue_created")
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action="venue_created", error=repr(exc))
         return venue

@@ -74,9 +74,7 @@ class OrganisationMemberRepository:
         user_id: uuid.UUID,
         role: OrganisationRole,
     ) -> OrganisationMember:
-        member = OrganisationMember(
-            organisation_id=organisation_id, user_id=user_id, role=role
-        )
+        member = OrganisationMember(organisation_id=organisation_id, user_id=user_id, role=role)
         self._session.add(member)
         await self._session.flush()
         await self._session.refresh(member)

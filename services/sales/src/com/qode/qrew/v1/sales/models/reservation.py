@@ -14,7 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.sales.core.infra.database import Base
+from com.qode.qrew.v1.sales.core.database import Base
 
 
 class ReservationStatus(enum.StrEnum):
@@ -34,9 +34,7 @@ class Reservation(Base):
         {"schema": "sales"},
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     event_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     ticket_type_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
@@ -47,9 +45,7 @@ class Reservation(Base):
         server_default=ReservationStatus.reserved.value,
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    requires_review: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
+    requires_review: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     risk_score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

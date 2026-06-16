@@ -15,7 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.catalog.core.infra.database import Base
+from com.qode.qrew.v1.catalog.core.database import Base
 
 
 class TicketType(Base):
@@ -38,9 +38,7 @@ class TicketType(Base):
         {"schema": "catalog"},
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     event_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("catalog.events.id", ondelete="RESTRICT"),
@@ -49,9 +47,7 @@ class TicketType(Base):
     name: Mapped[str] = mapped_column(String(32), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
-    reserved_count: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default="0"
-    )
+    reserved_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     price_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
@@ -64,6 +60,4 @@ class TicketType(Base):
         onupdate=func.now(),
         nullable=False,
     )
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

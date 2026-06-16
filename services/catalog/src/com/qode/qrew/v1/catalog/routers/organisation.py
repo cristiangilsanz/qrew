@@ -3,13 +3,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.core.api import Page, clamp_limit, cursor_paginate
-from com.qode.qrew.v1.catalog.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.catalog.core.auth.organisation_acl import get_org_member
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.idempotency import idempotent
-from com.qode.qrew.v1.catalog.core.infra.database import get_db
-from com.qode.qrew.v1.catalog.core.infra.limiter import limiter
+from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
+from com.qode.qrew.v1.catalog.core.principals import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.catalog.core.dependencies import get_org_member
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from idempotency import idempotent
+from com.qode.qrew.v1.catalog.core.database import get_db
+from com.qode.qrew.v1.catalog.core.dependencies import limiter
 from com.qode.qrew.v1.catalog.models.organisation import (
     Organisation,
     OrganisationMember,
@@ -45,14 +45,8 @@ def _service(db: AsyncSession) -> OrganisationService:
 
 
 def _bad_request(error: OrganisationError) -> HTTPException:
-    code = (
-        status.HTTP_409_CONFLICT
-        if error.field == "slug"
-        else status.HTTP_400_BAD_REQUEST
-    )
-    return HTTPException(
-        status_code=code, detail={"message": error.message, "field": error.field}
-    )
+    code = status.HTTP_409_CONFLICT if error.field == "slug" else status.HTTP_400_BAD_REQUEST
+    return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
 def _to_response(org: Organisation) -> OrganisationResponse:
@@ -108,7 +102,7 @@ async def list_my_organisations(
 ) -> Page[OrganisationResponse]:
     del request
     page_limit = clamp_limit(limit, default=20)
-    stmt = OrganisationRepository(db).list_for_user_query(current_user.id)
+    stmt = _service(db).list_for_user_query(current_user.id)
     rows, next_cursor = await cursor_paginate(
         db,
         stmt,
@@ -136,7 +130,7 @@ async def get_public_organisation(
     db: AsyncSession = Depends(get_db),
 ) -> OrganisationPublicResponse:
     del request
-    org = await OrganisationRepository(db).get_by_id(organisation_id)
+    org = await _service(db).get_by_id(organisation_id)
     if org is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

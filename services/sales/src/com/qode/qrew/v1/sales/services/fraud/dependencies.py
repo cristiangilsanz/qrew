@@ -18,7 +18,7 @@ from com.qode.qrew.v1.sales.services.fraud.signals.time_to_purchase import (
     TimeToPurchaseSignal,
 )
 from com.qode.qrew.v1.sales.services.fraud.signals.voip_phone import VoipPhoneSignal
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
 
 class _ClientState:
@@ -39,36 +39,13 @@ async def close_fraud() -> None:
     _ClientState.client = None
 
 
-async def build_engine(session: AsyncSession) -> FraudRuleEngine:
-    """Compose the fraud engine; loads projection data for user-age and fingerprint signals."""
-    redis_client = _shared_redis()
-
-    # Pre-load projections needed by signals (avoids per-signal async DB calls)
-    # AccountAgeSignal gets a dict {user_id: registered_at}
-    # FingerprintReuseSignal gets a dict {hash: distinct_user_count}
-    # These are tiny lookups — the projections table is a point read.
-    # Signals receive a pre-fetched dict so the engine stays synchronous-safe.
-    registered_at_lookup: dict[uuid.UUID, datetime] = {}
-    fingerprint_lookup: dict[str, int] = {}
-
-    return FraudRuleEngine(
-        [
-            AccountAgeSignal(registered_at_lookup),
-            TimeToPurchaseSignal(registered_at_lookup),
-            VoipPhoneSignal(),
-            IpVelocitySignal(redis_client),
-            FingerprintReuseSignal(fingerprint_lookup),
-        ]
-    )
-
-
 async def build_engine_for_user(
     session: AsyncSession,
     *,
     user_id: uuid.UUID,
     fingerprint_hash: str | None,
 ) -> FraudRuleEngine:
-    """Build engine with pre-fetched projections for a specific user/fingerprint."""
+    """Assembles the fraud detection engine with projection data pre-loaded for a specific user."""
     redis_client = _shared_redis()
 
     age_repo = UserAgeContextRepository(session)

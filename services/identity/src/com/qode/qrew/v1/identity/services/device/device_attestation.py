@@ -3,15 +3,15 @@ import uuid
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.device.attestation import (
+from com.qode.qrew.v1.identity.services.device.attestation import (
     AttestationResult,
     AttestationVerifier,
     AttestationVerifierError,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -75,10 +75,11 @@ class DeviceAttestationService:
                     entity_id=str(user_id),
                     payload={"platform": platform, "reason": str(exc)},
                 )
-            except Exception:
+            except Exception as _err:
                 await logger.awarning(
                     "audit_write_failed",
                     action=AuditAction.DEVICE_ATTESTATION_FAILED,
+                    error=repr(_err),
                 )
             raise DeviceAttestationError(str(exc), field=None) from exc
 
@@ -93,8 +94,10 @@ class DeviceAttestationService:
                 entity_id=str(user_id),
                 payload={"platform": result.platform},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.DEVICE_ATTESTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.DEVICE_ATTESTED, error=repr(exc)
+            )
         return result
 
 

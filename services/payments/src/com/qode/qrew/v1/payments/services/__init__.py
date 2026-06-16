@@ -3,5 +3,15 @@ from com.qode.qrew.v1.payments.services.payment import (
     PaymentExpiredError,
     PaymentService,
 )
+from com.qode.qrew.v1.payments.services.stripe_client import (
+    StripeClient,
+    StripeRealClient,
+)
 
-__all__ = ["PaymentError", "PaymentExpiredError", "PaymentService"]
+__all__ = [
+    "PaymentError",
+    "PaymentExpiredError",
+    "PaymentService",
+    "StripeClient",
+    "StripeRealClient",
+]

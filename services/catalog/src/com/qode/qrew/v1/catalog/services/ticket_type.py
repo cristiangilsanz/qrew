@@ -1,14 +1,16 @@
 import re
 import uuid
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
+from sqlalchemy import Select
 
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.infra.errors import DomainError
-from com.qode.qrew.v1.catalog.core.locking import redlock
-from com.qode.qrew.v1.catalog.core.observability import traced
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from com.qode.qrew.v1.catalog.core.errors import DomainError
+from locking import redlock
+from observability import traced
+from com.qode.qrew.v1.catalog.core.config import settings
 from com.qode.qrew.v1.catalog.models.event import EventStatus
 from com.qode.qrew.v1.catalog.models.ticket_type import TicketType
 from com.qode.qrew.v1.catalog.repositories.event import EventRepository
@@ -19,8 +21,8 @@ logger = structlog.get_logger(__name__)
 
 async def _publish_nats(subject: str, ticket_type: TicketType) -> None:
     try:
-        from common.broker.publisher import publish  # type: ignore[import-not-found]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+        from broker.publisher import publish  # type: ignore[import-not-found]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),
@@ -38,8 +40,9 @@ async def _publish_nats(subject: str, ticket_type: TicketType) -> None:
     except Exception as exc:
         await logger.awarning("nats_publish_failed", subject=subject, error=repr(exc))
 
+
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
-ALLOWED_CURRENCIES: frozenset[str] = frozenset({"EUR", "USD", "GBP"})
+_ALLOWED_CURRENCIES: frozenset[str] = frozenset({"EUR", "USD", "GBP"})
 _MUTABLE_FIELDS: frozenset[str] = frozenset(
     {"name", "description", "price_cents", "position", "capacity"}
 )
@@ -51,9 +54,7 @@ class TicketTypeError(DomainError):
 
 def _validate_name(name: str) -> None:
     if not _NAME_PATTERN.match(name):
-        raise TicketTypeError(
-            "Name must be lowercase letters, digits or underscores", field="name"
-        )
+        raise TicketTypeError("Name must be lowercase letters, digits or underscores", field="name")
 
 
 def _validate_capacity(capacity: int) -> None:
@@ -63,15 +64,13 @@ def _validate_capacity(capacity: int) -> None:
 
 def _validate_price(price_cents: int) -> None:
     if price_cents < 0 or price_cents > 10_000_000:
-        raise TicketTypeError(
-            "Price must be between 0 and 10000000 cents", field="price_cents"
-        )
+        raise TicketTypeError("Price must be between 0 and 10000000 cents", field="price_cents")
 
 
 def _validate_currency(currency: str) -> None:
-    if currency not in ALLOWED_CURRENCIES:
+    if currency not in _ALLOWED_CURRENCIES:
         raise TicketTypeError(
-            f"Currency must be one of {sorted(ALLOWED_CURRENCIES)}", field="currency"
+            f"Currency must be one of {sorted(_ALLOWED_CURRENCIES)}", field="currency"
         )
 
 
@@ -85,6 +84,9 @@ class TicketTypeService:
         self._event_repo = event_repo
         self._repo = repo
         self._audit = audit
+
+    def list_for_event_query(self, event_id: uuid.UUID) -> Select[tuple[TicketType]]:
+        return self._repo.list_for_event_query(event_id)
 
     @traced("ticket_type.create")
     async def create(
@@ -103,7 +105,9 @@ class TicketTypeService:
         _validate_capacity(capacity)
         _validate_price(price_cents)
         _validate_currency(currency)
-        async with redlock(f"event:{event_id}:ticket-types", ttl_seconds=10):
+        async with redlock(
+            f"event:{event_id}:ticket-types", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             event = await self._event_repo.get_by_id(event_id)
             if event is None:
                 raise TicketTypeError("Event not found", field="event_id")
@@ -113,9 +117,7 @@ class TicketTypeService:
                 )
             existing = await self._repo.get_by_event_and_name(event_id, name)
             if existing is not None:
-                raise TicketTypeError(
-                    "A ticket type with that name already exists", field="name"
-                )
+                raise TicketTypeError("A ticket type with that name already exists", field="name")
             ticket_type = TicketType(
                 event_id=event_id,
                 name=name,
@@ -148,16 +150,16 @@ class TicketTypeService:
         unknown = set(changes) - _MUTABLE_FIELDS
         if unknown:
             raise TicketTypeError(f"Cannot edit fields: {sorted(unknown)}", field=None)
-        async with redlock(f"event:{event_id}:ticket-types", ttl_seconds=10):
+        async with redlock(
+            f"event:{event_id}:ticket-types", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             ticket_type = await self._repo.get_by_id(ticket_type_id)
             if ticket_type is None or ticket_type.event_id != event_id:
                 raise TicketTypeError("Ticket type not found", field="ticket_type_id")
             if "name" in changes:
                 _validate_name(changes["name"])
                 if changes["name"] != ticket_type.name:
-                    conflict = await self._repo.get_by_event_and_name(
-                        event_id, changes["name"]
-                    )
+                    conflict = await self._repo.get_by_event_and_name(event_id, changes["name"])
                     if conflict is not None and conflict.id != ticket_type.id:
                         raise TicketTypeError(
                             "A ticket type with that name already exists", field="name"
@@ -192,7 +194,9 @@ class TicketTypeService:
         event_id: uuid.UUID,
         ticket_type_id: uuid.UUID,
     ) -> None:
-        async with redlock(f"event:{event_id}:ticket-types", ttl_seconds=10):
+        async with redlock(
+            f"event:{event_id}:ticket-types", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             ticket_type = await self._repo.get_by_id(ticket_type_id)
             if ticket_type is None or ticket_type.event_id != event_id:
                 raise TicketTypeError("Ticket type not found", field="ticket_type_id")
@@ -200,7 +204,7 @@ class TicketTypeService:
                 raise TicketTypeError(
                     "Cannot delete a tier with live reservations", field="reserved_count"
                 )
-            ticket_type.deleted_at = datetime.now(timezone.utc)
+            ticket_type.deleted_at = datetime.now(UTC)
             await self._repo.flush()
             await self._record(
                 "ticket_type_deleted",
@@ -225,5 +229,5 @@ class TicketTypeService:
                 entity_id=str(ticket_type_id),
                 payload=payload,
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

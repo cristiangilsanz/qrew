@@ -102,5 +102,5 @@ class PasskeyManagementService:
                 entity_id=str(passkey_id),
                 payload=payload or {},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

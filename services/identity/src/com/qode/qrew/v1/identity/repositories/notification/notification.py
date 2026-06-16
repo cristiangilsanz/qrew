@@ -13,14 +13,14 @@ class NotificationRepository:
         self._session = session
 
     async def insert(self, notification: Notification) -> Notification:
-        """Insert a new notification and flush so the id is available."""
+        """Saves a new notification record and makes it immediately readable."""
         self._session.add(notification)
         await self._session.flush()
         await self._session.refresh(notification)
         return notification
 
     async def get(self, notification_id: uuid.UUID) -> Notification | None:
-        """Return a notification by id, or None when absent."""
+        """Fetches a single notification by its identifier, returning nothing when not found."""
         result = await self._session.execute(
             select(Notification).where(Notification.id == notification_id)
         )

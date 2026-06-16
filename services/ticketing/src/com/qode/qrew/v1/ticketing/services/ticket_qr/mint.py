@@ -1,15 +1,15 @@
 import secrets
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.auth import jwt_keys
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.core import principals as jwt_keys
 from com.qode.qrew.v1.ticketing.services.ticket_qr.gate import GateInputs
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -54,7 +54,7 @@ async def mint_qr(
         "exp": exp,
         "aud": settings.ticket_qr_audience,
     }
-    token = jwt_keys.sign(jwt_keys.Purpose.TICKET_QR, payload)
+    token = jwt_keys.sign(jwt_keys.TICKET_QR, payload)
     if _sample_audit(settings.ticket_qr_mint_audit_sample_rate):
         try:
             await audit.record(
@@ -64,8 +64,8 @@ async def mint_qr(
                 entity_id=str(inputs.ticket.id),
                 payload={"jti": jti, "device_id": str(device_id)},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=_TICKET_QR_MINTED)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=_TICKET_QR_MINTED, error=repr(exc))
     return MintedQr(jwt=token, jti=jti, issued_at=now, expires_at=exp)
 
 
@@ -88,9 +88,5 @@ async def record_denial(
                 "device_id": str(device_id) if device_id else None,
             },
         )
-    except Exception:
-        await logger.awarning("audit_write_failed", action=_TICKET_QR_DENIED)
-
-
-def utc_now() -> datetime:
-    return datetime.now(UTC)
+    except Exception as exc:
+        await logger.awarning("audit_write_failed", action=_TICKET_QR_DENIED, error=repr(exc))

@@ -3,19 +3,16 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.core.api import Page, clamp_limit, cursor_paginate
-from com.qode.qrew.v1.catalog.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.idempotency import idempotent
-from com.qode.qrew.v1.catalog.core.infra.database import get_db
-from com.qode.qrew.v1.catalog.core.infra.limiter import limiter
-from com.qode.qrew.v1.catalog.core.locking.errors import LockUnavailableError
-from com.qode.qrew.v1.catalog.models.organisation import OrganisationRole, role_rank
+from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
+from com.qode.qrew.v1.catalog.core.dependencies import get_event_member
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from idempotency import idempotent
+from com.qode.qrew.v1.catalog.core.database import get_db
+from com.qode.qrew.v1.catalog.core.dependencies import limiter
+from locking import LockUnavailableError
+from com.qode.qrew.v1.catalog.models.organisation import OrganisationMember, OrganisationRole
 from com.qode.qrew.v1.catalog.models.ticket_type import TicketType
 from com.qode.qrew.v1.catalog.repositories.event import EventRepository
-from com.qode.qrew.v1.catalog.repositories.organisation import (
-    OrganisationMemberRepository,
-)
 from com.qode.qrew.v1.catalog.repositories.ticket_type import TicketTypeRepository
 from com.qode.qrew.v1.catalog.schemas.ticket_type import (
     TicketTypeCreateRequest,
@@ -58,26 +55,7 @@ def _domain_to_http(error: TicketTypeError) -> HTTPException:
         if error.field == "name"
         else status.HTTP_400_BAD_REQUEST
     )
-    return HTTPException(
-        status_code=code, detail={"message": error.message, "field": error.field}
-    )
-
-
-async def _load_event_for_manager(
-    db: AsyncSession, event_id: uuid.UUID, user: AuthenticatedUser
-) -> None:
-    event = await EventRepository(db).get_by_id(event_id)
-    if event is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Event not found", "field": "event_id"},
-        )
-    member = await OrganisationMemberRepository(db).get(event.organisation_id, user.id)
-    if member is None or role_rank(member.role) < role_rank(OrganisationRole.manager):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Not a manager of this organisation", "field": None},
-        )
+    return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
 @router.post(
@@ -92,14 +70,13 @@ async def create_ticket_type(
     request: Request,
     event_id: uuid.UUID,
     body: TicketTypeCreateRequest,
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    actor: OrganisationMember = Depends(get_event_member(OrganisationRole.manager)),
     db: AsyncSession = Depends(get_db),
 ) -> TicketTypeResponse:
     del request
-    await _load_event_for_manager(db, event_id, current_user)
     try:
         ticket_type = await _service(db).create(
-            actor_id=current_user.id,
+            actor_id=actor.user_id,
             event_id=event_id,
             name=body.name,
             description=body.description,
@@ -131,15 +108,14 @@ async def update_ticket_type(
     event_id: uuid.UUID,
     ticket_type_id: uuid.UUID,
     body: TicketTypeUpdateRequest,
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    actor: OrganisationMember = Depends(get_event_member(OrganisationRole.manager)),
     db: AsyncSession = Depends(get_db),
 ) -> TicketTypeResponse:
     del request
-    await _load_event_for_manager(db, event_id, current_user)
     changes = body.model_dump(exclude_unset=True)
     try:
         ticket_type = await _service(db).update(
-            actor_id=current_user.id,
+            actor_id=actor.user_id,
             event_id=event_id,
             ticket_type_id=ticket_type_id,
             changes=changes,
@@ -164,14 +140,13 @@ async def delete_ticket_type(
     request: Request,
     event_id: uuid.UUID,
     ticket_type_id: uuid.UUID,
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    actor: OrganisationMember = Depends(get_event_member(OrganisationRole.manager)),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     del request
-    await _load_event_for_manager(db, event_id, current_user)
     try:
         await _service(db).delete(
-            actor_id=current_user.id,
+            actor_id=actor.user_id,
             event_id=event_id,
             ticket_type_id=ticket_type_id,
         )
@@ -200,7 +175,7 @@ async def list_ticket_types(
 ) -> Page[TicketTypeResponse]:
     del request
     page_limit = clamp_limit(limit, default=20)
-    stmt = TicketTypeRepository(db).list_for_event_query(event_id)
+    stmt = _service(db).list_for_event_query(event_id)
     rows, next_cursor = await cursor_paginate(
         db,
         stmt,

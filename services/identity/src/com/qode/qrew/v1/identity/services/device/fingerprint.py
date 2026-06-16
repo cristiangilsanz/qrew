@@ -9,7 +9,7 @@ from com.qode.qrew.v1.identity.repositories.device.fingerprint import (
     DeviceFingerprintRepository,
 )
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -47,7 +47,7 @@ class FingerprintService:
         user_agent: str | None,
         ip_address: str | None,
     ) -> bool:
-        """Upsert fingerprint record; flag if multi-account or headless."""
+        """Records a device fingerprint and flags suspicious activity patterns."""
         record = DeviceFingerprint(
             id=uuid.uuid4(),
             user_id=user.id,
@@ -80,10 +80,11 @@ class FingerprintService:
                         "user_agent": user_agent,
                     },
                 )
-            except Exception:
+            except Exception as exc:
                 await logger.awarning(
                     "audit_write_failed",
                     action=AuditAction.FINGERPRINT_HEADLESS_FLAG,
+                    error=repr(exc),
                 )
 
         if account_count > settings.fingerprint_multi_account_threshold:
@@ -105,10 +106,11 @@ class FingerprintService:
                         "account_count": account_count,
                     },
                 )
-            except Exception:
+            except Exception as exc:
                 await logger.awarning(
                     "audit_write_failed",
                     action=AuditAction.FINGERPRINT_MULTI_ACCOUNT_FLAG,
+                    error=repr(exc),
                 )
 
         await self._publish_fingerprint_seen(fingerprint_hash)
@@ -125,8 +127,8 @@ class FingerprintService:
         try:
             from datetime import UTC, datetime
 
-            from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+            from broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+            from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
             now = datetime.now(UTC)
             envelope = EventEnvelope(
@@ -148,5 +150,5 @@ class FingerprintService:
             )
 
     async def get_by_hash(self, fingerprint_hash: str) -> list[uuid.UUID]:
-        """Return all distinct user_ids linked to the given hash."""
+        """Returns all user identifiers associated with a given device fingerprint."""
         return await self._repo.get_user_ids_by_hash(fingerprint_hash)

@@ -13,7 +13,7 @@ class DeviceFingerprintRepository:
         self._session = session
 
     async def upsert(self, record: DeviceFingerprint) -> int:
-        """Upsert a fingerprint record and return the distinct user count."""
+        """Saves or updates a device fingerprint entry and returns how many distinct users share that fingerprint."""
         stmt = (
             insert(DeviceFingerprint)
             .values(
@@ -46,7 +46,7 @@ class DeviceFingerprintRepository:
         return count_result.scalar_one()
 
     async def get_user_ids_by_hash(self, fingerprint_hash: str) -> list[uuid.UUID]:
-        """Return distinct user_ids linked to the given fingerprint hash."""
+        """Returns all distinct user identifiers associated with a given device fingerprint."""
         result = await self._session.execute(
             select(DeviceFingerprint.user_id.distinct()).where(
                 DeviceFingerprint.fingerprint_hash == fingerprint_hash

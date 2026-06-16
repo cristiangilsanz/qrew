@@ -9,7 +9,7 @@ from webauthn.authentication.verify_authentication_response import (
 )
 from webauthn.helpers.base64url_to_bytes import base64url_to_bytes
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     create_access_token,
     create_refresh_token,
     create_setup_token,
@@ -153,7 +153,7 @@ class PasskeyAuthenticationService:
         user_agent: str | None,
         device_fingerprint: str | None,
     ) -> LoginResponse:
-        """Return either a full or setup-token response based on onboarding state."""
+        """Returns the appropriate token response depending on whether onboarding is complete."""
         setup_complete = user.phone_number_verified and user.kyc_status != KycStatus.not_submitted
         if setup_complete:
             refresh_token = create_refresh_token(str(user.id))
@@ -205,5 +205,7 @@ class PasskeyAuthenticationService:
                 entity_id=str(user_id),
                 payload={"setup_complete": setup_complete},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PASSKEY_AUTHENTICATED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_AUTHENTICATED, error=repr(exc)
+            )

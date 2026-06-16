@@ -2,8 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Request, UploadFile, status
 
-from com.qode.qrew.v1.identity.core.auth.auth import get_setup_or_full_user
-from com.qode.qrew.v1.identity.core.infra.limiter import limiter
+from com.qode.qrew.v1.identity.services.auth.auth import get_setup_or_full_user
+from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.schemas.auth.auth import LoginResponse
 from com.qode.qrew.v1.identity.schemas.kyc.kyc import KycUploadResponse

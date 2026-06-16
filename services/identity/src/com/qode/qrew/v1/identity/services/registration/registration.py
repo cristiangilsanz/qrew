@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     email_verification_token_expiry,
     generate_otp,
     generate_token,
@@ -11,9 +11,9 @@ from com.qode.qrew.v1.identity.core.auth.security import (
     is_password_pwned,
     phone_number_otp_expiry,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
-from com.qode.qrew.v1.identity.core.observability import traced
-from com.qode.qrew.v1.identity.core.registration.captcha import CaptchaService
+from com.qode.qrew.v1.identity.core.errors import DomainError
+from observability import traced
+from com.qode.qrew.v1.identity.services.registration.captcha import CaptchaService
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
@@ -22,7 +22,7 @@ from com.qode.qrew.v1.identity.schemas.registration.registration import (
     RegisterResponse,
 )
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
 
 logger = structlog.get_logger(__name__)
 
@@ -36,7 +36,7 @@ def _build_user(
     ip_address: str,
     device_fingerprint: str | None,
 ) -> User:
-    """Construct a new User instance from the registration request."""
+    """Builds a new user record from the registration request data."""
     now = datetime.now(UTC)
     return User(
         id=uuid.uuid4(),
@@ -104,8 +104,10 @@ class RegistrationService:
                 ip_address=ip_address,
                 payload={"email": created.email},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.REGISTER)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.REGISTER, error=repr(exc)
+            )
 
         await self._publish_registered(created)
 
@@ -118,8 +120,8 @@ class RegistrationService:
         try:
             from datetime import UTC, datetime
 
-            from common.broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from common.events.envelope import EventEnvelope  # type: ignore[import-not-found]
+            from broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
+            from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
 
             envelope = EventEnvelope(
                 occurred_at=datetime.now(UTC),
@@ -142,23 +144,23 @@ class RegistrationService:
             )
 
     async def _assert_captcha_valid(self, token: str, ip_address: str) -> None:
-        """Raise CaptchaError if the captcha token is invalid."""
+        """Verifies the captcha response and raises an error if it is invalid."""
         await self._captcha.verify(token, ip_address)
 
     async def _assert_email_available(self, email: str) -> None:
-        """Raise RegistrationError if the email is already registered."""
+        """Raises an error if the email address is already in use."""
         if await self._repo.exists_by_email(email):
             await logger.awarning("registration_failed", reason="email_taken")
             raise RegistrationError("Email already registered", field="email")
 
     async def _assert_phone_available(self, phone_number: str) -> None:
-        """Raise RegistrationError if the phone number is already registered."""
+        """Raises an error if the phone number is already in use."""
         if await self._repo.exists_by_phone(phone_number):
             await logger.awarning("registration_failed", reason="phone_number_taken")
             raise RegistrationError("Phone number already registered", field="phone_number")
 
     async def _assert_password_not_breached(self, password: str) -> None:
-        """Raise RegistrationError if the password appears in a known breach."""
+        """Raises an error if the password has been exposed in a known data breach."""
         if await is_password_pwned(password):
             await logger.awarning("registration_failed", reason="password_breached")
             raise RegistrationError(

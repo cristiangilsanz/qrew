@@ -7,7 +7,7 @@ import structlog
 
 from com.qode.qrew.v1.sales.services.fraud.context import PurchaseContext
 from com.qode.qrew.v1.sales.services.fraud.signals.base import SignalResult
-from com.qode.qrew.v1.sales.settings import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -29,8 +29,7 @@ class FraudEvaluation:
             "score": self.score,
             "decision": self.decision.value,
             "signals": [
-                {"name": s.name, "score": s.score, "reason": s.reason}
-                for s in self.signals
+                {"name": s.name, "score": s.score, "reason": s.reason} for s in self.signals
             ],
         }
 
@@ -38,8 +37,7 @@ class FraudEvaluation:
 class Signal(Protocol):
     name: str
 
-    async def evaluate(self, context: PurchaseContext) -> SignalResult:
-        ...
+    async def evaluate(self, context: PurchaseContext) -> SignalResult: ...
 
 
 class FraudRuleEngine:
@@ -54,9 +52,7 @@ class FraudRuleEngine:
             try:
                 result = await signal.evaluate(context)
             except Exception as exc:
-                await logger.awarning(
-                    "fraud_signal_failed", signal=signal.name, error=repr(exc)
-                )
+                await logger.awarning("fraud_signal_failed", signal=signal.name, error=repr(exc))
                 continue
             results.append(result)
         total = sum(r.score for r in results)

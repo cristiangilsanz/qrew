@@ -1,18 +1,16 @@
-"""Sales NATS worker: updates EventContext and TicketTypeInventory projections from catalog events."""
-
 import asyncio
-import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.sales.core.infra.database import AsyncSessionLocal
+from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
     TicketTypeInventoryRepository,
 )
+from com.qode.qrew.v1.sales.worker._utils import parse
 
 logger = structlog.get_logger(__name__)
 
@@ -20,22 +18,13 @@ STREAM = "CATALOG"
 DURABLE = "sales-catalog-handler"
 
 
-async def _parse(raw: bytes) -> dict[str, Any] | None:
-    try:
-        data = json.loads(raw.decode())
-        assert isinstance(data, dict)
-        return data  # type: ignore[return-value]
-    except Exception:
-        await logger.awarning("catalog_events.parse_error")
-        return None
-
-
 def _parse_dt(value: str | None) -> datetime | None:
     if not value:
         return None
     try:
-        return datetime.fromisoformat(value).astimezone(timezone.utc)
-    except Exception:
+        return datetime.fromisoformat(value).astimezone(UTC)
+    except Exception as exc:
+        logger.warning("catalog_events.parse_dt_error", value=value, error=repr(exc))
         return None
 
 
@@ -70,28 +59,28 @@ async def _upsert_event_ctx(
 
 
 async def handle_event_published(raw: bytes) -> None:
-    data = await _parse(raw)
+    data = await parse(raw)
     if data is None:
         return
     await _upsert_event_ctx(data, status="published")
 
 
 async def handle_event_cancelled(raw: bytes) -> None:
-    data = await _parse(raw)
+    data = await parse(raw)
     if data is None:
         return
     await _upsert_event_ctx(data, status="cancelled")
 
 
 async def handle_event_draft(raw: bytes) -> None:
-    data = await _parse(raw)
+    data = await parse(raw)
     if data is None:
         return
     await _upsert_event_ctx(data, status="draft")
 
 
 async def handle_ticket_type_created(raw: bytes) -> None:
-    data = await _parse(raw)
+    data = await parse(raw)
     if data is None:
         return
     try:
@@ -112,9 +101,7 @@ async def handle_ticket_type_created(raw: bytes) -> None:
             currency=currency,
         )
         await session.commit()
-    await logger.ainfo(
-        "catalog_events.ticket_type_upserted", ticket_type_id=str(ticket_type_id)
-    )
+    await logger.ainfo("catalog_events.ticket_type_upserted", ticket_type_id=str(ticket_type_id))
 
 
 async def handle_ticket_type_updated(raw: bytes) -> None:
@@ -134,6 +121,7 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
 
+    _tasks: list[asyncio.Task[None]] = []
     nc = await nats.connect(nats_url)  # type: ignore[reportUnknownMemberType]
     js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
 
@@ -149,9 +137,7 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
             deliver_policy=DeliverPolicy.ALL,
             filter_subject=subject,
         )
-        psub = await js.subscribe(
-            subject, durable=durable, config=config, stream=STREAM
-        )  # type: ignore[misc]
+        psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("catalog_events.subscribed", subject=subject)
 
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
@@ -159,11 +145,12 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
                 try:
                     await h(msg.data)  # type: ignore[attr-defined]
                     await msg.ack()  # type: ignore[attr-defined]
-                except Exception:
-                    await logger.awarning("catalog_events.handler_error")
+                except Exception as exc:
+                    await logger.awarning("catalog_events.handler_error", error=repr(exc))
                     await msg.nak()  # type: ignore[attr-defined]
 
-        asyncio.create_task(_consume())
+        t = asyncio.create_task(_consume())
+        _tasks.append(t)
 
     await logger.ainfo("catalog_events.all_subscribed")
     try:
@@ -172,4 +159,10 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
     except asyncio.CancelledError:
         pass
     finally:
-        await nc.drain()
+        for t in _tasks:
+            t.cancel()
+        await asyncio.gather(*_tasks, return_exceptions=True)
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("catalog_events.drain_failed", error=repr(exc))

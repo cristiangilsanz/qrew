@@ -1,7 +1,7 @@
 [project]
 name = "audit"
 version = "0.1.0"
-description = "qrew audit microservice (Merkle chain event projection)"
+description = "Qrew audit service."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -10,17 +10,29 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.29",
     "alembic>=1.13",
+    "redis[hiredis]>=5.0",
+    "slowapi>=0.1",
     "structlog>=24.0",
-    "opentelemetry-api>=1.24",
-    "opentelemetry-sdk>=1.24",
-    "opentelemetry-exporter-otlp-proto-http>=1.24",
-    "opentelemetry-instrumentation-fastapi>=0.45b0",
     "nats-py>=2.6",
-    "common",
+    "broker",
+    "idempotency",
+    "locking",
+    "middleware",
+    "observability",
+    "http-errors",
+    "audit-publisher",
+    "worker",
 ]
 
 [tool.uv.sources]
-common = { workspace = true }
+broker = { workspace = true }
+idempotency = { workspace = true }
+locking = { workspace = true }
+middleware = { workspace = true }
+observability = { workspace = true }
+http-errors = { workspace = true }
+audit-publisher = { workspace = true }
+worker = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.audit.__main__:main"
@@ -31,10 +43,11 @@ venvPath = "../.."
 venv = ".venv"
 
 [tool.pyright]
+reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/common/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/idempotency/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src"]
 
 [tool.ruff]
 line-length = 100

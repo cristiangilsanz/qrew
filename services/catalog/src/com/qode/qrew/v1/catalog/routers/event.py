@@ -3,25 +3,20 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.core.api import Page, clamp_limit, cursor_paginate
-from com.qode.qrew.v1.catalog.core.auth.auth import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.catalog.core.auth.organisation_acl import get_org_member
-from com.qode.qrew.v1.catalog.core.audit import AuditService
-from com.qode.qrew.v1.catalog.core.idempotency import idempotent
-from com.qode.qrew.v1.catalog.core.infra.database import get_db
-from com.qode.qrew.v1.catalog.core.infra.limiter import limiter
-from com.qode.qrew.v1.catalog.core.locking.errors import LockUnavailableError
+from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
+from com.qode.qrew.v1.catalog.core.dependencies import get_event_member, get_org_member
+from com.qode.qrew.v1.catalog.services.audit import AuditService
+from idempotency import idempotent
+from com.qode.qrew.v1.catalog.core.database import get_db
+from com.qode.qrew.v1.catalog.core.dependencies import limiter
+from locking import LockUnavailableError
 from com.qode.qrew.v1.catalog.models.event import Event
 from com.qode.qrew.v1.catalog.models.organisation import (
     OrganisationMember,
     OrganisationRole,
-    role_rank,
 )
 from com.qode.qrew.v1.catalog.repositories.event import EventRepository
-from com.qode.qrew.v1.catalog.repositories.organisation import (
-    OrganisationMemberRepository,
-    OrganisationRepository,
-)
+from com.qode.qrew.v1.catalog.repositories.organisation import OrganisationRepository
 from com.qode.qrew.v1.catalog.repositories.venue import VenueRepository
 from com.qode.qrew.v1.catalog.schemas.event import (
     EventCreateRequest,
@@ -72,27 +67,7 @@ def _bad_request(error: EventError) -> HTTPException:
         if error.field in {"event_id", "organisation_id", "venue_id"}
         else status.HTTP_400_BAD_REQUEST
     )
-    return HTTPException(
-        status_code=code, detail={"message": error.message, "field": error.field}
-    )
-
-
-async def _load_event_for_actor(
-    db: AsyncSession, event_id: uuid.UUID, user: AuthenticatedUser
-) -> tuple[Event, OrganisationMember]:
-    event = await EventRepository(db).get_by_id(event_id)
-    if event is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Event not found", "field": "event_id"},
-        )
-    member = await OrganisationMemberRepository(db).get(event.organisation_id, user.id)
-    if member is None or role_rank(member.role) < role_rank(OrganisationRole.manager):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Not a manager of this organisation", "field": None},
-        )
-    return event, member
+    return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
 @router.post(
@@ -146,7 +121,7 @@ async def list_org_events(
 ) -> Page[EventResponse]:
     del request
     page_limit = clamp_limit(limit, default=20)
-    stmt = EventRepository(db).list_for_org_query(organisation_id)
+    stmt = _service(db).list_for_org_query(organisation_id)
     rows, next_cursor = await cursor_paginate(
         db,
         stmt,
@@ -175,7 +150,7 @@ async def get_org_event(
     db: AsyncSession = Depends(get_db),
 ) -> EventResponse:
     del request
-    event = await EventRepository(db).get_by_id(event_id)
+    event = await _service(db).get_by_id(event_id)
     if event is None or event.organisation_id != organisation_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -195,11 +170,10 @@ async def update_event(
     request: Request,
     event_id: uuid.UUID,
     body: EventUpdateRequest,
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    actor: OrganisationMember = Depends(get_event_member(OrganisationRole.manager)),
     db: AsyncSession = Depends(get_db),
 ) -> EventResponse:
     del request
-    _, actor = await _load_event_for_actor(db, event_id, current_user)
     changes = body.model_dump(exclude_unset=True)
     try:
         event = await _service(db).update_event(
@@ -221,15 +195,12 @@ async def update_event(
 async def publish_event(
     request: Request,
     event_id: uuid.UUID,
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    actor: OrganisationMember = Depends(get_event_member(OrganisationRole.manager)),
     db: AsyncSession = Depends(get_db),
 ) -> EventResponse:
     del request
-    _, actor = await _load_event_for_actor(db, event_id, current_user)
     try:
-        event = await _service(db).publish_event(
-            actor_id=actor.user_id, event_id=event_id
-        )
+        event = await _service(db).publish_event(actor_id=actor.user_id, event_id=event_id)
     except EventError as exc:
         raise _bad_request(exc) from exc
     except LockUnavailableError as exc:
@@ -251,15 +222,12 @@ async def publish_event(
 async def cancel_event(
     request: Request,
     event_id: uuid.UUID,
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    actor: OrganisationMember = Depends(get_event_member(OrganisationRole.manager)),
     db: AsyncSession = Depends(get_db),
 ) -> EventResponse:
     del request
-    _, actor = await _load_event_for_actor(db, event_id, current_user)
     try:
-        event = await _service(db).cancel_event(
-            actor_id=actor.user_id, event_id=event_id
-        )
+        event = await _service(db).cancel_event(actor_id=actor.user_id, event_id=event_id)
     except EventError as exc:
         raise _bad_request(exc) from exc
     except LockUnavailableError as exc:

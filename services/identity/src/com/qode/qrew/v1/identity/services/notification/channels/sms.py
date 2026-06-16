@@ -1,11 +1,11 @@
 import httpx
 import structlog
 
-from com.qode.qrew.v1.identity.services.infra.notification._masking import (
+from com.qode.qrew.v1.identity.services.notification._masking import (
     mask_phone_number as mask_phone,
 )
 from com.qode.qrew.v1.identity.services.notification.templates import render_sms
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 

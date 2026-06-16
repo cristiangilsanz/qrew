@@ -7,7 +7,7 @@ import pytesseract  # type: ignore[import-untyped]
 import structlog
 from PIL import Image
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 
 logger = structlog.get_logger(__name__)
 

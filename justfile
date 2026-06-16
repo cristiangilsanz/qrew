@@ -1,12 +1,13 @@
 set shell := ["bash", "-c"]
 
 IDENTITY := "services/identity"
-GATE := "services/gate"
+ENTRY := "services/entry"
 PAYMENTS := "services/payments"
 CATALOG := "services/catalog"
 TICKETING := "services/ticketing"
 SALES := "services/sales"
 AUDIT := "services/audit"
+GATEWAY := "services/gateway"
 
 default: help
 
@@ -19,7 +20,7 @@ setup:
     docker compose down --volumes --rmi local --remove-orphans
     docker compose up postgres redis nats -d
     uv venv --python 3.12
-    cd {{IDENTITY}} && uv sync --all-groups
+    uv sync --all-packages --all-groups
     just db-upgrade
 
 # Stop dev environment
@@ -37,7 +38,7 @@ shutdown:
 
 # Install dependencies
 install:
-    cd {{IDENTITY}} && uv sync --all-groups
+    uv sync --all-packages --all-groups
 
 # Run dev environment
 dev:
@@ -51,28 +52,35 @@ worker:
 
 # Launch Jaeger for local trace viewing
 trace:
-    docker compose -f docker-compose.observability.yml up -d jaeger
+    docker compose up -d jaeger
     @echo "Jaeger UI: http://localhost:16686"
 
 # Verify linter
 lint-check:
-    cd {{IDENTITY}} && uv run ruff check .
+    uv run ruff check .
 
 # Auto-fix linter errors
 lint-fix:
-    cd {{IDENTITY}} && uv run ruff check --fix .
+    uv run ruff check --fix .
 
 # Verify formatter
 format-check:
-    cd {{IDENTITY}} && uv run ruff format --check .
+    uv run ruff format --check .
 
 # Auto-fix format errors
 format-fix:
-    cd {{IDENTITY}} && uv run ruff format .
+    uv run ruff format .
 
-# Verify type consistency
+# Verify type consistency (all services)
 type-check:
     cd {{IDENTITY}} && uv run pyright
+    cd {{ENTRY}} && uv run pyright
+    cd {{PAYMENTS}} && uv run pyright
+    cd {{CATALOG}} && uv run pyright
+    cd {{TICKETING}} && uv run pyright
+    cd {{SALES}} && uv run pyright
+    cd {{AUDIT}} && uv run pyright
+    cd {{GATEWAY}} && uv run pyright
 
 # Run test suite
 test:
@@ -110,6 +118,10 @@ identity-dev:
 identity-worker:
     cd {{IDENTITY}} && uv run worker
 
+# Run identity Arq background job worker
+identity-arq-worker:
+    cd {{IDENTITY}} && uv run arq-worker
+
 # Apply identity migrations
 identity-db-upgrade:
     cd {{IDENTITY}} && uv run alembic upgrade head
@@ -122,27 +134,27 @@ identity-migrate message:
 identity-type-check:
     cd {{IDENTITY}} && uv run pyright
 
-# ── Gate service ──────────────────────────────────────────────────────────────
+# ── Entry service ─────────────────────────────────────────────────────────────
 
-# Run gate service with auto-reload
-gate-dev:
-    cd {{GATE}} && uv run dev
+# Run entry service with auto-reload
+entry-dev:
+    cd {{ENTRY}} && uv run dev
 
-# Run gate NATS worker
-gate-worker:
-    cd {{GATE}} && uv run worker
+# Run entry NATS worker
+entry-worker:
+    cd {{ENTRY}} && uv run worker
 
-# Apply gate migrations
-gate-db-upgrade:
-    cd {{GATE}} && uv run alembic upgrade head
+# Apply entry migrations
+entry-db-upgrade:
+    cd {{ENTRY}} && uv run alembic upgrade head
 
-# Create gate migration
-gate-migrate message:
-    cd {{GATE}} && uv run alembic revision --autogenerate -m "{{message}}"
+# Create entry migration
+entry-migrate message:
+    cd {{ENTRY}} && uv run alembic revision --autogenerate -m "{{message}}"
 
-# Type-check gate service
-gate-type-check:
-    cd {{GATE}} && uv run pyright
+# Type-check entry service
+entry-type-check:
+    cd {{ENTRY}} && uv run pyright
 
 # ── Payments service ──────────────────────────────────────────────────────────
 
@@ -192,7 +204,7 @@ ticketing-dev:
 
 # Run ticketing NATS worker
 ticketing-worker:
-    cd {{TICKETING}} && uv run python -m com.qode.qrew.v1.ticketing.worker
+    cd {{TICKETING}} && uv run worker
 
 # Apply ticketing migrations
 ticketing-db-upgrade:
@@ -206,13 +218,15 @@ ticketing-migrate message:
 ticketing-type-check:
     cd {{TICKETING}} && uv run pyright
 
+# ── Sales service ─────────────────────────────────────────────────────────────
+
 # Run sales service with auto-reload
 sales-dev:
     cd {{SALES}} && uv run dev
 
 # Run sales NATS worker
 sales-worker:
-    cd {{SALES}} && uv run python -m com.qode.qrew.v1.sales.worker
+    cd {{SALES}} && uv run worker
 
 # Apply sales migrations
 sales-db-upgrade:
@@ -234,7 +248,7 @@ audit-dev:
 
 # Run audit NATS worker
 audit-worker:
-    cd {{AUDIT}} && uv run python -m com.qode.qrew.v1.audit.worker
+    cd {{AUDIT}} && uv run worker
 
 # Apply audit migrations
 audit-db-upgrade:
@@ -247,3 +261,13 @@ audit-migrate message:
 # Type-check audit service
 audit-type-check:
     cd {{AUDIT}} && uv run pyright
+
+# ── Gateway service ───────────────────────────────────────────────────────────
+
+# Run gateway service with auto-reload
+gateway-dev:
+    cd {{GATEWAY}} && uv run dev
+
+# Type-check gateway service
+gateway-type-check:
+    cd {{GATEWAY}} && uv run pyright

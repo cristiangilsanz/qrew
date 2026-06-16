@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, status
 
-from com.qode.qrew.v1.identity.core.auth.auth import get_admin_user
-from com.qode.qrew.v1.identity.core.infra.limiter import limiter
+from com.qode.qrew.v1.identity.services.auth.auth import get_admin_user
+from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.schemas.admin.admin import FingerprintAdminResponse
 from com.qode.qrew.v1.identity.services.device.fingerprint import FingerprintService

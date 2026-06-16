@@ -1,0 +1,21 @@
+[project]
+name = "ratelimit"
+version = "0.1.0"
+description = "Qrew ratelimit."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "redis[asyncio]>=5.0",
+    "structlog>=24.0",
+]
+
+[tool.uv.sources]
+
+[tool.uv]
+venvPath = "../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]

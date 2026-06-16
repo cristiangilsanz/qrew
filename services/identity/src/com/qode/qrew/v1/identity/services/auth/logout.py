@@ -5,8 +5,8 @@ import redis.asyncio as aioredis
 import structlog
 from jwt import ExpiredSignatureError, InvalidTokenError
 
-from com.qode.qrew.v1.identity.core.auth.security import decode_refresh_token
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.services.auth.security import decode_refresh_token
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.services.audit import AuditService
@@ -33,7 +33,7 @@ class LogoutService:
         self._session_repo = session_repo
 
     async def logout(self, refresh_token: str) -> None:
-        """Blacklist the refresh token's JTI and remove the session row."""
+        """Revokes a refresh token and removes the associated session record."""
         try:
             payload = decode_refresh_token(refresh_token)
         except ExpiredSignatureError:
@@ -69,5 +69,5 @@ class LogoutService:
                 entity_id=sub if isinstance(sub, str) else None,
                 payload={"jti": jti},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.LOGOUT)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=AuditAction.LOGOUT, error=repr(exc))

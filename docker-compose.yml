@@ -72,14 +72,14 @@ services:
       retries: 3
       start_period: 20s
 
-  gate:
+  entry:
     build:
       context: .
-      dockerfile: services/gate/Dockerfile
+      dockerfile: services/entry/Dockerfile
     ports:
       - "8001:8001"
     env_file:
-      - ./services/gate/.env
+      - ./services/entry/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -103,13 +103,13 @@ services:
       retries: 3
       start_period: 20s
 
-  gate-worker:
+  entry-worker:
     build:
       context: .
-      dockerfile: services/gate/Dockerfile
-    command: ["python", "-m", "com.qode.qrew.v1.gate.worker"]
+      dockerfile: services/entry/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.entry.worker"]
     env_file:
-      - ./services/gate/.env
+      - ./services/entry/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
@@ -212,6 +212,22 @@ services:
       nats:
         condition: service_healthy
 
+  identity-arq-worker:
+    build:
+      context: .
+      dockerfile: services/identity/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.identity.worker.arq_worker"]
+    env_file:
+      - ./services/identity/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   ticketing:
     build:
       context: .
@@ -302,6 +318,28 @@ services:
       nats:
         condition: service_healthy
 
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    ports:
+      - "8008:8008"
+    env_file:
+      - ./services/gateway/.env
+    environment:
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: false
+    depends_on:
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8008/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   audit:
     build:
       context: .
@@ -342,6 +380,17 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62
+    container_name: qrew-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
 
 volumes:
   postgres_data:

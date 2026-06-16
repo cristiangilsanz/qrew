@@ -1,21 +1,21 @@
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from http_errors import default_responses, register_exception_handlers
+from idempotency.middleware import IdempotencyMiddleware
+from middleware import (
+    RequestIDMiddleware,
+    SecurityHeadersMiddleware,
+)
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from com.qode.qrew.v1.payments.core.api.errors import default_responses, register_exception_handlers
-from com.qode.qrew.v1.payments.core.api.probes import router as probes_router
-from com.qode.qrew.v1.payments.core.infra.limiter import limiter
-from com.qode.qrew.v1.payments.core.infra.middleware import (
-    RequestIDMiddleware,
-    SecurityHeadersMiddleware,
-)
-from com.qode.qrew.v1.payments.core.observability import setup_tracing
-from com.qode.qrew.v1.payments.lifespan import lifespan
+from com.qode.qrew.v1.payments.core.config import settings
+from com.qode.qrew.v1.payments.core.dependencies import limiter
+from com.qode.qrew.v1.payments.core.lifespan import lifespan
 from com.qode.qrew.v1.payments.routers import router as v1_router
-from com.qode.qrew.v1.payments.settings import settings
+from com.qode.qrew.v1.payments.routers.health import router as probes_router
 
 structlog.configure(
     processors=[
@@ -40,12 +40,20 @@ app = FastAPI(
     responses=default_responses,
 )
 
-setup_tracing(app)
 register_exception_handlers(app)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
+app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(
+    IdempotencyMiddleware,
+    redis_url=settings.redis_url,
+    lock_seconds=settings.idempotency_lock_seconds,
+    enabled=settings.idempotency_enabled,
+)
+app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -53,9 +61,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(SlowAPIMiddleware)
-app.add_middleware(RequestIDMiddleware)
-app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(probes_router)
 app.include_router(v1_router)

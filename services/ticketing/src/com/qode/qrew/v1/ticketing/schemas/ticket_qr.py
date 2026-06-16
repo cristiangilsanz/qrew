@@ -17,7 +17,3 @@ class QrResponse(BaseModel):
     issued_at: datetime
     expires_at: datetime
     rotates_at: datetime
-
-
-class QrDeniedResponse(BaseModel):
-    detail: dict[str, str | None]

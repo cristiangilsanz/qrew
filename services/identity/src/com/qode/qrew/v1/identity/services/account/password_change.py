@@ -1,19 +1,19 @@
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     hash_password,
     is_password_pwned,
     verify_password,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.identity.services.audit import AuditService
 from com.qode.qrew.v1.identity.services.auth.logout import BLACKLIST_JTI_PREFIX
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -62,5 +62,7 @@ class PasswordChangeService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PASSWORD_CHANGED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSWORD_CHANGED, error=repr(exc)
+            )

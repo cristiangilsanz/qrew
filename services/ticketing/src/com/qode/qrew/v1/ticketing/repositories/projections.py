@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +29,7 @@ class EventVenueContextRepository:
             ctx.event_status = event_status
             if venue_id != ctx.venue_id:
                 ctx.venue_id = venue_id
-        ctx.updated_at = datetime.utcnow()
+        ctx.updated_at = datetime.now(UTC)
         await self._session.flush()
 
     async def upsert_venue(
@@ -59,7 +59,7 @@ class EventVenueContextRepository:
             ctx.longitude = longitude
             ctx.geofence_radius_m = geofence_radius_m
             ctx.timezone = timezone
-        ctx.updated_at = datetime.utcnow()
+        ctx.updated_at = datetime.now(UTC)
         await self._session.flush()
 
 
@@ -91,5 +91,5 @@ class DeviceContextRepository:
             ctx.user_id = user_id
             ctx.attested_at = attested_at
             ctx.revoked_at = revoked_at
-        ctx.updated_at = datetime.utcnow()
+        ctx.updated_at = datetime.now(UTC)
         await self._session.flush()

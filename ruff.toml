@@ -29,8 +29,17 @@ ignore = [
     "B008",
     "EM101",
     "EM102",
+    "PLC0415",  # lazy imports inside try/except for optional dependencies
+    "PLR0911",
+    "PLR0912",
     "PLR0913",
+    "PLR0915",
+    "PLW0603",  # global singleton pattern
     "S101",
+    "TC001",
+    "TC002",
+    "TC003",  # Pydantic models use these imports at runtime
+    "RUF012",  # SQLAlchemy __table_args__ is handled by the metaclass
 ]
 
 [lint.per-file-ignores]

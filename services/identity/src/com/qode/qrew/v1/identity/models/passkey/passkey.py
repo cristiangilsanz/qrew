@@ -5,7 +5,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, LargeBinary, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.identity.core.infra.database import Base
+from com.qode.qrew.v1.identity.core.database import Base
 
 
 class PasskeyCredential(Base):

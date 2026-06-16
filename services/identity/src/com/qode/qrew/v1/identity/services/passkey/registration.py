@@ -28,7 +28,7 @@ from com.qode.qrew.v1.identity.services.passkey._common import (
     PasskeyError,
     challenge_key,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -133,5 +133,7 @@ class PasskeyRegistrationService:
                 entity_type="user",
                 entity_id=str(user_id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PASSKEY_REGISTERED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_REGISTERED, error=repr(exc)
+            )

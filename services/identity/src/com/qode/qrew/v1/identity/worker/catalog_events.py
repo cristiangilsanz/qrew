@@ -1,5 +1,3 @@
-"""Monolith NATS worker: subscribes to catalog.* lifecycle events."""
-
 import asyncio
 import json
 import uuid
@@ -7,8 +5,8 @@ from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.core.outbox import publish_via_outbox
+from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
+from com.qode.qrew.v1.identity.services.outbox import publish_via_outbox
 
 logger = structlog.get_logger(__name__)
 
@@ -21,8 +19,8 @@ async def _parse(raw: bytes) -> dict[str, Any] | None:
         data = json.loads(raw.decode())
         assert isinstance(data, dict)
         return data  # type: ignore[return-value]
-    except Exception:
-        await logger.awarning("catalog_events.parse_error")
+    except Exception as exc:
+        await logger.awarning("catalog_events.parse_error", error=repr(exc))
         return None
 
 
@@ -57,6 +55,7 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
 
+    _tasks: set[asyncio.Task[None]] = set()
     nc = await nats.connect(nats_url)  # type: ignore[reportUnknownMemberType]
     js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
 
@@ -76,15 +75,20 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
         await logger.ainfo("catalog_events.subscribed", subject=subject)
 
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
-            async for msg in psub.messages:  # type: ignore[attr-defined]
-                try:
-                    await h(msg.data)  # type: ignore[attr-defined]
-                    await msg.ack()  # type: ignore[attr-defined]
-                except Exception:
-                    await logger.awarning("catalog_events.handler_error")
-                    await msg.nak()  # type: ignore[attr-defined]
+            try:
+                async for msg in psub.messages:  # type: ignore[attr-defined]
+                    try:
+                        await h(msg.data)  # type: ignore[attr-defined]
+                        await msg.ack()  # type: ignore[attr-defined]
+                    except Exception as exc:
+                        await logger.awarning("catalog_events.handler_error", error=repr(exc))
+                        await msg.nak()  # type: ignore[attr-defined]
+            except asyncio.CancelledError:
+                raise
 
-        asyncio.create_task(_consume())
+        t = asyncio.create_task(_consume())
+        _tasks.add(t)
+        t.add_done_callback(_tasks.discard)
 
     await logger.ainfo("catalog_events.all_subscribed")
     try:
@@ -93,4 +97,10 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
     except asyncio.CancelledError:
         pass
     finally:
-        await nc.drain()
+        for t in list(_tasks):
+            t.cancel()
+        await asyncio.gather(*_tasks, return_exceptions=True)
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("catalog_events.drain_failed", error=repr(exc))

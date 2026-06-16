@@ -19,9 +19,7 @@ class TicketTypeRepository:
         )
         return result.scalar_one_or_none()
 
-    async def get_by_event_and_name(
-        self, event_id: uuid.UUID, name: str
-    ) -> TicketType | None:
+    async def get_by_event_and_name(self, event_id: uuid.UUID, name: str) -> TicketType | None:
         result = await self._session.execute(
             select(TicketType).where(
                 TicketType.event_id == event_id,

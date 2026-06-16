@@ -1,14 +1,14 @@
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     email_verification_token_expiry,
     generate_otp,
     generate_token,
     phone_number_otp_expiry,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
 
 logger = structlog.get_logger(__name__)
 
@@ -23,7 +23,7 @@ class ResendEmailVerificationService:
         self._notifier = notifier
 
     async def resend(self, email: str) -> None:
-        """Generate a fresh email verification token and dispatch the link."""
+        """Generates a new email verification credential and sends it to the user."""
         user = await self._repo.get_by_email(email)
 
         if user is None:

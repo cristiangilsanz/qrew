@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.identity.services.audit import AuditService
@@ -59,8 +59,10 @@ class EmailVerificationService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.VERIFY_EMAIL)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.VERIFY_EMAIL, error=repr(exc)
+            )
 
 
 class PhoneVerificationService:
@@ -108,5 +110,7 @@ class PhoneVerificationService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.VERIFY_PHONE)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.VERIFY_PHONE, error=repr(exc)
+            )

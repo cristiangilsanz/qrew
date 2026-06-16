@@ -4,12 +4,12 @@ from datetime import UTC, datetime, timedelta
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.ticketing.core.audit import AuditService
-from com.qode.qrew.v1.ticketing.core.infra.errors import DomainError
+from com.qode.qrew.v1.ticketing.services.audit import AuditService
+from com.qode.qrew.v1.ticketing.core.errors import DomainError
 from com.qode.qrew.v1.ticketing.models.projections import DeviceContext
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
 from com.qode.qrew.v1.ticketing.services.ticket.transition import transition_ticket
-from com.qode.qrew.v1.ticketing.settings import settings
+from com.qode.qrew.v1.ticketing.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -39,9 +39,7 @@ async def restore_frozen_ticket(
             "Restore requires an authenticated device session", field="device_id"
         )
     if ticket.bound_device_id is not None and ticket.bound_device_id == session_device_id:
-        raise TicketRestoreError(
-            "Re-enrol onto a new device before restoring", field="device_id"
-        )
+        raise TicketRestoreError("Re-enrol onto a new device before restoring", field="device_id")
     now = datetime.now(UTC)
     if last_asserted_at is None:
         raise TicketRestoreError("Fresh passkey reassertion is required", field="reassertion")
@@ -85,16 +83,16 @@ async def restore_frozen_ticket(
                 "new_device_id": str(session_device_id),
             },
         )
-    except Exception:
-        await logger.awarning("audit_write_failed", action=_TICKET_RESTORED)
+    except Exception as exc:
+        await logger.awarning("audit_write_failed", action=_TICKET_RESTORED, error=repr(exc))
     await _publish_restored(ticket, actor_id)
     return ticket
 
 
 async def _publish_restored(ticket: Ticket, actor_id: uuid.UUID) -> None:
     try:
-        from common.broker.publisher import publish  # type: ignore[import-untyped]
-        from common.events.envelope import EventEnvelope  # type: ignore[import-untyped]
+        from broker.publisher import publish  # type: ignore[import-untyped]
+        from contracts.envelope import EventEnvelope  # type: ignore[import-untyped]
 
         envelope = EventEnvelope(
             occurred_at=datetime.now(UTC),
@@ -103,5 +101,7 @@ async def _publish_restored(ticket: Ticket, actor_id: uuid.UUID) -> None:
             data={"ticket_id": str(ticket.id), "user_id": str(actor_id)},
         )
         await publish("ticketing.ticket.restored", envelope)
-    except Exception:
-        await logger.awarning("nats_publish_failed", subject="ticketing.ticket.restored")
+    except Exception as exc:
+        await logger.awarning(
+            "nats_publish_failed", subject="ticketing.ticket.restored", error=repr(exc)
+        )

@@ -2,17 +2,17 @@ from datetime import UTC, datetime
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth.security import (
     generate_otp,
     phone_number_otp_expiry,
     verify_password,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
 
 logger = structlog.get_logger(__name__)
 
@@ -64,8 +64,10 @@ class PhoneChangeService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PHONE_CHANGE_REQUESTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PHONE_CHANGE_REQUESTED, error=repr(exc)
+            )
 
     async def confirm_change(self, user: User, new_phone_number: str, otp: str) -> None:
         """Validate OTP and swap the phone number."""
@@ -98,5 +100,7 @@ class PhoneChangeService:
                 entity_id=str(user.id),
                 payload={"new_phone_number": new_phone_number},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PHONE_CHANGE_CONFIRMED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PHONE_CHANGE_CONFIRMED, error=repr(exc)
+            )

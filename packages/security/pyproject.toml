@@ -1,0 +1,20 @@
+[project]
+name = "security"
+version = "0.1.0"
+description = "Qrew security."
+requires-python = ">=3.12"
+dependencies = [
+    "cryptography>=42",
+    "PyJWT>=2.8",
+]
+
+[tool.uv.sources]
+
+[tool.uv]
+venvPath = "../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]

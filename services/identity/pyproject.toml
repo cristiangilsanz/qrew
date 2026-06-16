@@ -1,7 +1,7 @@
 [project]
 name = "identity"
 version = "0.1.0"
-description = "qrew identity service (auth, registration, session, passkey, device, KYC)"
+description = "Qrew identity service."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -21,7 +21,6 @@ dependencies = [
     "httpx>=0.27",
     "aiosmtplib>=3.0",
     "phonenumbers>=8.13",
-    "mailchecker>=4.1",
     "zxcvbn>=4.4",
     "opentelemetry-sdk>=1.24",
     "opentelemetry-api>=1.24",
@@ -39,12 +38,25 @@ dependencies = [
     "cryptography>=42.0",
     "geoip2>=5.2.0",
     "nats-py>=2.7",
-    "common",
+    "broker",
+    "contracts",
+    "db",
+    "locking",
+    "middleware",
+    "observability",
+    "pagination",
+    "idempotency",
+    "ratelimit",
+    "jobs",
+    "http-errors",
+    "probes",
+    "worker",
 ]
 
 [project.scripts]
 dev = "com.qode.qrew.v1.identity.__main__:main"
 worker = "com.qode.qrew.v1.identity.worker.__main__:main"
+arq-worker = "com.qode.qrew.v1.identity.worker.arq_worker:main"
 
 [dependency-groups]
 dev = [
@@ -62,7 +74,19 @@ dev = [
 ]
 
 [tool.uv.sources]
-common = { workspace = true }
+broker = { workspace = true }
+contracts = { workspace = true }
+db = { workspace = true }
+locking = { workspace = true }
+middleware = { workspace = true }
+observability = { workspace = true }
+pagination = { workspace = true }
+idempotency = { workspace = true }
+ratelimit = { workspace = true }
+jobs = { workspace = true }
+http-errors = { workspace = true }
+probes = { workspace = true }
+worker = { workspace = true }
 
 [tool.uv]
 venvPath = "../.."
@@ -72,7 +96,7 @@ venv = ".venv"
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/common/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/jobs/src", "../../packages/ratelimit/src"]
 reportMissingTypeStubs = false
 
 [tool.ruff]
@@ -81,7 +105,7 @@ line-length = 100
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/common/src"]
+pythonpath = ["src", "../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/ratelimit/src"]
 python_files = ["*_test.py"]
 markers = [
     "integration: mark test as integration test requiring Docker services (Postgres + Redis)",

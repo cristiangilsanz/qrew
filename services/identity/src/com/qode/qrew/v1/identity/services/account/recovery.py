@@ -16,8 +16,8 @@ from webauthn.helpers.structs import (
 )
 from webauthn.registration.verify_registration_response import VerifiedRegistration
 
-from com.qode.qrew.v1.identity.core.auth.security import create_recovery_token
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
+from com.qode.qrew.v1.identity.services.auth.security import create_recovery_token
+from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.models.auth.user import User
 from com.qode.qrew.v1.identity.models.passkey.passkey import PasskeyCredential
@@ -30,9 +30,9 @@ from com.qode.qrew.v1.identity.schemas.passkey.passkey import (
     PasskeyRegistrationCompleteRequest,
 )
 from com.qode.qrew.v1.identity.services.audit import AuditService
-from com.qode.qrew.v1.identity.services.infra.notification import NotificationDispatcher
+from com.qode.qrew.v1.identity.services.notification import NotificationDispatcher
 from com.qode.qrew.v1.identity.services.kyc.ocr import OcrError, OcrService
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -193,8 +193,8 @@ class RecoveryService:
         """Send the recovery completion notification without propagating errors."""
         try:
             await self._notifier.send_account_recovery(user.email, user.full_name)
-        except Exception:
-            await logger.awarning("notification_failed", action="account_recovery")
+        except Exception as exc:
+            await logger.awarning("notification_failed", action="account_recovery", error=repr(exc))
 
     async def _audit_failed(self, actor_id: uuid.UUID | None, reason: str) -> None:
         """Record a recovery failure audit event."""
@@ -207,8 +207,10 @@ class RecoveryService:
                 entity_id=str(actor_id) if actor_id else None,
                 payload={"reason": reason},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.RECOVERY_FAILED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.RECOVERY_FAILED, error=repr(exc)
+            )
 
     async def _audit_safe(self, action: AuditAction, user_id: uuid.UUID) -> None:
         """Record a successful recovery audit event without raising."""
@@ -219,5 +221,5 @@ class RecoveryService:
                 entity_type="user",
                 entity_id=str(user_id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

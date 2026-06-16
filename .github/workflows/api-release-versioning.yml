@@ -18,18 +18,18 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.release.outputs.api--release_created }}
-      tag_name: ${{ steps.release.outputs.api--tag_name }}
-      version: ${{ steps.release.outputs.api--version }}
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           config-file: release-please-config.json
-          manifest-file: .api-release-versioning-manifest.json
+          manifest-file: .release-please-manifest.json
 
   publish:
-    name: Publish Docker Image
+    name: Publish Docker Images
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
@@ -37,6 +37,9 @@ jobs:
       packages: write
       contents: read
       security-events: write
+    strategy:
+      matrix:
+        service: [identity, entry, payments, catalog, ticketing, sales, audit, gateway]
     steps:
       - uses: actions/checkout@v4
 
@@ -54,16 +57,16 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: api/Dockerfile
+          file: services/${{ matrix.service }}/Dockerfile
           load: true
-          tags: qrew-api:scan
+          tags: qrew-${{ matrix.service }}:scan
           cache-to: type=gha,mode=max
           cache-from: type=gha
 
       - name: Scan Docker Image for Vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: qrew-api:scan
+          image-ref: qrew-${{ matrix.service }}:scan
           format: table
           severity: CRITICAL,HIGH
           exit-code: "1"
@@ -72,21 +75,24 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: api/Dockerfile
+          file: services/${{ matrix.service }}/Dockerfile
           push: true
           provenance: false
           tags: |
-            ghcr.io/${{ github.repository_owner }}/qrew-api:${{ needs.release-please.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/qrew-api:latest
+            ghcr.io/${{ github.repository_owner }}/qrew-${{ matrix.service }}:${{ needs.release-please.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/qrew-${{ matrix.service }}:latest
           cache-from: type=gha
 
   publish-dev:
-    name: Publish Dev Docker Image
+    name: Publish Dev Docker Images
     needs: ci
     runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read
+    strategy:
+      matrix:
+        service: [identity, entry, payments, catalog, ticketing, sales, audit, gateway]
     steps:
       - uses: actions/checkout@v4
 
@@ -100,22 +106,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker Image
+      - name: Build and Push Dev Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: api/Dockerfile
-          load: true
-          tags: qrew-api:dev
-          cache-to: type=gha,mode=max
-          cache-from: type=gha
-
-      - name: Push Docker Image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: api/Dockerfile
+          file: services/${{ matrix.service }}/Dockerfile
           push: true
           provenance: false
-          tags: ghcr.io/${{ github.repository_owner }}/qrew-api:dev
+          tags: ghcr.io/${{ github.repository_owner }}/qrew-${{ matrix.service }}:dev
+          cache-to: type=gha,mode=max
           cache-from: type=gha

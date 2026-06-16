@@ -8,14 +8,14 @@ from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 from jwt import ExpiredSignatureError, InvalidTokenError
 
-from com.qode.qrew.v1.identity.core.auth import jwt_keys
-from com.qode.qrew.v1.identity.core.auth.security import (
+from com.qode.qrew.v1.identity.services.auth import jwt_keys
+from com.qode.qrew.v1.identity.services.auth.security import (
     create_access_token,
     create_refresh_token,
     extract_jti,
 )
-from com.qode.qrew.v1.identity.core.infra.errors import DomainError
-from com.qode.qrew.v1.identity.core.observability import traced
+from com.qode.qrew.v1.identity.core.errors import DomainError
+from observability import traced
 from com.qode.qrew.v1.identity.models.audit.audit import AuditAction
 from com.qode.qrew.v1.identity.repositories.auth.session import SessionRepository
 from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
@@ -33,7 +33,7 @@ from com.qode.qrew.v1.identity.services.device.device_binding import (
     DeviceBindingError,
     verify_ecdsa,
 )
-from com.qode.qrew.v1.identity.settings import settings
+from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -52,7 +52,7 @@ def decode_signature_header(raw: str | None) -> bytes | None:
     padded = raw + "=" * (-len(raw) % 4)
     try:
         return base64.urlsafe_b64decode(padded)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -145,8 +145,10 @@ class RefreshService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.TOKEN_REFRESHED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.TOKEN_REFRESHED, error=repr(exc)
+            )
 
         return RefreshResponse(
             access_token=access_token,
@@ -154,7 +156,7 @@ class RefreshService:
         )
 
     async def _check_jti(self, jti_key: str, subject: object, jti: object) -> None:
-        """Raise if the JTI is blacklisted; trigger theft detection on replay."""
+        """Raises an error if the token identifier is blacklisted and detects replay theft."""
         stored: bytes | None = await self._redis.get(jti_key)
         if stored is None:
             return
@@ -187,8 +189,10 @@ class RefreshService:
                 entity_id=subject,
                 payload={"jti": jti},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.TOKEN_THEFT_DETECTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.TOKEN_THEFT_DETECTED, error=repr(exc)
+            )
 
     async def _check_user_revocation(self, subject: str, iat: object) -> None:
         """Raise if a user-level revocation covers this token's issue time."""
@@ -208,7 +212,7 @@ class RefreshService:
         signature: bytes | None,
         actor_id: uuid.UUID,
     ) -> uuid.UUID | None:
-        """If the session is device-bound, verify the ECDSA signature over jti||iat."""
+        """Verifies the device signature for a device-bound session before allowing a token refresh."""
         if self._session_repo is None or not isinstance(jti, str):
             return None
         session = await self._session_repo.get_by_jti(jti)
@@ -256,14 +260,15 @@ class RefreshService:
                 entity_id=str(actor_id),
                 payload={"jti": jti, "reason": reason},
             )
-        except Exception:
+        except Exception as exc:
             await logger.awarning(
                 "audit_write_failed",
                 action=AuditAction.REFRESH_SIGNATURE_INVALID,
+                error=repr(exc),
             )
 
     async def _rotate_jti(self, jti_key: str, exp: object) -> None:
-        """Blacklist the old JTI as rotated so any replay triggers theft detection."""
+        """Marks the consumed token identifier as rotated so any replay attempt triggers theft detection."""
         ttl = int(exp) - int(datetime.now(UTC).timestamp()) if isinstance(exp, (int, float)) else 0
         if ttl > 0:
             await self._redis.setex(jti_key, ttl, "rotated")
