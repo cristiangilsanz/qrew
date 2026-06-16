@@ -1,7 +1,7 @@
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -9,17 +9,17 @@ import httpx
 import jwt
 import redis.asyncio as aioredis
 import structlog
+from locking import LockUnavailableError, redlock
+from observability import traced
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.entry.core import principals as jwt_keys
-from locking import LockUnavailableError, redlock
-from observability import traced
+from com.qode.qrew.v1.entry.core.config import settings
 from com.qode.qrew.v1.entry.models.audit import AuditAction
 from com.qode.qrew.v1.entry.models.scanner import Scanner
 from com.qode.qrew.v1.entry.models.ticket_context import TicketState
 from com.qode.qrew.v1.entry.repositories.ticket_context import TicketContextRepository
 from com.qode.qrew.v1.entry.services.audit import AuditService
-from com.qode.qrew.v1.entry.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -147,10 +147,14 @@ async def _evaluate(
         return _denied(EntryReason.signature)
 
     if scanner_event_id is not None and scanner_event_id != event_id:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.wrong_event, event_id=event_id)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.wrong_event, event_id=event_id
+        )
         return _denied(EntryReason.wrong_event, ticket_id=ticket_id)
     if scanner_venue_id != venue_id:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.wrong_venue, event_id=event_id)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.wrong_venue, event_id=event_id
+        )
         return _denied(EntryReason.wrong_venue, ticket_id=ticket_id)
 
     now_unix = int(_now().timestamp())
@@ -159,16 +163,22 @@ async def _evaluate(
         f"{_REPLAY_PREFIX}:{jti}", str(ticket_id), ex=remaining_ttl, nx=True
     )
     if not claimed:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.replay, event_id=event_id)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.replay, event_id=event_id
+        )
         return _denied(EntryReason.replay, ticket_id=ticket_id)
 
     tc_repo = TicketContextRepository(session)
     ticket_ctx = await tc_repo.get(ticket_id)
     if ticket_ctx is None:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.not_found, event_id=event_id)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.not_found, event_id=event_id
+        )
         return _denied(EntryReason.not_found, ticket_id=ticket_id)
     if ticket_ctx.event_id != event_id:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.wrong_owner, event_id=event_id)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.wrong_owner, event_id=event_id
+        )
         return _denied(EntryReason.wrong_owner, ticket_id=ticket_id)
 
     valid_states = {TicketState.issued.value, TicketState.entry_pending.value}
@@ -184,13 +194,19 @@ async def _evaluate(
         return _denied(EntryReason.state, ticket_id=ticket_id)
 
     try:
-        async with redlock(f"ticket:{ticket_id}:entry", redis_url=settings.redis_url, ttl_seconds=10):
-            await _call_monolith_use(ticket_id, scanner.id)
+        async with redlock(
+            f"ticket:{ticket_id}:entry", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            await _call_ticketing_use(ticket_id, scanner.id)
     except LockUnavailableError:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.busy, event_id=event_id)
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.busy, event_id=event_id
+        )
         return _denied(EntryReason.busy, ticket_id=ticket_id)
-    except _MonolithUseError:
-        await _audit_reject(audit, scanner.id, ticket_id, EntryReason.busy, event_id=event_id)
+    except _TicketingError:
+        await _audit_reject(
+            audit, scanner.id, ticket_id, EntryReason.busy, event_id=event_id
+        )
         return _denied(EntryReason.busy, ticket_id=ticket_id)
 
     await audit.record(
@@ -205,9 +221,10 @@ async def _evaluate(
         },
     )
     try:
-        from broker.publisher import publish as _nats_publish  # type: ignore[import-not-found]
+        from broker.publisher import (
+            publish as _nats_publish,  # type: ignore[import-not-found]
+        )
         from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
-        from datetime import UTC as _UTC, datetime as _dt
 
         _channel = _entry_channel_key(str(event_id))
         _payload = {
@@ -219,14 +236,16 @@ async def _evaluate(
         await _nats_publish(
             "ws.fanout.v1",
             EventEnvelope(
-                occurred_at=_dt.now(_UTC),
+                occurred_at=datetime.now(UTC),
                 aggregate_type="ws_fanout",
                 aggregate_id=_channel,
                 data={"channel": _channel, "payload": _payload},
             ),
         )
-    except Exception:
-        await logger.awarning("entry_ws_publish_failed", event_id=str(event_id))
+    except Exception as exc:
+        await logger.awarning(
+            "entry_ws_publish_failed", event_id=str(event_id), error=repr(exc)
+        )
 
     return EntryOutcome(
         allowed=True,
@@ -237,12 +256,11 @@ async def _evaluate(
     )
 
 
-class _MonolithUseError(Exception):
+class _TicketingError(Exception):
     pass
 
 
-async def _call_monolith_use(ticket_id: uuid.UUID, scanner_id: uuid.UUID) -> None:
-    """Forwards a ticket use request to the downstream ticketing service."""
+async def _call_ticketing_use(ticket_id: uuid.UUID, scanner_id: uuid.UUID) -> None:
     url = f"{settings.ticketing_url}/v1/_internal/tickets/{ticket_id}/use"
     async with httpx.AsyncClient(timeout=5.0) as client:
         resp = await client.post(
@@ -250,11 +268,10 @@ async def _call_monolith_use(ticket_id: uuid.UUID, scanner_id: uuid.UUID) -> Non
             headers={"X-Internal-Key": settings.internal_api_key},
             json={"actor_id": str(scanner_id)},
         )
-    if resp.status_code == 409:
-        # Already used — idempotent
+    if resp.status_code == 409:  # noqa: PLR2004
         return
     if resp.status_code not in {200, 204}:
-        raise _MonolithUseError(f"monolith returned {resp.status_code}")
+        raise _TicketingError(f"ticketing returned {resp.status_code}")
 
 
 def _denied(reason: EntryReason, *, ticket_id: uuid.UUID | None = None) -> EntryOutcome:
@@ -263,7 +280,7 @@ def _denied(reason: EntryReason, *, ticket_id: uuid.UUID | None = None) -> Entry
         reason=reason,
         ticket_id=ticket_id,
         holder_user_id=None,
-        scanned_at=datetime.now(timezone.utc),
+        scanned_at=datetime.now(UTC),
     )
 
 
@@ -289,13 +306,18 @@ async def _audit_reject(
             entity_id=str(ticket_id) if ticket_id else None,
             payload=payload,
         )
-    except Exception:
-        await logger.awarning("audit_write_failed", action=AuditAction.ENTRY_REJECTED)
+    except Exception as exc:
+        await logger.awarning(
+            "audit_write_failed", action=AuditAction.ENTRY_REJECTED, error=repr(exc)
+        )
     if event_id is not None:
         try:
-            from broker.publisher import publish as _nats_publish  # type: ignore[import-not-found]
-            from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
-            from datetime import UTC as _UTC, datetime as _dt
+            from broker.publisher import (
+                publish as _nats_publish,  # type: ignore[import-not-found]
+            )
+            from contracts.envelope import (
+                EventEnvelope,  # type: ignore[import-not-found]
+            )
 
             _channel = _entry_channel_key(str(event_id))
             _payload = {
@@ -306,11 +328,13 @@ async def _audit_reject(
             await _nats_publish(
                 "ws.fanout.v1",
                 EventEnvelope(
-                    occurred_at=_dt.now(_UTC),
+                    occurred_at=datetime.now(UTC),
                     aggregate_type="ws_fanout",
                     aggregate_id=_channel,
                     data={"channel": _channel, "payload": _payload},
                 ),
             )
-        except Exception:
-            await logger.awarning("entry_ws_publish_failed", event_id=str(event_id))
+        except Exception as exc:
+            await logger.awarning(
+                "entry_ws_publish_failed", event_id=str(event_id), error=repr(exc)
+            )

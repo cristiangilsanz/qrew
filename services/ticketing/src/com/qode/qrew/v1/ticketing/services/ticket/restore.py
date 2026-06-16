@@ -39,9 +39,7 @@ async def restore_frozen_ticket(
             "Restore requires an authenticated device session", field="device_id"
         )
     if ticket.bound_device_id is not None and ticket.bound_device_id == session_device_id:
-        raise TicketRestoreError(
-            "Re-enrol onto a new device before restoring", field="device_id"
-        )
+        raise TicketRestoreError("Re-enrol onto a new device before restoring", field="device_id")
     now = datetime.now(UTC)
     if last_asserted_at is None:
         raise TicketRestoreError("Fresh passkey reassertion is required", field="reassertion")
@@ -85,8 +83,8 @@ async def restore_frozen_ticket(
                 "new_device_id": str(session_device_id),
             },
         )
-    except Exception:
-        await logger.awarning("audit_write_failed", action=_TICKET_RESTORED)
+    except Exception as exc:
+        await logger.awarning("audit_write_failed", action=_TICKET_RESTORED, error=repr(exc))
     await _publish_restored(ticket, actor_id)
     return ticket
 
@@ -103,5 +101,7 @@ async def _publish_restored(ticket: Ticket, actor_id: uuid.UUID) -> None:
             data={"ticket_id": str(ticket.id), "user_id": str(actor_id)},
         )
         await publish("ticketing.ticket.restored", envelope)
-    except Exception:
-        await logger.awarning("nats_publish_failed", subject="ticketing.ticket.restored")
+    except Exception as exc:
+        await logger.awarning(
+            "nats_publish_failed", subject="ticketing.ticket.restored", error=repr(exc)
+        )

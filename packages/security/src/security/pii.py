@@ -7,7 +7,7 @@ _HASH_PREFIX: Final = b"qrew-pii-v1:"
 
 
 def make_fernet(primary_key: str, previous_keys: str = "") -> MultiFernet:
-    """Builds a key-rotation-aware Fernet encryptor from a primary key and optional previous keys."""
+    """Build a Fernet encryptor supporting key rotation via optional previous keys."""
     keys = [Fernet(primary_key.encode())]
     for raw in previous_keys.splitlines():
         previous = raw.strip()
@@ -37,6 +37,6 @@ def decrypt_bytes(fernet: MultiFernet, ciphertext: bytes) -> bytes:
 
 
 def hash_lookup(plaintext: str) -> str:
-    """Returns a deterministic hash for PII equality lookups without storing plaintext."""
+    """Return a deterministic hash for PII equality lookups."""
     normalised = plaintext.strip().lower().encode()
     return hashlib.sha256(_HASH_PREFIX + normalised).hexdigest()

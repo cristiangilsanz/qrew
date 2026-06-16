@@ -17,9 +17,7 @@ async def reindex_event(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
     del ctx
     row_id = payload["event_id"]
     async with AsyncSessionLocal() as session, session.begin():
-        await session.execute(
-            text(update_one_sql(EVENTS_SEARCH_CONFIG)), {"row_id": row_id}
-        )
+        await session.execute(text(update_one_sql(EVENTS_SEARCH_CONFIG)), {"row_id": row_id})
 
 
 @job("search.reindex_events", cron=parse_crontab("0 5 * * *"), max_attempts=1)

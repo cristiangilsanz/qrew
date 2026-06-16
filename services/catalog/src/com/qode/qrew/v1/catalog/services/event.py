@@ -1,9 +1,9 @@
 import uuid
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
-from sqlalchemy import text
+from sqlalchemy import Select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.catalog.services.audit import AuditService
@@ -53,9 +53,7 @@ def _validate_windows(
     if sale_starts_at >= sale_ends_at:
         raise EventError("Sale must start before it ends", field="sale_starts_at")
     if sale_ends_at > starts_at:
-        raise EventError(
-            "Sale must close before the event starts", field="sale_ends_at"
-        )
+        raise EventError("Sale must close before the event starts", field="sale_ends_at")
 
 
 def _validate_max_tickets(value: int) -> None:
@@ -98,6 +96,12 @@ class EventService:
         self._org_repo = org_repo
         self._venue_repo = venue_repo
         self._audit = audit
+
+    def list_for_org_query(self, organisation_id: uuid.UUID) -> Select[tuple[Event]]:
+        return self._repo.list_for_org_query(organisation_id)
+
+    async def get_by_id(self, event_id: uuid.UUID) -> Event | None:
+        return await self._repo.get_by_id(event_id)
 
     async def _load_organisation(self, organisation_id: uuid.UUID) -> Organisation:
         org = await self._org_repo.get_by_id(organisation_id)
@@ -200,7 +204,9 @@ class EventService:
 
     @traced("event.publish")
     async def publish_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
-        async with redlock(f"event:{event_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10):
+        async with redlock(
+            f"event:{event_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             event = await self._repo.get_by_id(event_id)
             if event is None:
                 raise EventError("Event not found", field="event_id")
@@ -209,7 +215,7 @@ class EventService:
             if event.status != EventStatus.draft:
                 raise EventError("Only draft events can be published", field="status")
             event.status = EventStatus.published
-            event.published_at = datetime.now(timezone.utc)
+            event.published_at = datetime.now(UTC)
             await self._repo.flush()
             await self._reindex(event.id)
             await self._record(
@@ -228,14 +234,16 @@ class EventService:
 
     @traced("event.cancel")
     async def cancel_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
-        async with redlock(f"event:{event_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10):
+        async with redlock(
+            f"event:{event_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             event = await self._repo.get_by_id(event_id)
             if event is None:
                 raise EventError("Event not found", field="event_id")
             if event.status == EventStatus.cancelled:
                 return event
             event.status = EventStatus.cancelled
-            event.cancelled_at = datetime.now(timezone.utc)
+            event.cancelled_at = datetime.now(UTC)
             await self._repo.flush()
             await self._reindex(event.id)
             await self._record(
@@ -271,5 +279,5 @@ class EventService:
                 entity_id=str(event_id),
                 payload=payload,
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

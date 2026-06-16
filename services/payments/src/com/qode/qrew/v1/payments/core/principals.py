@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from typing import Annotated, Final
 
 import jwt
-import structlog
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi import Depends, HTTPException, status
@@ -12,8 +11,6 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
 
 from com.qode.qrew.v1.payments.core.config import settings
-
-logger = structlog.get_logger(__name__)
 
 ALGORITHM: Final = "ES256"
 ACCESS: Final = "access"
@@ -84,16 +81,22 @@ def _load_purpose_keys(purpose: str) -> _PurposeKeys:
     private_pem = raw.strip()
     if not private_pem:
         if not settings.debug:
-            raise RuntimeError(f"{purpose.upper()}_JWT_PRIVATE_KEY is required in production")
+            raise RuntimeError(
+                f"{purpose.upper()}_JWT_PRIVATE_KEY is required in production"
+            )
         private_pem, public_pem = _generate_ephemeral_keypair()
     else:
         public_pem = _derive_public_pem(private_pem)
     kid = _kid_for(public_pem)
     verifiers: dict[str, str] = {kid: public_pem}
-    previous_raw: str = getattr(settings, f"{purpose}_jwt_previous_public_keys", "") or ""
+    previous_raw: str = (
+        getattr(settings, f"{purpose}_jwt_previous_public_keys", "") or ""
+    )
     for previous_pem in _split_pems(previous_raw):
         verifiers[_kid_for(previous_pem)] = previous_pem
-    return _PurposeKeys(private_pem=private_pem, public_pem=public_pem, kid=kid, verifiers=verifiers)
+    return _PurposeKeys(
+        private_pem=private_pem, public_pem=public_pem, kid=kid, verifiers=verifiers
+    )
 
 
 _KEYS: dict[str, _PurposeKeys] = {p: _load_purpose_keys(p) for p in _PURPOSES}

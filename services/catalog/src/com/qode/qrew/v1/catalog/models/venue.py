@@ -16,18 +16,14 @@ class Venue(Base):
         {"schema": "catalog"},
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     address_line: Mapped[str] = mapped_column(String(256), nullable=False)
     city: Mapped[str] = mapped_column(String(96), nullable=False)
     country: Mapped[str] = mapped_column(String(2), nullable=False)
     latitude: Mapped[Decimal] = mapped_column(Numeric(9, 6), nullable=False)
     longitude: Mapped[Decimal] = mapped_column(Numeric(9, 6), nullable=False)
-    geofence_radius_m: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default="200"
-    )
+    geofence_radius_m: Mapped[int] = mapped_column(Integer, nullable=False, server_default="200")
     timezone: Mapped[str] = mapped_column(String(64), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -39,6 +35,4 @@ class Venue(Base):
         onupdate=func.now(),
         nullable=False,
     )
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.services.auth import pii_crypto
+from com.qode.qrew.v1.identity.core import pii as pii_crypto
 from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
 
 

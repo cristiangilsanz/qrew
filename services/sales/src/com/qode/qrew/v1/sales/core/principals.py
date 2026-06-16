@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 from dataclasses import dataclass
 from enum import StrEnum
@@ -10,8 +11,6 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from com.qode.qrew.v1.sales.core.config import settings
-
-import hashlib
 
 ALGORITHM = "ES256"
 
@@ -49,10 +48,14 @@ def _load_key(purpose: Purpose) -> tuple[str, str]:
     if not pem:
         pem = _gen_ephemeral_pem()
     key = serialization.load_pem_private_key(pem.encode(), password=None)
-    public_pem = key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    ).decode()
+    public_pem = (
+        key.public_key()
+        .public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        .decode()
+    )
     return pem, public_pem
 
 
@@ -76,9 +79,7 @@ def verify(purpose: Purpose, token: str) -> dict[str, Any]:
     return jwt.decode(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[return-value]
 
 
-def verify_any(
-    purposes: tuple[Purpose, ...], token: str
-) -> tuple[Purpose, dict[str, Any]]:
+def verify_any(purposes: tuple[Purpose, ...], token: str) -> tuple[Purpose, dict[str, Any]]:
     for purpose in purposes:
         try:
             return purpose, verify(purpose, token)

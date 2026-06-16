@@ -1,27 +1,32 @@
 """Internal API routes consumed only by sibling services."""
 
 import uuid
-from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.core.database import get_db
-from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
-from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
-from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 from com.qode.qrew.v1.sales.core.config import settings
+from com.qode.qrew.v1.sales.services.payment_context import (
+    PaymentContext,
+    PaymentContextError,
+    get_payment_context,
+)
 
 router = APIRouter(prefix="/_internal", include_in_schema=False)
+
+_ERROR_STATUS = {
+    "not_found": status.HTTP_404_NOT_FOUND,
+    "not_reserved": status.HTTP_400_BAD_REQUEST,
+    "expired": status.HTTP_410_GONE,
+}
 
 
 def _require_internal_key(request: Request) -> None:
     key = request.headers.get("X-Internal-Key", "")
     if not key or key != settings.internal_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
 class _PaymentContextRequest(BaseModel):
@@ -31,6 +36,10 @@ class _PaymentContextRequest(BaseModel):
 class _PaymentContextResponse(BaseModel):
     amount_cents: int
     currency: str
+
+
+def _to_response(ctx: PaymentContext) -> _PaymentContextResponse:
+    return _PaymentContextResponse(amount_cents=ctx.amount_cents, currency=ctx.currency)
 
 
 @router.post(
@@ -45,31 +54,16 @@ async def get_reservation_payment_context(
 ) -> _PaymentContextResponse:
     """Returns the billable amount and currency for a reservation."""
     _require_internal_key(request)
-    reservation = await ReservationRepository(db).get_by_id(reservation_id)
-    if reservation is None or reservation.user_id != body.user_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error_code": "not_found", "message": "Reservation not found"},
+    try:
+        ctx = await get_payment_context(
+            db,
+            reservation_id=reservation_id,
+            user_id=body.user_id,
+            default_currency=settings.payments_default_currency,
         )
-    if reservation.status != ReservationStatus.reserved:
+    except PaymentContextError as exc:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "error_code": "not_reserved",
-                "message": "Reservation is not pending payment",
-            },
-        )
-    if reservation.expires_at <= datetime.now(UTC):
-        raise HTTPException(
-            status_code=status.HTTP_410_GONE,
-            detail={"error_code": "expired", "message": "Reservation has expired"},
-        )
-    inventory = await TicketTypeInventoryRepository(db).get_by_id(reservation.ticket_type_id)
-    if inventory is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error_code": "not_found", "message": "Ticket type not found"},
-        )
-    amount_cents = inventory.price_cents * reservation.quantity
-    currency = inventory.currency or settings.payments_default_currency
-    return _PaymentContextResponse(amount_cents=amount_cents, currency=currency)
+            status_code=_ERROR_STATUS.get(exc.error_code, status.HTTP_400_BAD_REQUEST),
+            detail={"error_code": exc.error_code, "message": exc.message},
+        ) from exc
+    return _to_response(ctx)

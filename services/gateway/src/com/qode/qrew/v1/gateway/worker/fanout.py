@@ -18,8 +18,8 @@ DURABLE = "gateway-fanout-handler"
 async def _handle(raw: bytes) -> None:
     try:
         envelope = json.loads(raw.decode())
-    except Exception:
-        await logger.awarning("gateway_fanout.parse_error")
+    except Exception as exc:
+        await logger.awarning("gateway_fanout.parse_error", error=repr(exc))
         return
 
     data: Any = envelope.get("data", {})
@@ -37,7 +37,7 @@ async def _handle(raw: bytes) -> None:
     await hub.deliver(channel_key, payload)  # type: ignore[reportUnknownArgumentType]
 
 
-async def run_fanout_subscriber(nats_url: str) -> None:
+async def start_fanout_subscriber(nats_url: str) -> tuple[asyncio.Task[None], Any]:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
 
@@ -46,17 +46,18 @@ async def run_fanout_subscriber(nats_url: str) -> None:
 
     try:
         await js.find_stream_name_by_subject(SUBJECT)
-    except Exception:
-        await js.add_stream(name=STREAM, subjects=["ws.>"])  # type: ignore[misc]
+    except Exception as exc:
+        raise RuntimeError(
+            f"NATS JetStream stream for subject '{SUBJECT}' not found"
+            " — provision it via infrastructure before starting the gateway."
+        ) from exc
 
     config = ConsumerConfig(
         durable_name=DURABLE,
         deliver_policy=DeliverPolicy.ALL,
         filter_subject=SUBJECT,
     )
-    psub = await js.subscribe(
-        SUBJECT, durable=DURABLE, config=config, stream=STREAM
-    )  # type: ignore[misc]
+    psub = await js.subscribe(SUBJECT, durable=DURABLE, config=config, stream=STREAM)  # type: ignore[misc]
     await logger.ainfo("gateway_fanout.subscribed", subject=SUBJECT)
 
     async def _consume() -> None:
@@ -64,17 +65,10 @@ async def run_fanout_subscriber(nats_url: str) -> None:
             try:
                 await _handle(msg.data)  # type: ignore[attr-defined]
                 await msg.ack()  # type: ignore[attr-defined]
-            except Exception:
-                await logger.awarning("gateway_fanout.handler_error")
+            except Exception as exc:
+                await logger.awarning("gateway_fanout.handler_error", error=repr(exc))
                 await msg.nak()  # type: ignore[attr-defined]
 
-    asyncio.create_task(_consume())
-
+    task: asyncio.Task[None] = asyncio.create_task(_consume())
     await logger.ainfo("gateway_fanout.ready")
-    try:
-        while True:
-            await asyncio.sleep(3600)
-    except asyncio.CancelledError:
-        pass
-    finally:
-        await nc.drain()
+    return task, nc

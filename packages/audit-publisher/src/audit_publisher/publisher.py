@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -19,6 +20,7 @@ async def publish_audit_event(
         from contracts.envelope import EventEnvelope
 
         envelope = EventEnvelope(
+            occurred_at=datetime.now(UTC),
             aggregate_type=aggregate_type,
             aggregate_id=aggregate_id,
             actor_id=actor_id,

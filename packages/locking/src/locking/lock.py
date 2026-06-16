@@ -43,7 +43,7 @@ def _full_key(key: str) -> str:
 
 
 class RedisLock:
-    """Manages a single acquire-and-release cycle for a Redis-backed distributed mutex."""
+    """Acquire-and-release cycle for a Redis-backed distributed mutex."""
 
     def __init__(
         self,
@@ -59,7 +59,7 @@ class RedisLock:
         self._sha: str | None = None
 
     async def acquire(self, *, retry_attempts: int, retry_delay_ms: int) -> bool:
-        """Attempts to acquire the lock with jittered retries up to the configured limit."""
+        """Acquire the lock with jittered retries up to the configured limit."""
         nonce = uuid.uuid4().hex
         ttl_ms = int(self.ttl_seconds * 1000)
         for attempt in range(retry_attempts + 1):
@@ -71,7 +71,7 @@ class RedisLock:
                 return True
             if attempt >= retry_attempts:
                 return False
-            await asyncio.sleep(random.uniform(0, retry_delay_ms) / 1000)
+            await asyncio.sleep(random.uniform(0, retry_delay_ms) / 1000)  # noqa: S311
         return False
 
     async def release(self) -> None:

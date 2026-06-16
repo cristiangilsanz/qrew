@@ -205,5 +205,7 @@ class PasskeyAuthenticationService:
                 entity_id=str(user_id),
                 payload={"setup_complete": setup_complete},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PASSKEY_AUTHENTICATED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_AUTHENTICATED, error=repr(exc)
+            )

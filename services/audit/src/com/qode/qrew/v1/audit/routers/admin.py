@@ -1,16 +1,17 @@
-from fastapi import APIRouter, Header, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, status
 
+from com.qode.qrew.v1.audit.core.dependencies import verify_internal_api_key
+from com.qode.qrew.v1.audit.schemas.verify import AuditVerifyResponse
 from com.qode.qrew.v1.audit.services import AuditChainVerifier
-from com.qode.qrew.v1.audit.core.config import settings
 
-router = APIRouter(prefix="/v1/admin/audit")
+router = APIRouter(
+    prefix="/v1/admin/audit",
+    dependencies=[Depends(verify_internal_api_key)],
+)
 
 
-class AuditVerifyResponse(BaseModel):
-    valid: bool
-    event_count: int
-    tampered_ids: list[str]
+def _verifier() -> AuditChainVerifier:
+    return AuditChainVerifier()
 
 
 @router.get(
@@ -20,11 +21,9 @@ class AuditVerifyResponse(BaseModel):
     summary="Verify the integrity of the audit hash chain",
 )
 async def audit_chain_verify(
-    x_internal_key: str = Header(alias="X-Internal-Key"),
+    verifier: AuditChainVerifier = Depends(_verifier),
 ) -> AuditVerifyResponse:
-    if x_internal_key != settings.internal_api_key:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
-    result = await AuditChainVerifier().verify()
+    result = await verifier.verify()
     return AuditVerifyResponse(
         valid=result.valid,
         event_count=result.event_count,

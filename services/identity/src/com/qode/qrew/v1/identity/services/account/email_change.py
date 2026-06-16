@@ -65,8 +65,10 @@ class EmailChangeService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.EMAIL_CHANGE_REQUESTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.EMAIL_CHANGE_REQUESTED, error=repr(exc)
+            )
 
     async def confirm_change(self, token: str) -> None:
         """Confirm an email change using the token sent to the new address."""
@@ -100,5 +102,7 @@ class EmailChangeService:
                 entity_id=str(user.id),
                 payload={"new_email": new_email},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.EMAIL_CHANGE_CONFIRMED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.EMAIL_CHANGE_CONFIRMED, error=repr(exc)
+            )

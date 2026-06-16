@@ -76,7 +76,7 @@ class IdempotencyStore:
         self._lock_seconds = lock_seconds
 
     async def acquire(self, scope: str, user_id: str | None, key: str) -> LockResult:
-        """Attempts to acquire the processing lock and returns any existing cached response."""
+        """Acquire the processing lock and return any existing cached response."""
         lock_key = _lock_key(scope, user_id, key)
         acquired = await self._redis.set(  # type: ignore[misc]
             lock_key, b"1", ex=self._lock_seconds, nx=True
@@ -87,7 +87,9 @@ class IdempotencyStore:
         cached = await self.fetch(scope, user_id, key)
         return LockResult(acquired=False, cached=cached)
 
-    async def fetch(self, scope: str, user_id: str | None, key: str) -> StoredResponse | None:
+    async def fetch(
+        self, scope: str, user_id: str | None, key: str
+    ) -> StoredResponse | None:
         """Return the cached response for a key, if any."""
         raw = await self._redis.get(_result_key(scope, user_id, key))  # type: ignore[misc]
         if raw is None:

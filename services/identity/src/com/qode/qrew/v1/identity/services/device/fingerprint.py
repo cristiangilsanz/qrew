@@ -80,10 +80,11 @@ class FingerprintService:
                         "user_agent": user_agent,
                     },
                 )
-            except Exception:
+            except Exception as exc:
                 await logger.awarning(
                     "audit_write_failed",
                     action=AuditAction.FINGERPRINT_HEADLESS_FLAG,
+                    error=repr(exc),
                 )
 
         if account_count > settings.fingerprint_multi_account_threshold:
@@ -105,10 +106,11 @@ class FingerprintService:
                         "account_count": account_count,
                     },
                 )
-            except Exception:
+            except Exception as exc:
                 await logger.awarning(
                     "audit_write_failed",
                     action=AuditAction.FINGERPRINT_MULTI_ACCOUNT_FLAG,
+                    error=repr(exc),
                 )
 
         await self._publish_fingerprint_seen(fingerprint_hash)

@@ -1,11 +1,13 @@
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from urllib.parse import urlparse
 
 import redis.asyncio as aioredis
 from arq.connections import RedisSettings
 
 
-def create_redis_dependency(redis_url: str):
+def create_redis_dependency(
+    redis_url: str,
+) -> Callable[[], AsyncGenerator[aioredis.Redis, None]]:
     """Creates a FastAPI dependency that yields a Redis client per request."""
 
     async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[type-arg]

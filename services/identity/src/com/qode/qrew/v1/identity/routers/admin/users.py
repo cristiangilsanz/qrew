@@ -12,7 +12,7 @@ from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
 from com.qode.qrew.v1.identity.schemas.admin.admin import UserSummaryResponse
 from com.qode.qrew.v1.identity.services.auth.login_lockout import LoginLockoutService
 
-from ._deps import get_login_lockout_service
+from ._deps import get_login_lockout_service, get_user_repository
 
 router = APIRouter()
 
@@ -34,10 +34,10 @@ async def list_users(
     kyc_status: KycStatus | None = None,
     _admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    repo: UserRepository = Depends(get_user_repository),
 ) -> Page[UserSummaryResponse]:
     """List and search users, newest first."""
     page_limit = clamp_limit(limit, default=_DEFAULT_LIMIT)
-    repo = UserRepository(db)
     stmt = repo.search_query(search=search, kyc_status=kyc_status)
     users, next_cursor = await cursor_paginate(
         db,

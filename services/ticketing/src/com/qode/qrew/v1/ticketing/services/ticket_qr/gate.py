@@ -33,10 +33,7 @@ def haversine_metres(*, lat1: float, lon1: float, lat2: float, lon2: float) -> f
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dlambda = math.radians(lon2 - lon1)
-    a = (
-        math.sin(dphi / 2) ** 2
-        + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
-    )
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
     return float(2 * _EARTH_RADIUS_M * math.asin(math.sqrt(a)))
 
 
@@ -87,17 +84,21 @@ def evaluate_gate(
         attested = attested.replace(tzinfo=UTC)
     if now - attested > timedelta(hours=settings.ticket_qr_attestation_max_age_hours):
         return DenialReason.attestation
-    if event_ctx := inputs.event_ctx:
-        if event_ctx.latitude is None or event_ctx.longitude is None or event_ctx.geofence_radius_m is None:  # type: ignore[reportUnnecessaryComparison]
-            return DenialReason.geofence
-        distance = haversine_metres(
-            lat1=latitude,
-            lon1=longitude,
-            lat2=float(event_ctx.latitude),
-            lon2=float(event_ctx.longitude),
-        )
-        if distance > event_ctx.geofence_radius_m:
-            return DenialReason.geofence
+    event_ctx = inputs.event_ctx
+    if (
+        event_ctx.latitude is None  # type: ignore[reportUnnecessaryComparison]
+        or event_ctx.longitude is None  # type: ignore[reportUnnecessaryComparison]
+        or event_ctx.geofence_radius_m is None  # type: ignore[reportUnnecessaryComparison]
+    ):
+        return DenialReason.geofence
+    distance = haversine_metres(
+        lat1=latitude,
+        lon1=longitude,
+        lat2=float(event_ctx.latitude),
+        lon2=float(event_ctx.longitude),
+    )
+    if distance > event_ctx.geofence_radius_m:
+        return DenialReason.geofence
     return None
 
 

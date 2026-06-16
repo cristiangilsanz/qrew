@@ -1,7 +1,6 @@
 import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
 
 CanSubscribe = Callable[[dict[str, object], dict[str, str]], Awaitable[bool]]
 
@@ -49,14 +48,3 @@ def resolve(channel_key: str) -> tuple[ChannelDefinition, dict[str, str]] | None
         if params is not None:
             return definition, params
     return None
-
-
-def _placeholder_names(pattern: str) -> list[str]:
-    return [m.group(1) for m in _PLACEHOLDER.finditer(pattern)]
-
-
-def render_key(pattern: str, params: dict[str, Any]) -> str:
-    rendered = pattern
-    for name in _placeholder_names(pattern):
-        rendered = rendered.replace(f"{{{name}}}", str(params[name]))
-    return rendered

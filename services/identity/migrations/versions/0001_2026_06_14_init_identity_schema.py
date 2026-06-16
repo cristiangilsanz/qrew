@@ -5,11 +5,10 @@ Revises:
 Create Date: 2026-06-14
 
 Baseline migration for the identity service.  All tables in the `identity` and
-`audit` schemas were originally created by the monolith's alembic migrations.
+`audit` schemas were originally created before service extraction.
 This migration creates the schemas so that autogenerate compares correctly on
-fresh environments.  On an existing database where the monolith already ran,
-stamp this migration with `alembic stamp 0001_identity_init` before deleting the
-monolith.
+fresh environments.  On an existing database from before the extraction,
+stamp this migration with `alembic stamp 0001_identity_init`.
 """
 
 from __future__ import annotations

@@ -111,7 +111,7 @@ async def list_venues(
 ) -> Page[VenuePublicResponse]:
     del request
     page_limit = clamp_limit(limit, default=20)
-    stmt = VenueRepository(db).list_query(city=city, country=country)
+    stmt = _service(db).list_query(city=city, country=country)
     rows, next_cursor = await cursor_paginate(
         db,
         stmt,
@@ -138,7 +138,7 @@ async def get_public_venue(
     db: AsyncSession = Depends(get_db),
 ) -> VenuePublicResponse:
     del request
-    venue = await VenueRepository(db).get_by_id(venue_id)
+    venue = await _service(db).get_by_id(venue_id)
     if venue is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

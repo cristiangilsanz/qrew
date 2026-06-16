@@ -1,10 +1,11 @@
 """Subscribes to ticket state events and keeps the local projection up to date."""
+
 import asyncio
 
 import structlog
-
 from broker.client import init_nats
 from worker import run_nats_subscribers
+
 from com.qode.qrew.v1.entry.core.config import settings
 from com.qode.qrew.v1.entry.worker.ticket_projector import run_projector
 

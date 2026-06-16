@@ -75,10 +75,11 @@ class DeviceAttestationService:
                     entity_id=str(user_id),
                     payload={"platform": platform, "reason": str(exc)},
                 )
-            except Exception:
+            except Exception as _err:
                 await logger.awarning(
                     "audit_write_failed",
                     action=AuditAction.DEVICE_ATTESTATION_FAILED,
+                    error=repr(_err),
                 )
             raise DeviceAttestationError(str(exc), field=None) from exc
 
@@ -93,8 +94,10 @@ class DeviceAttestationService:
                 entity_id=str(user_id),
                 payload={"platform": result.platform},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.DEVICE_ATTESTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.DEVICE_ATTESTED, error=repr(exc)
+            )
         return result
 
 

@@ -10,8 +10,9 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 
+from http_errors import credentials_exception
+
 from com.qode.qrew.v1.catalog.core.config import settings
-from com.qode.qrew.v1.catalog.routers.errors import credentials_exception
 
 ALGORITHM: Final = "ES256"
 ACCESS: Final = "access"
@@ -86,7 +87,9 @@ def _load_purpose_keys(purpose: str) -> _PurposeKeys:
     previous_raw: str = getattr(settings, f"{purpose}_jwt_previous_public_keys", "") or ""
     for previous_pem in _split_pems(previous_raw):
         verifiers[_kid_for(previous_pem)] = previous_pem
-    return _PurposeKeys(private_pem=private_pem, public_pem=public_pem, kid=kid, verifiers=verifiers)
+    return _PurposeKeys(
+        private_pem=private_pem, public_pem=public_pem, kid=kid, verifiers=verifiers
+    )
 
 
 _KEYS: dict[str, _PurposeKeys] = {p: _load_purpose_keys(p) for p in _PURPOSES}

@@ -33,11 +33,17 @@ def upgrade() -> None:
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS ix_tickets_reservation_id ON ticketing.tickets (reservation_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_tickets_reservation_id ON ticketing.tickets (reservation_id)"
+    )
     op.execute("CREATE INDEX IF NOT EXISTS ix_tickets_event_id ON ticketing.tickets (event_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS ix_tickets_owner_user_id ON ticketing.tickets (owner_user_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_tickets_owner_user_id ON ticketing.tickets (owner_user_id)"
+    )
     op.execute("CREATE INDEX IF NOT EXISTS ix_tickets_state ON ticketing.tickets (state)")
-    op.execute("CREATE INDEX IF NOT EXISTS ix_tickets_bound_device_id ON ticketing.tickets (bound_device_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_tickets_bound_device_id ON ticketing.tickets (bound_device_id)"
+    )
 
     op.execute("""
         CREATE TABLE IF NOT EXISTS ticketing.event_venue_context (
@@ -61,7 +67,9 @@ def upgrade() -> None:
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS ix_device_context_user_id ON ticketing.device_context (user_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_device_context_user_id ON ticketing.device_context (user_id)"
+    )
 
 
 def downgrade() -> None:

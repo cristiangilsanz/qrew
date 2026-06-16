@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -28,20 +28,16 @@ class QueueError(DomainError):
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class QueueService:
-    def __init__(
-        self, event_ctx_repo: EventContextRepository, audit: AuditService
-    ) -> None:
+    def __init__(self, event_ctx_repo: EventContextRepository, audit: AuditService) -> None:
         self._event_ctx_repo = event_ctx_repo
         self._audit = audit
 
     @traced("queue.service.join")
-    async def join(
-        self, *, user_id: uuid.UUID, event_id: uuid.UUID, tiebreak: int
-    ) -> int:
+    async def join(self, *, user_id: uuid.UUID, event_id: uuid.UUID, tiebreak: int) -> int:
         event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
         if event_ctx is None or event_ctx.status != "published":
             raise QueueError("Event not found", field="event_id")
@@ -53,9 +49,7 @@ class QueueService:
         lead = settings.queue_join_lead_seconds
         if event_ctx.sale_starts_at is not None:
             if (event_ctx.sale_starts_at - now).total_seconds() > lead:
-                raise QueueError(
-                    "Queue is not yet open for this event", field="sale_starts_at"
-                )
+                raise QueueError("Queue is not yet open for this event", field="sale_starts_at")
         sale_start_ms = (
             int(event_ctx.sale_starts_at.timestamp() * 1000)
             if event_ctx.sale_starts_at
@@ -97,12 +91,8 @@ class QueueService:
                 event_id=None,
                 payload={"reason": str(exc)},
             )
-            raise QueueError(
-                "Invalid redeem token", field="redeem_window_token"
-            ) from exc
-        await self._record(
-            _QUEUE_REDEEMED, actor_id=user_id, event_id=None, payload={}
-        )
+            raise QueueError("Invalid redeem token", field="redeem_window_token") from exc
+        await self._record(_QUEUE_REDEEMED, actor_id=user_id, event_id=None, payload={})
         return reservation_token
 
     async def _record(
@@ -121,5 +111,5 @@ class QueueService:
                 entity_id=str(event_id) if event_id else None,
                 payload=payload,
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

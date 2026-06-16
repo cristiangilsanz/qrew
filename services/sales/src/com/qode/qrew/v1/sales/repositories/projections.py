@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,7 +50,7 @@ class EventContextRepository:
             ctx.max_tickets_per_user = max_tickets_per_user
             ctx.queue_required = queue_required
             ctx.queue_admit_rate_per_minute = queue_admit_rate_per_minute
-        ctx.updated_at = datetime.now(timezone.utc)
+        ctx.updated_at = datetime.now(UTC)
         await self._session.flush()
 
 
@@ -85,7 +85,7 @@ class TicketTypeInventoryRepository:
             inv.capacity = capacity
             inv.price_cents = price_cents
             inv.currency = currency
-        inv.updated_at = datetime.now(timezone.utc)
+        inv.updated_at = datetime.now(UTC)
         await self._session.flush()
 
 
@@ -103,7 +103,7 @@ class UserAgeContextRepository:
             self._session.add(ctx)
         else:
             ctx.registered_at = registered_at
-        ctx.updated_at = datetime.now(timezone.utc)
+        ctx.updated_at = datetime.now(UTC)
         await self._session.flush()
 
 
@@ -126,5 +126,5 @@ class FingerprintContextRepository:
         else:
             ctx.distinct_user_count += 1
             ctx.last_seen_at = now
-        ctx.updated_at = datetime.now(timezone.utc)
+        ctx.updated_at = datetime.now(UTC)
         await self._session.flush()

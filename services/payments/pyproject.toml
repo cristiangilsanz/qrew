@@ -36,7 +36,7 @@ dependencies = [
     "broker",
     "contracts",
     "db",
-    "locking",
+    "idempotency",
     "middleware",
     "observability",
     "http-errors",
@@ -47,7 +47,7 @@ dependencies = [
 broker = { workspace = true }
 contracts = { workspace = true }
 db = { workspace = true }
-locking = { workspace = true }
+idempotency = { workspace = true }
 middleware = { workspace = true }
 observability = { workspace = true }
 http-errors = { workspace = true }
@@ -78,7 +78,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/security/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/idempotency/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/security/src"]
 venvPath = "../.."
 venv = ".venv"
 

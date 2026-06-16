@@ -39,29 +39,6 @@ async def close_fraud() -> None:
     _ClientState.client = None
 
 
-async def build_engine(session: AsyncSession) -> FraudRuleEngine:
-    """Assembles the fraud detection engine with all available signals."""
-    redis_client = _shared_redis()
-
-    # Pre-load projections needed by signals (avoids per-signal async DB calls)
-    # AccountAgeSignal gets a dict {user_id: registered_at}
-    # FingerprintReuseSignal gets a dict {hash: distinct_user_count}
-    # These are tiny lookups — the projections table is a point read.
-    # Signals receive a pre-fetched dict so the engine stays synchronous-safe.
-    registered_at_lookup: dict[uuid.UUID, datetime] = {}
-    fingerprint_lookup: dict[str, int] = {}
-
-    return FraudRuleEngine(
-        [
-            AccountAgeSignal(registered_at_lookup),
-            TimeToPurchaseSignal(registered_at_lookup),
-            VoipPhoneSignal(),
-            IpVelocitySignal(redis_client),
-            FingerprintReuseSignal(fingerprint_lookup),
-        ]
-    )
-
-
 async def build_engine_for_user(
     session: AsyncSession,
     *,

@@ -68,7 +68,9 @@ class KycReviewService:
                     "reason": reason,
                 },
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.KYC_REVIEWED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.KYC_REVIEWED, error=repr(exc)
+            )
 
         return user

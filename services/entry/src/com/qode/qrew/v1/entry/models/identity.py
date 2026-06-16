@@ -1,4 +1,5 @@
 """Read-only identity schema models for the entry service."""
+
 import uuid
 
 from sqlalchemy import Boolean

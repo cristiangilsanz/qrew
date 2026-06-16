@@ -6,7 +6,7 @@ from sqlalchemy import Boolean, DateTime, Enum, LargeBinary, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from com.qode.qrew.v1.identity.services.auth import pii_crypto
+from com.qode.qrew.v1.identity.core import pii as pii_crypto
 from com.qode.qrew.v1.identity.core.database import Base
 
 

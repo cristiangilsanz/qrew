@@ -1,4 +1,4 @@
-"""init audit schema (stub — table pre-exists from monolith migration)
+"""init audit schema (stub — table pre-exists from pre-extraction migration)
 
 Revision ID: a1b2c3d4e5f6
 Revises:

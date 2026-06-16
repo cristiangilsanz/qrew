@@ -88,7 +88,9 @@ def _load_purpose_keys(purpose: str) -> _PurposeKeys:
     previous_raw: str = getattr(settings, f"{purpose}_jwt_previous_public_keys", "") or ""
     for previous_pem in _split_pems(previous_raw):
         verifiers[_kid_for(previous_pem)] = previous_pem
-    return _PurposeKeys(private_pem=private_pem, public_pem=public_pem, kid=kid, verifiers=verifiers)
+    return _PurposeKeys(
+        private_pem=private_pem, public_pem=public_pem, kid=kid, verifiers=verifiers
+    )
 
 
 _KEYS: dict[str, _PurposeKeys] = {p: _load_purpose_keys(p) for p in _PURPOSES}
@@ -117,6 +119,7 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer),
 ) -> AuthenticatedUser:
     from datetime import UTC, datetime
+
     token = credentials.credentials
     try:
         payload = verify(ACCESS, token)

@@ -64,7 +64,9 @@ class RateLimiter:
         window_ms = window_seconds * 1000
         member = f"{now_ms}-{uuid.uuid4().hex}"
         try:
-            raw = await self._evaluate(self._full_key(scope_key), now_ms, window_ms, limit, member)
+            raw = await self._evaluate(
+                self._full_key(scope_key), now_ms, window_ms, limit, member
+            )
         except aioredis.RedisError as exc:
             if self._fail_open:
                 await logger.awarning(
@@ -79,7 +81,7 @@ class RateLimiter:
         return Decision(allowed=bool(allowed_flag), retry_after_seconds=retry_after_s)
 
     async def check_many(self, checks: list[tuple[str, int, int]]) -> None:
-        """Applies multiple rate limit checks and raises an error if any limit is exceeded."""
+        """Apply multiple rate limit checks and raise if any limit is exceeded."""
         worst: RateLimitedError | None = None
         for scope_key, limit, window_seconds in checks:
             decision = await self.check(scope_key, limit, window_seconds)

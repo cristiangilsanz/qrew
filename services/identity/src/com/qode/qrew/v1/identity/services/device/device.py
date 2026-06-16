@@ -70,8 +70,10 @@ class DeviceService:
                 entity_id=str(device_id),
                 payload={"reason": "user_initiated"},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.DEVICE_REVOKE)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.DEVICE_REVOKE, error=repr(exc)
+            )
 
     async def revoke_all_devices(
         self,
@@ -98,8 +100,10 @@ class DeviceService:
                 entity_id=str(user.id),
                 payload={"reason": "user_initiated", "revoked_count": revoked_count},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.DEVICE_REVOKE_ALL)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.DEVICE_REVOKE_ALL, error=repr(exc)
+            )
 
         return revoked_count
 

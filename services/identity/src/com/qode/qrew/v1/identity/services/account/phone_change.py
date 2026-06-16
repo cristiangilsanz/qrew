@@ -64,8 +64,10 @@ class PhoneChangeService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PHONE_CHANGE_REQUESTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PHONE_CHANGE_REQUESTED, error=repr(exc)
+            )
 
     async def confirm_change(self, user: User, new_phone_number: str, otp: str) -> None:
         """Validate OTP and swap the phone number."""
@@ -98,5 +100,7 @@ class PhoneChangeService:
                 entity_id=str(user.id),
                 payload={"new_phone_number": new_phone_number},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PHONE_CHANGE_CONFIRMED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PHONE_CHANGE_CONFIRMED, error=repr(exc)
+            )

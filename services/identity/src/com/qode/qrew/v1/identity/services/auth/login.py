@@ -230,8 +230,8 @@ class LoginService:
             return
         try:
             await self._anomaly.check(user, ip_address, device_fingerprint)
-        except Exception:
-            await logger.awarning("anomaly_check_error", user_id=str(user.id))
+        except Exception as exc:
+            await logger.awarning("anomaly_check_error", user_id=str(user.id), error=repr(exc))
 
     async def _enforce_session_cap(self, user_id: uuid.UUID) -> None:
         """Enforces the maximum allowed number of concurrent sessions per user."""
@@ -281,5 +281,5 @@ class LoginService:
         """Record an audit event without letting failure propagate."""
         try:
             await self._audit.record(action=action, **kwargs)  # type: ignore[arg-type]
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

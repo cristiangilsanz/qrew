@@ -89,8 +89,10 @@ class LoginLockoutService:
                 ip_address=ip_address,
                 payload={"attempts": attempts, "duration_seconds": duration},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.LOGIN_LOCKED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.LOGIN_LOCKED, error=repr(exc)
+            )
 
     async def reset(self, user_id: uuid.UUID) -> None:
         """Clear the failure counter and any active lock."""
@@ -106,8 +108,10 @@ class LoginLockoutService:
                 entity_type="user",
                 entity_id=str(user_id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.LOGIN_UNLOCKED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.LOGIN_UNLOCKED, error=repr(exc)
+            )
 
     @staticmethod
     def _duration_for_attempts(attempts: int) -> int | None:

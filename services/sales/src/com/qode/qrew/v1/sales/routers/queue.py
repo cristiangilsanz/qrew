@@ -33,9 +33,7 @@ def _bad_request(error: QueueError) -> HTTPException:
         if error.field in {"sale_starts_at", "sale_window", "queue_required"}
         else status.HTTP_400_BAD_REQUEST
     )
-    return HTTPException(
-        status_code=code, detail={"message": error.message, "field": error.field}
-    )
+    return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
 @router.post(

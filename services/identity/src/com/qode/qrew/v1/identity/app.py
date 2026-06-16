@@ -17,7 +17,7 @@ from middleware import (
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
 )
-from observability import add_trace_context, setup_tracing
+from observability import add_trace_context
 from com.qode.qrew.v1.identity.core.lifespan import lifespan
 from com.qode.qrew.v1.identity.routers import router as v1_router
 from com.qode.qrew.v1.identity.routers.internal import router as internal_router
@@ -45,27 +45,12 @@ app = FastAPI(
     responses=default_responses,
 )
 
-setup_tracing(
-    service_name=settings.app_name,
-    version=settings.version,
-    environment="development" if settings.debug else "production",
-    app=app,
-)
-
 register_exception_handlers(app)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 app.add_middleware(SlowAPIMiddleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 app.add_middleware(
     IdempotencyMiddleware,
     redis_url=settings.redis_url,
@@ -74,6 +59,13 @@ app.add_middleware(
 )
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(probes_router)
 app.include_router(v1_router)

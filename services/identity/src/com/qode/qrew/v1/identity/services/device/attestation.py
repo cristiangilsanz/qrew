@@ -96,23 +96,10 @@ class IosAppAttestVerifier:
 
     async def verify_ios(self, token: str, expected_nonce: str) -> AttestationResult:
         """Validate an iOS App Attest assertion."""
-        # TODO: implement full Apple App Attest CA chain validation
-        try:
-            payload = jwt.decode(
-                token,
-                options={"verify_signature": False, "verify_aud": False},
-            )
-        except Exception as exc:
-            raise AttestationVerifierError("Invalid App Attest token") from exc
-
-        if payload.get("nonce") != expected_nonce:
-            raise AttestationVerifierError("Attestation nonce mismatch")
-        if payload.get("teamId") != settings.ios_team_id:
-            raise AttestationVerifierError("Unexpected team id")
-        if payload.get("bundleId") != settings.ios_bundle_id:
-            raise AttestationVerifierError("Unexpected bundle id")
-
-        return AttestationResult(platform="ios")
+        raise AttestationVerifierError(
+            "iOS App Attest CA chain validation is not yet implemented — "
+            "configure attestation_enabled=False or deploy after implementing full Apple attestation."
+        )
 
 
 def build_attestation_verifier() -> AttestationVerifier:

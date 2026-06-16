@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, Text, func
+from sqlalchemy import DateTime, Integer, Select, String, Text, func, select
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -28,3 +28,7 @@ class OutboxEvent(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     dlq_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+def dlq_query() -> Select[tuple[OutboxEvent]]:
+    return select(OutboxEvent).where(OutboxEvent.dlq_reason.is_not(None))

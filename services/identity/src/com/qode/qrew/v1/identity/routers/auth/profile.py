@@ -11,16 +11,14 @@ from com.qode.qrew.v1.identity.services.auth.auth import (
 from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.models.audit.audit import AuditEvent
-from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
-from com.qode.qrew.v1.identity.repositories.audit.audit import AuditRepository
-from com.qode.qrew.v1.identity.repositories.passkey.passkey import (
-    PasskeyCredentialRepository,
-)
+from com.qode.qrew.v1.identity.models.auth.user import User
+from com.qode.qrew.v1.identity.routers.auth._deps.profile import get_profile_service
 from com.qode.qrew.v1.identity.schemas.audit.audit import UserAuditEventResponse
 from com.qode.qrew.v1.identity.schemas.auth.auth import (
     OnboardingStatusResponse,
     UserProfileResponse,
 )
+from com.qode.qrew.v1.identity.services.auth.profile import ProfileService
 
 router = APIRouter()
 
@@ -60,23 +58,11 @@ async def get_me(
 @limiter.limit("60/minute")  # type: ignore[misc]
 async def get_onboarding_status(
     request: Request,
-    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_setup_or_full_user),
+    profile_svc: ProfileService = Depends(get_profile_service),
 ) -> OnboardingStatusResponse:
     """Return which onboarding steps the user has completed."""
-    passkey_repo = PasskeyCredentialRepository(db)
-    has_passkey = await passkey_repo.has_passkey(current_user.id)
-    kyc_submitted = current_user.kyc_status != KycStatus.not_submitted
-    email_verified = current_user.email_verified
-    phone_verified = current_user.phone_number_verified
-    is_complete = email_verified and phone_verified and kyc_submitted and has_passkey
-    return OnboardingStatusResponse(
-        email_verified=email_verified,
-        phone_verified=phone_verified,
-        kyc_submitted=kyc_submitted,
-        passkey_registered=has_passkey,
-        is_complete=is_complete,
-    )
+    return await profile_svc.get_onboarding_status(current_user)
 
 
 @router.get(
@@ -94,11 +80,11 @@ async def list_user_audit(
     limit: int = _AUDIT_PAGE_SIZE,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    profile_svc: ProfileService = Depends(get_profile_service),
 ) -> Page[UserAuditEventResponse]:
     """Return the current user's audit history."""
     page_limit = clamp_limit(limit, default=_AUDIT_PAGE_SIZE)
-    repo = AuditRepository(db)
-    stmt = repo.query_for_user(current_user.id, action=action, since=since)
+    stmt = profile_svc.query_user_audit(current_user.id, action=action, since=since)
     events, next_cursor = await cursor_paginate(
         db,
         stmt,

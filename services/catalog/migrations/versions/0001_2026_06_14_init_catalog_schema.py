@@ -8,9 +8,7 @@ Create Date: 2026-06-14 00:00:00.000000
 
 from typing import Sequence, Union
 
-import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 revision: str = "c1a2b3d4e5f6"
 down_revision: Union[str, None] = None
@@ -32,7 +30,9 @@ def upgrade() -> None:
             deleted_at TIMESTAMPTZ
         )
     """)
-    op.execute("CREATE UNIQUE INDEX IF NOT EXISTS uq_organisations_slug ON catalog.organisations (slug)")
+    op.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_organisations_slug ON catalog.organisations (slug)"
+    )
 
     op.execute("""
         CREATE TABLE IF NOT EXISTS catalog.organisation_members (
@@ -61,7 +61,9 @@ def upgrade() -> None:
             deleted_at TIMESTAMPTZ
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS ix_venues_city_country ON catalog.venues (city, country)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_venues_city_country ON catalog.venues (city, country)"
+    )
 
     op.execute("""
         CREATE TABLE IF NOT EXISTS catalog.events (
@@ -92,10 +94,16 @@ def upgrade() -> None:
             CONSTRAINT ck_events_queue_admit_rate CHECK (queue_admit_rate_per_minute >= 1 AND queue_admit_rate_per_minute <= 600)
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS ix_events_organisation_id ON catalog.events (organisation_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_events_organisation_id ON catalog.events (organisation_id)"
+    )
     op.execute("CREATE INDEX IF NOT EXISTS ix_events_venue_id ON catalog.events (venue_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS ix_events_status_starts_at ON catalog.events (status, starts_at)")
-    op.execute("CREATE INDEX IF NOT EXISTS ix_events_search_vector ON catalog.events USING gin (search_vector)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_events_status_starts_at ON catalog.events (status, starts_at)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_events_search_vector ON catalog.events USING gin (search_vector)"
+    )
 
     op.execute("""
         CREATE TABLE IF NOT EXISTS catalog.ticket_types (
@@ -117,7 +125,9 @@ def upgrade() -> None:
             CONSTRAINT ck_ticket_types_price CHECK (price_cents >= 0 AND price_cents <= 10000000)
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS ix_ticket_types_event_id ON catalog.ticket_types (event_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_ticket_types_event_id ON catalog.ticket_types (event_id)"
+    )
 
 
 def downgrade() -> None:

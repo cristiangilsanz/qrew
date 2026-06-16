@@ -133,5 +133,7 @@ class PasskeyRegistrationService:
                 entity_type="user",
                 entity_id=str(user_id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PASSKEY_REGISTERED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_REGISTERED, error=repr(exc)
+            )

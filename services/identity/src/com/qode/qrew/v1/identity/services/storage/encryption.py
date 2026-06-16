@@ -1,4 +1,4 @@
-from com.qode.qrew.v1.identity.services.auth import pii_crypto
+from com.qode.qrew.v1.identity.core import pii as pii_crypto
 
 ENCRYPTED_KINDS = frozenset({"kyc"})
 

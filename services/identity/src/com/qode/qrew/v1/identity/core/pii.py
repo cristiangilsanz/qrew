@@ -1,4 +1,9 @@
-"""Encryption and lookup hashing for stored PII."""
+"""Encryption and lookup hashing for stored PII.
+
+This module lives in `core` so it can be imported by both the model layer
+(which must remain free of service-layer dependencies) and the service layer
+without creating a circular import or a model→service inversion.
+"""
 
 import hashlib
 from typing import Final

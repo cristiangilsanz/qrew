@@ -1,23 +1,32 @@
 import json
 import uuid
-from dataclasses import dataclass, field as _field
+from dataclasses import dataclass
+from dataclasses import field as _field
 from datetime import UTC, datetime, timedelta
 
 import redis.asyncio as aioredis
 import structlog
+from observability import traced
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from observability import traced
+from com.qode.qrew.v1.entry.core.config import settings
 from com.qode.qrew.v1.entry.models.audit import AuditAction, AuditEvent
 from com.qode.qrew.v1.entry.models.ticket_context import TicketContext, TicketState
-from com.qode.qrew.v1.entry.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
 _REASONS: tuple[str, ...] = (
-    "signature", "audience", "expired", "wrong_event", "wrong_venue",
-    "replay", "not_found", "wrong_owner", "state", "busy",
+    "signature",
+    "audience",
+    "expired",
+    "wrong_event",
+    "wrong_venue",
+    "replay",
+    "not_found",
+    "wrong_owner",
+    "state",
+    "busy",
 )
 
 
@@ -39,7 +48,9 @@ class EntryStats:
             "total_entered": self.total_entered,
             "total_remaining": self.total_remaining,
             "rejections_by_reason": dict(self.rejections_by_reason),
-            "last_scan_at": self.last_scan_at.isoformat() if self.last_scan_at else None,
+            "last_scan_at": self.last_scan_at.isoformat()
+            if self.last_scan_at
+            else None,
         }
 
 
@@ -50,7 +61,9 @@ def _stats_cache_key(event_id: uuid.UUID, since: datetime) -> str:
 def _resolve_since(since: datetime | None) -> datetime:
     if since is not None:
         return since
-    return datetime.now(UTC) - timedelta(hours=settings.entry_stats_default_window_hours)
+    return datetime.now(UTC) - timedelta(
+        hours=settings.entry_stats_default_window_hours
+    )
 
 
 @traced("entry_stats.compute")
@@ -73,8 +86,8 @@ async def compute_entry_stats(
             json.dumps(stats.to_payload()),
             ex=settings.entry_stats_cache_ttl_seconds,
         )
-    except Exception:
-        await logger.awarning("entry_stats_cache_write_failed")
+    except Exception as exc:
+        await logger.awarning("entry_stats_cache_write_failed", error=repr(exc))
     return stats
 
 

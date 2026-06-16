@@ -94,6 +94,7 @@ async def drain_once(
                         outbox_id=str(row.id),
                         job_name=row.job_name,
                         attempts=row.attempt_count,
+                        last_error=row.last_error,
                     )
     if drained:
         await logger.ainfo("outbox_drained", count=drained)

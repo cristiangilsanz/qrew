@@ -24,8 +24,8 @@ class PasswordBreachChecker:
         """Check a password against known breach data and audit a hit."""
         try:
             compromised = await is_password_pwned(password)
-        except Exception:
-            await logger.awarning("hibp_check_error", user_id=str(user_id))
+        except Exception as exc:
+            await logger.awarning("hibp_check_error", user_id=str(user_id), error=repr(exc))
             return False
         if not compromised:
             return False
@@ -43,7 +43,7 @@ class PasswordBreachChecker:
                 entity_id=str(user_id),
                 ip_address=ip_address,
             )
-        except Exception:
+        except Exception as exc:
             await logger.awarning(
-                "audit_write_failed", action=AuditAction.LOGIN_COMPROMISED_PASSWORD
+                "audit_write_failed", action=AuditAction.LOGIN_COMPROMISED_PASSWORD, error=repr(exc)
             )

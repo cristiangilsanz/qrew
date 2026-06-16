@@ -16,7 +16,11 @@ from starlette.status import (
 
 from idempotency.decorator import IdempotencyConfig, get_config
 from idempotency.fingerprint import compute_fingerprint
-from idempotency.store import IdempotencyStore, StoredResponse, sanitise_response_headers
+from idempotency.store import (
+    IdempotencyStore,
+    StoredResponse,
+    sanitise_response_headers,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -43,7 +47,9 @@ class _StoreState:
 async def _ensure_store() -> IdempotencyStore:
     if _StoreState.store is None:
         if _StoreState.redis_url is None:
-            raise RuntimeError("IdempotencyMiddleware not configured — redis_url is missing")
+            raise RuntimeError(
+                "IdempotencyMiddleware not configured — redis_url is missing"
+            )
         _StoreState.redis = aioredis.from_url(  # type: ignore[type-arg]
             _StoreState.redis_url, decode_responses=False
         )
@@ -83,7 +89,7 @@ def _user_id(request: Request) -> str | None:
 
 
 class IdempotencyMiddleware(BaseHTTPMiddleware):
-    """Enforce idempotent replay on opt-in routes carrying the Idempotency-Key header."""
+    """Enforce idempotent replay on opt-in routes with an Idempotency-Key header."""
 
     def __init__(
         self,
@@ -98,7 +104,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         _StoreState.lock_seconds = lock_seconds
         self._enabled = enabled
 
-    async def dispatch(  # noqa: PLR0911
+    async def dispatch(
         self,
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
@@ -120,7 +126,9 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         body = await request.body()
-        fingerprint = compute_fingerprint(request.method, request.url.path, request.url.query, body)
+        fingerprint = compute_fingerprint(
+            request.method, request.url.path, request.url.query, body
+        )
 
         try:
             store = await _ensure_store()
@@ -130,11 +138,17 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             await logger.awarning("idempotency_redis_unavailable", error=repr(exc))
             return await self._replay_body(request, call_next, body)
 
-        if lock_result.cached is not None and lock_result.cached.fingerprint == fingerprint:
+        if (
+            lock_result.cached is not None
+            and lock_result.cached.fingerprint == fingerprint
+        ):
             await store.release(config.scope, user_id, key)
             return self._materialise(lock_result.cached)
 
-        if lock_result.cached is not None and lock_result.cached.fingerprint != fingerprint:
+        if (
+            lock_result.cached is not None
+            and lock_result.cached.fingerprint != fingerprint
+        ):
             await store.release(config.scope, user_id, key)
             return _error_response(
                 HTTP_422_UNPROCESSABLE_CONTENT,
@@ -200,7 +214,11 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         return Response(
             content=body,
             status_code=response.status_code,
-            headers={k: v for k, v in response.headers.items() if k.lower() != "content-length"},
+            headers={
+                k: v
+                for k, v in response.headers.items()
+                if k.lower() != "content-length"
+            },
             media_type=response.media_type,
         )
 

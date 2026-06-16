@@ -62,5 +62,7 @@ class PasswordChangeService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PASSWORD_CHANGED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSWORD_CHANGED, error=repr(exc)
+            )

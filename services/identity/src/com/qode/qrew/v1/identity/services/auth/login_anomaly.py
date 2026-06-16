@@ -66,8 +66,10 @@ class LoginAnomalyService:
                 device_fingerprint_hash=device_fingerprint,
                 payload={"reason": reason_str},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.LOGIN_ANOMALY_DETECTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.LOGIN_ANOMALY_DETECTED, error=repr(exc)
+            )
 
         if settings.anomaly_kill_sessions_on_detection:
             try:
@@ -76,15 +78,19 @@ class LoginAnomalyService:
                 for jti in jtis:
                     await self._redis.setex(_BLACKLIST_JTI_PREFIX + jti, ttl, "1")
                 await logger.awarning("anomaly_sessions_killed", user_id=str(user.id))
-            except Exception:
-                await logger.awarning("anomaly_session_kill_failed", user_id=str(user.id))
+            except Exception as exc:
+                await logger.awarning(
+                    "anomaly_session_kill_failed", user_id=str(user.id), error=repr(exc)
+                )
 
         try:
             await self._notifier.send_login_anomaly_alert(
                 user.email, user.full_name, reason_str, ip_address
             )
-        except Exception:
-            await logger.awarning("notification_failed", action="login_anomaly_alert")
+        except Exception as exc:
+            await logger.awarning(
+                "notification_failed", action="login_anomaly_alert", error=repr(exc)
+            )
 
     async def _check_impossible_travel(self, user: User, current_ip: str) -> str | None:
         current_loc = self._geoip.locate(current_ip)
@@ -92,7 +98,10 @@ class LoginAnomalyService:
             return None
         try:
             events = await self._audit.get_recent_login_events(user.id, limit=5)
-        except Exception:
+        except Exception as exc:
+            await logger.awarning(
+                "audit_query_failed", action="get_recent_login_events", error=repr(exc)
+            )
             return None
         prev_events = [
             e for e in events if e.payload.get("setup_complete") is True and e.ip_address
@@ -131,7 +140,10 @@ class LoginAnomalyService:
     async def _check_concurrent_device(self, user: User, current_fingerprint: str) -> str | None:
         try:
             sessions = await self._session_repo.get_all_by_user_id(user.id)
-        except Exception:
+        except Exception as exc:
+            await logger.awarning(
+                "session_query_failed", action="get_all_by_user_id", error=repr(exc)
+            )
             return None
 
         window = timedelta(minutes=settings.anomaly_concurrent_window_minutes)

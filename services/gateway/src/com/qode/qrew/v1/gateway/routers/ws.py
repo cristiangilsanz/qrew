@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import time
 from typing import Any
 
@@ -64,6 +65,8 @@ async def channel_socket(websocket: WebSocket, channel_key: str) -> None:
     finally:
         writer_task.cancel()
         heartbeat_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await asyncio.gather(writer_task, heartbeat_task, return_exceptions=True)
         await hub.unsubscribe(channel_key, connection)
         await connection.close(WS_CLOSE_NORMAL)
 

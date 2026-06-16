@@ -2,10 +2,10 @@ from typing import Any
 
 from arq.connections import RedisSettings
 from arq.jobs import Job
+from observability import CARRIER_KEY, inject_current_context
 
 from jobs.pool import get_pool
 from jobs.registry import get_spec
-from observability import CARRIER_KEY, inject_current_context
 
 
 async def enqueue(

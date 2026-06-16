@@ -42,11 +42,12 @@ async def purge_old_kyc_documents(ctx: dict[str, Any]) -> dict[str, int]:
                 await storage.delete(object_key)
                 deleted += 1
                 keys_to_clear.append((str(user_id), object_key))
-            except Exception:
+            except Exception as exc:
                 await logger.awarning(
                     "kyc_retention_delete_failed",
                     user_id=str(user_id),
                     object_key=object_key,
+                    error=repr(exc),
                 )
 
     if keys_to_clear:
@@ -68,6 +69,6 @@ async def purge_old_kyc_documents(ctx: dict[str, Any]) -> dict[str, int]:
                     "retention_days": days,
                 },
             )
-        except Exception:
-            await logger.awarning("kyc_retention_audit_write_failed")
+        except Exception as exc:
+            await logger.awarning("kyc_retention_audit_write_failed", error=repr(exc))
     return {"deleted": deleted}

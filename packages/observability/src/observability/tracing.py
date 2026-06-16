@@ -84,7 +84,7 @@ def shutdown_tracing() -> None:
 def traced(
     name: str,
 ) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
-    """Wraps an async function in a named tracing span, recording any raised exceptions."""
+    """Wrap an async function in a named tracing span, recording exceptions."""
 
     def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
         @wraps(func)

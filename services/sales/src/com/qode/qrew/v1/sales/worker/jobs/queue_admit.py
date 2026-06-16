@@ -31,7 +31,9 @@ async def admit_next() -> int:
         event_id = uuid.UUID(str(row["event_id"]))
         batch_size = int(row["queue_admit_rate_per_minute"])
         try:
-            async with redlock(f"event:{event_id}:admit", redis_url=settings.redis_url, ttl_seconds=30):
+            async with redlock(
+                f"event:{event_id}:admit", redis_url=settings.redis_url, ttl_seconds=30
+            ):
                 admitted = await admit_batch(event_id=event_id, batch_size=batch_size)
         except LockUnavailableError:
             continue

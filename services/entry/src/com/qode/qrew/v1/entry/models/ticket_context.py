@@ -25,9 +25,7 @@ class TicketContext(Base):
     __tablename__ = "ticket_contexts"
     __table_args__ = {"schema": "entry"}
 
-    ticket_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True
-    )
+    ticket_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     event_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, index=True
     )

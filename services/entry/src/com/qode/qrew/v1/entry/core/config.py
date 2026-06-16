@@ -11,17 +11,16 @@ class Settings(BaseSettings):
 
     app_name: str = "qrew-entry"
     version: str = "0.1.0"
-    debug: bool = True
+    debug: bool = False
     host: str = "127.0.0.1"
     port: int = 8001
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
     redis_url: str = "redis://localhost:6379/0"
-    nats_url: str = "nats://localhost:4222"
+    nats_url: str = ""
 
-    internal_api_key: str = "dev-internal-secret"
-    monolith_url: str = "http://localhost:8000"
+    internal_api_key: str = ""
     ticketing_url: str = "http://localhost:8004"
 
     access_jwt_private_key: str = ""
@@ -39,18 +38,11 @@ class Settings(BaseSettings):
 
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"
-    otel_environment: str = "dev"
+
+    idempotency_enabled: bool = True
+    idempotency_lock_seconds: int = 30
 
     ratelimit_enabled: bool = True
-    ratelimit_fail_open: bool = True
-
-    ws_enabled: bool = True
-    ws_heartbeat_seconds: int = 30
-    ws_pong_timeout_seconds: int = 10
-
-    locking_default_ttl_seconds: float = 10.0
-    locking_default_retry_attempts: int = 3
-    locking_default_retry_delay_ms: int = 200
 
 
 settings = Settings()

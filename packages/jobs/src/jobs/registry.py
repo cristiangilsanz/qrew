@@ -39,7 +39,8 @@ def get_spec(name: str) -> JobSpec:
         return _registry[name]
     except KeyError:
         from jobs.errors import JobNotFoundError
-        raise JobNotFoundError(name)
+
+        raise JobNotFoundError(name) from None
 
 
 def all_specs() -> list[JobSpec]:
@@ -50,7 +51,7 @@ def all_specs() -> list[JobSpec]:
 def parse_crontab(expr: str) -> CronFields:
     """Parse a standard five-field cron expression into structured fields."""
     parts = expr.strip().split()
-    if len(parts) != 5:
+    if len(parts) != 5:  # noqa: PLR2004
         raise ValueError(f"expected 5 cron fields, got {len(parts)}: {expr!r}")
 
     def _parse_field(val: str) -> set[int] | int | str:
@@ -80,6 +81,7 @@ def job(
     cron: CronFields | None = None,
 ) -> Callable[[JobHandler], JobHandler]:
     """Decorator that registers an async function as a named job."""
+
     def decorator(func: JobHandler) -> JobHandler:
         register(
             JobSpec(
@@ -91,4 +93,5 @@ def job(
             )
         )
         return func
+
     return decorator

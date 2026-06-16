@@ -15,7 +15,7 @@ async def cursor_paginate(
     limit: int,
     cursor: str | None,
 ) -> tuple[list[Any], str | None]:
-    """Executes a keyset-paginated query and returns results with a continuation token."""
+    """Execute a keyset-paginated query and return results with a continuation token."""
     ordered = stmt.order_by(sort_column.desc(), id_column.desc())
     if cursor is not None:
         sort_value, last_id = decode_cursor(cursor)

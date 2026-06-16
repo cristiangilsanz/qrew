@@ -45,8 +45,8 @@ async def is_password_pwned(password: str) -> bool:
 
         return any(line.split(":")[0] == suffix for line in lines)
 
-    except Exception:
-        await logger.awarning("hibp_check_skipped", reason="HIBP API unavailable")
+    except Exception as exc:
+        await logger.awarning("hibp_check_skipped", reason="HIBP API unavailable", error=repr(exc))
         return False
 
 

@@ -25,7 +25,10 @@ class NatsClient:
 
     async def close(self) -> None:
         if self._nc is not None:
-            await self._nc.drain()
+            try:
+                await self._nc.drain()
+            except Exception as exc:
+                await logger.awarning("nats.drain_failed", error=repr(exc))
             await logger.ainfo("nats.disconnected")
 
     @property

@@ -18,8 +18,12 @@ class AuditService:
         payload: dict[str, object] | None = None,
     ) -> None:
         try:
-            from broker.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from contracts.envelope import EventEnvelope  # type: ignore[import-not-found]
+            from broker.publisher import (
+                publish as nats_publish,  # type: ignore[import-not-found]
+            )
+            from contracts.envelope import (
+                EventEnvelope,  # type: ignore[import-not-found]
+            )
 
             envelope = EventEnvelope(
                 occurred_at=datetime.now(UTC),
@@ -35,4 +39,6 @@ class AuditService:
             )
             await nats_publish("audit.events.v1", envelope)
         except Exception as exc:
-            await logger.awarning("audit_publish_failed", action=action, error=repr(exc))
+            await logger.awarning(
+                "audit_publish_failed", action=action, error=repr(exc)
+            )

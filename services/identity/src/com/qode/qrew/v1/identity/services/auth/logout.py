@@ -69,5 +69,5 @@ class LogoutService:
                 entity_id=sub if isinstance(sub, str) else None,
                 payload={"jti": jti},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.LOGOUT)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=AuditAction.LOGOUT, error=repr(exc))

@@ -154,9 +154,7 @@ async def redeem_window_token(*, token: str, user_id: uuid.UUID) -> str:
     added = await redis.sadd(_REDEEMED_KEY.format(event_id=event_id), jti)  # type: ignore[misc]
     if not added:
         raise InvalidTokenError("Token already redeemed")
-    reservation_token, _ = _build_reservation_token(
-        event_id=event_id, user_id=str(user_id)
-    )
+    reservation_token, _ = _build_reservation_token(event_id=event_id, user_id=str(user_id))
     return reservation_token
 
 

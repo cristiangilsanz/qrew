@@ -21,7 +21,7 @@ async def subscribe(
     *,
     ack_wait: int = 30,
 ) -> None:
-    """Registers a durable push consumer and dispatches each incoming message to the provided callable, retrying on failure."""
+    """Register a durable push consumer; nacks messages on handler failure."""
     js = get_nats().js
     config = ConsumerConfig(
         durable_name=durable,
@@ -39,11 +39,12 @@ async def subscribe(
             try:
                 await handler(msg.data)  # type: ignore[attr-defined]
                 await msg.ack()  # type: ignore[attr-defined]
-            except Exception:
+            except Exception as exc:
                 await logger.awarning(
                     "nats.handler_error",
                     subject=msg.subject,  # type: ignore[attr-defined]
                     durable=durable,
+                    error=repr(exc),
                 )
                 await msg.nak()  # type: ignore[attr-defined]
 

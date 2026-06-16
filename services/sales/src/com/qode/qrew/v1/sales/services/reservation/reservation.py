@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
@@ -11,7 +11,7 @@ from com.qode.qrew.v1.sales.services.audit import AuditService
 from com.qode.qrew.v1.sales.core.errors import DomainError
 from locking import redlock
 from observability import traced
-from com.qode.qrew.v1.sales.models.projections import TicketTypeInventory
+from com.qode.qrew.v1.sales.models.projections import EventContext, TicketTypeInventory
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
@@ -35,7 +35,7 @@ class TierBusyError(DomainError):
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class ReservationService:
@@ -55,9 +55,7 @@ class ReservationService:
         self._inventory_repo = inventory_repo
         self._audit = audit
 
-    async def _lock_inventory_nowait(
-        self, ticket_type_id: uuid.UUID
-    ) -> TicketTypeInventory | None:
+    async def _lock_inventory_nowait(self, ticket_type_id: uuid.UUID) -> TicketTypeInventory | None:
         try:
             result = await self._session.execute(
                 text(
@@ -87,7 +85,9 @@ class ReservationService:
     ) -> Reservation:
         if quantity < 1:
             raise ReservationError("Quantity must be at least 1", field="quantity")
-        async with redlock(f"event:{event_id}:reserve:{user_id}", redis_url=settings.redis_url, ttl_seconds=10):
+        async with redlock(
+            f"event:{event_id}:reserve:{user_id}", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
             if event_ctx is None:
                 raise ReservationError("Event not found", field="event_id")
@@ -104,21 +104,15 @@ class ReservationService:
             if now < event_ctx.sale_starts_at or now > event_ctx.sale_ends_at:
                 raise ReservationError("Sale window is closed", field="sale_window")
             if event_ctx.queue_required:
-                raise ReservationError(
-                    "This event requires a queue token", field="queue_required"
-                )
+                raise ReservationError("This event requires a queue token", field="queue_required")
             inventory = await self._lock_inventory_nowait(ticket_type_id)
             if inventory is None or inventory.event_id != event_id:
                 raise ReservationError("Ticket type not found", field="ticket_type_id")
             if inventory.reserved_count + quantity > inventory.capacity:
-                raise ReservationError(
-                    "Not enough capacity remaining", field="quantity"
-                )
+                raise ReservationError("Not enough capacity remaining", field="quantity")
             held = await self._repo.active_quantity_for_user(user_id, event_id)
             if held + quantity > event_ctx.max_tickets_per_user:
-                raise ReservationError(
-                    "Would exceed your per-user ticket limit", field="quantity"
-                )
+                raise ReservationError("Would exceed your per-user ticket limit", field="quantity")
             expires_at = now + timedelta(seconds=settings.reservation_ttl_seconds)
             reservation = Reservation(
                 user_id=user_id,
@@ -160,7 +154,9 @@ class ReservationService:
         """Creates a reservation for events that require prior queue admission, assuming the queue token has already been validated."""
         if quantity < 1:
             raise ReservationError("Quantity must be at least 1", field="quantity")
-        async with redlock(f"event:{event_id}:reserve:{user_id}", redis_url=settings.redis_url, ttl_seconds=10):
+        async with redlock(
+            f"event:{event_id}:reserve:{user_id}", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
             if event_ctx is None:
                 raise ReservationError("Event not found", field="event_id")
@@ -180,14 +176,10 @@ class ReservationService:
             if inventory is None or inventory.event_id != event_id:
                 raise ReservationError("Ticket type not found", field="ticket_type_id")
             if inventory.reserved_count + quantity > inventory.capacity:
-                raise ReservationError(
-                    "Not enough capacity remaining", field="quantity"
-                )
+                raise ReservationError("Not enough capacity remaining", field="quantity")
             held = await self._repo.active_quantity_for_user(user_id, event_id)
             if held + quantity > event_ctx.max_tickets_per_user:
-                raise ReservationError(
-                    "Would exceed your per-user ticket limit", field="quantity"
-                )
+                raise ReservationError("Would exceed your per-user ticket limit", field="quantity")
             expires_at = now + timedelta(seconds=settings.reservation_ttl_seconds)
             reservation = Reservation(
                 user_id=user_id,
@@ -216,9 +208,7 @@ class ReservationService:
         return reservation
 
     @traced("reservation.cancel")
-    async def cancel(
-        self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID
-    ) -> Reservation:
+    async def cancel(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Reservation:
         reservation = await self._repo.get_by_id(reservation_id)
         if reservation is None or reservation.user_id != actor_id:
             raise ReservationError("Reservation not found", field="reservation_id")
@@ -232,14 +222,14 @@ class ReservationService:
                 "Paid reservations must be refunded, not cancelled",
                 field="status",
             )
-        async with redlock(f"reservation:{reservation_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10):
+        async with redlock(
+            f"reservation:{reservation_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             inventory = await self._lock_inventory_nowait(reservation.ticket_type_id)
             if inventory is None:
                 raise ReservationError("Ticket type not found", field="ticket_type_id")
             reservation.status = ReservationStatus.cancelled
-            inventory.reserved_count = max(
-                0, inventory.reserved_count - reservation.quantity
-            )
+            inventory.reserved_count = max(0, inventory.reserved_count - reservation.quantity)
             await self._session.flush()
             await self._record(
                 _RESERVATION_CANCELLED,
@@ -250,13 +240,56 @@ class ReservationService:
         await _publish_reservation_cancelled(reservation)
         return reservation
 
-    async def get_for_user(
-        self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID
-    ) -> Reservation:
+    async def get_event_context(self, event_id: uuid.UUID) -> EventContext | None:
+        return await self._event_ctx_repo.get_by_event_id(event_id)
+
+    async def get_for_user(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Reservation:
         reservation = await self._repo.get_by_id(reservation_id)
         if reservation is None or reservation.user_id != actor_id:
             raise ReservationError("Reservation not found", field="reservation_id")
         return reservation
+
+    async def record_blocked(
+        self,
+        *,
+        actor_id: uuid.UUID,
+        event_id: uuid.UUID,
+        payload: dict[str, Any],
+    ) -> None:
+        """Record a fraud-blocked reservation attempt against the event entity."""
+        try:
+            await self._audit.record(
+                action="RESERVATION_BLOCKED",
+                actor_id=actor_id,
+                entity_type="event",
+                entity_id=str(event_id),
+                payload=payload,
+            )
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action="RESERVATION_BLOCKED", error=repr(exc)
+            )
+
+    async def record_flagged(
+        self,
+        *,
+        actor_id: uuid.UUID,
+        reservation_id: uuid.UUID,
+        payload: dict[str, Any],
+    ) -> None:
+        """Record a fraud-flagged reservation that was created under manual review."""
+        try:
+            await self._audit.record(
+                action="RESERVATION_FLAGGED",
+                actor_id=actor_id,
+                entity_type="reservation",
+                entity_id=str(reservation_id),
+                payload=payload,
+            )
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action="RESERVATION_FLAGGED", error=repr(exc)
+            )
 
     async def _record(
         self,
@@ -274,8 +307,8 @@ class ReservationService:
                 entity_id=str(reservation_id),
                 payload=payload,
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))
 
 
 async def _publish_reservation_created(reservation: Reservation) -> None:

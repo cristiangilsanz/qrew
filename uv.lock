@@ -335,17 +335,16 @@ dependencies = [
     { name = "asyncpg" },
     { name = "audit-publisher" },
     { name = "broker" },
-    { name = "contracts" },
-    { name = "db" },
     { name = "fastapi" },
     { name = "http-errors" },
+    { name = "idempotency" },
+    { name = "locking" },
+    { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
-    { name = "opentelemetry-instrumentation-fastapi" },
-    { name = "opentelemetry-sdk" },
     { name = "pydantic-settings" },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
@@ -358,17 +357,16 @@ requires-dist = [
     { name = "asyncpg", specifier = ">=0.29" },
     { name = "audit-publisher", editable = "packages/audit-publisher" },
     { name = "broker", editable = "packages/broker" },
-    { name = "contracts", editable = "packages/contracts" },
-    { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "http-errors", editable = "packages/http-errors" },
+    { name = "idempotency", editable = "packages/idempotency" },
+    { name = "locking", editable = "packages/locking" },
+    { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/observability" },
-    { name = "opentelemetry-api", specifier = ">=1.24" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.24" },
-    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
-    { name = "opentelemetry-sdk", specifier = ">=1.24" },
     { name = "pydantic-settings", specifier = ">=2.0" },
+    { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "slowapi", specifier = ">=0.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
@@ -444,7 +442,6 @@ dependencies = [
     { name = "db" },
     { name = "fastapi" },
     { name = "http-errors" },
-    { name = "httpx" },
     { name = "idempotency" },
     { name = "jobs" },
     { name = "locking" },
@@ -452,7 +449,6 @@ dependencies = [
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
@@ -461,12 +457,10 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pyjwt" },
     { name = "redis", extra = ["hiredis"] },
-    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
-    { name = "worker" },
 ]
 
 [package.metadata]
@@ -480,7 +474,6 @@ requires-dist = [
     { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "http-errors", editable = "packages/http-errors" },
-    { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/idempotency" },
     { name = "jobs", editable = "packages/jobs" },
     { name = "locking", editable = "packages/locking" },
@@ -488,7 +481,6 @@ requires-dist = [
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.24" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
@@ -497,12 +489,10 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
-    { name = "security", editable = "packages/security" },
     { name = "slowapi", specifier = ">=0.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
-    { name = "worker", editable = "packages/worker" },
 ]
 
 [[package]]
@@ -928,9 +918,9 @@ dependencies = [
     { name = "fastapi" },
     { name = "http-errors" },
     { name = "httpx" },
+    { name = "idempotency" },
     { name = "locking" },
     { name = "middleware" },
-    { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
@@ -947,6 +937,7 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "worker" },
 ]
 
 [package.dev-dependencies]
@@ -974,9 +965,9 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "http-errors", editable = "packages/http-errors" },
     { name = "httpx", specifier = ">=0.27" },
+    { name = "idempotency", editable = "packages/idempotency" },
     { name = "locking", editable = "packages/locking" },
     { name = "middleware", editable = "packages/middleware" },
-    { name = "nats-py", specifier = ">=2.7" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.24" },
@@ -993,6 +984,7 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+    { name = "worker", editable = "packages/worker" },
 ]
 
 [package.metadata.requires-dev]
@@ -1170,28 +1162,34 @@ name = "gateway"
 version = "0.1.0"
 source = { virtual = "services/gateway" }
 dependencies = [
-    { name = "broker" },
-    { name = "contracts" },
     { name = "cryptography" },
     { name = "fastapi" },
     { name = "http-errors" },
+    { name = "idempotency" },
+    { name = "middleware" },
     { name = "nats-py" },
+    { name = "observability" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "slowapi" },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "broker", editable = "packages/broker" },
-    { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "http-errors", editable = "packages/http-errors" },
+    { name = "idempotency", editable = "packages/idempotency" },
+    { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
+    { name = "observability", editable = "packages/observability" },
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
+    { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "slowapi", specifier = ">=0.1" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
 ]
@@ -1566,7 +1564,6 @@ dependencies = [
     { name = "idempotency" },
     { name = "jobs" },
     { name = "locking" },
-    { name = "mailchecker" },
     { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
@@ -1589,7 +1586,6 @@ dependencies = [
     { name = "python-multipart" },
     { name = "ratelimit" },
     { name = "redis", extra = ["hiredis"] },
-    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -1634,7 +1630,6 @@ requires-dist = [
     { name = "idempotency", editable = "packages/idempotency" },
     { name = "jobs", editable = "packages/jobs" },
     { name = "locking", editable = "packages/locking" },
-    { name = "mailchecker", specifier = ">=4.1" },
     { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.7" },
     { name = "observability", editable = "packages/observability" },
@@ -1657,7 +1652,6 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.9" },
     { name = "ratelimit", editable = "packages/ratelimit" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
-    { name = "security", editable = "packages/security" },
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.1" },
@@ -1798,15 +1792,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c3/13/731c99dc2e7652ae818a6de45bdf0142049f7cb566049061c898355f1891/lupa-2.8-cp39-abi3-musllinux_1_2_ppc64le.whl", hash = "sha256:250e035fdaffe8c87093e3ebc206ac29a26131b1568ea711d780c26001ce96e7", size = 1466321, upload-time = "2026-04-15T20:07:57.627Z" },
     { url = "https://files.pythonhosted.org/packages/de/71/3ad8cc4fc05a77dc0d3f7079348bd1cad4675a0d14c24f8e6a3ce5f008f7/lupa-2.8-cp39-abi3-musllinux_1_2_riscv64.whl", hash = "sha256:b9bddb09acfffb4f828f790f444b11dc0cca591afea1a244d9329eea2d20c003", size = 1288577, upload-time = "2026-04-15T20:07:59.913Z" },
     { url = "https://files.pythonhosted.org/packages/d8/b2/1175f6d0aa7b68627fbe2f58bd1e8bea36a89d10dfd67671d2b024c96162/lupa-2.8-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:2e64acbbd47e9b82a64405a39e0d2b36a5a7dad8ab41c0f3437f572f7d282ba3", size = 2444866, upload-time = "2026-04-15T20:08:02.753Z" },
-]
-
-[[package]]
-name = "mailchecker"
-version = "6.0.20"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d9/b1/54f153cb2d494c3923a560d53cce19086d16b5c156d28f4a24d757f8b6d8/mailchecker-6.0.20.tar.gz", hash = "sha256:953e16c5a7dca4e5dbc497c89d18c3c75c7e9af64c05aee6d004afaf8a03eb8a", size = 322876, upload-time = "2026-03-06T16:35:03.052Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/37/e2e7f711148a395784d020d38361b8ac98214cf3cc9a8296cbfeae269527/mailchecker-6.0.20-py3-none-any.whl", hash = "sha256:82916c0d997cab6e6f39eaafd3c3505ac952ff8ea4baef3723b299d7cd6fa8cf", size = 323128, upload-time = "2026-03-06T16:35:01.537Z" },
 ]
 
 [[package]]
@@ -2221,24 +2206,6 @@ wheels = [
 ]
 
 [[package]]
-name = "opentelemetry-exporter-otlp-proto-http"
-version = "1.42.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "googleapis-common-protos" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-common" },
-    { name = "opentelemetry-proto" },
-    { name = "opentelemetry-sdk" },
-    { name = "requests" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/77/32/826bfa1d80ecea24f47808de03cd4a0d13c17ecc07712f45123f0f61e4ac/opentelemetry_exporter_otlp_proto_http-1.42.1.tar.gz", hash = "sha256:bf142a21035d7571ac3a09cb2e5639f49886f243972883cfe777ed3bf02b734d", size = 25406, upload-time = "2026-05-21T16:32:56.807Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/96/82cb223a1502f0787d4bbff12907f5f8d870a50731febcd5818d93ef9555/opentelemetry_exporter_otlp_proto_http-1.42.1-py3-none-any.whl", hash = "sha256:00a16da1b312a1d6c7233d600d557c91df71125af73020f3b9a7765bd699d59d", size = 21793, upload-time = "2026-05-21T16:32:35.277Z" },
-]
-
-[[package]]
 name = "opentelemetry-instrumentation"
 version = "0.63b1"
 source = { registry = "https://pypi.org/simple" }
@@ -2452,7 +2419,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "http-errors" },
     { name = "httpx" },
-    { name = "locking" },
+    { name = "idempotency" },
     { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
@@ -2497,7 +2464,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "http-errors", editable = "packages/http-errors" },
     { name = "httpx", specifier = ">=0.27" },
-    { name = "locking", editable = "packages/locking" },
+    { name = "idempotency", editable = "packages/idempotency" },
     { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.7" },
     { name = "observability", editable = "packages/observability" },
@@ -3192,32 +3159,25 @@ version = "0.1.0"
 source = { virtual = "services/sales" }
 dependencies = [
     { name = "alembic" },
-    { name = "arq" },
     { name = "asyncpg" },
     { name = "broker" },
     { name = "contracts" },
     { name = "cryptography" },
-    { name = "db" },
     { name = "fastapi" },
     { name = "http-errors" },
-    { name = "httpx" },
     { name = "idempotency" },
-    { name = "jobs" },
     { name = "locking" },
     { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
-    { name = "pagination" },
     { name = "probes" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
     { name = "redis", extra = ["hiredis"] },
-    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -3228,32 +3188,25 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
-    { name = "arq", specifier = ">=0.25" },
     { name = "asyncpg", specifier = ">=0.29" },
     { name = "broker", editable = "packages/broker" },
     { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42" },
-    { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "http-errors", editable = "packages/http-errors" },
-    { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/idempotency" },
-    { name = "jobs", editable = "packages/jobs" },
     { name = "locking", editable = "packages/locking" },
     { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.24" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
-    { name = "pagination", editable = "packages/pagination" },
     { name = "probes", editable = "packages/probes" },
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
-    { name = "security", editable = "packages/security" },
     { name = "slowapi", specifier = ">=0.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
@@ -3264,7 +3217,7 @@ requires-dist = [
 [[package]]
 name = "security"
 version = "0.1.0"
-source = { editable = "packages/security" }
+source = { virtual = "packages/security" }
 dependencies = [
     { name = "cryptography" },
     { name = "pyjwt" },
@@ -3384,7 +3337,6 @@ version = "0.1.0"
 source = { virtual = "services/ticketing" }
 dependencies = [
     { name = "alembic" },
-    { name = "arq" },
     { name = "asyncpg" },
     { name = "broker" },
     { name = "contracts" },
@@ -3392,24 +3344,19 @@ dependencies = [
     { name = "db" },
     { name = "fastapi" },
     { name = "http-errors" },
-    { name = "httpx" },
     { name = "idempotency" },
-    { name = "jobs" },
     { name = "locking" },
     { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
-    { name = "pagination" },
     { name = "probes" },
     { name = "pydantic-settings" },
     { name = "pyjwt", extra = ["crypto"] },
     { name = "redis", extra = ["hiredis"] },
-    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -3420,7 +3367,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
-    { name = "arq", specifier = ">=0.25" },
     { name = "asyncpg", specifier = ">=0.29" },
     { name = "broker", editable = "packages/broker" },
     { name = "contracts", editable = "packages/contracts" },
@@ -3428,24 +3374,19 @@ requires-dist = [
     { name = "db", editable = "packages/db" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "http-errors", editable = "packages/http-errors" },
-    { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/idempotency" },
-    { name = "jobs", editable = "packages/jobs" },
     { name = "locking", editable = "packages/locking" },
     { name = "middleware", editable = "packages/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.24" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
-    { name = "pagination", editable = "packages/pagination" },
     { name = "probes", editable = "packages/probes" },
     { name = "pydantic-settings", specifier = ">=2.0" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
-    { name = "security", editable = "packages/security" },
     { name = "slowapi", specifier = ">=0.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },

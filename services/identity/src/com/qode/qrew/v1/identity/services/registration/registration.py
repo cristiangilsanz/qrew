@@ -104,8 +104,10 @@ class RegistrationService:
                 ip_address=ip_address,
                 payload={"email": created.email},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.REGISTER)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.REGISTER, error=repr(exc)
+            )
 
         await self._publish_registered(created)
 

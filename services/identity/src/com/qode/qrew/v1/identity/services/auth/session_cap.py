@@ -54,5 +54,7 @@ class SessionCapEnforcer:
                 entity_id=str(session_id),
                 payload={"reason": "session_cap", "jti": jti},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.SESSION_EVICTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.SESSION_EVICTED, error=repr(exc)
+            )

@@ -5,11 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.catalog.core.database import get_db
 from com.qode.qrew.v1.catalog.core.dependencies import limiter
-from com.qode.qrew.v1.catalog.models.event import EventStatus
-from com.qode.qrew.v1.catalog.repositories.event import EventRepository
-from com.qode.qrew.v1.catalog.repositories.organisation import OrganisationRepository
-from com.qode.qrew.v1.catalog.repositories.ticket_type import TicketTypeRepository
-from com.qode.qrew.v1.catalog.repositories.venue import VenueRepository
 from com.qode.qrew.v1.catalog.schemas.organisation import OrganisationPublicResponse
 from com.qode.qrew.v1.catalog.schemas.public_catalog import (
     AvailabilityItem,
@@ -18,8 +13,13 @@ from com.qode.qrew.v1.catalog.schemas.public_catalog import (
     PublicTicketTypeItem,
 )
 from com.qode.qrew.v1.catalog.schemas.venue import VenuePublicResponse
+from com.qode.qrew.v1.catalog.services.public_catalog import PublicCatalogService
 
 router = APIRouter(prefix="/events", tags=["public-catalog"])
+
+
+def _service(db: AsyncSession) -> PublicCatalogService:
+    return PublicCatalogService(db)
 
 
 def _not_found() -> HTTPException:
@@ -42,16 +42,12 @@ async def get_public_event(
     db: AsyncSession = Depends(get_db),
 ) -> PublicEventDetailResponse:
     del request
-    event = await EventRepository(db).get_by_id(event_id)
-    if event is None or event.status != EventStatus.published:
+    svc = _service(db)
+    result = await svc.get_published_event(event_id)
+    if result is None:
         raise _not_found()
-    org = await OrganisationRepository(db).get_by_id(event.organisation_id)
-    venue = await VenueRepository(db).get_by_id(event.venue_id)
-    if org is None or venue is None:
-        raise _not_found()
-    stmt = TicketTypeRepository(db).list_for_event_query(event_id)
-    result = await db.execute(stmt)
-    tiers = result.scalars().all()
+    event, org, venue = result
+    tiers = await svc.get_ticket_types(event_id)
     return PublicEventDetailResponse(
         id=event.id,
         name=event.name,
@@ -105,12 +101,11 @@ async def get_event_availability(
     db: AsyncSession = Depends(get_db),
 ) -> EventAvailabilityResponse:
     del request
-    event = await EventRepository(db).get_by_id(event_id)
-    if event is None or event.status != EventStatus.published:
+    svc = _service(db)
+    result = await svc.get_published_event_availability(event_id)
+    if result is None:
         raise _not_found()
-    stmt = TicketTypeRepository(db).list_for_event_query(event_id)
-    result = await db.execute(stmt)
-    tiers = result.scalars().all()
+    _event, tiers = result
     return EventAvailabilityResponse(
         ticket_types=[
             AvailabilityItem(

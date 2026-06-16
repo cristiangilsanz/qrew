@@ -16,16 +16,10 @@ class EventContext(Base):
     __tablename__ = "event_context"
     __table_args__ = ({"schema": "sales"},)
 
-    event_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True
-    )
+    event_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, server_default="draft")
-    sale_starts_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    sale_ends_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    sale_starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sale_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     max_tickets_per_user: Mapped[int] = mapped_column(Integer, nullable=False, server_default="10")
     queue_required: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     queue_admit_rate_per_minute: Mapped[int] = mapped_column(
@@ -42,9 +36,7 @@ class TicketTypeInventory(Base):
     __tablename__ = "ticket_type_inventory"
     __table_args__ = ({"schema": "sales"},)
 
-    ticket_type_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True
-    )
+    ticket_type_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     event_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     reserved_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
@@ -62,9 +54,7 @@ class UserAgeContext(Base):
     __table_args__ = ({"schema": "sales"},)
 
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    registered_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -77,12 +67,8 @@ class FingerprintContext(Base):
     __table_args__ = ({"schema": "sales"},)
 
     fingerprint_hash: Mapped[str] = mapped_column(String(128), primary_key=True)
-    distinct_user_count: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default="1"
-    )
-    last_seen_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    distinct_user_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

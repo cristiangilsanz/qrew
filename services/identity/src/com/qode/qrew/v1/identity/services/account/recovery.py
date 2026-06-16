@@ -193,8 +193,8 @@ class RecoveryService:
         """Send the recovery completion notification without propagating errors."""
         try:
             await self._notifier.send_account_recovery(user.email, user.full_name)
-        except Exception:
-            await logger.awarning("notification_failed", action="account_recovery")
+        except Exception as exc:
+            await logger.awarning("notification_failed", action="account_recovery", error=repr(exc))
 
     async def _audit_failed(self, actor_id: uuid.UUID | None, reason: str) -> None:
         """Record a recovery failure audit event."""
@@ -207,8 +207,10 @@ class RecoveryService:
                 entity_id=str(actor_id) if actor_id else None,
                 payload={"reason": reason},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.RECOVERY_FAILED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.RECOVERY_FAILED, error=repr(exc)
+            )
 
     async def _audit_safe(self, action: AuditAction, user_id: uuid.UUID) -> None:
         """Record a successful recovery audit event without raising."""
@@ -219,5 +221,5 @@ class RecoveryService:
                 entity_type="user",
                 entity_id=str(user_id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=action)
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

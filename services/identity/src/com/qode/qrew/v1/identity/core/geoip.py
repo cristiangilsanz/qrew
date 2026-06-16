@@ -24,8 +24,8 @@ class GeoIpService:
         self._reader: geoip2.database.Reader | None = None
         try:
             self._reader = geoip2.database.Reader(db_path)
-        except Exception:
-            logger.warning("geoip_db_not_loaded", path=db_path)
+        except Exception as exc:
+            logger.warning("geoip_db_not_loaded", path=db_path, error=repr(exc))
 
     def locate(self, ip: str) -> tuple[float, float] | None:
         """Resolve an IP to a latitude and longitude."""
@@ -38,7 +38,8 @@ class GeoIpService:
             if lat is None or lon is None:
                 return None
             return (float(lat), float(lon))
-        except Exception:
+        except Exception as exc:
+            logger.warning("geoip_locate_failed", ip=ip, error=repr(exc))
             return None
 
     def distance_km(

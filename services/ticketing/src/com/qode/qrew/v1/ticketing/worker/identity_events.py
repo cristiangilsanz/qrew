@@ -28,8 +28,8 @@ async def _parse(raw: bytes) -> dict[str, Any] | None:
         data = json.loads(raw.decode())
         assert isinstance(data, dict)
         return data  # type: ignore[return-value]
-    except Exception:
-        await logger.awarning("identity_events.parse_error")
+    except Exception as exc:
+        await logger.awarning("identity_events.parse_error", error=repr(exc))
         return None
 
 
@@ -97,8 +97,13 @@ async def handle_device_revoked(raw: bytes) -> None:
                     entity_id=str(ticket.id),
                     payload={"device_id": str(device_id)},
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                await logger.awarning(
+                    "identity_events.audit_failed",
+                    action=_TICKET_FROZEN_DEVICE_REVOKE,
+                    ticket_id=str(ticket.id),
+                    error=repr(exc),
+                )
         await session.commit()
     await logger.ainfo(
         "identity_events.device_revoked",
@@ -117,6 +122,7 @@ async def run_identity_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
 
+    _tasks: list[asyncio.Task[None]] = []
     nc = await nats.connect(nats_url)  # type: ignore[reportUnknownMemberType]
     js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
 
@@ -132,21 +138,22 @@ async def run_identity_event_subscriber(nats_url: str) -> None:
             deliver_policy=DeliverPolicy.ALL,
             filter_subject=subject,
         )
-        psub = await js.subscribe(
-            subject, durable=durable, config=config, stream=STREAM
-        )  # type: ignore[misc]
+        psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("identity_events.subscribed", subject=subject)
 
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
-            async for msg in psub.messages:  # type: ignore[attr-defined]
-                try:
-                    await h(msg.data)  # type: ignore[attr-defined]
-                    await msg.ack()  # type: ignore[attr-defined]
-                except Exception:
-                    await logger.awarning("identity_events.handler_error")
-                    await msg.nak()  # type: ignore[attr-defined]
+            try:
+                async for msg in psub.messages:  # type: ignore[attr-defined]
+                    try:
+                        await h(msg.data)  # type: ignore[attr-defined]
+                        await msg.ack()  # type: ignore[attr-defined]
+                    except Exception as exc:
+                        await logger.awarning("identity_events.handler_error", error=repr(exc))
+                        await msg.nak()  # type: ignore[attr-defined]
+            except asyncio.CancelledError:
+                raise
 
-        asyncio.create_task(_consume())
+        _tasks.append(asyncio.create_task(_consume()))
 
     await logger.ainfo("identity_events.all_subscribed")
     try:
@@ -155,4 +162,10 @@ async def run_identity_event_subscriber(nats_url: str) -> None:
     except asyncio.CancelledError:
         pass
     finally:
-        await nc.drain()
+        for t in _tasks:
+            t.cancel()
+        await asyncio.gather(*_tasks, return_exceptions=True)
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("identity_events.drain_failed", error=repr(exc))

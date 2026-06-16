@@ -123,8 +123,10 @@ class DeviceBindingService:
                 entity_id=str(device.id),
                 payload={"device_name": name},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.DEVICE_BIND)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.DEVICE_BIND, error=repr(exc)
+            )
 
         return device
 

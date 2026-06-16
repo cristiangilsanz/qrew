@@ -16,23 +16,16 @@ dependencies = [
     "structlog>=24.0",
     "opentelemetry-api>=1.24",
     "opentelemetry-sdk>=1.24",
-    "opentelemetry-exporter-otlp-proto-http>=1.24",
     "opentelemetry-instrumentation-fastapi>=0.45b0",
     "opentelemetry-instrumentation-sqlalchemy>=0.45b0",
-    "httpx>=0.27",
     "cryptography>=42",
     "nats-py>=2.6",
-    "arq>=0.25",
     "broker",
     "contracts",
-    "db",
     "locking",
     "middleware",
     "observability",
-    "pagination",
     "idempotency",
-    "jobs",
-    "security",
     "http-errors",
     "probes",
     "worker",
@@ -41,14 +34,10 @@ dependencies = [
 [tool.uv.sources]
 broker = { workspace = true }
 contracts = { workspace = true }
-db = { workspace = true }
 locking = { workspace = true }
 middleware = { workspace = true }
 observability = { workspace = true }
-pagination = { workspace = true }
 idempotency = { workspace = true }
-jobs = { workspace = true }
-security = { workspace = true }
 http-errors = { workspace = true }
 probes = { workspace = true }
 worker = { workspace = true }
@@ -66,7 +55,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/jobs/src", "../../packages/security/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/idempotency/src"]
 
 [tool.ruff]
 line-length = 100

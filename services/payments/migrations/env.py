@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from com.qode.qrew.v1.payments.core.database import Base
 from com.qode.qrew.v1.payments import models  # noqa: F401
+from com.qode.qrew.v1.payments.core.database import Base
 
 config = context.config
 if config.config_file_name is not None:
@@ -19,7 +19,7 @@ target_metadata = Base.metadata
 
 
 def include_object(
-    object: object,
+    object: object,  # noqa: A002
     name: str,
     type_: str,
     reflected: bool,

@@ -58,8 +58,8 @@ class Connection:
         try:
             if self.socket.application_state == WebSocketState.CONNECTED:
                 await self.socket.close(code=code, reason=reason)
-        except Exception:
-            pass
+        except Exception as exc:
+            await logger.adebug("gateway.connection.close_failed", error=repr(exc))
 
     def record_pong(self, now: float) -> None:
         self._last_pong = now

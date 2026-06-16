@@ -1,12 +1,20 @@
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+
+from middleware import RequestIDMiddleware, SecurityHeadersMiddleware
+from idempotency.middleware import IdempotencyMiddleware
 
 from com.qode.qrew.v1.gateway.routing import entry as _entry_channel  # noqa: F401  # type: ignore[reportUnusedImport]
 from com.qode.qrew.v1.gateway.routing import me as _me_channel  # noqa: F401  # type: ignore[reportUnusedImport]
 from com.qode.qrew.v1.gateway.core.lifespan import lifespan
 from com.qode.qrew.v1.gateway.routers.ws import router as ws_router
-from com.qode.qrew.v1.gateway.routers.errors import register_exception_handlers
+from http_errors import register_exception_handlers
+from com.qode.qrew.v1.gateway.routers.health import router as probes_router
 from com.qode.qrew.v1.gateway.core.config import settings
 
 structlog.configure(
@@ -14,9 +22,7 @@ structlog.configure(
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.dev.ConsoleRenderer()
-        if settings.debug
-        else structlog.processors.JSONRenderer(),
+        structlog.dev.ConsoleRenderer() if settings.debug else structlog.processors.JSONRenderer(),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(20),
     context_class=dict,
@@ -31,19 +37,28 @@ app = FastAPI(
     docs_url="/docs" if settings.debug else None,
 )
 
+register_exception_handlers(app)
+
+limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(
+    IdempotencyMiddleware,
+    redis_url=settings.redis_url,
+    lock_seconds=settings.idempotency_lock_seconds,
+    enabled=settings.idempotency_enabled,
+)
+app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-register_exception_handlers(app)
-
+app.include_router(probes_router)
 app.include_router(ws_router)
-
-
-@app.get("/health", tags=["probes"])
-async def health() -> dict[str, str]:
-    return {"status": "ok"}

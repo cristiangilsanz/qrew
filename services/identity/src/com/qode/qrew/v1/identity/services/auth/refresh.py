@@ -52,7 +52,7 @@ def decode_signature_header(raw: str | None) -> bytes | None:
     padded = raw + "=" * (-len(raw) % 4)
     try:
         return base64.urlsafe_b64decode(padded)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -145,8 +145,10 @@ class RefreshService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.TOKEN_REFRESHED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.TOKEN_REFRESHED, error=repr(exc)
+            )
 
         return RefreshResponse(
             access_token=access_token,
@@ -187,8 +189,10 @@ class RefreshService:
                 entity_id=subject,
                 payload={"jti": jti},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.TOKEN_THEFT_DETECTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.TOKEN_THEFT_DETECTED, error=repr(exc)
+            )
 
     async def _check_user_revocation(self, subject: str, iat: object) -> None:
         """Raise if a user-level revocation covers this token's issue time."""
@@ -256,10 +260,11 @@ class RefreshService:
                 entity_id=str(actor_id),
                 payload={"jti": jti, "reason": reason},
             )
-        except Exception:
+        except Exception as exc:
             await logger.awarning(
                 "audit_write_failed",
                 action=AuditAction.REFRESH_SIGNATURE_INVALID,
+                error=repr(exc),
             )
 
     async def _rotate_jti(self, jti_key: str, exp: object) -> None:

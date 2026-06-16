@@ -1,12 +1,13 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.entry.core.principals import get_admin_user
 from com.qode.qrew.v1.entry.core.database import get_db
 from com.qode.qrew.v1.entry.core.dependencies import limiter
 from com.qode.qrew.v1.entry.models.identity import User
 from com.qode.qrew.v1.entry.repositories.scanner import ScannerRepository
+from com.qode.qrew.v1.entry.routers.auth import get_admin_user
 from com.qode.qrew.v1.entry.schemas.scanner import (
     ScannerCreateRequest,
     ScannerDeactivateResponse,
@@ -17,14 +18,11 @@ from com.qode.qrew.v1.entry.schemas.scanner import (
 )
 from com.qode.qrew.v1.entry.services.audit import AuditService
 from com.qode.qrew.v1.entry.services.scanner import ScannerError, ScannerService
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends as _Depends
-
 
 router = APIRouter(prefix="/admin")
 
 
-def _get_scanner_service(db: AsyncSession = _Depends(get_db)) -> ScannerService:
+def _get_scanner_service(db: AsyncSession = Depends(get_db)) -> ScannerService:
     return ScannerService(ScannerRepository(db), AuditService())
 
 

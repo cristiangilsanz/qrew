@@ -3,10 +3,10 @@ from typing import Any
 
 import structlog
 from arq.worker import Retry
+from observability import extract_context, take_carrier, tracer
 
 from jobs.dlq import push_to_dlq
 from jobs.registry import JobSpec
-from observability import extract_context, take_carrier, tracer
 
 logger = structlog.get_logger(__name__)
 
@@ -22,7 +22,7 @@ def _payload_from_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[st
 def _take_propagation_context(
     args: tuple[Any, ...], kwargs: dict[str, Any]
 ) -> tuple[tuple[Any, ...], dict[str, str] | None]:
-    """Extracts and removes the trace propagation carrier from incoming job arguments."""
+    """Extract and remove the trace propagation carrier from job arguments."""
     if not args:
         return args, take_carrier(kwargs)
     head = args[0]
@@ -33,7 +33,7 @@ def _take_propagation_context(
 
 
 def wrap_handler(spec: JobSpec) -> JobRunner:
-    """Wraps a job handler with logging, tracing, retry logic, and dead-letter routing."""
+    """Wrap a job handler with tracing, retry logic, and dead-letter routing."""
 
     async def runner(ctx: dict[str, Any], *args: Any, **kwargs: Any) -> Any:
         attempt = int(ctx.get("job_try", 1))

@@ -1,4 +1,5 @@
 """Read-only catalog schema models for the entry service."""
+
 import uuid
 
 from sqlalchemy.dialects.postgresql import UUID
@@ -14,7 +15,9 @@ class Event(Base):
     __table_args__ = {"schema": "catalog"}
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    organisation_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    organisation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False
+    )
 
 
 class OrganisationMember(Base):
@@ -24,5 +27,7 @@ class OrganisationMember(Base):
     __table_args__ = {"schema": "catalog"}
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    organisation_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    organisation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False
+    )
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)

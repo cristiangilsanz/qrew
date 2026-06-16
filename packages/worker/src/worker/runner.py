@@ -30,7 +30,7 @@ async def run_nats_subscribers(
     tasks = [asyncio.create_task(sub) for sub in subscribers]
 
     try:
-        done, pending = await asyncio.wait(
+        _done, pending = await asyncio.wait(
             [asyncio.create_task(stop_event.wait()), *tasks],
             return_when=asyncio.FIRST_COMPLETED,
         )

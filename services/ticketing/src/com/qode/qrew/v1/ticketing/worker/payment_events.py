@@ -26,8 +26,8 @@ async def _parse(raw: bytes) -> dict[str, Any] | None:
         data = json.loads(raw.decode())
         assert isinstance(data, dict)
         return data  # type: ignore[return-value]
-    except Exception:
-        await logger.awarning("sales_events.parse_error")
+    except Exception as exc:
+        await logger.awarning("sales_events.parse_error", error=repr(exc))
         return None
 
 
@@ -47,7 +47,9 @@ async def handle_reservation_created(raw: bytes) -> None:
         return
 
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10):
+        async with redlock(
+            f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             existing = await TicketRepository(session).list_by_reservation(reservation_id)
             if existing:
                 await logger.ainfo(
@@ -86,7 +88,9 @@ async def handle_reservation_paid(raw: bytes) -> None:
         return
 
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10):
+        async with redlock(
+            f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             audit = AuditService()
             tickets = await TicketRepository(session).list_by_reservation(reservation_id)
             for ticket in tickets:
@@ -100,9 +104,7 @@ async def handle_reservation_paid(raw: bytes) -> None:
                         audit=audit,
                     )
             await session.commit()
-    await logger.ainfo(
-        "sales_events.tickets_issued", reservation_id=str(reservation_id)
-    )
+    await logger.ainfo("sales_events.tickets_issued", reservation_id=str(reservation_id))
 
 
 async def handle_reservation_cancelled(raw: bytes) -> None:
@@ -116,9 +118,7 @@ async def handle_reservation_cancelled(raw: bytes) -> None:
     except (KeyError, ValueError):
         await logger.awarning("sales_events.reservation_cancelled.bad_payload")
         return
-    await _cancel_tickets_for_reservation(
-        reservation_id, user_id, reason="reservation_cancelled"
-    )
+    await _cancel_tickets_for_reservation(reservation_id, user_id, reason="reservation_cancelled")
 
 
 async def _cancel_tickets_for_reservation(
@@ -129,7 +129,9 @@ async def _cancel_tickets_for_reservation(
 ) -> None:
     cancellable = {TicketState.reserved, TicketState.issued}
     async with AsyncSessionLocal() as session:
-        async with redlock(f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10):
+        async with redlock(
+            f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
+        ):
             audit = AuditService()
             tickets = await TicketRepository(session).list_by_reservation(reservation_id)
             for ticket in tickets:
@@ -161,6 +163,7 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
 
+    _tasks: list[asyncio.Task[None]] = []
     nc = await nats.connect(nats_url)  # type: ignore[reportUnknownMemberType]
     js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
 
@@ -176,21 +179,22 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
             deliver_policy=DeliverPolicy.ALL,
             filter_subject=subject,
         )
-        psub = await js.subscribe(
-            subject, durable=durable, config=config, stream=STREAM
-        )  # type: ignore[misc]
+        psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("sales_events.subscribed", subject=subject)
 
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
-            async for msg in psub.messages:  # type: ignore[attr-defined]
-                try:
-                    await h(msg.data)  # type: ignore[attr-defined]
-                    await msg.ack()  # type: ignore[attr-defined]
-                except Exception:
-                    await logger.awarning("sales_events.handler_error")
-                    await msg.nak()  # type: ignore[attr-defined]
+            try:
+                async for msg in psub.messages:  # type: ignore[attr-defined]
+                    try:
+                        await h(msg.data)  # type: ignore[attr-defined]
+                        await msg.ack()  # type: ignore[attr-defined]
+                    except Exception as exc:
+                        await logger.awarning("sales_events.handler_error", error=repr(exc))
+                        await msg.nak()  # type: ignore[attr-defined]
+            except asyncio.CancelledError:
+                raise
 
-        asyncio.create_task(_consume())
+        _tasks.append(asyncio.create_task(_consume()))
 
     await logger.ainfo("sales_events.all_subscribed")
     try:
@@ -199,4 +203,10 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
     except asyncio.CancelledError:
         pass
     finally:
-        await nc.drain()
+        for t in _tasks:
+            t.cancel()
+        await asyncio.gather(*_tasks, return_exceptions=True)
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("payment_events.drain_failed", error=repr(exc))

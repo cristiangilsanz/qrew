@@ -35,9 +35,18 @@ default_responses: dict[int | str, dict[str, Any]] = {
     HTTP_403_FORBIDDEN: {"model": ErrorResponse, "description": "Forbidden"},
     HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Not found"},
     HTTP_409_CONFLICT: {"model": ErrorResponse, "description": "Conflict"},
-    HTTP_422_UNPROCESSABLE_CONTENT: {"model": ErrorResponse, "description": "Validation error"},
-    HTTP_429_TOO_MANY_REQUESTS: {"model": ErrorResponse, "description": "Too many requests"},
-    HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse, "description": "Server error"},
+    HTTP_422_UNPROCESSABLE_CONTENT: {
+        "model": ErrorResponse,
+        "description": "Validation error",
+    },
+    HTTP_429_TOO_MANY_REQUESTS: {
+        "model": ErrorResponse,
+        "description": "Too many requests",
+    },
+    HTTP_500_INTERNAL_SERVER_ERROR: {
+        "model": ErrorResponse,
+        "description": "Server error",
+    },
 }
 
 
@@ -96,7 +105,9 @@ async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONR
     )
 
 
-async def _unexpected_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def _unexpected_exception_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
     await logger.aexception(
         "unhandled_exception",
         method=request.method,

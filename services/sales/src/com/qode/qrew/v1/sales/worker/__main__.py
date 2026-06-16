@@ -7,6 +7,7 @@ from com.qode.qrew.v1.sales.core.config import settings
 async def main() -> None:
     if not settings.nats_url:
         import structlog
+
         await structlog.get_logger(__name__).awarning("sales_worker.no_nats_url")
         return
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import structlog
+from contracts.envelope import EventEnvelope
 
 from broker.client import get_nats
-from contracts.envelope import EventEnvelope
 
 logger = structlog.get_logger(__name__)
 

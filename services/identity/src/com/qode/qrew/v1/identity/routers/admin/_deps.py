@@ -25,6 +25,13 @@ def _get_notification_service() -> NotificationDispatcher:
     return build_notification_dispatcher()
 
 
+def get_user_repository(
+    db: AsyncSession = Depends(get_db),
+) -> UserRepository:
+    """Build the user repository."""
+    return UserRepository(db)
+
+
 def get_fingerprint_service(
     db: AsyncSession = Depends(get_db),
 ) -> FingerprintService:

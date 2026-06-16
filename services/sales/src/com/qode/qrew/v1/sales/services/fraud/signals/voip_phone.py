@@ -1,8 +1,6 @@
 from com.qode.qrew.v1.sales.services.fraud.context import PurchaseContext
 from com.qode.qrew.v1.sales.services.fraud.signals.base import SignalResult
 
-_VOIP_PREFIXES = ("+1900", "+1976")
-
 
 class VoipPhoneSignal:
     """Heuristic score for known VoIP/throwaway phone number patterns."""

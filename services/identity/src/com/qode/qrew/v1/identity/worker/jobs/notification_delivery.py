@@ -59,8 +59,8 @@ async def deliver(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
                     entity_id=str(notification_id),
                     payload={"channel": str(channel), "template": template_key},
                 )
-            except Exception:
-                await logger.awarning("notification_failure_audit_write_failed")
+            except Exception as exc:
+                await logger.awarning("notification_failure_audit_write_failed", error=repr(exc))
         raise
 
     async with AsyncSessionLocal() as session, session.begin():

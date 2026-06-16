@@ -57,7 +57,7 @@ def _extract_token(websocket: WebSocket) -> tuple[str, str | None] | None:
         for entry in raw.split(","):
             value = entry.strip()
             if value.startswith(_PROTOCOL_PREFIX):
-                token = value[len(_PROTOCOL_PREFIX):]
+                token = value[len(_PROTOCOL_PREFIX) :]
                 if token:
                     return token, value
     token = websocket.query_params.get("token")

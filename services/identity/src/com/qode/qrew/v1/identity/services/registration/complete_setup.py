@@ -83,8 +83,10 @@ class CompleteSetupService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.SETUP_COMPLETED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.SETUP_COMPLETED, error=repr(exc)
+            )
 
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 

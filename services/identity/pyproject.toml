@@ -21,7 +21,6 @@ dependencies = [
     "httpx>=0.27",
     "aiosmtplib>=3.0",
     "phonenumbers>=8.13",
-    "mailchecker>=4.1",
     "zxcvbn>=4.4",
     "opentelemetry-sdk>=1.24",
     "opentelemetry-api>=1.24",
@@ -49,7 +48,6 @@ dependencies = [
     "idempotency",
     "ratelimit",
     "jobs",
-    "security",
     "http-errors",
     "probes",
     "worker",
@@ -86,7 +84,6 @@ pagination = { workspace = true }
 idempotency = { workspace = true }
 ratelimit = { workspace = true }
 jobs = { workspace = true }
-security = { workspace = true }
 http-errors = { workspace = true }
 probes = { workspace = true }
 worker = { workspace = true }
@@ -99,7 +96,7 @@ venv = ".venv"
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/jobs/src", "../../packages/security/src", "../../packages/ratelimit/src"]
+extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/jobs/src", "../../packages/ratelimit/src"]
 reportMissingTypeStubs = false
 
 [tool.ruff]

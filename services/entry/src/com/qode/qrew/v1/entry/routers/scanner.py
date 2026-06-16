@@ -9,11 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.entry.core.database import get_db
 from com.qode.qrew.v1.entry.core.dependencies import limiter
-from com.qode.qrew.v1.entry.services.scanner.security import decode_scanner_token_for_refresh
 from com.qode.qrew.v1.entry.repositories.scanner import ScannerRepository
 from com.qode.qrew.v1.entry.schemas.scanner import ScannerTokenResponse
 from com.qode.qrew.v1.entry.services.audit import AuditService
 from com.qode.qrew.v1.entry.services.scanner import ScannerError, ScannerService
+from com.qode.qrew.v1.entry.services.scanner.security import (
+    decode_scanner_token_for_refresh,
+)
 
 router = APIRouter(prefix="/scanners", tags=["scanners"])
 _bearer = HTTPBearer(auto_error=True)
@@ -22,6 +24,10 @@ _INVALID_TOKEN = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail={"message": "Invalid scanner token", "field": None},
 )
+
+
+def _get_scanner_service(db: AsyncSession = Depends(get_db)) -> ScannerService:
+    return ScannerService(ScannerRepository(db), AuditService())
 
 
 def _claims_from(
@@ -49,7 +55,7 @@ def _claims_from(
 async def refresh_scanner(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(_bearer),
-    db: AsyncSession = Depends(get_db),
+    service: ScannerService = Depends(_get_scanner_service),
 ) -> ScannerTokenResponse:
     del request
     try:
@@ -57,9 +63,10 @@ async def refresh_scanner(
     except InvalidTokenError as exc:
         raise _INVALID_TOKEN from exc
     scanner_id, venue_id, event_id, scan_date = _claims_from(payload)
-    service = ScannerService(ScannerRepository(db), AuditService())
     try:
-        scanner, token = await service.refresh_self(scanner_id, venue_id, event_id, scan_date)
+        scanner, token = await service.refresh_self(
+            scanner_id, venue_id, event_id, scan_date
+        )
     except ScannerError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

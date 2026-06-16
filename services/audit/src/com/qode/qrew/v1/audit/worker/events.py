@@ -21,8 +21,8 @@ async def _parse(raw: bytes) -> dict[str, Any] | None:
         data = json.loads(raw.decode())
         assert isinstance(data, dict)
         return data  # type: ignore[return-value]
-    except Exception:
-        await logger.awarning("audit_events.parse_error")
+    except Exception as exc:
+        await logger.awarning("audit_events.parse_error", error=repr(exc))
         return None
 
 
@@ -46,7 +46,7 @@ async def handle_audit_event(raw: bytes) -> None:
         try:
             actor_id = uuid.UUID(str(raw_actor))
         except ValueError:
-            pass
+            await logger.awarning("audit_events.invalid_actor_id", raw_actor=str(raw_actor))
 
     try:
         await AuditService().record(
@@ -73,7 +73,8 @@ async def run_audit_event_subscriber(nats_url: str) -> None:
 
     try:
         await js.find_stream_name_by_subject(SUBJECT)
-    except Exception:
+    except Exception as exc:
+        await logger.awarning("audit_events.stream_not_found", subject=SUBJECT, error=repr(exc))
         await js.add_stream(name=STREAM, subjects=["audit.>"])  # type: ignore[misc]
 
     config = ConsumerConfig(
@@ -81,9 +82,7 @@ async def run_audit_event_subscriber(nats_url: str) -> None:
         deliver_policy=DeliverPolicy.ALL,
         filter_subject=SUBJECT,
     )
-    psub = await js.subscribe(
-        SUBJECT, durable=DURABLE, config=config, stream=STREAM
-    )  # type: ignore[misc]
+    psub = await js.subscribe(SUBJECT, durable=DURABLE, config=config, stream=STREAM)  # type: ignore[misc]
     await logger.ainfo("audit_events.subscribed", subject=SUBJECT)
 
     async def _consume() -> None:
@@ -91,17 +90,24 @@ async def run_audit_event_subscriber(nats_url: str) -> None:
             try:
                 await handle_audit_event(msg.data)  # type: ignore[attr-defined]
                 await msg.ack()  # type: ignore[attr-defined]
-            except Exception:
-                await logger.awarning("audit_events.handler_error")
+            except Exception as exc:
+                await logger.awarning("audit_events.handler_error", error=repr(exc))
                 await msg.nak()  # type: ignore[attr-defined]
 
-    asyncio.create_task(_consume())
+    _task = asyncio.create_task(_consume())
 
     await logger.ainfo("audit_events.subscriber_ready")
     try:
         while True:
             await asyncio.sleep(3600)
     except asyncio.CancelledError:
-        pass
+        _task.cancel()
+        try:
+            await _task
+        except asyncio.CancelledError:
+            pass
     finally:
-        await nc.drain()
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("audit_events.drain_failed", error=repr(exc))

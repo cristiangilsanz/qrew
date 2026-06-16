@@ -4,7 +4,7 @@ from sqlalchemy import Select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from com.qode.qrew.v1.catalog.routers.page import decode_cursor, encode_cursor
+from pagination import decode_cursor, encode_cursor
 
 
 async def cursor_paginate(
@@ -31,7 +31,5 @@ async def cursor_paginate(
         return rows, None
     visible = rows[:limit]
     last = visible[-1]
-    next_cursor = encode_cursor(
-        getattr(last, sort_column.key), str(getattr(last, id_column.key))
-    )
+    next_cursor = encode_cursor(getattr(last, sort_column.key), str(getattr(last, id_column.key)))
     return visible, next_cursor

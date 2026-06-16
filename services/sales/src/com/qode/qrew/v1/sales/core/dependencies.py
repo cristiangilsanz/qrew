@@ -1,14 +1,12 @@
 from collections.abc import AsyncGenerator
-from urllib.parse import urlparse
 
 import redis.asyncio as aioredis
-from arq.connections import RedisSettings
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from com.qode.qrew.v1.sales.core.config import settings
 
-limiter = Limiter(key_func=get_remote_address, enabled=True)
+limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
 
 
 async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[type-arg]
@@ -19,18 +17,3 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[t
         yield client
     finally:
         await client.aclose()
-
-
-def redis_settings_from_url(url: str | None = None) -> RedisSettings:
-    parsed = urlparse(url or settings.redis_url)
-    database = 0
-    if parsed.path and parsed.path != "/":
-        database = int(parsed.path.lstrip("/"))
-    return RedisSettings(
-        host=parsed.hostname or "localhost",
-        port=parsed.port or 6379,
-        database=database,
-        username=parsed.username,
-        password=parsed.password,
-        ssl=parsed.scheme == "rediss",
-    )

@@ -79,7 +79,7 @@ class PasskeyReassertionService:
                 "passkey_reassertion_failed",
                 reason="verification_failed",
                 user_id=str(user.id),
-                detail=str(exc),
+                error=repr(exc),
             )
             raise PasskeyError(assertion_error_message(exc, "re-assertion")) from exc
 
@@ -113,5 +113,7 @@ class PasskeyReassertionService:
                 entity_type="session",
                 entity_id=str(session.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.PASSKEY_REASSERTED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.PASSKEY_REASSERTED, error=repr(exc)
+            )

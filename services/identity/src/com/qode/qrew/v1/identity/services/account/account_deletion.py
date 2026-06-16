@@ -64,8 +64,10 @@ class AccountDeletionService:
                 entity_type="user",
                 entity_id=str(user.id),
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.ACCOUNT_DELETED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.ACCOUNT_DELETED, error=repr(exc)
+            )
 
     @staticmethod
     def _anonymise(user: User) -> None:

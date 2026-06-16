@@ -97,8 +97,10 @@ class KycService:
         if previous_key:
             try:
                 await storage.delete(previous_key)
-            except Exception:
-                await logger.awarning("kyc_previous_doc_delete_failed", user_id=str(user.id))
+            except Exception as exc:
+                await logger.awarning(
+                    "kyc_previous_doc_delete_failed", user_id=str(user.id), error=repr(exc)
+                )
 
         if settings.kyc_auto_approve:
             user.kyc_status = KycStatus.approved
@@ -118,7 +120,9 @@ class KycService:
                 entity_id=str(user.id),
                 payload={"kyc_status": user.kyc_status},
             )
-        except Exception:
-            await logger.awarning("audit_write_failed", action=AuditAction.KYC_UPLOADED)
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.KYC_UPLOADED, error=repr(exc)
+            )
 
         return user.kyc_status

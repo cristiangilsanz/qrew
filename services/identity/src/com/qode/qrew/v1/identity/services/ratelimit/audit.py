@@ -57,7 +57,7 @@ def make_audit_rejection_handler(
                     "method": request.method,
                 },
             )
-        except Exception:
-            await logger.awarning("ratelimit_audit_write_failed", scope=exc.scope)
+        except Exception as _err:
+            await logger.awarning("ratelimit_audit_write_failed", error=repr(_err))
 
     return handler

@@ -7,18 +7,24 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.entry.core.principals import get_scanner
 from com.qode.qrew.v1.entry.core.database import get_db
-from com.qode.qrew.v1.entry.core.dependencies import limiter
-from com.qode.qrew.v1.entry.core.dependencies import get_redis
-from com.qode.qrew.v1.entry.services.scanner.security import decode_scanner_token
+from com.qode.qrew.v1.entry.core.dependencies import get_redis, limiter
 from com.qode.qrew.v1.entry.models.scanner import Scanner
-from com.qode.qrew.v1.entry.schemas.entry import EntryValidateRequest, EntryValidateResponse
+from com.qode.qrew.v1.entry.routers.auth import get_scanner
+from com.qode.qrew.v1.entry.schemas.entry import (
+    EntryValidateRequest,
+    EntryValidateResponse,
+)
 from com.qode.qrew.v1.entry.services.audit import AuditService
 from com.qode.qrew.v1.entry.services.entry import validate_entry
+from com.qode.qrew.v1.entry.services.scanner.security import decode_scanner_token
 
 router = APIRouter(prefix="/entry", tags=["entry"])
 _bearer = HTTPBearer(auto_error=True)
+
+
+def _audit_service() -> AuditService:
+    return AuditService()
 
 
 def _claims_or_401(token: str) -> tuple[uuid.UUID | None, uuid.UUID]:
@@ -61,6 +67,7 @@ async def validate_entry_endpoint(
     scanner: Scanner = Depends(get_scanner),
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+    audit: AuditService = Depends(_audit_service),
 ) -> EntryValidateResponse:
     del request
     event_id, venue_id = _claims_or_401(credentials.credentials)
@@ -71,7 +78,7 @@ async def validate_entry_endpoint(
         scanner=scanner,
         scanner_event_id=event_id,
         scanner_venue_id=venue_id,
-        audit=AuditService(),
+        audit=audit,
     )
     return EntryValidateResponse(
         allowed=outcome.allowed,

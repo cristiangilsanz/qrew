@@ -1,4 +1,5 @@
-"""Manages the full payment lifecycle and publishes saga events to the message broker."""
+"""Manages the full payment lifecycle and publishes saga events via NATS."""
+
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -6,15 +7,15 @@ from typing import Any
 
 import httpx
 import structlog
+from observability import traced
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.payments.core import crypto as pii_crypto
+from com.qode.qrew.v1.payments.core.config import settings
 from com.qode.qrew.v1.payments.core.errors import DomainError
-from observability import traced
-from com.qode.qrew.v1.payments.services import StripeClient
 from com.qode.qrew.v1.payments.models.payment import Payment, PaymentStatus
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
-from com.qode.qrew.v1.payments.core.config import settings
+from com.qode.qrew.v1.payments.services import StripeClient
 
 logger = structlog.get_logger(__name__)
 
@@ -45,7 +46,7 @@ async def _get_reservation_context(
             headers={"X-Internal-Key": settings.internal_api_key},
             timeout=5.0,
         )
-    if resp.status_code == 200:
+    if resp.status_code == 200:  # noqa: PLR2004
         data = resp.json()
         return _ReservationContext(
             amount_cents=data["amount_cents"],
@@ -61,10 +62,14 @@ async def _get_reservation_context(
             error_code=data.get("error_code") or str(resp.status_code),
         )
     resp.raise_for_status()
-    return _ReservationContext(amount_cents=0, currency="", is_valid=False, error_code="unknown")
+    return _ReservationContext(
+        amount_cents=0, currency="", is_valid=False, error_code="unknown"
+    )
 
 
-async def _publish_event(subject: str, data: dict[str, Any], *, actor_id: uuid.UUID | None = None) -> None:
+async def _publish_event(
+    subject: str, data: dict[str, Any], *, actor_id: uuid.UUID | None = None
+) -> None:
     try:
         from broker.publisher import publish as nats_publish
         from contracts.envelope import EventEnvelope
@@ -77,8 +82,8 @@ async def _publish_event(subject: str, data: dict[str, Any], *, actor_id: uuid.U
             data=data,
         )
         await nats_publish(subject, event)
-    except Exception:
-        await logger.awarning("nats_publish_failed", subject=subject)
+    except Exception as exc:
+        await logger.awarning("nats_publish_failed", subject=subject, error=repr(exc))
 
 
 class PaymentService:
@@ -93,7 +98,9 @@ class PaymentService:
         self._stripe = stripe
 
     @traced("payment.initiate")
-    async def initiate(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Payment:
+    async def initiate(
+        self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> Payment:
         ctx = await _get_reservation_context(reservation_id, actor_id)
         if not ctx.is_valid:
             if ctx.error_code in ("410", "expired"):
