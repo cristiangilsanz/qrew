@@ -1,6 +1,6 @@
-"""init gate schema
+"""init entry schema
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: 0001_entry_init
 Revises:
 Create Date: 2026-06-13 00:00:00.000000
 
@@ -12,14 +12,14 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "a1b2c3d4e5f6"
+revision: str = "0001_entry_init"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE SCHEMA IF NOT EXISTS gate")
+    op.execute("CREATE SCHEMA IF NOT EXISTS entry")
 
     op.create_table(
         "scanners",
@@ -39,13 +39,13 @@ def upgrade() -> None:
             "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
         ),
         sa.PrimaryKeyConstraint("id"),
-        schema="gate",
+        schema="entry",
     )
     op.create_index(
-        "ix_gate_scanners_venue_id", "scanners", ["venue_id"], schema="gate"
+        "ix_entry_scanners_venue_id", "scanners", ["venue_id"], schema="entry"
     )
     op.create_index(
-        "ix_gate_scanners_created_by", "scanners", ["created_by"], schema="gate"
+        "ix_entry_scanners_created_by", "scanners", ["created_by"], schema="entry"
     )
 
     op.create_table(
@@ -63,23 +63,23 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("ticket_id"),
-        schema="gate",
+        schema="entry",
     )
     op.create_index(
-        "ix_gate_ticket_contexts_event_id",
+        "ix_entry_ticket_contexts_event_id",
         "ticket_contexts",
         ["event_id"],
-        schema="gate",
+        schema="entry",
     )
     op.create_index(
-        "ix_gate_ticket_contexts_state",
+        "ix_entry_ticket_contexts_state",
         "ticket_contexts",
         ["state"],
-        schema="gate",
+        schema="entry",
     )
 
 
 def downgrade() -> None:
-    op.drop_table("ticket_contexts", schema="gate")
-    op.drop_table("scanners", schema="gate")
-    op.execute("DROP SCHEMA IF EXISTS gate")
+    op.drop_table("ticket_contexts", schema="entry")
+    op.drop_table("scanners", schema="entry")
+    op.execute("DROP SCHEMA IF EXISTS entry")

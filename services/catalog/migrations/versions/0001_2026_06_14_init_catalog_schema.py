@@ -1,6 +1,6 @@
 """init catalog schema
 
-Revision ID: c1a2b3d4e5f6
+Revision ID: 0001_catalog_init
 Revises:
 Create Date: 2026-06-14 00:00:00.000000
 
@@ -10,7 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "c1a2b3d4e5f6"
+revision: str = "0001_catalog_init"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

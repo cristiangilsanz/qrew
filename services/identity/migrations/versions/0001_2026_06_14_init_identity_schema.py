@@ -2,13 +2,8 @@
 
 Revision ID: 0001_identity_init
 Revises:
-Create Date: 2026-06-14
+Create Date: 2026-06-14 00:00:00.000000
 
-Baseline migration for the identity service.  All tables in the `identity` and
-`audit` schemas were originally created before service extraction.
-This migration creates the schemas so that autogenerate compares correctly on
-fresh environments.  On an existing database from before the extraction,
-stamp this migration with `alembic stamp 0001_identity_init`.
 """
 
 from __future__ import annotations

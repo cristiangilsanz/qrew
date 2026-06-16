@@ -1,6 +1,6 @@
 """init payments schema
 
-Revision ID: b1c2d3e4f5a6
+Revision ID: 0001_payments_init
 Revises:
 Create Date: 2026-06-14 00:00:00.000000
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "b1c2d3e4f5a6"
+revision: str = "0001_payments_init"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -25,6 +25,7 @@ def upgrade() -> None:
         "payments",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("reservation_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("provider", sa.String(32), nullable=False, server_default="stripe"),
         sa.Column("provider_payment_intent_id", sa.String(255), nullable=True),
         sa.Column("amount_cents", sa.Integer(), nullable=False),

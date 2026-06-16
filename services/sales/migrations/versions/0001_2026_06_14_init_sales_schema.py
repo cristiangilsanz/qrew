@@ -1,6 +1,6 @@
 """init sales schema
 
-Revision ID: b1c2d3e4f5a6
+Revision ID: 0001_sales_init
 Revises:
 Create Date: 2026-06-14 00:00:00.000000
 
@@ -10,7 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "b1c2d3e4f5a6"
+revision: str = "0001_sales_init"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -67,6 +67,8 @@ def upgrade() -> None:
             event_id UUID NOT NULL,
             capacity INTEGER NOT NULL,
             reserved_count INTEGER NOT NULL DEFAULT 0,
+            price_cents INTEGER NOT NULL DEFAULT 0,
+            currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
     """)
