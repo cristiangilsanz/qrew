@@ -99,15 +99,18 @@ class TestValidateCurrency:
 
 
 class TestTicketTypeServiceCreate:
-    async def test_raises_on_invalid_name(
-        self, actor_id: uuid.UUID, event_id: uuid.UUID
-    ) -> None:
+    async def test_raises_on_invalid_name(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(TicketTypeError, match="lowercase"):
             await svc.create(
-                actor_id=actor_id, event_id=event_id, name="1bad",
-                description=None, capacity=100, price_cents=1000,
-                currency="EUR", position=0,
+                actor_id=actor_id,
+                event_id=event_id,
+                name="1bad",
+                description=None,
+                capacity=100,
+                price_cents=1000,
+                currency="EUR",
+                position=0,
             )
 
     async def test_raises_on_invalid_currency(
@@ -116,9 +119,14 @@ class TestTicketTypeServiceCreate:
         svc, _ = _make_svc()
         with pytest.raises(TicketTypeError, match="Currency"):
             await svc.create(
-                actor_id=actor_id, event_id=event_id, name="general",
-                description=None, capacity=100, price_cents=1000,
-                currency="BTC", position=0,
+                actor_id=actor_id,
+                event_id=event_id,
+                name="general",
+                description=None,
+                capacity=100,
+                price_cents=1000,
+                currency="BTC",
+                position=0,
             )
 
     async def test_raises_when_event_not_found(
@@ -131,9 +139,14 @@ class TestTicketTypeServiceCreate:
             pytest.raises(TicketTypeError, match="Event not found"),
         ):
             await svc.create(
-                actor_id=actor_id, event_id=event_id, name="general",
-                description=None, capacity=100, price_cents=1000,
-                currency="EUR", position=0,
+                actor_id=actor_id,
+                event_id=event_id,
+                name="general",
+                description=None,
+                capacity=100,
+                price_cents=1000,
+                currency="EUR",
+                position=0,
             )
 
     async def test_raises_when_event_cancelled(
@@ -147,9 +160,14 @@ class TestTicketTypeServiceCreate:
             pytest.raises(TicketTypeError, match="cancelled"),
         ):
             await svc.create(
-                actor_id=actor_id, event_id=event_id, name="general",
-                description=None, capacity=100, price_cents=1000,
-                currency="EUR", position=0,
+                actor_id=actor_id,
+                event_id=event_id,
+                name="general",
+                description=None,
+                capacity=100,
+                price_cents=1000,
+                currency="EUR",
+                position=0,
             )
 
     async def test_raises_when_name_already_exists(
@@ -164,14 +182,17 @@ class TestTicketTypeServiceCreate:
             pytest.raises(TicketTypeError, match="already exists"),
         ):
             await svc.create(
-                actor_id=actor_id, event_id=event_id, name="general",
-                description=None, capacity=100, price_cents=1000,
-                currency="EUR", position=0,
+                actor_id=actor_id,
+                event_id=event_id,
+                name="general",
+                description=None,
+                capacity=100,
+                price_cents=1000,
+                currency="EUR",
+                position=0,
             )
 
-    async def test_creates_ticket_type(
-        self, actor_id: uuid.UUID, event_id: uuid.UUID
-    ) -> None:
+    async def test_creates_ticket_type(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
         svc, repo = _make_svc(event=event, name_conflict=None)
         with (
@@ -179,9 +200,14 @@ class TestTicketTypeServiceCreate:
             patch(_PATCH_SETTINGS, make_fake_settings()),
         ):
             result = await svc.create(
-                actor_id=actor_id, event_id=event_id, name="vip",
-                description=None, capacity=200, price_cents=5000,
-                currency="EUR", position=1,
+                actor_id=actor_id,
+                event_id=event_id,
+                name="vip",
+                description=None,
+                capacity=200,
+                price_cents=5000,
+                currency="EUR",
+                position=1,
             )
         assert result.name == "vip"
         assert result.capacity == 200
@@ -195,8 +221,10 @@ class TestTicketTypeServiceUpdate:
         svc, _ = _make_svc()
         with pytest.raises(TicketTypeError, match="Cannot edit"):
             await svc.update(
-                actor_id=actor_id, event_id=event_id,
-                ticket_type_id=ticket_type_id, changes={"currency": "EUR"},
+                actor_id=actor_id,
+                event_id=event_id,
+                ticket_type_id=ticket_type_id,
+                changes={"currency": "EUR"},
             )
 
     async def test_raises_when_not_found(
@@ -209,8 +237,10 @@ class TestTicketTypeServiceUpdate:
             pytest.raises(TicketTypeError, match="not found"),
         ):
             await svc.update(
-                actor_id=actor_id, event_id=event_id,
-                ticket_type_id=ticket_type_id, changes={"name": "vip"},
+                actor_id=actor_id,
+                event_id=event_id,
+                ticket_type_id=ticket_type_id,
+                changes={"name": "vip"},
             )
 
     async def test_raises_when_ticket_type_belongs_to_other_event(
@@ -224,8 +254,10 @@ class TestTicketTypeServiceUpdate:
             pytest.raises(TicketTypeError, match="not found"),
         ):
             await svc.update(
-                actor_id=actor_id, event_id=event_id,
-                ticket_type_id=ticket_type_id, changes={"name": "vip"},
+                actor_id=actor_id,
+                event_id=event_id,
+                ticket_type_id=ticket_type_id,
+                changes={"name": "vip"},
             )
 
     async def test_raises_when_capacity_decreases(
@@ -239,8 +271,10 @@ class TestTicketTypeServiceUpdate:
             pytest.raises(TicketTypeError, match="only increase"),
         ):
             await svc.update(
-                actor_id=actor_id, event_id=event_id,
-                ticket_type_id=ticket_type_id, changes={"capacity": 100},
+                actor_id=actor_id,
+                event_id=event_id,
+                ticket_type_id=ticket_type_id,
+                changes={"capacity": 100},
             )
 
     async def test_raises_on_name_conflict(
@@ -255,8 +289,10 @@ class TestTicketTypeServiceUpdate:
             pytest.raises(TicketTypeError, match="already exists"),
         ):
             await svc.update(
-                actor_id=actor_id, event_id=event_id,
-                ticket_type_id=ticket_type_id, changes={"name": "vip"},
+                actor_id=actor_id,
+                event_id=event_id,
+                ticket_type_id=ticket_type_id,
+                changes={"name": "vip"},
             )
 
     async def test_updates_fields_and_flushes(
@@ -269,8 +305,10 @@ class TestTicketTypeServiceUpdate:
             patch(_PATCH_SETTINGS, make_fake_settings()),
         ):
             result = await svc.update(
-                actor_id=actor_id, event_id=event_id,
-                ticket_type_id=ticket_type_id, changes={"price_cents": 2000},
+                actor_id=actor_id,
+                event_id=event_id,
+                ticket_type_id=ticket_type_id,
+                changes={"price_cents": 2000},
             )
         assert result.price_cents == 2000
         repo.flush.assert_awaited_once()
@@ -286,39 +324,29 @@ class TestTicketTypeServiceDelete:
             patch(_PATCH_SETTINGS, make_fake_settings()),
             pytest.raises(TicketTypeError, match="not found"),
         ):
-            await svc.delete(
-                actor_id=actor_id, event_id=event_id, ticket_type_id=ticket_type_id
-            )
+            await svc.delete(actor_id=actor_id, event_id=event_id, ticket_type_id=ticket_type_id)
 
     async def test_raises_when_has_live_reservations(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
-        tt = make_ticket_type(
-            ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=5
-        )
+        tt = make_ticket_type(ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=5)
         svc, _ = _make_svc(ticket_type=tt)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
             pytest.raises(TicketTypeError, match="live reservations"),
         ):
-            await svc.delete(
-                actor_id=actor_id, event_id=event_id, ticket_type_id=ticket_type_id
-            )
+            await svc.delete(actor_id=actor_id, event_id=event_id, ticket_type_id=ticket_type_id)
 
     async def test_sets_deleted_at_and_flushes(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
-        tt = make_ticket_type(
-            ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=0
-        )
+        tt = make_ticket_type(ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=0)
         svc, repo = _make_svc(ticket_type=tt)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
         ):
-            await svc.delete(
-                actor_id=actor_id, event_id=event_id, ticket_type_id=ticket_type_id
-            )
+            await svc.delete(actor_id=actor_id, event_id=event_id, ticket_type_id=ticket_type_id)
         assert tt.deleted_at is not None
         repo.flush.assert_awaited_once()

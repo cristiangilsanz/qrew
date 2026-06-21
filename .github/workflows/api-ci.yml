@@ -56,3 +56,32 @@ jobs:
           enable-cache: true
       - run: uv sync --all-packages --all-groups
       - run: cd ${{ matrix.path }} && uv run pyright
+
+  test:
+    name: Test (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: audit,        path: services/audit }
+          - { name: catalog,      path: services/catalog }
+          - { name: entry,        path: services/entry }
+          - { name: identity,     path: services/identity }
+          - { name: payments,     path: services/payments }
+          - { name: sales,        path: services/sales }
+          - { name: ticketing,    path: services/ticketing }
+          - { name: idempotency,  path: packages/shared-python/idempotency }
+          - { name: ratelimit,    path: packages/shared-python/ratelimit }
+          - { name: locking,      path: packages/shared-python/locking }
+          - { name: pagination,   path: packages/shared-python/pagination }
+          - { name: jobs,         path: packages/shared-python/jobs }
+          - { name: auditor,      path: packages/auditor }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages --all-groups
+      - run: cd ${{ matrix.path }} && uv run pytest tests/unit/ -v

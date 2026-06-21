@@ -14,13 +14,9 @@ from com.qode.qrew.v1.payments.services.application.payment import (
 )
 from conftest import make_payment
 
-_PATCH_GET_CTX = (
-    "com.qode.qrew.v1.payments.services.application.payment._get_reservation_context"
-)
+_PATCH_GET_CTX = "com.qode.qrew.v1.payments.services.application.payment._get_reservation_context"
 _PATCH_CRYPTO = "com.qode.qrew.v1.payments.services.application.payment.pii_crypto"
-_PATCH_CLAIM = (
-    "com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency.claim_event"
-)
+_PATCH_CLAIM = "com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency.claim_event"
 _PATCH_DISPATCH = (
     "com.qode.qrew.v1.payments.services.infrastructure.webhooks.dispatch.dispatch_webhook_event"
 )
@@ -194,9 +190,7 @@ class TestPaymentServiceDecryptClientSecret:
         assert result is None
         mock_crypto.decrypt.assert_not_called()
 
-    def test_decrypts_ciphertext(
-        self, user_id: uuid.UUID, reservation_id: uuid.UUID
-    ) -> None:
+    def test_decrypts_ciphertext(self, user_id: uuid.UUID, reservation_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc()
         payment = make_payment(reservation_id=reservation_id, client_secret_ciphertext=b"cipher")
         mock_crypto = MagicMock()
@@ -213,9 +207,7 @@ class TestPaymentServiceApplySucceeded:
         await svc.apply_succeeded(intent_id="pi_unknown")
         repo.flush.assert_not_awaited()
 
-    async def test_marks_succeeded_and_flushes(
-        self, reservation_id: uuid.UUID
-    ) -> None:
+    async def test_marks_succeeded_and_flushes(self, reservation_id: uuid.UUID) -> None:
         payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.requires_action)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.apply_succeeded(intent_id="pi_test")
@@ -229,9 +221,7 @@ class TestPaymentServiceApplyFailed:
         await svc.apply_failed(intent_id="pi_x", failure_code="card_declined", failure_message="No")
         repo.flush.assert_not_awaited()
 
-    async def test_records_failure_and_flushes(
-        self, reservation_id: uuid.UUID
-    ) -> None:
+    async def test_records_failure_and_flushes(self, reservation_id: uuid.UUID) -> None:
         payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.processing)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.apply_failed(
@@ -249,27 +239,21 @@ class TestPaymentServiceApplyRefund:
         await svc.apply_refund(intent_id="pi_x", amount_refunded=1000, amount_total=2000)
         repo.flush.assert_not_awaited()
 
-    async def test_partial_refund_does_not_change_status(
-        self, reservation_id: uuid.UUID
-    ) -> None:
+    async def test_partial_refund_does_not_change_status(self, reservation_id: uuid.UUID) -> None:
         payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.apply_refund(intent_id="pi_test", amount_refunded=500, amount_total=2000)
         assert payment.status == PaymentStatus.succeeded
         repo.flush.assert_not_awaited()
 
-    async def test_full_refund_sets_refunded_and_flushes(
-        self, reservation_id: uuid.UUID
-    ) -> None:
+    async def test_full_refund_sets_refunded_and_flushes(self, reservation_id: uuid.UUID) -> None:
         payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.apply_refund(intent_id="pi_test", amount_refunded=2000, amount_total=2000)
         assert payment.status == PaymentStatus.refunded
         repo.flush.assert_awaited_once()
 
-    async def test_overpaid_refund_counts_as_full(
-        self, reservation_id: uuid.UUID
-    ) -> None:
+    async def test_overpaid_refund_counts_as_full(self, reservation_id: uuid.UUID) -> None:
         payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.apply_refund(intent_id="pi_test", amount_refunded=2500, amount_total=2000)
@@ -296,9 +280,7 @@ class TestPaymentServiceRecordChargebackClosed:
         await svc.record_chargeback_closed(intent_id="pi_x")
         repo.flush.assert_not_awaited()
 
-    async def test_publishes_event_without_status_change(
-        self, reservation_id: uuid.UUID
-    ) -> None:
+    async def test_publishes_event_without_status_change(self, reservation_id: uuid.UUID) -> None:
         payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.refunded)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.record_chargeback_closed(intent_id="pi_test")
@@ -312,18 +294,14 @@ class TestPaymentServiceUpdateIntermediate:
         await svc.update_intermediate(intent_id="pi_x", status="processing")
         repo.flush.assert_not_awaited()
 
-    async def test_skips_update_for_terminal_succeeded(
-        self, reservation_id: uuid.UUID
-    ) -> None:
+    async def test_skips_update_for_terminal_succeeded(self, reservation_id: uuid.UUID) -> None:
         payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.processing)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.update_intermediate(intent_id="pi_test", status="succeeded")
         assert payment.status == PaymentStatus.processing
         repo.flush.assert_not_awaited()
 
-    async def test_skips_update_for_terminal_failed(
-        self, reservation_id: uuid.UUID
-    ) -> None:
+    async def test_skips_update_for_terminal_failed(self, reservation_id: uuid.UUID) -> None:
         payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.processing)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.update_intermediate(intent_id="pi_test", status="canceled")
@@ -331,9 +309,7 @@ class TestPaymentServiceUpdateIntermediate:
         repo.flush.assert_not_awaited()
 
     async def test_updates_intermediate_status(self, reservation_id: uuid.UUID) -> None:
-        payment = make_payment(
-            reservation_id=reservation_id, status=PaymentStatus.requires_action
-        )
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.requires_action)
         svc, repo, _ = _make_svc(by_intent=payment)
         await svc.update_intermediate(intent_id="pi_test", status="processing")
         assert payment.status == PaymentStatus.processing

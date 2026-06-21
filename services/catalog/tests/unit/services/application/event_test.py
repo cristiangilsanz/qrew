@@ -12,13 +12,11 @@ from com.qode.qrew.v1.catalog.services.application.events.event import (
     _validate_windows,
 )
 from conftest import (
-    future,
     make_event,
     make_fake_settings,
     make_org,
     make_redlock_cm,
     make_venue,
-    past,
 )
 
 _MOD = "com.qode.qrew.v1.catalog.services.application.events.event"
@@ -57,6 +55,7 @@ def _make_svc(
 
 
 # ── Pure function tests ───────────────────────────────────────────────────────
+
 
 class TestValidateWindows:
     def test_raises_when_starts_after_ends(self) -> None:
@@ -115,6 +114,7 @@ class TestValidateMaxTickets:
 
 
 # ── EventService tests ────────────────────────────────────────────────────────
+
 
 class TestEventServiceCreate:
     async def test_raises_when_windows_invalid(
@@ -254,9 +254,7 @@ class TestEventServiceUpdate:
                 changes={"ends_at": event.starts_at - timedelta(hours=1)},
             )
 
-    async def test_updates_name_and_flushes(
-        self, actor_id: uuid.UUID, event_id: uuid.UUID
-    ) -> None:
+    async def test_updates_name_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
         svc, repo = _make_svc(event=event)
         result = await svc.update_event(
@@ -302,9 +300,7 @@ class TestEventServicePublish:
         ):
             await svc.publish_event(actor_id=actor_id, event_id=event_id)
 
-    async def test_publishes_and_flushes(
-        self, actor_id: uuid.UUID, event_id: uuid.UUID
-    ) -> None:
+    async def test_publishes_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
         svc, repo = _make_svc(event=event)
         with (
@@ -343,9 +339,7 @@ class TestEventServiceCancel:
         assert result is event
         repo.flush.assert_not_awaited()
 
-    async def test_cancels_and_flushes(
-        self, actor_id: uuid.UUID, event_id: uuid.UUID
-    ) -> None:
+    async def test_cancels_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.published)
         svc, repo = _make_svc(event=event)
         with (

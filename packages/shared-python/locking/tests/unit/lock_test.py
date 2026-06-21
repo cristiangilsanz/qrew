@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from locking.errors import LockUnavailableError
 from locking.lock import RedisLock, redlock
 

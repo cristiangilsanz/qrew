@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from ratelimit.errors import RateLimitedError
 from ratelimit.limiter import RateLimiter
 
@@ -45,7 +44,7 @@ class TestRateLimiterCheck:
         from redis.asyncio import RedisError
 
         redis.eval = AsyncMock(side_effect=RedisError("down"))
-        with pytest.raises(Exception):
+        with pytest.raises(RedisError):
             await limiter.check("ip:x", limit=5, window_seconds=10)
 
 
@@ -53,10 +52,12 @@ class TestCheckMany:
     async def test_passes_when_all_allowed(self) -> None:
         limiter, redis = _make_limiter()
         redis.eval = AsyncMock(return_value=[1, 0])
-        await limiter.check_many([
-            ("ip:1.2.3.4", 100, 60),
-            ("user:abc", 50, 60),
-        ])
+        await limiter.check_many(
+            [
+                ("ip:1.2.3.4", 100, 60),
+                ("user:abc", 50, 60),
+            ]
+        )
 
     async def test_raises_when_any_denied(self) -> None:
         limiter, redis = _make_limiter()
@@ -77,8 +78,10 @@ class TestCheckMany:
 
         redis.eval = AsyncMock(side_effect=_eval)
         with pytest.raises(RateLimitedError) as exc_info:
-            await limiter.check_many([
-                ("key1", 10, 60),
-                ("key2", 10, 60),
-            ])
+            await limiter.check_many(
+                [
+                    ("key1", 10, 60),
+                    ("key2", 10, 60),
+                ]
+            )
         assert exc_info.value.retry_after_seconds == 10

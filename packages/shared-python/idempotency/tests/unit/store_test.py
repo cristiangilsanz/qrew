@@ -96,7 +96,7 @@ class TestIdempotencyStore:
         return store, redis
 
     async def test_acquire_lock_succeeds(self) -> None:
-        store, redis = self._make_store()
+        store, _ = self._make_store()
         result = await store.acquire("global", None, "k1")
         assert result.acquired is True
         assert result.cached is None
@@ -108,7 +108,7 @@ class TestIdempotencyStore:
         assert result.acquired is False
 
     async def test_fetch_returns_none_when_missing(self) -> None:
-        store, redis = self._make_store()
+        store, _ = self._make_store()
         result = await store.fetch("global", None, "k1")
         assert result is None
 

@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-
 from jobs.errors import JobNotFoundError
 from jobs.registry import JobSpec, all_specs, get_spec, job, parse_crontab, register
 
@@ -109,5 +108,5 @@ class TestParseCrontab:
             parse_crontab("* * * *")
 
     def test_six_fields_raises(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="5 fields"):
             parse_crontab("* * * * * *")

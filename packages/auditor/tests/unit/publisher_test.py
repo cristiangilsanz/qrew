@@ -14,11 +14,11 @@ class TestPublishAuditEvent:
 
         mock_envelope_instance = MagicMock()
         mock_envelope_instance.model_dump_json = MagicMock(return_value='{"ok":true}')
-        MockEnvelope = MagicMock(return_value=mock_envelope_instance)
+        mock_envelope_cls = MagicMock(return_value=mock_envelope_instance)
 
         with (
             patch(_PATCH_NATS, return_value=mock_nc),
-            patch(_PATCH_ENVELOPE, MockEnvelope),
+            patch(_PATCH_ENVELOPE, mock_envelope_cls),
         ):
             await publish_audit_event(
                 subject="audit.events.v1",
@@ -49,11 +49,11 @@ class TestPublishAuditEvent:
 
         mock_envelope_instance = MagicMock()
         mock_envelope_instance.model_dump_json = MagicMock(return_value="{}")
-        MockEnvelope = MagicMock(return_value=mock_envelope_instance)
+        mock_envelope_cls = MagicMock(return_value=mock_envelope_instance)
 
         with (
             patch(_PATCH_NATS, return_value=mock_nc),
-            patch(_PATCH_ENVELOPE, MockEnvelope),
+            patch(_PATCH_ENVELOPE, mock_envelope_cls),
         ):
             await publish_audit_event(
                 subject="audit.events.v1",

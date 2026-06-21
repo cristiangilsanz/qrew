@@ -7,12 +7,13 @@ from com.qode.qrew.v1.entry.models.projections import TicketState
 from com.qode.qrew.v1.entry.services.application.entry.entry_stats import (
     _deserialise,
     _resolve_since,
-    _stats_cache_key,
     compute_entry_stats,
 )
 from com.qode.qrew.v1.entry.services.domain.entry import EntryStats
 
-_PATCH_SETTINGS = "com.qode.qrew.v1.entry.services.application.entry.entry_stats.settings"
+_PATCH_SETTINGS = (
+    "com.qode.qrew.v1.entry.services.application.entry.entry_stats.settings"
+)
 
 
 def _make_redis(*, cached: str | bytes | None = None) -> MagicMock:
@@ -103,9 +104,7 @@ class TestDeserialise:
     def test_handles_missing_last_scan(self) -> None:
         event_id = uuid.uuid4()
         since = datetime(2026, 6, 1, tzinfo=UTC)
-        raw = json.dumps(
-            {"total_issued": 5, "total_entered": 2, "total_remaining": 3}
-        )
+        raw = json.dumps({"total_issued": 5, "total_entered": 2, "total_remaining": 3})
         result = _deserialise(raw, event_id, since)
         assert result.last_scan_at is None
 
@@ -127,7 +126,9 @@ class TestComputeEntryStats:
         db = MagicMock()
 
         with patch(_PATCH_SETTINGS, _fake_settings()):
-            result = await compute_entry_stats(db, redis, event_id=event_id, since=since)
+            result = await compute_entry_stats(
+                db, redis, event_id=event_id, since=since
+            )
 
         assert result.total_issued == 50
         assert result.total_entered == 20
@@ -146,10 +147,12 @@ class TestComputeEntryStats:
             last_scan=datetime(2026, 6, 2, tzinfo=UTC),
         )
         with patch(_PATCH_SETTINGS, _fake_settings(cache_ttl=60)):
-            result = await compute_entry_stats(db, redis, event_id=event_id, since=since)
+            result = await compute_entry_stats(
+                db, redis, event_id=event_id, since=since
+            )
 
-        assert result.total_issued == 115   # 80 + 30 + 5
-        assert result.total_entered == 30   # only "used" count
+        assert result.total_issued == 115  # 80 + 30 + 5
+        assert result.total_entered == 30  # only "used" count
         assert result.total_remaining == 85
         assert result.rejections_by_reason["signature"] == 4
         assert result.rejections_by_reason["replay"] == 2
@@ -161,7 +164,9 @@ class TestComputeEntryStats:
         redis.set = AsyncMock(side_effect=RuntimeError("redis down"))
         db = _make_db()
         with patch(_PATCH_SETTINGS, _fake_settings()):
-            result = await compute_entry_stats(db, redis, event_id=event_id, since=since)
+            result = await compute_entry_stats(
+                db, redis, event_id=event_id, since=since
+            )
         assert isinstance(result, EntryStats)
 
     async def test_remaining_never_goes_negative(self, event_id: uuid.UUID) -> None:
@@ -172,5 +177,7 @@ class TestComputeEntryStats:
             state_rows=[(TicketState.used.value, 100)],
         )
         with patch(_PATCH_SETTINGS, _fake_settings()):
-            result = await compute_entry_stats(db, redis, event_id=event_id, since=since)
+            result = await compute_entry_stats(
+                db, redis, event_id=event_id, since=since
+            )
         assert result.total_remaining == 0

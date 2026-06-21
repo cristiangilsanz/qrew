@@ -324,9 +324,7 @@ class TestReservationServiceReserve:
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
         ctx = make_event_ctx(event_id=event_id, max_tickets_per_user=5)
-        inventory = make_inventory(
-            ticket_type_id=ticket_type_id, event_id=event_id, capacity=100
-        )
+        inventory = make_inventory(ticket_type_id=ticket_type_id, event_id=event_id, capacity=100)
         svc, _ = _make_service(event_ctx=ctx, inventory=inventory, held=4)
         engine = MagicMock()
         engine.evaluate = AsyncMock(return_value=_allow())
@@ -375,9 +373,7 @@ class TestReservationServiceReserve:
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
         ctx = make_event_ctx(event_id=event_id)
-        inventory = make_inventory(
-            ticket_type_id=ticket_type_id, event_id=event_id, capacity=100
-        )
+        inventory = make_inventory(ticket_type_id=ticket_type_id, event_id=event_id, capacity=100)
         svc, _ = _make_service(event_ctx=ctx, inventory=inventory)
         engine = MagicMock()
         engine.evaluate = AsyncMock(return_value=_review())

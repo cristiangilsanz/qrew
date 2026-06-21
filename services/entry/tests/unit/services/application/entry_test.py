@@ -4,12 +4,11 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import jwt
-import pytest
+from conftest import make_scanner, make_ticket_ctx
 
 from com.qode.qrew.v1.entry.models.projections import TicketState
 from com.qode.qrew.v1.entry.services.application.entry.entry import validate_entry
 from com.qode.qrew.v1.entry.services.domain.entry import EntryReason
-from conftest import make_scanner, make_ticket_ctx
 
 _MOD = "com.qode.qrew.v1.entry.services.application.entry.entry"
 
@@ -63,7 +62,9 @@ def _make_jwt_mocks(
 
     mock_jwt_keys = MagicMock()
     mock_jwt_keys.TICKET_QR = "ticket_qr"
-    mock_jwt_keys.get_verifiers = MagicMock(return_value={kid: "-----BEGIN PUBLIC KEY-----\nfake\n"})
+    mock_jwt_keys.get_verifiers = MagicMock(
+        return_value={kid: "-----BEGIN PUBLIC KEY-----\nfake\n"}
+    )
 
     return mock_jwt, mock_jwt_keys
 
@@ -358,7 +359,9 @@ class TestValidateEntryContextChecks:
     async def test_denied_when_ticketing_call_fails(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
-        from com.qode.qrew.v1.entry.services.application.entry.entry import _TicketingError
+        from com.qode.qrew.v1.entry.services.application.entry.entry import (
+            _TicketingError,
+        )
 
         ticket_id = uuid.uuid4()
         mock_jwt, mock_jwt_keys = _make_jwt_mocks(
@@ -407,9 +410,7 @@ class TestValidateEntryHappyPath:
         assert outcome.ticket_id == ticket_id
         assert outcome.holder_user_id == owner
 
-    async def test_allowed_when_no_scanner_event_id(
-        self, venue_id: uuid.UUID
-    ) -> None:
+    async def test_allowed_when_no_scanner_event_id(self, venue_id: uuid.UUID) -> None:
         ticket_id = uuid.uuid4()
         event_id = uuid.uuid4()
         mock_jwt, mock_jwt_keys = _make_jwt_mocks(

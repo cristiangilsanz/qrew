@@ -37,6 +37,7 @@ def ticket_type_id() -> uuid.UUID:
 
 # ── Time helpers ──────────────────────────────────────────────────────────────
 
+
 def future(*, hours: int = 0, days: int = 0) -> datetime:
     return datetime.now(UTC) + timedelta(hours=hours, days=days)
 
@@ -47,7 +48,10 @@ def past(*, hours: int = 0, days: int = 0) -> datetime:
 
 # ── Model factories ───────────────────────────────────────────────────────────
 
-def make_org(*, org_id: uuid.UUID | None = None, slug: str = "acme", name: str = "Acme") -> SimpleNamespace:
+
+def make_org(
+    *, org_id: uuid.UUID | None = None, slug: str = "acme", name: str = "Acme"
+) -> SimpleNamespace:
     return SimpleNamespace(id=org_id or uuid.uuid4(), slug=slug, name=name, description=None)
 
 
@@ -134,6 +138,7 @@ def make_member(
 
 
 # ── Shared redlock helper ─────────────────────────────────────────────────────
+
 
 def make_redlock_cm() -> MagicMock:
     cm = MagicMock()

@@ -29,9 +29,6 @@ def _make_db(
 
     db = MagicMock()
 
-    original_init_reservation = ReservationRepository.__init__
-    original_init_inventory = TicketTypeInventoryRepository.__init__
-
     def _patch_repo(cls, session):  # type: ignore[no-untyped-def]
         pass
 
@@ -87,9 +84,7 @@ class TestGetPaymentContext:
             user_id=uuid.uuid4(), event_id=event_id, ticket_type_id=ticket_type_id
         )
         with pytest.raises(PaymentContextError) as exc_info:
-            await _billing(
-                user_id=user_id, reservation_id=reservation.id, reservation=reservation
-            )
+            await _billing(user_id=user_id, reservation_id=reservation.id, reservation=reservation)
         assert exc_info.value.error_code == "not_found"
 
     async def test_raises_when_not_in_reserved_status(
@@ -118,9 +113,7 @@ class TestGetPaymentContext:
             expires_at=datetime.now(UTC) - timedelta(minutes=1),
         )
         with pytest.raises(PaymentContextError) as exc_info:
-            await _billing(
-                user_id=user_id, reservation_id=reservation.id, reservation=reservation
-            )
+            await _billing(user_id=user_id, reservation_id=reservation.id, reservation=reservation)
         assert exc_info.value.error_code == "expired"
 
     async def test_raises_when_inventory_not_found(
@@ -172,7 +165,10 @@ class TestGetPaymentContext:
             quantity=1,
         )
         inventory = make_inventory(
-            ticket_type_id=ticket_type_id, event_id=event_id, price_cents=200, currency=None  # type: ignore[arg-type]
+            ticket_type_id=ticket_type_id,
+            event_id=event_id,
+            price_cents=200,
+            currency=None,  # type: ignore[arg-type]
         )
         result = await _billing(
             user_id=user_id,

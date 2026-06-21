@@ -3,9 +3,12 @@ from datetime import date
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from com.qode.qrew.v1.entry.services.application.scanner import ScannerError, ScannerService
 from conftest import make_scanner
+
+from com.qode.qrew.v1.entry.services.application.scanner import (
+    ScannerError,
+    ScannerService,
+)
 
 _PATCH_CREATE_TOKEN = (
     "com.qode.qrew.v1.entry.services.application.scanner.create_scanner_token"
@@ -71,7 +74,9 @@ class TestScannerServiceRotate:
     ) -> None:
         svc, _, _ = _make_svc(scanner=None)
         with pytest.raises(ScannerError, match="not found"):
-            await svc.rotate(admin_id, uuid.uuid4(), venue_id, event_id, date(2026, 8, 1))
+            await svc.rotate(
+                admin_id, uuid.uuid4(), venue_id, event_id, date(2026, 8, 1)
+            )
 
     async def test_raises_when_scanner_inactive(
         self, admin_id: uuid.UUID, venue_id: uuid.UUID, event_id: uuid.UUID

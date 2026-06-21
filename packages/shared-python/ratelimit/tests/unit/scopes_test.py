@@ -2,7 +2,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-
 from ratelimit.scopes import build_scope_key, resolve_scope_value
 
 

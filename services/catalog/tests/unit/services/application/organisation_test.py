@@ -95,9 +95,7 @@ class TestOrganisationServiceInviteMember:
                 role=OrganisationRole.owner,
             )
 
-    async def test_raises_when_user_not_found(
-        self, actor_id: uuid.UUID, org_id: uuid.UUID
-    ) -> None:
+    async def test_raises_when_user_not_found(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc(invitee=None)
         with pytest.raises(OrganisationError, match="email"):
             await svc.invite_member(
@@ -107,9 +105,7 @@ class TestOrganisationServiceInviteMember:
                 role=OrganisationRole.member,
             )
 
-    async def test_raises_when_already_member(
-        self, actor_id: uuid.UUID, org_id: uuid.UUID
-    ) -> None:
+    async def test_raises_when_already_member(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         invitee = SimpleNamespace(id=uuid.uuid4(), email="user@example.com")
         existing_member = make_member(org_id=org_id, user_id=invitee.id)
         svc, _, _ = _make_svc(invitee=invitee, member=existing_member)
@@ -124,7 +120,7 @@ class TestOrganisationServiceInviteMember:
     async def test_adds_member(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         invitee = SimpleNamespace(id=uuid.uuid4(), email="new@example.com")
         svc, _, member_repo = _make_svc(invitee=invitee, member=None)
-        result = await svc.invite_member(
+        await svc.invite_member(
             actor_id=actor_id,
             organisation_id=org_id,
             invitee_email="new@example.com",
@@ -137,9 +133,7 @@ class TestOrganisationServiceInviteMember:
 
 
 class TestOrganisationServiceRemoveMember:
-    async def test_raises_when_not_a_member(
-        self, actor_id: uuid.UUID, org_id: uuid.UUID
-    ) -> None:
+    async def test_raises_when_not_a_member(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc(member=None)
         with pytest.raises(OrganisationError, match="not a member"):
             await svc.remove_member(
@@ -167,18 +161,12 @@ class TestOrganisationServiceRemoveMember:
         target_id = uuid.uuid4()
         member = make_member(org_id=org_id, user_id=target_id, role=OrganisationRole.owner)
         svc, _, member_repo = _make_svc(member=member, owner_count=2)
-        await svc.remove_member(
-            actor_id=actor_id, organisation_id=org_id, member_user_id=target_id
-        )
+        await svc.remove_member(actor_id=actor_id, organisation_id=org_id, member_user_id=target_id)
         member_repo.delete.assert_awaited_once_with(org_id, target_id)
 
-    async def test_removes_regular_member(
-        self, actor_id: uuid.UUID, org_id: uuid.UUID
-    ) -> None:
+    async def test_removes_regular_member(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         target_id = uuid.uuid4()
         member = make_member(org_id=org_id, user_id=target_id, role=OrganisationRole.member)
         svc, _, member_repo = _make_svc(member=member)
-        await svc.remove_member(
-            actor_id=actor_id, organisation_id=org_id, member_user_id=target_id
-        )
+        await svc.remove_member(actor_id=actor_id, organisation_id=org_id, member_user_id=target_id)
         member_repo.delete.assert_awaited_once_with(org_id, target_id)

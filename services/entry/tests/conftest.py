@@ -4,14 +4,13 @@ import os
 os.environ.setdefault("DEBUG", "true")
 
 import uuid
-from datetime import UTC, datetime
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
 from com.qode.qrew.v1.entry.models.projections import TicketState
 from com.qode.qrew.v1.entry.services.application.audit import AuditService
-from unittest.mock import AsyncMock
 
 
 @pytest.fixture

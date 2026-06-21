@@ -12,7 +12,6 @@ from com.qode.qrew.v1.catalog.services.application.venue import (
     _validate_radius,
     _validate_timezone,
 )
-from conftest import make_venue
 
 
 def _make_svc(*, venue: object = None) -> tuple[VenueService, MagicMock]:
@@ -93,44 +92,79 @@ class TestVenueServiceCreate:
         svc, _ = _make_svc()
         with pytest.raises(VenueError, match="ISO"):
             await svc.create_venue(
-                actor_id=actor_id, name="V", address_line="A", city="C",
-                country="XYZ", latitude=Decimal("52"), longitude=Decimal("4"),
-                geofence_radius_m=200, timezone="UTC", description=None,
+                actor_id=actor_id,
+                name="V",
+                address_line="A",
+                city="C",
+                country="XYZ",
+                latitude=Decimal("52"),
+                longitude=Decimal("4"),
+                geofence_radius_m=200,
+                timezone="UTC",
+                description=None,
             )
 
     async def test_raises_when_coordinates_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(VenueError, match="Latitude"):
             await svc.create_venue(
-                actor_id=actor_id, name="V", address_line="A", city="C",
-                country="NL", latitude=Decimal("999"), longitude=Decimal("4"),
-                geofence_radius_m=200, timezone="UTC", description=None,
+                actor_id=actor_id,
+                name="V",
+                address_line="A",
+                city="C",
+                country="NL",
+                latitude=Decimal("999"),
+                longitude=Decimal("4"),
+                geofence_radius_m=200,
+                timezone="UTC",
+                description=None,
             )
 
     async def test_raises_when_radius_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(VenueError, match="50"):
             await svc.create_venue(
-                actor_id=actor_id, name="V", address_line="A", city="C",
-                country="NL", latitude=Decimal("52"), longitude=Decimal("4"),
-                geofence_radius_m=10, timezone="UTC", description=None,
+                actor_id=actor_id,
+                name="V",
+                address_line="A",
+                city="C",
+                country="NL",
+                latitude=Decimal("52"),
+                longitude=Decimal("4"),
+                geofence_radius_m=10,
+                timezone="UTC",
+                description=None,
             )
 
     async def test_raises_when_timezone_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(VenueError, match="timezone"):
             await svc.create_venue(
-                actor_id=actor_id, name="V", address_line="A", city="C",
-                country="NL", latitude=Decimal("52"), longitude=Decimal("4"),
-                geofence_radius_m=200, timezone="Not/Real", description=None,
+                actor_id=actor_id,
+                name="V",
+                address_line="A",
+                city="C",
+                country="NL",
+                latitude=Decimal("52"),
+                longitude=Decimal("4"),
+                geofence_radius_m=200,
+                timezone="Not/Real",
+                description=None,
             )
 
     async def test_creates_venue(self, actor_id: uuid.UUID) -> None:
         svc, repo = _make_svc()
         result = await svc.create_venue(
-            actor_id=actor_id, name="Stadium", address_line="Dam 1", city="Amsterdam",
-            country="nl", latitude=Decimal("52.370"), longitude=Decimal("4.895"),
-            geofence_radius_m=200, timezone="Europe/Amsterdam", description=None,
+            actor_id=actor_id,
+            name="Stadium",
+            address_line="Dam 1",
+            city="Amsterdam",
+            country="nl",
+            latitude=Decimal("52.370"),
+            longitude=Decimal("4.895"),
+            geofence_radius_m=200,
+            timezone="Europe/Amsterdam",
+            description=None,
         )
         assert result.name == "Stadium"
         assert result.country == "NL"  # uppercased
@@ -140,8 +174,15 @@ class TestVenueServiceCreate:
         svc, _ = _make_svc()
         svc._audit.record = AsyncMock(side_effect=RuntimeError("audit down"))
         result = await svc.create_venue(
-            actor_id=actor_id, name="Stadium", address_line="Dam 1", city="Amsterdam",
-            country="NL", latitude=Decimal("52.370"), longitude=Decimal("4.895"),
-            geofence_radius_m=200, timezone="Europe/Amsterdam", description=None,
+            actor_id=actor_id,
+            name="Stadium",
+            address_line="Dam 1",
+            city="Amsterdam",
+            country="NL",
+            latitude=Decimal("52.370"),
+            longitude=Decimal("4.895"),
+            geofence_radius_m=200,
+            timezone="Europe/Amsterdam",
+            description=None,
         )
         assert result is not None

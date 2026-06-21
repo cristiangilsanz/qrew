@@ -3,7 +3,6 @@ import json
 
 import pytest
 from fastapi import HTTPException
-
 from pagination.cursor import clamp_limit, decode_cursor, encode_cursor
 
 
@@ -40,7 +39,9 @@ class TestDecodeCursorErrors:
             decode_cursor(bad)
 
     def test_raises_on_missing_fields(self) -> None:
-        bad = base64.urlsafe_b64encode(json.dumps({"x": 1}).encode()).decode().rstrip("=")
+        bad = (
+            base64.urlsafe_b64encode(json.dumps({"x": 1}).encode()).decode().rstrip("=")
+        )
         with pytest.raises(HTTPException):
             decode_cursor(bad)
 

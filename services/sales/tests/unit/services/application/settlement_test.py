@@ -1,7 +1,6 @@
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 
 from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
 from com.qode.qrew.v1.sales.services.application.settlement import SettlementService
@@ -196,7 +195,7 @@ class TestSettlementCancel:
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
         ):
-            result = await svc.cancel(reservation.id, reason="refund")
+            await svc.cancel(reservation.id, reason="refund")
         assert reservation.status == ReservationStatus.cancelled
         session.commit.assert_awaited_once()
 
