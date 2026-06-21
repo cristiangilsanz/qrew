@@ -1,4 +1,4 @@
-from com.qode.qrew.v1.catalog.repositories.event import EventRepository
+from com.qode.qrew.v1.catalog.repositories.events.event import EventRepository
 from com.qode.qrew.v1.catalog.repositories.identity import UserRepository
 from com.qode.qrew.v1.catalog.repositories.organisation import (
     OrganisationMemberRepository,

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from .admin import router as admin_router
+from .audit import router as audit_router
 
-router = APIRouter()
-router.include_router(admin_router)
+router = APIRouter(prefix="/v1")
+router.include_router(audit_router)

@@ -1,11 +1,11 @@
 import asyncio
 
 import structlog
-from broker.client import init_nats
+from messaging.client import init_nats
 from worker import run_nats_subscribers
 
 from com.qode.qrew.v1.entry.core.config import settings
-from com.qode.qrew.v1.entry.worker.ticket_projector import run_projector
+from com.qode.qrew.v1.entry.worker.subscribers.ticketing import run_projector
 
 logger = structlog.get_logger(__name__)
 

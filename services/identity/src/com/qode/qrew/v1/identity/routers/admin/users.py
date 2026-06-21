@@ -4,23 +4,25 @@ from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.identity.routers import Page, clamp_limit, cursor_paginate
-from com.qode.qrew.v1.identity.services.auth.auth import get_admin_user
+from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
 from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import limiter
-from com.qode.qrew.v1.identity.models.auth.user import KycStatus, User
-from com.qode.qrew.v1.identity.repositories.auth.user import UserRepository
-from com.qode.qrew.v1.identity.schemas.admin.admin import UserSummaryResponse
-from com.qode.qrew.v1.identity.services.auth.login_lockout import LoginLockoutService
+from com.qode.qrew.v1.identity.models.user import KycStatus, User
+from com.qode.qrew.v1.identity.repositories.user import UserRepository
+from com.qode.qrew.v1.identity.schemas.admin import UserSummaryResponse
+from com.qode.qrew.v1.identity.services.application.authentication.login.guards.lockout import (
+    LoginLockoutService,
+)
 
 from ._deps import get_login_lockout_service, get_user_repository
 
-router = APIRouter()
+router = APIRouter(prefix="/users")
 
 _DEFAULT_LIMIT = 20
 
 
 @router.get(
-    "/users",
+    "",
     response_model=Page[UserSummaryResponse],
     status_code=status.HTTP_200_OK,
     summary="List and search users",
@@ -66,7 +68,7 @@ async def list_users(
 
 
 @router.post(
-    "/users/{user_id}/unlock",
+    "/{user_id}/unlock",
     status_code=status.HTTP_200_OK,
     summary="Clear a per-account login lockout",
 )

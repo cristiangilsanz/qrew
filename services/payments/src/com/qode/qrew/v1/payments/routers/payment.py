@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
 from com.qode.qrew.v1.payments.core.dependencies import (
     get_payment_service,
-    get_stripe_client,
     limiter,
 )
 from com.qode.qrew.v1.payments.core.principals import (
@@ -12,20 +11,19 @@ from com.qode.qrew.v1.payments.core.principals import (
     get_current_user,
 )
 from com.qode.qrew.v1.payments.schemas.payment import PaymentInitiateResponse
-from com.qode.qrew.v1.payments.services import StripeClient
-from com.qode.qrew.v1.payments.services.payment import (
+from com.qode.qrew.v1.payments.services.application.payment import (
     PaymentError,
     PaymentExpiredError,
     PaymentService,
+    WebhookError,
 )
-from com.qode.qrew.v1.payments.services.webhook_dispatch import dispatch_webhook_event
-from com.qode.qrew.v1.payments.services.webhook_idempotency import claim_event
 
-router = APIRouter(tags=["payments"])
+router = APIRouter(prefix="/reservations", tags=["payments"])
+webhooks_router = APIRouter(prefix="/payments", tags=["payments"])
 
 
 @router.post(
-    "/reservations/{reservation_id}/payment",
+    "/{reservation_id}/payment",
     response_model=PaymentInitiateResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create or return the PaymentIntent for a reservation",
@@ -39,9 +37,7 @@ async def initiate_payment(
 ) -> PaymentInitiateResponse:
     del request
     try:
-        payment = await service.initiate(
-            actor_id=current_user.id, reservation_id=reservation_id
-        )
+        payment = await service.initiate(actor_id=current_user.id, reservation_id=reservation_id)
     except PaymentExpiredError as exc:
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
@@ -69,8 +65,8 @@ async def initiate_payment(
     )
 
 
-@router.post(
-    "/payments/webhook",
+@webhooks_router.post(
+    "/webhook",
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
 )
@@ -78,28 +74,12 @@ async def stripe_webhook(
     request: Request,
     stripe_signature: str | None = Header(default=None, alias="Stripe-Signature"),
     service: PaymentService = Depends(get_payment_service),
-    stripe_client: StripeClient = Depends(get_stripe_client),
 ) -> dict[str, str]:
     payload = await request.body()
-    if stripe_signature is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"message": "Missing Stripe-Signature header", "field": None},
-        )
     try:
-        event = await stripe_client.verify_webhook(payload, stripe_signature)
-    except Exception as exc:
+        return await service.handle_webhook(payload, stripe_signature)
+    except WebhookError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"message": "Invalid Stripe signature", "field": None},
+            detail={"message": exc.message, "field": None},
         ) from exc
-    event_id = str(event.get("id") or "")
-    if not event_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"message": "Webhook payload missing id", "field": None},
-        )
-    if not await claim_event(event_id):
-        return {"status": "duplicate"}
-    await dispatch_webhook_event(service, event)
-    return {"status": "ok"}

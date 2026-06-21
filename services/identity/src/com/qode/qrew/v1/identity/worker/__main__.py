@@ -13,8 +13,8 @@ async def main() -> None:
         await logger.awarning("identity_worker.no_nats_url")
         return
 
-    from com.qode.qrew.v1.identity.worker.catalog_events import run_catalog_event_subscriber
-    from com.qode.qrew.v1.identity.worker.payment_events import run_payment_event_subscriber
+    from com.qode.qrew.v1.identity.worker.subscribers.catalog import run_catalog_event_subscriber
+    from com.qode.qrew.v1.identity.worker.subscribers.payments import run_payment_event_subscriber
 
     await run_nats_subscribers(
         "identity",

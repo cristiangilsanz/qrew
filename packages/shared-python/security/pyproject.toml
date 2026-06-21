@@ -1,0 +1,20 @@
+[project]
+name = "security"
+version = "0.1.0"
+description = "JWT verification and PII encryption utilities"
+requires-python = ">=3.12"
+dependencies = [
+    "PyJWT>=2.8",
+    "cryptography>=42",
+    "pydantic>=2.0",
+]
+
+[tool.uv]
+venvPath = "../../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+reportMissingTypeStubs = false

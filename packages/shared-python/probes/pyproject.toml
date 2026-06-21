@@ -1,0 +1,18 @@
+[project]
+name = "probes"
+version = "0.1.0"
+description = "FastAPI health and readiness probe router"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+]
+
+[tool.uv]
+venvPath = "../../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+reportMissingTypeStubs = false

@@ -31,29 +31,29 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-grpc>=1.24",
     "httpx>=0.27",
     "cryptography>=42.0",
-    "broker",
-    "contracts",
-    "db",
-    "locking",
+    "exceptions",
     "idempotency",
     "middleware",
     "observability",
-    "http-errors",
-    "probes",
+    "db",
+    "locking",
+    "messaging",
     "worker",
+    "probes",
+    "contracts",
 ]
 
 [tool.uv.sources]
-broker = { workspace = true }
-contracts = { workspace = true }
+exceptions = { workspace = true }
 idempotency = { workspace = true }
-db = { workspace = true }
-locking = { workspace = true }
 middleware = { workspace = true }
 observability = { workspace = true }
-http-errors = { workspace = true }
-probes = { workspace = true }
+db = { workspace = true }
+locking = { workspace = true }
+messaging = { workspace = true }
 worker = { workspace = true }
+probes = { workspace = true }
+contracts = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.entry.__main__:main"
@@ -83,7 +83,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/idempotency/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/security/src", "../../packages/worker/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src"]
 venvPath = "../.."
 venv = ".venv"
 
@@ -92,7 +92,7 @@ venv = ".venv"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/security/src"]
+pythonpath = ["src", "tests", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
 

@@ -20,33 +20,40 @@ dependencies = [
     "opentelemetry-instrumentation-sqlalchemy>=0.45b0",
     "cryptography>=42",
     "nats-py>=2.6",
-    "broker",
-    "contracts",
-    "db",
-    "locking",
+    "exceptions",
+    "idempotency",
     "middleware",
     "observability",
-    "idempotency",
-    "http-errors",
-    "probes",
+    "locking",
     "worker",
+    "db",
+    "probes",
+    "contracts",
 ]
 
 [tool.uv.sources]
-broker = { workspace = true }
-contracts = { workspace = true }
-db = { workspace = true }
-locking = { workspace = true }
+exceptions = { workspace = true }
+idempotency = { workspace = true }
 middleware = { workspace = true }
 observability = { workspace = true }
-idempotency = { workspace = true }
-http-errors = { workspace = true }
-probes = { workspace = true }
+locking = { workspace = true }
 worker = { workspace = true }
+db = { workspace = true }
+probes = { workspace = true }
+contracts = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.ticketing.__main__:main"
 worker = "com.qode.qrew.v1.ticketing.worker.__main__:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=5",
+    "pyright>=1.1",
+    "ruff>=0.4",
+]
 
 [tool.uv]
 venvPath = "../.."
@@ -57,7 +64,14 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/idempotency/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src"]
+python_files = ["*_test.py"]
+addopts = ["--tb=short", "--strict-markers", "--no-header"]
 
 [tool.ruff]
 line-length = 100

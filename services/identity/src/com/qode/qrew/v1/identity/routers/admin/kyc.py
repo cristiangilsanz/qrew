@@ -2,25 +2,25 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from com.qode.qrew.v1.identity.services.auth.auth import get_admin_user
+from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
-from com.qode.qrew.v1.identity.models.auth.user import User
-from com.qode.qrew.v1.identity.schemas.admin.admin import (
+from com.qode.qrew.v1.identity.models.user import User
+from com.qode.qrew.v1.identity.schemas.admin import (
     KycReviewRequest,
     KycReviewResponse,
 )
-from com.qode.qrew.v1.identity.services.kyc.kyc_review import (
+from com.qode.qrew.v1.identity.services.application.authentication.kyc.review import (
     KycReviewError,
     KycReviewService,
 )
 
 from ._deps import get_kyc_review_service
 
-router = APIRouter()
+router = APIRouter(prefix="/kyc")
 
 
 @router.post(
-    "/kyc/{user_id}/review",
+    "/{user_id}/review",
     response_model=KycReviewResponse,
     status_code=status.HTTP_200_OK,
     summary="Approve or reject a pending KYC submission",

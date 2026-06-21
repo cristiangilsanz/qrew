@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.audit.models.audit_event import AuditAction, AuditEvent
+from com.qode.qrew.v1.audit.models.event import AuditAction, AuditEvent
 
 
 def _canonical_json(data: dict[str, object]) -> bytes:

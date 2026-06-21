@@ -1,0 +1,36 @@
+[project]
+name = "jobs"
+version = "0.1.0"
+description = "Arq-based background job queue with tracing, retries, and dead-letter queue"
+requires-python = ">=3.12"
+dependencies = [
+    "arq>=0.26",
+    "redis[asyncio,hiredis]>=5.0",
+    "structlog>=24.1",
+    "observability",
+]
+
+[tool.uv]
+venvPath = "../../.."
+venv = ".venv"
+
+[tool.uv.sources]
+observability = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src", "../observability/src"]
+python_files = ["*_test.py"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+reportMissingTypeStubs = false

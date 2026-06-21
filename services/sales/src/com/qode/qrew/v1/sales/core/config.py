@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"
 
+    trusted_proxy_ip: str = ""
+
     ratelimit_enabled: bool = True
 
     idempotency_enabled: bool = True

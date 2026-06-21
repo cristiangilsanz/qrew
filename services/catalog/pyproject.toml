@@ -21,46 +21,60 @@ dependencies = [
     "cryptography>=42",
     "nats-py>=2.6",
     "arq>=0.25",
-    "broker",
-    "contracts",
-    "db",
-    "locking",
+    "exceptions",
+    "idempotency",
     "middleware",
     "observability",
-    "pagination",
-    "idempotency",
+    "db",
     "jobs",
-    "http-errors",
-    "probes",
+    "locking",
+    "messaging",
+    "pagination",
+    "contracts",
 ]
 
 [tool.uv.sources]
-broker = { workspace = true }
-contracts = { workspace = true }
-db = { workspace = true }
-locking = { workspace = true }
+exceptions = { workspace = true }
+idempotency = { workspace = true }
 middleware = { workspace = true }
 observability = { workspace = true }
-pagination = { workspace = true }
-idempotency = { workspace = true }
+db = { workspace = true }
 jobs = { workspace = true }
-http-errors = { workspace = true }
-probes = { workspace = true }
+locking = { workspace = true }
+messaging = { workspace = true }
+pagination = { workspace = true }
+contracts = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.catalog.__main__:main"
 worker = "com.qode.qrew.v1.catalog.worker.__main__:main"
 
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=5",
+    "pyright>=1.1",
+    "ruff>=0.4",
+]
+
 [tool.uv]
 venvPath = "../.."
 venv = ".venv"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src", "tests", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/pagination/src", "../../packages/contracts/src"]
+python_files = ["*_test.py"]
+addopts = ["--tb=short", "--strict-markers", "--no-header"]
 
 [tool.pyright]
 reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/jobs/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/pagination/src", "../../packages/contracts/src"]
 
 [tool.ruff]
 line-length = 100

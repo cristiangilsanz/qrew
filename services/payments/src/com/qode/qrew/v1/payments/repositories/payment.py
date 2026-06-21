@@ -11,9 +11,7 @@ class PaymentRepository:
         self._session = session
 
     async def get_by_id(self, payment_id: uuid.UUID) -> Payment | None:
-        result = await self._session.execute(
-            select(Payment).where(Payment.id == payment_id)
-        )
+        result = await self._session.execute(select(Payment).where(Payment.id == payment_id))
         return result.scalar_one_or_none()
 
     async def get_by_reservation_id(self, reservation_id: uuid.UUID) -> Payment | None:

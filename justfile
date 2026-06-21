@@ -7,7 +7,7 @@ CATALOG := "services/catalog"
 TICKETING := "services/ticketing"
 SALES := "services/sales"
 AUDIT := "services/audit"
-GATEWAY := "services/gateway"
+GATEWAY := "gateway"
 
 default: help
 

@@ -1,0 +1,18 @@
+[project]
+name = "db"
+version = "0.1.0"
+description = "Redis connection utilities and FastAPI dependency factories"
+requires-python = ">=3.12"
+dependencies = [
+    "redis[asyncio,hiredis]>=5.0",
+]
+
+[tool.uv]
+venvPath = "../../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+reportMissingTypeStubs = false

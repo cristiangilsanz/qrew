@@ -5,12 +5,12 @@ from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.routers import Page, clamp_limit, cursor_paginate
-from com.qode.qrew.v1.identity.services.auth.auth import get_admin_user
+from com.qode.qrew.v1.identity.routers import Page, clamp_limit
+from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
 from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import limiter
-from com.qode.qrew.v1.identity.services.outbox.model import OutboxEvent, dlq_query
-from com.qode.qrew.v1.identity.models.auth.user import User
+from com.qode.qrew.v1.identity.models.user import User
+from com.qode.qrew.v1.identity.services.application.outbox.querier import paginate_dlq
 
 router = APIRouter(prefix="/outbox", tags=["admin-outbox"])
 
@@ -44,15 +44,7 @@ async def list_dlq(
     """Return outbox rows that were parked in the DLQ."""
     del request
     page_limit = clamp_limit(limit, default=20)
-    stmt = dlq_query()
-    rows, next_cursor = await cursor_paginate(
-        db,
-        stmt,
-        sort_column=OutboxEvent.created_at,
-        id_column=OutboxEvent.id,
-        limit=page_limit,
-        cursor=cursor,
-    )
+    rows, next_cursor = await paginate_dlq(db, cursor=cursor, limit=page_limit)
     return Page[OutboxDlqItem](
         items=[
             OutboxDlqItem(

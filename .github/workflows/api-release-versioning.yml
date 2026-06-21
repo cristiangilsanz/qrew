@@ -39,7 +39,15 @@ jobs:
       security-events: write
     strategy:
       matrix:
-        service: [identity, entry, payments, catalog, ticketing, sales, audit, gateway]
+        include:
+          - { service: identity,  path: services/identity }
+          - { service: entry,     path: services/entry }
+          - { service: payments,  path: services/payments }
+          - { service: catalog,   path: services/catalog }
+          - { service: ticketing, path: services/ticketing }
+          - { service: sales,     path: services/sales }
+          - { service: audit,     path: services/audit }
+          - { service: gateway,   path: gateway }
     steps:
       - uses: actions/checkout@v4
 
@@ -57,7 +65,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: services/${{ matrix.service }}/Dockerfile
+          file: ${{ matrix.path }}/Dockerfile
           load: true
           tags: qrew-${{ matrix.service }}:scan
           cache-to: type=gha,mode=max
@@ -75,7 +83,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: services/${{ matrix.service }}/Dockerfile
+          file: ${{ matrix.path }}/Dockerfile
           push: true
           provenance: false
           tags: |
@@ -92,7 +100,15 @@ jobs:
       contents: read
     strategy:
       matrix:
-        service: [identity, entry, payments, catalog, ticketing, sales, audit, gateway]
+        include:
+          - { service: identity,  path: services/identity }
+          - { service: entry,     path: services/entry }
+          - { service: payments,  path: services/payments }
+          - { service: catalog,   path: services/catalog }
+          - { service: ticketing, path: services/ticketing }
+          - { service: sales,     path: services/sales }
+          - { service: audit,     path: services/audit }
+          - { service: gateway,   path: gateway }
     steps:
       - uses: actions/checkout@v4
 
@@ -110,7 +126,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: services/${{ matrix.service }}/Dockerfile
+          file: ${{ matrix.path }}/Dockerfile
           push: true
           provenance: false
           tags: ghcr.io/${{ github.repository_owner }}/qrew-${{ matrix.service }}:dev

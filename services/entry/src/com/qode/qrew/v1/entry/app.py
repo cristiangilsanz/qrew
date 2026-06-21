@@ -1,7 +1,10 @@
 import structlog
+from exceptions import (
+    default_responses,
+    register_exception_handlers,
+)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from http_errors import default_responses, register_exception_handlers
 from idempotency.middleware import IdempotencyMiddleware
 from middleware import (
     RequestIDMiddleware,

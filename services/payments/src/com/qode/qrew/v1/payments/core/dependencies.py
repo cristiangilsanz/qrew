@@ -7,8 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from com.qode.qrew.v1.payments.core.config import settings
 from com.qode.qrew.v1.payments.core.database import get_db
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
-from com.qode.qrew.v1.payments.services import StripeClient, StripeRealClient
-from com.qode.qrew.v1.payments.services.payment import PaymentService
+from com.qode.qrew.v1.payments.services.application.payment import PaymentService
+from com.qode.qrew.v1.payments.services.infrastructure.stripe_client import (
+    StripeClient,
+    StripeRealClient,
+)
 
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
 

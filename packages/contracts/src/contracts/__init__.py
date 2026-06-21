@@ -1,13 +1,12 @@
-from contracts.catalog import (
+from contracts.events.catalog import (
     EventCancelledData,
     EventPublishedData,
     OrganisationCreatedData,
     TicketTypeCreatedData,
     TicketTypeDeletedData,
 )
-from contracts.entry import EntryRejectedData, EntryValidatedData
-from contracts.envelope import EventEnvelope, OtelCarrier
-from contracts.identity import (
+from contracts.events.entry import EntryRejectedData, EntryValidatedData
+from contracts.events.identity import (
     DeviceBoundData,
     DeviceRevokedData,
     PasskeyReassertedData,
@@ -15,14 +14,14 @@ from contracts.identity import (
     UserRegisteredData,
     UserVerifiedData,
 )
-from contracts.payments import (
+from contracts.events.payments import (
     ChargebackOpenedData,
     PaymentFailedData,
     PaymentInitiatedData,
     PaymentRefundedData,
     PaymentSucceededData,
 )
-from contracts.sales import (
+from contracts.events.sales import (
     QueueAdmittedData,
     QueueJoinedData,
     ReservationCancelledData,
@@ -31,7 +30,7 @@ from contracts.sales import (
     ReservationFlaggedData,
     ReservationPaidData,
 )
-from contracts.ticketing import (
+from contracts.events.ticketing import (
     QrDeniedData,
     QrMintedData,
     TicketCancelledData,
@@ -40,6 +39,7 @@ from contracts.ticketing import (
     TicketRestoredData,
     TicketUsedData,
 )
+from contracts.messaging.envelope import EventEnvelope, OtelCarrier
 
 __all__ = [
     "ChargebackOpenedData",

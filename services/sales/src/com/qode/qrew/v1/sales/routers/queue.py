@@ -2,27 +2,19 @@ import secrets
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.sales.services.audit import AuditService
 from com.qode.qrew.v1.sales.core.principals import AuthenticatedUser, get_current_user
 from idempotency import idempotent
-from com.qode.qrew.v1.sales.core.database import get_db
-from com.qode.qrew.v1.sales.core.dependencies import limiter
-from com.qode.qrew.v1.sales.repositories.projections import EventContextRepository
+from com.qode.qrew.v1.sales.core.dependencies import get_queue_service, limiter
 from com.qode.qrew.v1.sales.schemas.queue import (
     QueueJoinResponse,
     QueuePositionResponse,
     QueueRedeemRequest,
     QueueRedeemResponse,
 )
-from com.qode.qrew.v1.sales.services.queue.queue import QueueError, QueueService
+from com.qode.qrew.v1.sales.services.application.queue.service import QueueError, QueueService
 
 router = APIRouter(prefix="/events/{event_id}/queue", tags=["queue"])
-
-
-def _service(db: AsyncSession) -> QueueService:
-    return QueueService(EventContextRepository(db), AuditService())
 
 
 def _bad_request(error: QueueError) -> HTTPException:
@@ -44,18 +36,16 @@ def _bad_request(error: QueueError) -> HTTPException:
 )
 @limiter.limit("10/minute")  # type: ignore[misc]
 @idempotent(scope="user", ttl_seconds=60)
-async def join_queue_endpoint(
+async def join_queue(
     request: Request,
     event_id: uuid.UUID,
     current_user: AuthenticatedUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: QueueService = Depends(get_queue_service),
 ) -> QueueJoinResponse:
     del request
     tiebreak = secrets.randbits(16)
     try:
-        position = await _service(db).join(
-            user_id=current_user.id, event_id=event_id, tiebreak=tiebreak
-        )
+        position = await service.join(user_id=current_user.id, event_id=event_id, tiebreak=tiebreak)
     except QueueError as exc:
         raise _bad_request(exc) from exc
     return QueueJoinResponse(position=position)
@@ -68,14 +58,14 @@ async def join_queue_endpoint(
     summary="Read the caller's current queue position",
 )
 @limiter.limit("60/minute")  # type: ignore[misc]
-async def queue_position_endpoint(
+async def queue_position(
     request: Request,
     event_id: uuid.UUID,
     current_user: AuthenticatedUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: QueueService = Depends(get_queue_service),
 ) -> QueuePositionResponse:
     del request
-    position = await _service(db).position(user_id=current_user.id, event_id=event_id)
+    position = await service.position(user_id=current_user.id, event_id=event_id)
     return QueuePositionResponse(position=position)
 
 
@@ -86,17 +76,16 @@ async def queue_position_endpoint(
     summary="Exchange a redeem token for a reservation window",
 )
 @limiter.limit("30/minute")  # type: ignore[misc]
-async def redeem_queue_endpoint(
+async def redeem_queue(
     request: Request,
     event_id: uuid.UUID,
     body: QueueRedeemRequest,
     current_user: AuthenticatedUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: QueueService = Depends(get_queue_service),
 ) -> QueueRedeemResponse:
-    del request
-    del event_id
+    del request, event_id
     try:
-        reservation_token = await _service(db).redeem(
+        reservation_token = await service.redeem(
             user_id=current_user.id, token=body.redeem_window_token
         )
     except QueueError as exc:

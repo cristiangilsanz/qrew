@@ -33,25 +33,23 @@ dependencies = [
     "cryptography>=42.0",
     "nats-py>=2.7",
     "stripe>=10.0",
-    "broker",
-    "contracts",
-    "db",
+    "exceptions",
     "idempotency",
     "middleware",
     "observability",
-    "http-errors",
+    "db",
     "probes",
+    "contracts",
 ]
 
 [tool.uv.sources]
-broker = { workspace = true }
-contracts = { workspace = true }
-db = { workspace = true }
+exceptions = { workspace = true }
 idempotency = { workspace = true }
 middleware = { workspace = true }
 observability = { workspace = true }
-http-errors = { workspace = true }
+db = { workspace = true }
 probes = { workspace = true }
+contracts = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.payments.__main__:main"
@@ -78,7 +76,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/idempotency/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/security/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src"]
 venvPath = "../.."
 venv = ".venv"
 
@@ -87,9 +85,14 @@ venv = ".venv"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/observability/src"]
+pythonpath = ["src", "tests", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
+
+# ── Ruff ──────────────────────────────────────────────────────────────────────
+
+[tool.ruff]
+line-length = 100
 
 # ── Coverage ──────────────────────────────────────────────────────────────────
 

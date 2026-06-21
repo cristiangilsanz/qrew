@@ -39,7 +39,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [identity, entry, payments, catalog, ticketing, sales, audit, gateway]
+        include:
+          - { service: identity,  path: services/identity }
+          - { service: entry,     path: services/entry }
+          - { service: payments,  path: services/payments }
+          - { service: catalog,   path: services/catalog }
+          - { service: ticketing, path: services/ticketing }
+          - { service: sales,     path: services/sales }
+          - { service: audit,     path: services/audit }
+          - { service: gateway,   path: gateway }
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
@@ -47,4 +55,4 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: uv sync --all-packages --all-groups
-      - run: cd services/${{ matrix.service }} && uv run pyright
+      - run: cd ${{ matrix.path }} && uv run pyright

@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import Response
 
-from com.qode.qrew.v1.identity.services.auth.auth import get_setup_or_full_user
+from com.qode.qrew.v1.identity.core.dependencies import get_setup_or_full_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
-from com.qode.qrew.v1.identity.services.storage import (
+from com.qode.qrew.v1.identity.services.application.storage import (
     ObjectNotFoundError,
     SignatureExpiredError,
     SignatureInvalidError,
@@ -13,7 +13,7 @@ from com.qode.qrew.v1.identity.services.storage import (
     is_valid_key,
     storage,
 )
-from com.qode.qrew.v1.identity.models.auth.user import User
+from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.schemas.storage.upload import (
     SignUploadRequest,
     SignUploadResponse,

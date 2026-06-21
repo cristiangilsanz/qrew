@@ -5,3 +5,11 @@ class DomainError(Exception):
         self.message = message
         self.field = field
         super().__init__(message)
+
+
+class EventNotFoundError(Exception):
+    pass
+
+
+class NotEventMemberError(Exception):
+    pass

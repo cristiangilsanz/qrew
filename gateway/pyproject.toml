@@ -1,0 +1,43 @@
+[project]
+name = "gateway"
+version = "0.1.0"
+description = "Qrew gateway service."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic-settings>=2.0",
+    "structlog>=24.0",
+    "PyJWT>=2.8",
+    "cryptography>=42",
+    "nats-py>=2.6",
+    "redis[hiredis]>=5.0",
+    "slowapi>=0.1",
+    "exceptions",
+    "idempotency",
+    "middleware",
+    "observability",
+]
+
+[tool.uv.sources]
+exceptions = { workspace = true }
+idempotency = { workspace = true }
+middleware = { workspace = true }
+observability = { workspace = true }
+
+[project.scripts]
+dev = "com.qode.qrew.v1.gateway.__main__:main"
+
+[tool.uv]
+venvPath = ".."
+venv = ".venv"
+
+[tool.pyright]
+reportMissingTypeStubs = false
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+extraPaths = ["../packages/shared-python/exceptions/src", "../packages/shared-python/idempotency/src", "../packages/shared-python/middleware/src", "../packages/shared-python/observability/src", "../packages/contracts/src"]
+
+[tool.ruff]
+line-length = 100

@@ -10,7 +10,7 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 
-from http_errors import credentials_exception
+from exceptions import credentials_exception
 
 from com.qode.qrew.v1.catalog.core.config import settings
 

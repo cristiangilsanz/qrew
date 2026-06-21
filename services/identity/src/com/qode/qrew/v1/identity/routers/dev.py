@@ -6,10 +6,10 @@ from pydantic import BaseModel
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.core import pii as pii_crypto
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import get_redis
-from com.qode.qrew.v1.identity.models.auth.user import User
+from com.qode.qrew.v1.identity.models.user import User
 
 router = APIRouter(prefix="/dev", tags=["dev"])
 
