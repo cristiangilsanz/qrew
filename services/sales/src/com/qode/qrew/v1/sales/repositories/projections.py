@@ -1,6 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.models.projections import (
@@ -115,16 +116,16 @@ class FingerprintContextRepository:
         return await self._session.get(FingerprintContext, fingerprint_hash)
 
     async def seen(self, *, fingerprint_hash: str, now: datetime) -> None:
-        ctx = await self._session.get(FingerprintContext, fingerprint_hash)
-        if ctx is None:
-            ctx = FingerprintContext(
-                fingerprint_hash=fingerprint_hash,
-                distinct_user_count=1,
-                last_seen_at=now,
-            )
-            self._session.add(ctx)
-        else:
-            ctx.distinct_user_count += 1
-            ctx.last_seen_at = now
-        ctx.updated_at = datetime.now(UTC)
-        await self._session.flush()
+        # Atomic upsert: INSERT wins the race on first occurrence; ON CONFLICT increments
+        # atomically so concurrent workers never double-count the same fingerprint hash.
+        await self._session.execute(
+            text(
+                "INSERT INTO sales.fingerprint_context "
+                "(fingerprint_hash, distinct_user_count, last_seen_at, updated_at) "
+                "VALUES (:hash, 1, :now, :now) "
+                "ON CONFLICT (fingerprint_hash) DO UPDATE "
+                "SET distinct_user_count = fingerprint_context.distinct_user_count + 1, "
+                "    last_seen_at = EXCLUDED.last_seen_at, "
+                "    updated_at = EXCLUDED.updated_at"
+            ).bindparams(hash=fingerprint_hash, now=now)
+        )

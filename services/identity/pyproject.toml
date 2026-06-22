@@ -38,25 +38,25 @@ dependencies = [
     "cryptography>=42.0",
     "geoip2>=5.2.0",
     "nats-py>=2.7",
-    "broker",
-    "contracts",
-    "db",
-    "locking",
-    "middleware",
-    "observability",
-    "pagination",
+    "exceptions",
     "idempotency",
+    "middleware",
     "ratelimit",
+    "observability",
+    "db",
     "jobs",
-    "http-errors",
-    "probes",
+    "locking",
+    "messaging",
     "worker",
+    "pagination",
+    "probes",
+    "contracts",
 ]
 
 [project.scripts]
 dev = "com.qode.qrew.v1.identity.__main__:main"
 worker = "com.qode.qrew.v1.identity.worker.__main__:main"
-arq-worker = "com.qode.qrew.v1.identity.worker.arq_worker:main"
+arq-worker = "com.qode.qrew.v1.identity.worker.runner:main"
 
 [dependency-groups]
 dev = [
@@ -71,22 +71,23 @@ dev = [
     "pre-commit>=3.7",
     "fakeredis[lua]>=2.20",
     "httpx2>=2.4.0",
+    "mailchecker>=6.0.20",
 ]
 
 [tool.uv.sources]
-broker = { workspace = true }
-contracts = { workspace = true }
-db = { workspace = true }
-locking = { workspace = true }
-middleware = { workspace = true }
-observability = { workspace = true }
-pagination = { workspace = true }
+exceptions = { workspace = true }
 idempotency = { workspace = true }
+middleware = { workspace = true }
 ratelimit = { workspace = true }
+observability = { workspace = true }
+db = { workspace = true }
 jobs = { workspace = true }
-http-errors = { workspace = true }
-probes = { workspace = true }
+locking = { workspace = true }
+messaging = { workspace = true }
 worker = { workspace = true }
+pagination = { workspace = true }
+probes = { workspace = true }
+contracts = { workspace = true }
 
 [tool.uv]
 venvPath = "../.."
@@ -96,7 +97,7 @@ venv = ".venv"
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/jobs/src", "../../packages/ratelimit/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/ratelimit/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/pagination/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src"]
 reportMissingTypeStubs = false
 
 [tool.ruff]
@@ -105,7 +106,7 @@ line-length = 100
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/broker/src", "../../packages/contracts/src", "../../packages/db/src", "../../packages/locking/src", "../../packages/middleware/src", "../../packages/observability/src", "../../packages/pagination/src", "../../packages/idempotency/src", "../../packages/ratelimit/src"]
+pythonpath = ["src", "tests", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/ratelimit/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/pagination/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src"]
 python_files = ["*_test.py"]
 markers = [
     "integration: mark test as integration test requiring Docker services (Postgres + Redis)",

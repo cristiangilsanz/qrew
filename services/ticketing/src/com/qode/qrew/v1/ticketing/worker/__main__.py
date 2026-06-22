@@ -11,13 +11,13 @@ async def main() -> None:
         await structlog.get_logger(__name__).awarning("ticketing_worker.no_nats_url")
         return
 
-    from com.qode.qrew.v1.ticketing.worker.catalog_events import run_catalog_event_subscriber
-    from com.qode.qrew.v1.ticketing.worker.identity_events import run_identity_event_subscriber
-    from com.qode.qrew.v1.ticketing.worker.payment_events import run_payment_event_subscriber
+    from com.qode.qrew.v1.ticketing.worker.subscribers.catalog import run_catalog_event_subscriber
+    from com.qode.qrew.v1.ticketing.worker.subscribers.identity import run_identity_event_subscriber
+    from com.qode.qrew.v1.ticketing.worker.subscribers.sales import run_sales_event_subscriber
 
     await run_nats_subscribers(
         "ticketing",
-        run_payment_event_subscriber(settings.nats_url),
+        run_sales_event_subscriber(settings.nats_url),
         run_catalog_event_subscriber(settings.nats_url),
         run_identity_event_subscriber(settings.nats_url),
     )

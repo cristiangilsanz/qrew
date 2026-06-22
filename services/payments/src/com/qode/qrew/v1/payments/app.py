@@ -1,7 +1,10 @@
 import structlog
+from exceptions import (
+    default_responses,
+    register_exception_handlers,
+)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from http_errors import default_responses, register_exception_handlers
 from idempotency.middleware import IdempotencyMiddleware
 from middleware import (
     RequestIDMiddleware,
@@ -22,9 +25,7 @@ structlog.configure(
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.dev.ConsoleRenderer()
-        if settings.debug
-        else structlog.processors.JSONRenderer(),
+        structlog.dev.ConsoleRenderer() if settings.debug else structlog.processors.JSONRenderer(),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(20),
     context_class=dict,

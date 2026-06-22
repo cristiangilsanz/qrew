@@ -5,7 +5,7 @@ import structlog
 from worker import run_nats_subscribers
 from com.qode.qrew.v1.audit.services.writer import AuditService
 from com.qode.qrew.v1.audit.core.config import settings
-from com.qode.qrew.v1.audit.worker.jobs.verify_chain import run_nightly_verify
+from com.qode.qrew.v1.audit.worker.jobs.chain_verifier import run_nightly_verify
 from com.qode.qrew.v1.audit.worker.events import run_audit_event_subscriber
 
 logger = structlog.get_logger(__name__)

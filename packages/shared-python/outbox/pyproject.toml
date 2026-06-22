@@ -1,0 +1,16 @@
+[project]
+name = "outbox"
+version = "0.1.0"
+description = "Transactional outbox sweeper protocol and helper"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+venvPath = "../../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+reportMissingTypeStubs = false

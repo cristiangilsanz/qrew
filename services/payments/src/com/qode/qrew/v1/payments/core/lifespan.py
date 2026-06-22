@@ -8,7 +8,7 @@ from observability import setup_tracing, shutdown_tracing
 
 from com.qode.qrew.v1.payments.core.config import settings
 from com.qode.qrew.v1.payments.core.database import engine
-from com.qode.qrew.v1.payments.services.webhook_idempotency import (
+from com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency import (
     close_webhook_idempotency,
 )
 
@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await logger.ainfo("payments.startup")
     if settings.nats_url:
         try:
-            from broker.client import init_nats
+            from messaging.client import init_nats
 
             await init_nats(settings.nats_url)
             await logger.ainfo("payments.nats_connected")
@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_webhook_idempotency()
     if settings.nats_url:
         try:
-            from broker.client import close_nats
+            from messaging.client import close_nats
 
             await close_nats()
         except Exception as exc:

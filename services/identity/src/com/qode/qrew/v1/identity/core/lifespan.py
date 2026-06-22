@@ -8,7 +8,7 @@ from idempotency.middleware import close_idempotency_store
 from jobs.pool import close_pool
 from locking import close_locking
 from observability import setup_tracing, shutdown_tracing
-from com.qode.qrew.v1.identity.services.ratelimit.dependencies import close_ratelimiter
+from com.qode.qrew.v1.identity.services.application.ratelimit.limiter import close_ratelimiter
 from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.core.database import engine
 
@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await logger.ainfo("identity.startup")
     if settings.nats_url:
         try:
-            from broker.client import init_nats  # type: ignore[import-not-found]
+            from messaging.client import init_nats  # type: ignore[import-not-found]
 
             await init_nats(settings.nats_url)
             await logger.ainfo("identity.nats_connected")
@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_idempotency_store()
     await close_locking()
     try:
-        from broker.client import close_nats  # type: ignore[import-not-found]
+        from messaging.client import close_nats  # type: ignore[import-not-found]
 
         await close_nats()
     except Exception as exc:

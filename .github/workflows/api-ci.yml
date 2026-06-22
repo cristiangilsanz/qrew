@@ -34,12 +34,8 @@ jobs:
       - run: just format-check
 
   typecheck:
-    name: Type Check (${{ matrix.service }})
+    name: Type Check
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        service: [identity, entry, payments, catalog, ticketing, sales, audit, gateway]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
@@ -47,4 +43,41 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: uv sync --all-packages --all-groups
-      - run: cd services/${{ matrix.service }} && uv run pyright
+      - run: cd services/identity  && uv run pyright
+      - run: cd services/entry     && uv run pyright
+      - run: cd services/payments  && uv run pyright
+      - run: cd services/catalog   && uv run pyright
+      - run: cd services/ticketing && uv run pyright
+      - run: cd services/sales     && uv run pyright
+      - run: cd services/audit     && uv run pyright
+      - run: cd gateway            && uv run pyright
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages --all-groups
+      - run: cd services/audit                          && uv run pytest tests/unit/ -v
+      - run: cd services/catalog                        && uv run pytest tests/unit/ -v
+      - run: cd services/entry                          && uv run pytest tests/unit/ -v
+      - run: cd services/identity                       && uv run pytest tests/unit/ -v
+      - run: cd services/payments                       && uv run pytest tests/unit/ -v
+      - run: cd services/sales                          && uv run pytest tests/unit/ -v
+      - run: cd services/ticketing                      && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/idempotency      && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/ratelimit        && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/locking          && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/pagination       && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/jobs             && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/db               && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/exceptions       && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/middleware       && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/observability    && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/probes           && uv run pytest tests/unit/ -v
+      - run: cd packages/shared-python/security         && uv run pytest tests/unit/ -v
+      - run: cd packages/auditor                        && uv run pytest tests/unit/ -v

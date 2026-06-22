@@ -1,9 +1,9 @@
-from com.qode.qrew.v1.payments.services.payment import (
+from com.qode.qrew.v1.payments.services.application.payment import (
     PaymentError,
     PaymentExpiredError,
     PaymentService,
 )
-from com.qode.qrew.v1.payments.services.stripe_client import (
+from com.qode.qrew.v1.payments.services.infrastructure.stripe_client import (
     StripeClient,
     StripeRealClient,
 )

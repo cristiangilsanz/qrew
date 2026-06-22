@@ -5,21 +5,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
 from com.qode.qrew.v1.catalog.core.principals import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.catalog.core.dependencies import get_org_member
-from com.qode.qrew.v1.catalog.services.audit import AuditService
-from idempotency import idempotent
-from com.qode.qrew.v1.catalog.core.database import get_db
-from com.qode.qrew.v1.catalog.core.dependencies import limiter
+from com.qode.qrew.v1.catalog.core.dependencies import (
+    get_db,
+    get_event_service,
+    get_org_member,
+    get_organisation_service,
+    limiter,
+)
+from com.qode.qrew.v1.catalog.models.event import Event
 from com.qode.qrew.v1.catalog.models.organisation import (
     Organisation,
     OrganisationMember,
     OrganisationRole,
 )
-from com.qode.qrew.v1.catalog.repositories.identity import UserRepository
-from com.qode.qrew.v1.catalog.repositories.organisation import (
-    OrganisationMemberRepository,
-    OrganisationRepository,
-)
+from com.qode.qrew.v1.catalog.schemas.event import EventCreateRequest, EventResponse
 from com.qode.qrew.v1.catalog.schemas.organisation import (
     OrganisationCreateRequest,
     OrganisationMemberInviteRequest,
@@ -27,21 +26,14 @@ from com.qode.qrew.v1.catalog.schemas.organisation import (
     OrganisationPublicResponse,
     OrganisationResponse,
 )
-from com.qode.qrew.v1.catalog.services.organisation import (
+from com.qode.qrew.v1.catalog.services.application.events.event import EventError, EventService
+from com.qode.qrew.v1.catalog.services.application.organisation import (
     OrganisationError,
     OrganisationService,
 )
+from idempotency import idempotent
 
 router = APIRouter(prefix="/organisations", tags=["organisations"])
-
-
-def _service(db: AsyncSession) -> OrganisationService:
-    return OrganisationService(
-        OrganisationRepository(db),
-        OrganisationMemberRepository(db),
-        UserRepository(db),
-        AuditService(),
-    )
 
 
 def _bad_request(error: OrganisationError) -> HTTPException:
@@ -59,6 +51,38 @@ def _to_response(org: Organisation) -> OrganisationResponse:
     )
 
 
+def _event_response(event: Event) -> EventResponse:
+    return EventResponse(
+        id=event.id,
+        organisation_id=event.organisation_id,
+        venue_id=event.venue_id,
+        name=event.name,
+        description=event.description,
+        starts_at=event.starts_at,
+        ends_at=event.ends_at,
+        sale_starts_at=event.sale_starts_at,
+        sale_ends_at=event.sale_ends_at,
+        max_tickets_per_user=event.max_tickets_per_user,
+        status=event.status,
+        organiser_name=event.organiser_name,
+        venue_city=event.venue_city,
+        queue_required=event.queue_required,
+        queue_admit_rate_per_minute=event.queue_admit_rate_per_minute,
+        created_at=event.created_at,
+        published_at=event.published_at,
+        cancelled_at=event.cancelled_at,
+    )
+
+
+def _event_error(error: EventError) -> HTTPException:
+    code = (
+        status.HTTP_404_NOT_FOUND
+        if error.field in {"event_id", "organisation_id", "venue_id"}
+        else status.HTTP_400_BAD_REQUEST
+    )
+    return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
+
+
 @router.post(
     "",
     response_model=OrganisationResponse,
@@ -71,11 +95,11 @@ async def create_organisation(
     request: Request,
     body: OrganisationCreateRequest,
     current_user: AuthenticatedUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    svc: OrganisationService = Depends(get_organisation_service),
 ) -> OrganisationResponse:
     del request
     try:
-        org = await _service(db).create_organisation(
+        org = await svc.create_organisation(
             owner_id=current_user.id,
             slug=body.slug,
             name=body.name,
@@ -98,11 +122,12 @@ async def list_my_organisations(
     cursor: str | None = None,
     limit: int = 20,
     current_user: AuthenticatedUser = Depends(get_current_user),
+    svc: OrganisationService = Depends(get_organisation_service),
     db: AsyncSession = Depends(get_db),
 ) -> Page[OrganisationResponse]:
     del request
     page_limit = clamp_limit(limit, default=20)
-    stmt = _service(db).list_for_user_query(current_user.id)
+    stmt = svc.list_for_user_query(current_user.id)
     rows, next_cursor = await cursor_paginate(
         db,
         stmt,
@@ -127,10 +152,10 @@ async def list_my_organisations(
 async def get_public_organisation(
     request: Request,
     organisation_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
+    svc: OrganisationService = Depends(get_organisation_service),
 ) -> OrganisationPublicResponse:
     del request
-    org = await _service(db).get_by_id(organisation_id)
+    org = await svc.get_by_id(organisation_id)
     if org is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -154,11 +179,11 @@ async def invite_member(
     organisation_id: uuid.UUID,
     body: OrganisationMemberInviteRequest,
     actor: OrganisationMember = Depends(get_org_member(OrganisationRole.manager)),
-    db: AsyncSession = Depends(get_db),
+    svc: OrganisationService = Depends(get_organisation_service),
 ) -> OrganisationMemberResponse:
     del request
     try:
-        member = await _service(db).invite_member(
+        member = await svc.invite_member(
             actor_id=actor.user_id,
             organisation_id=organisation_id,
             invitee_email=str(body.email),
@@ -185,14 +210,109 @@ async def remove_member(
     organisation_id: uuid.UUID,
     user_id: uuid.UUID,
     actor: OrganisationMember = Depends(get_org_member(OrganisationRole.manager)),
-    db: AsyncSession = Depends(get_db),
+    svc: OrganisationService = Depends(get_organisation_service),
 ) -> None:
     del request
     try:
-        await _service(db).remove_member(
+        await svc.remove_member(
             actor_id=actor.user_id,
             organisation_id=organisation_id,
             member_user_id=user_id,
         )
     except OrganisationError as exc:
         raise _bad_request(exc) from exc
+
+
+# ---------------------------------------------------------------------------
+# Events nested under organisations
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/{organisation_id}/events",
+    response_model=EventResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a draft event under an organisation",
+)
+@limiter.limit("60/hour")  # type: ignore[misc]
+@idempotent(scope="user", ttl_seconds=300)
+async def create_event(
+    request: Request,
+    organisation_id: uuid.UUID,
+    body: EventCreateRequest,
+    actor: OrganisationMember = Depends(get_org_member(OrganisationRole.manager)),
+    svc: EventService = Depends(get_event_service),
+) -> EventResponse:
+    del request
+    try:
+        event = await svc.create_event(
+            actor_id=actor.user_id,
+            organisation_id=organisation_id,
+            venue_id=body.venue_id,
+            name=body.name,
+            description=body.description,
+            starts_at=body.starts_at,
+            ends_at=body.ends_at,
+            sale_starts_at=body.sale_starts_at,
+            sale_ends_at=body.sale_ends_at,
+            max_tickets_per_user=body.max_tickets_per_user,
+        )
+    except EventError as exc:
+        raise _event_error(exc) from exc
+    return _event_response(event)
+
+
+@router.get(
+    "/{organisation_id}/events",
+    response_model=Page[EventResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List events under an organisation",
+)
+@limiter.limit("120/minute")  # type: ignore[misc]
+async def list_org_events(
+    request: Request,
+    organisation_id: uuid.UUID,
+    cursor: str | None = None,
+    limit: int = 20,
+    _actor: OrganisationMember = Depends(get_org_member(OrganisationRole.member)),
+    svc: EventService = Depends(get_event_service),
+    db: AsyncSession = Depends(get_db),
+) -> Page[EventResponse]:
+    del request
+    page_limit = clamp_limit(limit, default=20)
+    stmt = svc.list_for_org_query(organisation_id)
+    rows, next_cursor = await cursor_paginate(
+        db,
+        stmt,
+        sort_column=Event.created_at,
+        id_column=Event.id,
+        limit=page_limit,
+        cursor=cursor,
+    )
+    return Page[EventResponse](
+        items=[_event_response(event) for event in rows], next_cursor=next_cursor
+    )
+
+
+@router.get(
+    "/{organisation_id}/events/{event_id}",
+    response_model=EventResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Read a single event the caller's organisation owns",
+)
+@limiter.limit("120/minute")  # type: ignore[misc]
+async def get_org_event(
+    request: Request,
+    organisation_id: uuid.UUID,
+    event_id: uuid.UUID,
+    _actor: OrganisationMember = Depends(get_org_member(OrganisationRole.member)),
+    svc: EventService = Depends(get_event_service),
+) -> EventResponse:
+    del request
+    event = await svc.get_by_id(event_id)
+    if event is None or event.organisation_id != organisation_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Event not found", "field": "event_id"},
+        )
+    return _event_response(event)

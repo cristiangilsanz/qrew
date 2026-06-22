@@ -1,0 +1,36 @@
+[project]
+name = "observability"
+version = "0.1.0"
+description = "OpenTelemetry tracing setup, log correlation and context propagation"
+requires-python = ">=3.12"
+dependencies = [
+    "opentelemetry-sdk>=1.20",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.20",
+    "opentelemetry-instrumentation-fastapi>=0.40b0",
+    "opentelemetry-instrumentation-httpx>=0.40b0",
+    "opentelemetry-instrumentation-redis>=0.40b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.40b0",
+    "structlog>=24.1",
+]
+
+[tool.uv]
+venvPath = "../../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+reportMissingTypeStubs = false
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+python_files = ["*_test.py"]

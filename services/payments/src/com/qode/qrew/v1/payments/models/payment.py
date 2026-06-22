@@ -34,19 +34,13 @@ class Payment(Base):
         {"schema": "payments"},
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     reservation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, unique=True
     )
     user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
-    provider: Mapped[str] = mapped_column(
-        String(32), nullable=False, server_default="stripe"
-    )
-    provider_payment_intent_id: Mapped[str | None] = mapped_column(
-        String(255), nullable=True
-    )
+    provider: Mapped[str] = mapped_column(String(32), nullable=False, server_default="stripe")
+    provider_payment_intent_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     status: Mapped[PaymentStatus] = mapped_column(
@@ -54,9 +48,7 @@ class Payment(Base):
         nullable=False,
         server_default=PaymentStatus.requires_action.value,
     )
-    client_secret_ciphertext: Mapped[bytes | None] = mapped_column(
-        LargeBinary, nullable=True
-    )
+    client_secret_ciphertext: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     failure_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     failure_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

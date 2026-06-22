@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await logger.ainfo("audit.startup")
     if settings.nats_url:
         try:
-            from broker.client import init_nats  # type: ignore[import-not-found]
+            from messaging.client import init_nats  # type: ignore[import-not-found]
 
             await init_nats(settings.nats_url)
             await logger.ainfo("audit.nats_connected")
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_locking()
     if settings.nats_url:
         try:
-            from broker.client import close_nats  # type: ignore[import-not-found]
+            from messaging.client import close_nats  # type: ignore[import-not-found]
 
             await close_nats()
         except Exception as exc:

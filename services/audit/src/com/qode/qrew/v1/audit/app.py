@@ -7,7 +7,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from com.qode.qrew.v1.audit.core.lifespan import lifespan
 from com.qode.qrew.v1.audit.routers import router
-from http_errors import default_responses, register_exception_handlers
+from exceptions import default_responses, register_exception_handlers
 from com.qode.qrew.v1.audit.routers.health import router as probes_router
 from com.qode.qrew.v1.audit.core.config import settings
 from com.qode.qrew.v1.audit.core.dependencies import limiter

@@ -5,7 +5,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from http_errors import default_responses, register_exception_handlers
+from exceptions import default_responses, register_exception_handlers
 from com.qode.qrew.v1.ticketing.routers.health import router as probes_router
 from idempotency.middleware import IdempotencyMiddleware
 from com.qode.qrew.v1.ticketing.core.dependencies import limiter

@@ -5,24 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
 from com.qode.qrew.v1.catalog.core.principals import AuthenticatedUser, get_current_user
-from com.qode.qrew.v1.catalog.services.audit import AuditService
-from idempotency import idempotent
-from com.qode.qrew.v1.catalog.core.database import get_db
-from com.qode.qrew.v1.catalog.core.dependencies import limiter
+from com.qode.qrew.v1.catalog.core.dependencies import get_db, get_venue_service, limiter
 from com.qode.qrew.v1.catalog.models.venue import Venue
-from com.qode.qrew.v1.catalog.repositories.venue import VenueRepository
 from com.qode.qrew.v1.catalog.schemas.venue import (
     VenueCreateRequest,
     VenuePublicResponse,
     VenueResponse,
 )
-from com.qode.qrew.v1.catalog.services.venue import VenueError, VenueService
+from com.qode.qrew.v1.catalog.services.application.venue import VenueError, VenueService
+from idempotency import idempotent
 
 router = APIRouter(prefix="/venues", tags=["venues"])
-
-
-def _service(db: AsyncSession) -> VenueService:
-    return VenueService(VenueRepository(db), AuditService())
 
 
 def _to_response(venue: Venue) -> VenueResponse:
@@ -73,11 +66,11 @@ async def create_venue(
     request: Request,
     body: VenueCreateRequest,
     current_user: AuthenticatedUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    svc: VenueService = Depends(get_venue_service),
 ) -> VenueResponse:
     del request
     try:
-        venue = await _service(db).create_venue(
+        venue = await svc.create_venue(
             actor_id=current_user.id,
             name=body.name,
             address_line=body.address_line,
@@ -107,11 +100,12 @@ async def list_venues(
     country: str | None = None,
     cursor: str | None = None,
     limit: int = 20,
+    svc: VenueService = Depends(get_venue_service),
     db: AsyncSession = Depends(get_db),
 ) -> Page[VenuePublicResponse]:
     del request
     page_limit = clamp_limit(limit, default=20)
-    stmt = _service(db).list_query(city=city, country=country)
+    stmt = svc.list_query(city=city, country=country)
     rows, next_cursor = await cursor_paginate(
         db,
         stmt,
@@ -135,10 +129,10 @@ async def list_venues(
 async def get_public_venue(
     request: Request,
     venue_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
+    svc: VenueService = Depends(get_venue_service),
 ) -> VenuePublicResponse:
     del request
-    venue = await _service(db).get_by_id(venue_id)
+    venue = await svc.get_by_id(venue_id)
     if venue is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -3,6 +3,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from com.qode.qrew.v1.audit.core.config import settings
+from com.qode.qrew.v1.audit.services.verifier import AuditChainVerifier
 
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
 
@@ -12,3 +13,7 @@ async def verify_internal_api_key(
 ) -> None:
     if x_internal_key != settings.internal_api_key:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+
+
+def get_chain_verifier() -> AuditChainVerifier:
+    return AuditChainVerifier()

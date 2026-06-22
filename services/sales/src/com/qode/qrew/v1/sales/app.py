@@ -5,9 +5,8 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from http_errors import default_responses, register_exception_handlers
+from exceptions import default_responses, register_exception_handlers
 from com.qode.qrew.v1.sales.routers.health import router as probes_router
-from com.qode.qrew.v1.sales.routers.internal import router as internal_router
 from idempotency.middleware import IdempotencyMiddleware
 from com.qode.qrew.v1.sales.core.dependencies import limiter
 from middleware import (
@@ -62,5 +61,4 @@ app.add_middleware(
 )
 
 app.include_router(probes_router)
-app.include_router(internal_router)
 app.include_router(v1_router)

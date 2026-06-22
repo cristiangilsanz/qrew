@@ -8,7 +8,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from com.qode.qrew.v1.identity.routers import (
     default_responses,
-    probes_router,
+    health_router,
     register_exception_handlers,
 )
 from idempotency.middleware import IdempotencyMiddleware
@@ -67,6 +67,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(probes_router)
+app.include_router(health_router)
 app.include_router(v1_router)
 app.include_router(internal_router)

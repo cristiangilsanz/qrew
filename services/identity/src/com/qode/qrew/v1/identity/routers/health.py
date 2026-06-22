@@ -1,17 +1,5 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
+from probes import create_probe_router
+from com.qode.qrew.v1.identity.core.database import get_db
+from com.qode.qrew.v1.identity.core.dependencies import get_redis
 
-from com.qode.qrew.v1.identity.core.config import settings
-
-router = APIRouter(tags=["health"])
-
-
-class HealthResponse(BaseModel):
-    status: str
-    version: str
-
-
-@router.get("/health", response_model=HealthResponse, summary="Check service health")
-async def health() -> HealthResponse:
-    """Return the current service status."""
-    return HealthResponse(status="ok", version=settings.version)
+router = create_probe_router(get_db, get_redis)

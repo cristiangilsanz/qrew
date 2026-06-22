@@ -9,11 +9,11 @@ from fastapi import FastAPI
 from idempotency.middleware import close_idempotency_store
 from locking import close_locking
 from com.qode.qrew.v1.sales.core.database import engine
-from com.qode.qrew.v1.sales.services.queue.redis_queue import close_queue
+from com.qode.qrew.v1.sales.services.application.queue.storage import close_queue
 from observability import setup_tracing, shutdown_tracing
-from com.qode.qrew.v1.sales.worker.jobs.queue_admit import admit_next
-from com.qode.qrew.v1.sales.worker.jobs.reservation_sweep import sweep_expired
-from com.qode.qrew.v1.sales.services.fraud.dependencies import close_fraud
+from com.qode.qrew.v1.sales.worker.jobs.queue_admitter import admit_next
+from com.qode.qrew.v1.sales.worker.jobs.reservation_expirer import sweep_expired
+from com.qode.qrew.v1.sales.services.domain.fraud.dependencies import close_fraud
 from com.qode.qrew.v1.sales.core.config import settings
 
 logger = structlog.get_logger(__name__)
@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await logger.ainfo("sales.startup")
     if settings.nats_url:
         try:
-            from broker.client import init_nats  # type: ignore[import-not-found]
+            from messaging.client import init_nats  # type: ignore[import-not-found]
 
             await init_nats(settings.nats_url)
             await logger.ainfo("sales.nats_connected")
@@ -63,7 +63,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_idempotency_store()
     await close_locking()
     try:
-        from broker.client import close_nats  # type: ignore[import-not-found]
+        from messaging.client import close_nats  # type: ignore[import-not-found]
 
         await close_nats()
     except Exception as exc:

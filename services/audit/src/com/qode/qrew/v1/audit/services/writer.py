@@ -5,7 +5,7 @@ import structlog
 from sqlalchemy import text
 
 from com.qode.qrew.v1.audit.core.database import AsyncSessionLocal
-from com.qode.qrew.v1.audit.models.audit_event import AuditAction
+from com.qode.qrew.v1.audit.models.event import AuditAction
 from com.qode.qrew.v1.audit.repositories.audit import AuditRepository, build_event
 
 logger = structlog.get_logger(__name__)

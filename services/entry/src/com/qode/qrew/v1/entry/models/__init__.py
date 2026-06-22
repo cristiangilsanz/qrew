@@ -1,9 +1,8 @@
 from com.qode.qrew.v1.entry.models import (
     audit,
-    catalog,
-    identity,
+    entry_attempt,
+    projections,
     scanner,
-    ticket_context,
 )
 
-__all__ = ["audit", "catalog", "identity", "scanner", "ticket_context"]
+__all__ = ["audit", "entry_attempt", "projections", "scanner"]

@@ -1,18 +1,20 @@
 from fastapi import APIRouter, Depends, Request, status
 
-from com.qode.qrew.v1.identity.services.auth.auth import get_admin_user
+from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
-from com.qode.qrew.v1.identity.models.auth.user import User
-from com.qode.qrew.v1.identity.schemas.admin.admin import FingerprintAdminResponse
-from com.qode.qrew.v1.identity.services.device.fingerprint import FingerprintService
+from com.qode.qrew.v1.identity.models.user import User
+from com.qode.qrew.v1.identity.schemas.admin import FingerprintAdminResponse
+from com.qode.qrew.v1.identity.services.application.authentication.device.fingerprint import (
+    FingerprintService,
+)
 
 from ._deps import get_fingerprint_service
 
-router = APIRouter()
+router = APIRouter(prefix="/fingerprints")
 
 
 @router.get(
-    "/fingerprints/{fingerprint_hash}",
+    "/{fingerprint_hash}",
     response_model=FingerprintAdminResponse,
     status_code=status.HTTP_200_OK,
     summary="List accounts associated with a device fingerprint",

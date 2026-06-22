@@ -7,7 +7,20 @@ CATALOG := "services/catalog"
 TICKETING := "services/ticketing"
 SALES := "services/sales"
 AUDIT := "services/audit"
-GATEWAY := "services/gateway"
+GATEWAY := "gateway"
+
+PKG_IDEMPOTENCY   := "packages/shared-python/idempotency"
+PKG_RATELIMIT     := "packages/shared-python/ratelimit"
+PKG_LOCKING       := "packages/shared-python/locking"
+PKG_PAGINATION    := "packages/shared-python/pagination"
+PKG_JOBS          := "packages/shared-python/jobs"
+PKG_DB            := "packages/shared-python/db"
+PKG_EXCEPTIONS    := "packages/shared-python/exceptions"
+PKG_MIDDLEWARE    := "packages/shared-python/middleware"
+PKG_OBSERVABILITY := "packages/shared-python/observability"
+PKG_PROBES        := "packages/shared-python/probes"
+PKG_SECURITY      := "packages/shared-python/security"
+PKG_AUDITOR       := "packages/auditor"
 
 default: help
 
@@ -82,9 +95,30 @@ type-check:
     cd {{AUDIT}} && uv run pyright
     cd {{GATEWAY}} && uv run pyright
 
-# Run test suite
+# Run test suite (all services and packages)
 test:
-    cd {{IDENTITY}} && uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -v; code=$?; [ $code -eq 5 ] && exit 0 || exit $code
+    #!/usr/bin/env bash
+    set -e
+    _run() { cd "$1" && uv run pytest tests/unit/ -v; cd - > /dev/null; }
+    _run {{AUDIT}}
+    _run {{CATALOG}}
+    _run {{ENTRY}}
+    _run {{PAYMENTS}}
+    _run {{SALES}}
+    _run {{TICKETING}}
+    _run {{IDENTITY}}
+    _run {{PKG_IDEMPOTENCY}}
+    _run {{PKG_RATELIMIT}}
+    _run {{PKG_LOCKING}}
+    _run {{PKG_PAGINATION}}
+    _run {{PKG_JOBS}}
+    _run {{PKG_DB}}
+    _run {{PKG_EXCEPTIONS}}
+    _run {{PKG_MIDDLEWARE}}
+    _run {{PKG_OBSERVABILITY}}
+    _run {{PKG_PROBES}}
+    _run {{PKG_SECURITY}}
+    _run {{PKG_AUDITOR}}
 
 # Auto-fix all issues
 fix: lint-fix format-fix

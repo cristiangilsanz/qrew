@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
-from com.qode.qrew.v1.identity.services.auth import jwt_keys
+from com.qode.qrew.v1.identity.core.utils import jwt as jwt_keys
 from com.qode.qrew.v1.identity.core.config import settings
 
 router = APIRouter(prefix="/internal", include_in_schema=False)

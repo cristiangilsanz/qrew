@@ -1,7 +1,12 @@
 from com.qode.qrew.v1.catalog.schemas.event import (
+    AvailabilityItem,
+    EventAvailabilityResponse,
     EventCreateRequest,
     EventResponse,
+    EventSearchResult,
     EventUpdateRequest,
+    PublicEventDetailResponse,
+    PublicTicketTypeItem,
 )
 from com.qode.qrew.v1.catalog.schemas.organisation import (
     OrganisationCreateRequest,
@@ -10,13 +15,6 @@ from com.qode.qrew.v1.catalog.schemas.organisation import (
     OrganisationPublicResponse,
     OrganisationResponse,
 )
-from com.qode.qrew.v1.catalog.schemas.public_catalog import (
-    AvailabilityItem,
-    EventAvailabilityResponse,
-    PublicEventDetailResponse,
-    PublicTicketTypeItem,
-)
-from com.qode.qrew.v1.catalog.schemas.search import EventSearchResult
 from com.qode.qrew.v1.catalog.schemas.ticket_type import (
     TicketTypeCreateRequest,
     TicketTypeResponse,

@@ -1,12 +1,11 @@
 from fastapi import APIRouter
 
 from com.qode.qrew.v1.identity.routers.admin import router as admin_router
-from com.qode.qrew.v1.identity.routers.auth import router as auth_router
-from http_errors import default_responses, register_exception_handlers
+from com.qode.qrew.v1.identity.routers.authentication import router as auth_router
+from exceptions import default_responses, register_exception_handlers
 from com.qode.qrew.v1.identity.routers.health import router as health_router
 from pagination import Page, clamp_limit
-from com.qode.qrew.v1.identity.routers.pagination import cursor_paginate
-from com.qode.qrew.v1.identity.routers.probes import router as probes_router
+from com.qode.qrew.v1.identity.core.utils.pagination import cursor_paginate
 from com.qode.qrew.v1.identity.routers.uploads import router as uploads_router
 from com.qode.qrew.v1.identity.core.config import settings
 
@@ -26,7 +25,7 @@ __all__ = [
     "clamp_limit",
     "cursor_paginate",
     "default_responses",
-    "probes_router",
+    "health_router",
     "register_exception_handlers",
     "router",
 ]
