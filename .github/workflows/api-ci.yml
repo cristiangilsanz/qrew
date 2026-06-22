@@ -71,12 +71,18 @@ jobs:
           - { name: payments,     path: services/payments }
           - { name: sales,        path: services/sales }
           - { name: ticketing,    path: services/ticketing }
-          - { name: idempotency,  path: packages/shared-python/idempotency }
-          - { name: ratelimit,    path: packages/shared-python/ratelimit }
-          - { name: locking,      path: packages/shared-python/locking }
-          - { name: pagination,   path: packages/shared-python/pagination }
-          - { name: jobs,         path: packages/shared-python/jobs }
-          - { name: auditor,      path: packages/auditor }
+          - { name: idempotency,   path: packages/shared-python/idempotency }
+          - { name: ratelimit,     path: packages/shared-python/ratelimit }
+          - { name: locking,       path: packages/shared-python/locking }
+          - { name: pagination,    path: packages/shared-python/pagination }
+          - { name: jobs,          path: packages/shared-python/jobs }
+          - { name: db,            path: packages/shared-python/db }
+          - { name: exceptions,    path: packages/shared-python/exceptions }
+          - { name: middleware,    path: packages/shared-python/middleware }
+          - { name: observability, path: packages/shared-python/observability }
+          - { name: probes,        path: packages/shared-python/probes }
+          - { name: security,      path: packages/shared-python/security }
+          - { name: auditor,       path: packages/auditor }
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4

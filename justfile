@@ -9,12 +9,18 @@ SALES := "services/sales"
 AUDIT := "services/audit"
 GATEWAY := "gateway"
 
-PKG_IDEMPOTENCY := "packages/shared-python/idempotency"
-PKG_RATELIMIT   := "packages/shared-python/ratelimit"
-PKG_LOCKING     := "packages/shared-python/locking"
-PKG_PAGINATION  := "packages/shared-python/pagination"
-PKG_JOBS        := "packages/shared-python/jobs"
-PKG_AUDITOR     := "packages/auditor"
+PKG_IDEMPOTENCY   := "packages/shared-python/idempotency"
+PKG_RATELIMIT     := "packages/shared-python/ratelimit"
+PKG_LOCKING       := "packages/shared-python/locking"
+PKG_PAGINATION    := "packages/shared-python/pagination"
+PKG_JOBS          := "packages/shared-python/jobs"
+PKG_DB            := "packages/shared-python/db"
+PKG_EXCEPTIONS    := "packages/shared-python/exceptions"
+PKG_MIDDLEWARE    := "packages/shared-python/middleware"
+PKG_OBSERVABILITY := "packages/shared-python/observability"
+PKG_PROBES        := "packages/shared-python/probes"
+PKG_SECURITY      := "packages/shared-python/security"
+PKG_AUDITOR       := "packages/auditor"
 
 default: help
 
@@ -106,6 +112,12 @@ test:
     _run {{PKG_LOCKING}}
     _run {{PKG_PAGINATION}}
     _run {{PKG_JOBS}}
+    _run {{PKG_DB}}
+    _run {{PKG_EXCEPTIONS}}
+    _run {{PKG_MIDDLEWARE}}
+    _run {{PKG_OBSERVABILITY}}
+    _run {{PKG_PROBES}}
+    _run {{PKG_SECURITY}}
     _run {{PKG_AUDITOR}}
 
 # Auto-fix all issues
