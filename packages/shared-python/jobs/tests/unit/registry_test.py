@@ -108,5 +108,5 @@ class TestParseCrontab:
             parse_crontab("* * * *")
 
     def test_six_fields_raises(self) -> None:
-        with pytest.raises(ValueError, match="5 fields"):
+        with pytest.raises(ValueError, match="5 cron fields"):
             parse_crontab("* * * * * *")
