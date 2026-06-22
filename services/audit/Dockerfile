@@ -12,7 +12,7 @@ COPY packages/shared-python/middleware/pyproject.toml packages/shared-python/mid
 COPY packages/shared-python/locking/pyproject.toml packages/shared-python/locking/pyproject.toml
 COPY packages/shared-python/observability/pyproject.toml packages/shared-python/observability/pyproject.toml
 COPY packages/shared-python/worker/pyproject.toml packages/shared-python/worker/pyproject.toml
-COPY packages/audit-publisher/pyproject.toml packages/audit-publisher/pyproject.toml
+COPY packages/auditor/pyproject.toml packages/auditor/pyproject.toml
 COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
 COPY uv.lock ./
 
@@ -30,7 +30,7 @@ COPY packages/shared-python/middleware/src/ ./src/
 COPY packages/shared-python/locking/src/ ./src/
 COPY packages/shared-python/observability/src/ ./src/
 COPY packages/shared-python/worker/src/ ./src/
-COPY packages/audit-publisher/src/ ./src/
+COPY packages/auditor/src/ ./src/
 COPY packages/contracts/src/ ./src/
 
 ENV PATH="/app/.venv/bin:$PATH"
