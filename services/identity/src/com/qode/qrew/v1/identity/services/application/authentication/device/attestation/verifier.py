@@ -104,7 +104,7 @@ class IosAppAttestVerifier:
 
 def build_attestation_verifier() -> AttestationVerifier:
     """Build the attestation verifier configured by settings."""
-    if not settings.attestation_enabled or settings.attestation_dev_bypass:
+    if not settings.attestation_enabled or settings.attestation_skip_verification:
         return BypassVerifier()
     return _CompositeVerifier()
 

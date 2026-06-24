@@ -1,0 +1,39 @@
+# ── app ───────────────────────────────────────────────────────────────────────
+debug: true
+host: "127.0.0.1"
+port: 8002
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:5173"
+
+# ── infrastructure ────────────────────────────────────────────────────────────
+database_url: "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
+redis_url: "redis://localhost:6379/0"
+nats_url: "nats://localhost:4222"
+
+# ── security ──────────────────────────────────────────────────────────────────
+internal_api_key: "dev-internal-secret"
+sales_url: "http://localhost:8005"
+
+# ── keys ──────────────────────────────────────────────────────────────────────
+access_jwt_private_key: ""
+access_jwt_previous_public_keys: ""
+
+# ── encryption ────────────────────────────────────────────────────────────────
+pii_encryption_key: ""
+pii_encryption_previous_keys: ""
+
+# ── stripe ────────────────────────────────────────────────────────────────────
+stripe_secret_key: ""
+stripe_webhook_signing_secret: ""
+stripe_api_version: "2024-06-20"
+payments_webhook_idempotency_ttl_seconds: 86400
+
+# ── features ──────────────────────────────────────────────────────────────────
+idempotency_enabled: true
+idempotency_lock_seconds: 30
+ratelimit_enabled: true
+
+# ── observability ─────────────────────────────────────────────────────────────
+otel_enabled: false
+otel_endpoint: "http://localhost:4317"

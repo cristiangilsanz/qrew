@@ -1,0 +1,51 @@
+# ── app ───────────────────────────────────────────────────────────────────────
+debug: true
+host: "127.0.0.1"
+port: 8005
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:5173"
+
+# ── infrastructure ────────────────────────────────────────────────────────────
+database_url: "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
+redis_url: "redis://localhost:6379/0"
+nats_url: "nats://localhost:4222"
+
+# ── security ──────────────────────────────────────────────────────────────────
+internal_api_key: "dev-internal-secret"
+trusted_proxy_ip: ""
+
+# ── keys ──────────────────────────────────────────────────────────────────────
+access_jwt_private_key: ""
+queue_jwt_private_key: ""
+
+# ── config ────────────────────────────────────────────────────────────────────
+payments_default_currency: "EUR"
+reservation_ttl_seconds: 600
+reservation_sweep_batch_size: 100
+queue_join_lead_seconds: 300
+queue_redeem_window_seconds: 120
+queue_reservation_window_seconds: 300
+
+# ── fraud ─────────────────────────────────────────────────────────────────────
+fraud_signals_enabled: true
+fraud_score_block_threshold: 80
+fraud_score_review_threshold: 40
+fraud_weight_account_age_recent: 50
+fraud_weight_account_age_young: 25
+fraud_weight_fingerprint_reuse: 40
+fraud_weight_time_to_purchase_immediate: 50
+fraud_weight_time_to_purchase_fast: 30
+fraud_weight_ip_velocity: 35
+fraud_fingerprint_threshold: 3
+fraud_ip_velocity_window_minutes: 10
+fraud_ip_velocity_threshold: 5
+
+# ── features ──────────────────────────────────────────────────────────────────
+idempotency_enabled: true
+idempotency_lock_seconds: 30
+ratelimit_enabled: true
+
+# ── observability ─────────────────────────────────────────────────────────────
+otel_enabled: false
+otel_endpoint: "http://localhost:4317"

@@ -1,8 +1,13 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_SERVICE_DIR = Path(__file__).parents[7]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
+        yaml_file=str(_SERVICE_DIR / "config" / "local.yaml"),
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
@@ -11,8 +16,8 @@ class Settings(BaseSettings):
 
     app_name: str = "qrew-payments"
     version: str = "0.1.0"
-    debug: bool = False
-    host: str = "127.0.0.1"
+    debug: bool = True
+    host: str = "0.0.0.0"  # noqa: S104
     port: int = 8002
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 

@@ -50,14 +50,14 @@ services:
       dockerfile: services/identity/Dockerfile
     ports:
       - "8006:8006"
-    env_file:
-      - ./services/identity/.env
+    volumes:
+      - ./services/identity/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
-      DEBUG: false
+      DEBUG: "false"
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,20 +72,53 @@ services:
       retries: 3
       start_period: 20s
 
+  identity-worker:
+    build:
+      context: .
+      dockerfile: services/identity/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.identity.worker"]
+    volumes:
+      - ./services/identity/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
+  identity-arq-worker:
+    build:
+      context: .
+      dockerfile: services/identity/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.identity.worker.arq_worker"]
+    volumes:
+      - ./services/identity/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   entry:
     build:
       context: .
       dockerfile: services/entry/Dockerfile
     ports:
       - "8001:8001"
-    env_file:
-      - ./services/entry/.env
+    volumes:
+      - ./services/entry/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
-      DEBUG: false
+      DEBUG: "false"
       TICKETING_URL: http://ticketing:8004
     depends_on:
       postgres:
@@ -108,8 +141,8 @@ services:
       context: .
       dockerfile: services/entry/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.entry.worker"]
-    env_file:
-      - ./services/entry/.env
+    volumes:
+      - ./services/entry/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
@@ -125,14 +158,14 @@ services:
       dockerfile: services/payments/Dockerfile
     ports:
       - "8002:8002"
-    env_file:
-      - ./services/payments/.env
+    volumes:
+      - ./services/payments/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
-      DEBUG: false
+      DEBUG: "false"
       SALES_URL: http://sales:8005
     depends_on:
       sales:
@@ -154,14 +187,14 @@ services:
       dockerfile: services/catalog/Dockerfile
     ports:
       - "8003:8003"
-    env_file:
-      - ./services/catalog/.env
+    volumes:
+      - ./services/catalog/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
-      DEBUG: false
+      DEBUG: "false"
     depends_on:
       postgres:
         condition: service_healthy
@@ -181,8 +214,8 @@ services:
       context: .
       dockerfile: services/catalog/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.catalog.worker"]
-    env_file:
-      - ./services/catalog/.env
+    volumes:
+      - ./services/catalog/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -193,39 +226,6 @@ services:
       redis:
         condition: service_healthy
       nats:
-        condition: service_healthy
-
-  identity-worker:
-    build:
-      context: .
-      dockerfile: services/identity/Dockerfile
-    command: ["python", "-m", "com.qode.qrew.v1.identity.worker"]
-    env_file:
-      - ./services/identity/.env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
-      REDIS_URL: redis://redis:6379/0
-      NATS_URL: nats://nats:4222
-    depends_on:
-      postgres:
-        condition: service_healthy
-      nats:
-        condition: service_healthy
-
-  identity-arq-worker:
-    build:
-      context: .
-      dockerfile: services/identity/Dockerfile
-    command: ["python", "-m", "com.qode.qrew.v1.identity.worker.arq_worker"]
-    env_file:
-      - ./services/identity/.env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
-      REDIS_URL: redis://redis:6379/0
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
 
   ticketing:
@@ -234,14 +234,14 @@ services:
       dockerfile: services/ticketing/Dockerfile
     ports:
       - "8004:8004"
-    env_file:
-      - ./services/ticketing/.env
+    volumes:
+      - ./services/ticketing/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
-      DEBUG: false
+      DEBUG: "false"
     depends_on:
       postgres:
         condition: service_healthy
@@ -261,11 +261,10 @@ services:
       context: .
       dockerfile: services/ticketing/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.ticketing.worker"]
-    env_file:
-      - ./services/ticketing/.env
+    volumes:
+      - ./services/ticketing/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
-      REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
     depends_on:
       postgres:
@@ -279,14 +278,14 @@ services:
       dockerfile: services/sales/Dockerfile
     ports:
       - "8005:8005"
-    env_file:
-      - ./services/sales/.env
+    volumes:
+      - ./services/sales/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
-      DEBUG: false
+      DEBUG: "false"
     depends_on:
       postgres:
         condition: service_healthy
@@ -306,11 +305,10 @@ services:
       context: .
       dockerfile: services/sales/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.sales.worker"]
-    env_file:
-      - ./services/sales/.env
+    volumes:
+      - ./services/sales/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
-      REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
     depends_on:
       postgres:
@@ -318,41 +316,19 @@ services:
       nats:
         condition: service_healthy
 
-  gateway:
-    build:
-      context: .
-      dockerfile: gateway/Dockerfile
-    ports:
-      - "8008:8008"
-    env_file:
-      - ./gateway/.env
-    environment:
-      NATS_URL: nats://nats:4222
-      HOST: 0.0.0.0
-      DEBUG: false
-    depends_on:
-      nats:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8008/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
   audit:
     build:
       context: .
       dockerfile: services/audit/Dockerfile
     ports:
       - "8007:8007"
-    env_file:
-      - ./services/audit/.env
+    volumes:
+      - ./services/audit/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0
-      DEBUG: false
+      DEBUG: "false"
     depends_on:
       postgres:
         condition: service_healthy
@@ -370,8 +346,8 @@ services:
       context: .
       dockerfile: services/audit/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.audit.worker"]
-    env_file:
-      - ./services/audit/.env
+    volumes:
+      - ./services/audit/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
@@ -380,6 +356,28 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    ports:
+      - "8008:8008"
+    volumes:
+      - ./gateway/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: "false"
+    depends_on:
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8008/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   jaeger:
     image: jaegertracing/all-in-one:1.62

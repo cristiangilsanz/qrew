@@ -1,8 +1,13 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_SERVICE_DIR = Path(__file__).parents[7]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
+        yaml_file=str(_SERVICE_DIR / "config" / "local.yaml"),
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
@@ -11,8 +16,8 @@ class Settings(BaseSettings):
 
     app_name: str = "qrew-identity"
     version: str = "0.1.0"
-    debug: bool = False
-    host: str = "127.0.0.1"
+    debug: bool = True
+    host: str = "0.0.0.0"  # noqa: S104
     port: int = 8006
     base_url: str = "http://localhost:3000"
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
@@ -59,7 +64,7 @@ class Settings(BaseSettings):
     max_sessions_per_user: int = 5
 
     attestation_enabled: bool = False
-    attestation_dev_bypass: bool = True
+    attestation_skip_verification: bool = True
     android_package_name: str = ""
     android_app_cert_digest_sha256: str = ""
 

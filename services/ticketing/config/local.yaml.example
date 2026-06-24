@@ -1,0 +1,38 @@
+# ── app ───────────────────────────────────────────────────────────────────────
+debug: true
+host: "127.0.0.1"
+port: 8004
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:5173"
+
+# ── infrastructure ────────────────────────────────────────────────────────────
+database_url: "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
+redis_url: "redis://localhost:6379/0"
+nats_url: "nats://localhost:4222"
+
+# ── security ──────────────────────────────────────────────────────────────────
+internal_api_key: "dev-internal-secret"
+
+# ── keys ──────────────────────────────────────────────────────────────────────
+access_jwt_private_key: ""
+access_jwt_previous_public_keys: ""
+ticket_qr_jwt_private_key: ""
+ticket_qr_jwt_previous_public_keys: ""
+
+# ── qr ────────────────────────────────────────────────────────────────────────
+ticket_qr_ttl_seconds: 20
+ticket_qr_reassert_window_seconds: 30
+ticket_qr_mint_audit_sample_rate: 10
+ticket_qr_attestation_max_age_hours: 24
+ticket_qr_audience: "qrew.scan"
+ticket_qr_stream_max_seconds: 1800
+
+# ── features ──────────────────────────────────────────────────────────────────
+idempotency_enabled: true
+idempotency_lock_seconds: 30
+ratelimit_enabled: true
+
+# ── observability ─────────────────────────────────────────────────────────────
+otel_enabled: false
+otel_endpoint: "http://localhost:4317"
