@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
@@ -16,7 +16,7 @@ COPY uv.lock ./
 
 RUN uv sync --package sales --no-dev --frozen
 
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
