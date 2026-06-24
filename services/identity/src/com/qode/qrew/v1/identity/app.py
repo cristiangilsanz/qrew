@@ -20,7 +20,7 @@ from middleware import (
 from observability import add_trace_context
 from com.qode.qrew.v1.identity.core.lifespan import lifespan
 from com.qode.qrew.v1.identity.routers import router as v1_router
-from com.qode.qrew.v1.identity.routers.internal import router as internal_router
+from com.qode.qrew.v1.identity.routers.issuer import router as issuer_router
 from com.qode.qrew.v1.identity.core.config import settings
 
 structlog.configure(
@@ -69,4 +69,4 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(v1_router)
-app.include_router(internal_router)
+app.include_router(issuer_router)

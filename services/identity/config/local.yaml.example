@@ -1,0 +1,113 @@
+# ── app ───────────────────────────────────────────────────────────────────────
+debug: true
+host: "127.0.0.1"
+port: 8006
+base_url: "http://localhost:3000"
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:5173"
+
+# ── infrastructure ────────────────────────────────────────────────────────────
+database_url: "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
+redis_url: "redis://localhost:6379/0"
+nats_url: "nats://localhost:4222"
+
+# ── security ──────────────────────────────────────────────────────────────────
+internal_api_key: "dev-internal-secret"
+
+# ── keys ──────────────────────────────────────────────────────────────────────
+access_jwt_private_key: ""
+setup_jwt_private_key: ""
+recovery_jwt_private_key: ""
+refresh_jwt_private_key: ""
+queue_jwt_private_key: ""
+ticket_qr_jwt_private_key: ""
+access_jwt_previous_public_keys: ""
+setup_jwt_previous_public_keys: ""
+recovery_jwt_previous_public_keys: ""
+refresh_jwt_previous_public_keys: ""
+queue_jwt_previous_public_keys: ""
+ticket_qr_jwt_previous_public_keys: ""
+
+# ── tokens ────────────────────────────────────────────────────────────────────
+access_token_expire_minutes: 30
+setup_token_expire_minutes: 15
+refresh_token_expire_days: 7
+email_verification_token_expire_hours: 24
+phone_number_otp_expire_minutes: 10
+
+# ── encryption ────────────────────────────────────────────────────────────────
+pii_encryption_key: ""
+pii_encryption_previous_keys: ""
+national_id_encryption_key: ""
+
+# ── login ─────────────────────────────────────────────────────────────────────
+hibp_enabled: false
+login_max_attempts: 5
+login_lockout_base_seconds: 300
+max_sessions_per_user: 5
+fingerprint_multi_account_threshold: 2
+
+# ── geo ───────────────────────────────────────────────────────────────────────
+geoip_db_path: "GeoLite2-City.mmdb"
+anomaly_impossible_travel_kmh: 1000.0
+anomaly_concurrent_window_minutes: 5
+anomaly_kill_sessions_on_detection: false
+
+# ── attestation ───────────────────────────────────────────────────────────────
+attestation_enabled: false
+attestation_skip_verification: true
+android_package_name: ""
+android_app_cert_digest_sha256: ""
+
+# ── captcha ───────────────────────────────────────────────────────────────────
+captcha_enabled: false
+captcha_secret_key: ""
+
+# ── smtp ──────────────────────────────────────────────────────────────────────
+smtp_enabled: false
+smtp_host: "smtp.gmail.com"
+smtp_port: 587
+smtp_user: ""
+smtp_password: ""
+smtp_from_address: ""
+
+# ── twilio ────────────────────────────────────────────────────────────────────
+twilio_enabled: false
+twilio_account_sid: ""
+twilio_auth_token: ""
+twilio_from_number: ""
+
+# ── webauthn ──────────────────────────────────────────────────────────────────
+rp_id: "localhost"
+rp_name: "Qrew"
+rp_expected_origin: "http://localhost:3000"
+
+# ── storage ───────────────────────────────────────────────────────────────────
+storage_root: "./var/storage"
+storage_signing_key: ""
+storage_signed_url_ttl_seconds: 300
+kyc_auto_approve: false
+kyc_document_retention_days: 30
+
+# ── outbox ────────────────────────────────────────────────────────────────────
+notification_enabled: true
+notification_max_attempts: 5
+outbox_batch_size: 50
+outbox_max_attempts: 5
+outbox_backoff_delays_seconds:
+  - 1
+  - 5
+  - 25
+  - 125
+  - 625
+
+# ── features ──────────────────────────────────────────────────────────────────
+idempotency_enabled: true
+idempotency_lock_seconds: 60
+ratelimit_enabled: true
+ratelimit_audit_debounce_seconds: 60
+
+# ── observability ─────────────────────────────────────────────────────────────
+otel_enabled: false
+otel_endpoint: "http://localhost:4317"

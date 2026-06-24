@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Index, String, func
+from sqlalchemy import DateTime, Enum as SAEnum, Index, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -37,7 +37,9 @@ class Ticket(Base):
     owner_user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     bound_device_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     state: Mapped[TicketState] = mapped_column(
-        String(20), nullable=False, server_default=TicketState.reserved.value
+        SAEnum(TicketState, native_enum=False, create_constraint=False),
+        nullable=False,
+        server_default=TicketState.reserved.value,
     )
     state_updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

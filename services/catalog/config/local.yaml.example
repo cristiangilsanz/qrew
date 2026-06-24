@@ -1,0 +1,32 @@
+# ── app ───────────────────────────────────────────────────────────────────────
+debug: true
+host: "127.0.0.1"
+port: 8003
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:5173"
+
+# ── infrastructure ────────────────────────────────────────────────────────────
+database_url: "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
+redis_url: "redis://localhost:6379/0"
+nats_url: "nats://localhost:4222"
+
+# ── security ──────────────────────────────────────────────────────────────────
+internal_api_key: "dev-internal-secret"
+
+# ── keys ──────────────────────────────────────────────────────────────────────
+access_jwt_private_key: ""
+access_jwt_previous_public_keys: ""
+
+# ── search ────────────────────────────────────────────────────────────────────
+search_default_limit: 20
+search_max_limit: 100
+
+# ── features ──────────────────────────────────────────────────────────────────
+idempotency_enabled: true
+idempotency_lock_seconds: 30
+ratelimit_enabled: true
+
+# ── observability ─────────────────────────────────────────────────────────────
+otel_enabled: false
+otel_endpoint: "http://localhost:4317"
