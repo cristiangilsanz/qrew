@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, Request, status
 
-from com.qode.qrew.v1.identity.routers import Page
+from pagination import Page
 from com.qode.qrew.v1.identity.core.dependencies import get_current_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.models.user import User

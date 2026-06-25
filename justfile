@@ -68,6 +68,10 @@ trace:
     docker compose up -d jaeger
     @echo "Jaeger UI: http://localhost:16686"
 
+# Export OpenAPI specs for all services to docs/openapi/
+export-openapi:
+    bash scripts/export-openapi.sh
+
 # Verify linter
 lint-check:
     uv run ruff check .

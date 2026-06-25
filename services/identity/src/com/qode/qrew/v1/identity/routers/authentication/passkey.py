@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
-from com.qode.qrew.v1.identity.routers import Page
+from pagination import Page
 from com.qode.qrew.v1.identity.core.dependencies import (
     get_current_session,
     get_current_user,

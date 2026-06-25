@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.routers import Page, clamp_limit
+from pagination import Page, clamp_limit
 from com.qode.qrew.v1.identity.core.dependencies import (
     get_current_user,
     get_setup_or_full_user,
