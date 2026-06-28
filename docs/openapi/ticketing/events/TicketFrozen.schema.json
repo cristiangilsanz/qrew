@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "ticket_id": {
+      "format": "uuid",
+      "title": "Ticket Id",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "device_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Device Id"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "reason"
+  ],
+  "title": "TicketFrozen",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

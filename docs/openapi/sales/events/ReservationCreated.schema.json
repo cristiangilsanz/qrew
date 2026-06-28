@@ -1,0 +1,43 @@
+{
+  "properties": {
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "ticket_type_id": {
+      "format": "uuid",
+      "title": "Ticket Type Id",
+      "type": "string"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "quantity": {
+      "title": "Quantity",
+      "type": "integer"
+    },
+    "expires_at": {
+      "title": "Expires At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "reservation_id",
+    "user_id",
+    "ticket_type_id",
+    "event_id",
+    "quantity",
+    "expires_at"
+  ],
+  "title": "ReservationCreated",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

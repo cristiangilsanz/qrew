@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "device_id": {
+      "format": "uuid",
+      "title": "Device Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "device_id"
+  ],
+  "title": "PasskeyReasserted",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     debug: bool = True
     host: str = "0.0.0.0"  # noqa: S104
-    port: int = 8003
+    port: int = 8002
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"

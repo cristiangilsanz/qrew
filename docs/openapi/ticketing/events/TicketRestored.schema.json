@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "ticket_id": {
+      "format": "uuid",
+      "title": "Ticket Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "user_id"
+  ],
+  "title": "TicketRestored",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "ticket_type_id": {
+      "format": "uuid",
+      "title": "Ticket Type Id",
+      "type": "string"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "price_cents": {
+      "title": "Price Cents",
+      "type": "integer"
+    },
+    "currency": {
+      "title": "Currency",
+      "type": "string"
+    },
+    "capacity": {
+      "title": "Capacity",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "ticket_type_id",
+    "event_id",
+    "name",
+    "price_cents",
+    "currency",
+    "capacity"
+  ],
+  "title": "TicketTypeCreated",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

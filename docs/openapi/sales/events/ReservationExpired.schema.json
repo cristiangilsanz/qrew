@@ -1,0 +1,15 @@
+{
+  "properties": {
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "reservation_id"
+  ],
+  "title": "ReservationExpired",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

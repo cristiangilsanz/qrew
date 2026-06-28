@@ -1,0 +1,19 @@
+{
+  "properties": {
+    "email": {
+      "title": "Email",
+      "type": "string"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "email",
+    "display_name"
+  ],
+  "title": "UserRegistered",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

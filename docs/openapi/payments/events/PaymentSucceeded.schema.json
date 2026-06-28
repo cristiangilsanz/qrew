@@ -1,0 +1,31 @@
+{
+  "properties": {
+    "payment_id": {
+      "format": "uuid",
+      "title": "Payment Id",
+      "type": "string"
+    },
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "amount_cents": {
+      "title": "Amount Cents",
+      "type": "integer"
+    },
+    "currency": {
+      "title": "Currency",
+      "type": "string"
+    }
+  },
+  "required": [
+    "payment_id",
+    "reservation_id",
+    "amount_cents",
+    "currency"
+  ],
+  "title": "PaymentSucceeded",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

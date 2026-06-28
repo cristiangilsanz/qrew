@@ -1,0 +1,46 @@
+{
+  "properties": {
+    "ticket_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Ticket Id"
+    },
+    "event_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Event Id"
+    },
+    "scanner_id": {
+      "format": "uuid",
+      "title": "Scanner Id",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "event_id",
+    "scanner_id",
+    "reason"
+  ],
+  "title": "EntryRejected",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     debug: bool = True
     host: str = "0.0.0.0"  # noqa: S104
-    port: int = 8006
+    port: int = 8001
     base_url: str = "http://localhost:3000"
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
