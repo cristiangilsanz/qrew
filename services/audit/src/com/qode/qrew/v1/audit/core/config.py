@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import YamlConfigSettingsSource
 
 _SERVICE_DIR = Path(__file__).parents[7]
 
@@ -35,6 +36,22 @@ class Settings(BaseSettings):
 
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            YamlConfigSettingsSource(settings_cls),
+        )  # noqa: E501
 
 
 settings = Settings()

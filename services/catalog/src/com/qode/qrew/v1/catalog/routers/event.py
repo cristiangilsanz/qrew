@@ -4,7 +4,8 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
+from pagination import Page, clamp_limit
+from com.qode.qrew.v1.catalog.core.utils.pagination import cursor_paginate
 from com.qode.qrew.v1.catalog.core.config import settings
 from com.qode.qrew.v1.catalog.core.dependencies import (
     get_db,

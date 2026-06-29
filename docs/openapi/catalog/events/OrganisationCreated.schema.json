@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "organisation_id": {
+      "format": "uuid",
+      "title": "Organisation Id",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "organisation_id",
+    "name"
+  ],
+  "title": "OrganisationCreated",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,4398 @@
+openapi: 3.1.0
+info:
+  title: qrew-identity
+  version: 0.1.0
+paths:
+  /v1/auth/registration/:
+    post:
+      tags:
+      - auth
+      summary: Register a new user account
+      description: Register a new user account.
+      operationId: register_v1_auth_registration__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/registration/verify-email:
+    post:
+      tags:
+      - auth
+      summary: Confirm an email address using the verification token
+      description: Confirm an email address.
+      operationId: verify_email_v1_auth_registration_verify_email_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/registration/verify-phone:
+    post:
+      tags:
+      - auth
+      summary: Confirm a phone number using the OTP
+      description: Confirm a phone number.
+      operationId: verify_phone_v1_auth_registration_verify_phone_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyPhoneRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/registration/resend-email-verification:
+    post:
+      tags:
+      - auth
+      summary: Resend the email verification link
+      description: Send a fresh email verification link.
+      operationId: resend_email_verification_v1_auth_registration_resend_email_verification_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerificationRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResendResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/registration/resend-phone-otp:
+    post:
+      tags:
+      - auth
+      summary: Resend the phone verification OTP
+      description: Send a fresh OTP to a phone number.
+      operationId: resend_phone_otp_v1_auth_registration_resend_phone_otp_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendPhoneOtpRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResendResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Log in as a registered user
+      description: Log in as a registered user.
+      operationId: login_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/refresh:
+    post:
+      tags:
+      - auth
+      summary: Refresh an access token using a valid refresh token
+      description: Refresh an access token.
+      operationId: refresh_v1_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Log out and invalidate the refresh token
+      description: Log out and invalidate the refresh token.
+      operationId: logout_v1_auth_logout_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/setup/kyc/upload:
+    post:
+      tags:
+      - auth
+      summary: Submit a national ID document for KYC verification
+      description: Submit a national ID document for KYC verification.
+      operationId: kyc_upload_v1_auth_setup_kyc_upload_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_kyc_upload_v1_auth_setup_kyc_upload_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycUploadResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/setup/complete-setup:
+    post:
+      tags:
+      - auth
+      summary: Exchange a setup token for a full access token
+      description: Exchange a setup token for a full access token.
+      operationId: complete_setup_v1_auth_setup_complete_setup_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/passkeys/register/begin:
+    post:
+      tags:
+      - auth
+      summary: Begin passkey registration
+      description: Generate passkey registration options for the current user.
+      operationId: passkey_register_begin_v1_auth_passkeys_register_begin_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/passkeys/register/complete:
+    post:
+      tags:
+      - auth
+      summary: Complete passkey registration
+      description: Complete passkey registration.
+      operationId: passkey_register_complete_v1_auth_passkeys_register_complete_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRegistrationCompleteRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyRegistrationCompleteResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/passkeys/authenticate/begin:
+    post:
+      tags:
+      - auth
+      summary: Begin passkey authentication
+      description: Generate passkey assertion options for an email address.
+      operationId: passkey_authenticate_begin_v1_auth_passkeys_authenticate_begin_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyAuthenticationBeginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/passkeys/authenticate/complete:
+    post:
+      tags:
+      - auth
+      summary: Complete passkey authentication
+      description: Complete passkey authentication and return access tokens.
+      operationId: passkey_authenticate_complete_v1_auth_passkeys_authenticate_complete_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyAuthenticationCompleteRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/passkeys/assert/begin:
+    post:
+      tags:
+      - auth
+      summary: Begin a passkey re-assertion for the current session
+      description: Begin a passkey re-assertion for the current session.
+      operationId: passkey_assert_begin_v1_auth_passkeys_assert_begin_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyAssertBeginResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/passkeys/assert/complete:
+    post:
+      tags:
+      - auth
+      summary: Complete a passkey re-assertion and stamp the session
+      description: Complete a passkey re-assertion and stamp the session.
+      operationId: passkey_assert_complete_v1_auth_passkeys_assert_complete_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyAuthenticationCompleteRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyAssertCompleteResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/passkeys/:
+    get:
+      tags:
+      - auth
+      summary: List all passkeys for the current user
+      description: List all passkeys for the current user.
+      operationId: list_passkeys_v1_auth_passkeys__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_PasskeyResponse_'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/passkeys/{passkey_id}:
+    delete:
+      tags:
+      - auth
+      summary: Delete a passkey by id
+      description: Remove a passkey if it is not the user's last one.
+      operationId: delete_passkey_v1_auth_passkeys__passkey_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: passkey_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Passkey Id
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+      - auth
+      summary: Rename a passkey
+      description: Rename a passkey.
+      operationId: rename_passkey_v1_auth_passkeys__passkey_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: passkey_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Passkey Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRenameRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/sessions:
+    get:
+      tags:
+      - auth
+      summary: List all active sessions for the current user
+      description: List all active sessions for the current user.
+      operationId: list_sessions_v1_auth_sessions_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_SessionResponse_'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/sessions/{jti}:
+    delete:
+      tags:
+      - auth
+      summary: Revoke a specific session
+      description: Revoke a specific session.
+      operationId: revoke_session_v1_auth_sessions__jti__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: jti
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Jti
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/sessions/revoke-all:
+    post:
+      tags:
+      - auth
+      summary: Revoke all sessions for the current user
+      description: Revoke all sessions for the current user.
+      operationId: revoke_all_sessions_v1_auth_sessions_revoke_all_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeAllResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/account/change-password:
+    post:
+      tags:
+      - auth
+      summary: Change the current user's password
+      description: Change the current user's password.
+      operationId: change_password_v1_auth_account_change_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePasswordResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/account/delete:
+    post:
+      tags:
+      - auth
+      summary: Soft-delete the current user's account
+      description: Soft-delete the current user's account.
+      operationId: delete_account_v1_auth_account_delete_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountDeleteRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountDeleteResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/account/change-email:
+    post:
+      tags:
+      - auth
+      summary: Request an email address change
+      description: Request an email address change.
+      operationId: change_email_v1_auth_account_change_email_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeEmailResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/account/confirm-email-change:
+    post:
+      tags:
+      - auth
+      summary: Confirm an email address change
+      description: Confirm an email address change.
+      operationId: confirm_email_change_v1_auth_account_confirm_email_change_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmEmailChangeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeEmailResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/account/change-phone:
+    post:
+      tags:
+      - auth
+      summary: Request a phone number change
+      description: Request a phone number change.
+      operationId: change_phone_v1_auth_account_change_phone_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePhoneRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePhoneResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/account/confirm-phone-change:
+    post:
+      tags:
+      - auth
+      summary: Confirm a phone number change
+      description: Confirm a phone number change.
+      operationId: confirm_phone_change_v1_auth_account_confirm_phone_change_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPhoneChangeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePhoneResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/devices/fingerprint:
+    post:
+      tags:
+      - auth
+      summary: Report a device fingerprint for the current user
+      description: Report a device fingerprint for the current user.
+      operationId: report_fingerprint_v1_auth_devices_fingerprint_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FingerprintReportRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FingerprintReportResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/devices/bind/begin:
+    post:
+      tags:
+      - auth
+      summary: Begin device binding
+      description: Begin device binding.
+      operationId: device_bind_begin_v1_auth_devices_bind_begin_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceBindBeginResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/devices/bind/complete:
+    post:
+      tags:
+      - auth
+      summary: Complete device binding
+      description: Complete device binding.
+      operationId: device_bind_complete_v1_auth_devices_bind_complete_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceBindCompleteRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceBindCompleteResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/devices/attest:
+    post:
+      tags:
+      - auth
+      summary: Submit a device integrity attestation
+      description: Submit a device integrity attestation.
+      operationId: device_attest_v1_auth_devices_attest_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceAttestRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceAttestResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/devices:
+    get:
+      tags:
+      - auth
+      summary: List the current user's bound devices
+      description: List the current user's bound devices.
+      operationId: list_devices_v1_auth_devices_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_DeviceResponse_'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/devices/{device_id}/revoke:
+    post:
+      tags:
+      - auth
+      summary: Revoke a specific bound device
+      description: Revoke a specific bound device.
+      operationId: revoke_device_v1_auth_devices__device_id__revoke_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Device Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceRevokeResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/devices/revoke-all:
+    post:
+      tags:
+      - auth
+      summary: Revoke every device except the caller
+      description: Revoke every other device and kill all sessions.
+      operationId: revoke_all_devices_v1_auth_devices_revoke_all_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceRevokeAllResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/recovery/begin:
+    post:
+      tags:
+      - auth
+      summary: Begin account recovery with national ID document
+      description: Begin account recovery.
+      operationId: recovery_begin_v1_auth_recovery_begin_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_recovery_begin_v1_auth_recovery_begin_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecoveryBeginResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/recovery/complete:
+    post:
+      tags:
+      - auth
+      summary: Complete account recovery by registering a new passkey
+      description: Complete account recovery.
+      operationId: recovery_complete_v1_auth_recovery_complete_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRegistrationCompleteRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecoveryCompleteResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/profile/me:
+    get:
+      tags:
+      - auth
+      summary: Return the current user's profile
+      description: Return the current user's profile.
+      operationId: get_me_v1_auth_profile_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/profile/onboarding-status:
+    get:
+      tags:
+      - auth
+      summary: Return which onboarding steps the user has completed
+      description: Return which onboarding steps the user has completed.
+      operationId: get_onboarding_status_v1_auth_profile_onboarding_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingStatusResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/profile/audit:
+    get:
+      tags:
+      - auth
+      summary: Return the current user's audit history
+      description: Return the current user's audit history.
+      operationId: list_user_audit_v1_auth_profile_audit_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: action
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Action
+      - name: since
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Since
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_UserAuditEventResponse_'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/admin/kyc/{user_id}/review:
+    post:
+      tags:
+      - admin
+      summary: Approve or reject a pending KYC submission
+      description: Approve or reject a pending KYC submission.
+      operationId: kyc_review_v1_admin_kyc__user_id__review_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycReviewRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycReviewResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/admin/fingerprints/{fingerprint_hash}:
+    get:
+      tags:
+      - admin
+      summary: List accounts associated with a device fingerprint
+      description: List accounts associated with a device fingerprint.
+      operationId: get_fingerprint_v1_admin_fingerprints__fingerprint_hash__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: fingerprint_hash
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Fingerprint Hash
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FingerprintAdminResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/admin/users:
+    get:
+      tags:
+      - admin
+      summary: List and search users
+      description: List and search users, newest first.
+      operationId: list_users_v1_admin_users_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Search
+      - name: kyc_status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/KycStatus'
+          - type: 'null'
+          title: Kyc Status
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_UserSummaryResponse_'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/admin/users/{user_id}/unlock:
+    post:
+      tags:
+      - admin
+      summary: Clear a per-account login lockout
+      description: Clear a per-account login lockout.
+      operationId: unlock_user_v1_admin_users__user_id__unlock_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                title: Response Unlock User V1 Admin Users  User Id  Unlock Post
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/admin/outbox/dlq:
+    get:
+      tags:
+      - admin
+      - admin-outbox
+      summary: Paginate outbox rows the drainer parked in the DLQ
+      description: Return outbox rows that were parked in the DLQ.
+      operationId: list_dlq_v1_admin_outbox_dlq_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_OutboxDlqItem_'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/uploads/sign:
+    post:
+      tags:
+      - uploads
+      summary: Mint a signed upload URL for a new object
+      description: Mint a signed upload URL for a new object.
+      operationId: sign_upload_v1_uploads_sign_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUploadRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignUploadResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+components:
+  schemas:
+    AccountDeleteRequest:
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+          title: Current Password
+      type: object
+      required:
+      - current_password
+      title: AccountDeleteRequest
+    AccountDeleteResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: AccountDeleteResponse
+    AssertionResponseData:
+      properties:
+        clientDataJSON:
+          type: string
+          title: Clientdatajson
+        authenticatorData:
+          type: string
+          title: Authenticatordata
+        signature:
+          type: string
+          title: Signature
+        userHandle:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Userhandle
+      type: object
+      required:
+      - clientDataJSON
+      - authenticatorData
+      - signature
+      title: AssertionResponseData
+    AttestationResponseData:
+      properties:
+        clientDataJSON:
+          type: string
+          title: Clientdatajson
+        attestationObject:
+          type: string
+          title: Attestationobject
+      type: object
+      required:
+      - clientDataJSON
+      - attestationObject
+      title: AttestationResponseData
+    Body_kyc_upload_v1_auth_setup_kyc_upload_post:
+      properties:
+        document:
+          type: string
+          contentMediaType: application/octet-stream
+          title: Document
+      type: object
+      required:
+      - document
+      title: Body_kyc_upload_v1_auth_setup_kyc_upload_post
+    Body_recovery_begin_v1_auth_recovery_begin_post:
+      properties:
+        email:
+          type: string
+          title: Email
+        document:
+          type: string
+          contentMediaType: application/octet-stream
+          title: Document
+      type: object
+      required:
+      - email
+      - document
+      title: Body_recovery_begin_v1_auth_recovery_begin_post
+    ChangeEmailRequest:
+      properties:
+        new_email:
+          type: string
+          format: email
+          title: New Email
+        current_password:
+          type: string
+          minLength: 1
+          title: Current Password
+      type: object
+      required:
+      - new_email
+      - current_password
+      title: ChangeEmailRequest
+    ChangeEmailResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: ChangeEmailResponse
+    ChangePasswordRequest:
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+          title: Current Password
+        new_password:
+          type: string
+          minLength: 8
+          title: New Password
+      type: object
+      required:
+      - current_password
+      - new_password
+      title: ChangePasswordRequest
+    ChangePasswordResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: ChangePasswordResponse
+    ChangePhoneRequest:
+      properties:
+        new_phone_number:
+          type: string
+          maxLength: 20
+          minLength: 7
+          title: New Phone Number
+        current_password:
+          type: string
+          minLength: 1
+          title: Current Password
+      type: object
+      required:
+      - new_phone_number
+      - current_password
+      title: ChangePhoneRequest
+    ChangePhoneResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: ChangePhoneResponse
+    ConfirmEmailChangeRequest:
+      properties:
+        token:
+          type: string
+          maxLength: 512
+          minLength: 1
+          title: Token
+      type: object
+      required:
+      - token
+      title: ConfirmEmailChangeRequest
+    ConfirmPhoneChangeRequest:
+      properties:
+        new_phone_number:
+          type: string
+          maxLength: 20
+          minLength: 7
+          title: New Phone Number
+        otp:
+          type: string
+          maxLength: 6
+          minLength: 6
+          pattern: ^\d{6}$
+          title: Otp
+      type: object
+      required:
+      - new_phone_number
+      - otp
+      title: ConfirmPhoneChangeRequest
+    DeviceAttestRequest:
+      properties:
+        platform:
+          type: string
+          pattern: ^(android|ios)$
+          title: Platform
+        token:
+          type: string
+          maxLength: 16384
+          minLength: 1
+          title: Token
+      type: object
+      required:
+      - platform
+      - token
+      title: DeviceAttestRequest
+    DeviceAttestResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+        platform:
+          type: string
+          title: Platform
+      type: object
+      required:
+      - message
+      - platform
+      title: DeviceAttestResponse
+    DeviceBindBeginResponse:
+      properties:
+        challenge:
+          type: string
+          title: Challenge
+      type: object
+      required:
+      - challenge
+      title: DeviceBindBeginResponse
+    DeviceBindCompleteRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Name
+        public_key:
+          type: string
+          maxLength: 512
+          minLength: 1
+          title: Public Key
+        signature:
+          type: string
+          maxLength: 256
+          minLength: 1
+          title: Signature
+      type: object
+      required:
+      - name
+      - public_key
+      - signature
+      title: DeviceBindCompleteRequest
+    DeviceBindCompleteResponse:
+      properties:
+        device_id:
+          type: string
+          title: Device Id
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - device_id
+      - message
+      title: DeviceBindCompleteResponse
+    DeviceResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        last_seen_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Seen At
+      type: object
+      required:
+      - id
+      - name
+      - created_at
+      title: DeviceResponse
+    DeviceRevokeAllResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+        revoked_count:
+          type: integer
+          title: Revoked Count
+      type: object
+      required:
+      - message
+      - revoked_count
+      title: DeviceRevokeAllResponse
+    DeviceRevokeResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: DeviceRevokeResponse
+    ErrorDetail:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Human-readable explanation of the failure.
+        field:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Field
+      type: object
+      required:
+      - message
+      title: ErrorDetail
+    ErrorResponse:
+      properties:
+        detail:
+          $ref: '#/components/schemas/ErrorDetail'
+      type: object
+      required:
+      - detail
+      title: ErrorResponse
+    FingerprintAdminResponse:
+      properties:
+        fingerprint_hash:
+          type: string
+          title: Fingerprint Hash
+        user_ids:
+          items:
+            type: string
+          type: array
+          title: User Ids
+        account_count:
+          type: integer
+          title: Account Count
+      type: object
+      required:
+      - fingerprint_hash
+      - user_ids
+      - account_count
+      title: FingerprintAdminResponse
+    FingerprintReportRequest:
+      properties:
+        fingerprint_hash:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Fingerprint Hash
+        user_agent:
+          anyOf:
+          - type: string
+            maxLength: 1024
+          - type: 'null'
+          title: User Agent
+        ip_address:
+          anyOf:
+          - type: string
+            maxLength: 45
+          - type: 'null'
+          title: Ip Address
+      type: object
+      required:
+      - fingerprint_hash
+      title: FingerprintReportRequest
+    FingerprintReportResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+        flagged:
+          type: boolean
+          title: Flagged
+      type: object
+      required:
+      - message
+      - flagged
+      title: FingerprintReportResponse
+    KycAction:
+      type: string
+      enum:
+      - approve
+      - reject
+      title: KycAction
+    KycReviewRequest:
+      properties:
+        action:
+          $ref: '#/components/schemas/KycAction'
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Reason
+      type: object
+      required:
+      - action
+      title: KycReviewRequest
+    KycReviewResponse:
+      properties:
+        user_id:
+          type: string
+          title: User Id
+        kyc_status:
+          type: string
+          title: Kyc Status
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - user_id
+      - kyc_status
+      - message
+      title: KycReviewResponse
+    KycStatus:
+      type: string
+      enum:
+      - not_submitted
+      - pending
+      - approved
+      - rejected
+      title: KycStatus
+    KycUploadResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+        kyc_status:
+          type: string
+          title: Kyc Status
+      type: object
+      required:
+      - message
+      - kyc_status
+      title: KycUploadResponse
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+        password:
+          type: string
+          minLength: 1
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    LoginResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        refresh_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Refresh Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+        setup_required:
+          type: boolean
+          title: Setup Required
+          default: false
+        password_compromised:
+          type: boolean
+          title: Password Compromised
+          default: false
+      type: object
+      required:
+      - access_token
+      title: LoginResponse
+    LogoutRequest:
+      properties:
+        refresh_token:
+          type: string
+          minLength: 1
+          title: Refresh Token
+      type: object
+      required:
+      - refresh_token
+      title: LogoutRequest
+    LogoutResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: LogoutResponse
+    OnboardingStatusResponse:
+      properties:
+        email_verified:
+          type: boolean
+          title: Email Verified
+        phone_verified:
+          type: boolean
+          title: Phone Verified
+        kyc_submitted:
+          type: boolean
+          title: Kyc Submitted
+        passkey_registered:
+          type: boolean
+          title: Passkey Registered
+        is_complete:
+          type: boolean
+          title: Is Complete
+      type: object
+      required:
+      - email_verified
+      - phone_verified
+      - kyc_submitted
+      - passkey_registered
+      - is_complete
+      title: OnboardingStatusResponse
+    OutboxDlqItem:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        aggregate_type:
+          type: string
+          title: Aggregate Type
+        aggregate_id:
+          type: string
+          title: Aggregate Id
+        job_name:
+          type: string
+          title: Job Name
+        attempt_count:
+          type: integer
+          title: Attempt Count
+        last_error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Error
+        dlq_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dlq Reason
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        dispatched_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Dispatched At
+      type: object
+      required:
+      - id
+      - aggregate_type
+      - aggregate_id
+      - job_name
+      - attempt_count
+      - last_error
+      - dlq_reason
+      - created_at
+      - dispatched_at
+      title: OutboxDlqItem
+    Page_DeviceResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DeviceResponse'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+          description: Opaque token to fetch the next page; null on the last page.
+      type: object
+      required:
+      - items
+      title: Page[DeviceResponse]
+    Page_OutboxDlqItem_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/OutboxDlqItem'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+          description: Opaque token to fetch the next page; null on the last page.
+      type: object
+      required:
+      - items
+      title: Page[OutboxDlqItem]
+    Page_PasskeyResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PasskeyResponse'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+          description: Opaque token to fetch the next page; null on the last page.
+      type: object
+      required:
+      - items
+      title: Page[PasskeyResponse]
+    Page_SessionResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/SessionResponse'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+          description: Opaque token to fetch the next page; null on the last page.
+      type: object
+      required:
+      - items
+      title: Page[SessionResponse]
+    Page_UserAuditEventResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/UserAuditEventResponse'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+          description: Opaque token to fetch the next page; null on the last page.
+      type: object
+      required:
+      - items
+      title: Page[UserAuditEventResponse]
+    Page_UserSummaryResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/UserSummaryResponse'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+          description: Opaque token to fetch the next page; null on the last page.
+      type: object
+      required:
+      - items
+      title: Page[UserSummaryResponse]
+    PasskeyAssertBeginResponse:
+      properties:
+        options:
+          type: string
+          title: Options
+      type: object
+      required:
+      - options
+      title: PasskeyAssertBeginResponse
+    PasskeyAssertCompleteResponse:
+      properties:
+        asserted_at:
+          type: string
+          format: date-time
+          title: Asserted At
+      type: object
+      required:
+      - asserted_at
+      title: PasskeyAssertCompleteResponse
+    PasskeyAuthenticationBeginRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+      type: object
+      required:
+      - email
+      title: PasskeyAuthenticationBeginRequest
+    PasskeyAuthenticationCompleteRequest:
+      properties:
+        id:
+          type: string
+          title: Id
+        rawId:
+          type: string
+          title: Rawid
+        response:
+          $ref: '#/components/schemas/AssertionResponseData'
+        type:
+          type: string
+          title: Type
+          default: public-key
+      type: object
+      required:
+      - id
+      - rawId
+      - response
+      title: PasskeyAuthenticationCompleteRequest
+    PasskeyRegistrationCompleteRequest:
+      properties:
+        id:
+          type: string
+          title: Id
+        rawId:
+          type: string
+          title: Rawid
+        response:
+          $ref: '#/components/schemas/AttestationResponseData'
+        type:
+          type: string
+          title: Type
+          default: public-key
+      type: object
+      required:
+      - id
+      - rawId
+      - response
+      title: PasskeyRegistrationCompleteRequest
+    PasskeyRegistrationCompleteResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: PasskeyRegistrationCompleteResponse
+    PasskeyRenameRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Name
+      type: object
+      required:
+      - name
+      title: PasskeyRenameRequest
+    PasskeyResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        aaguid:
+          type: string
+          title: Aaguid
+        last_used_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Used At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - name
+      - aaguid
+      - last_used_at
+      - created_at
+      title: PasskeyResponse
+    RecoveryBeginResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+        recovery_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Recovery Token
+        passkey_options:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Passkey Options
+      type: object
+      required:
+      - message
+      title: RecoveryBeginResponse
+    RecoveryCompleteResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: RecoveryCompleteResponse
+    RefreshRequest:
+      properties:
+        refresh_token:
+          type: string
+          minLength: 1
+          title: Refresh Token
+      type: object
+      required:
+      - refresh_token
+      title: RefreshRequest
+    RefreshResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        refresh_token:
+          type: string
+          title: Refresh Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+      type: object
+      required:
+      - access_token
+      - refresh_token
+      title: RefreshResponse
+    RegisterRequest:
+      properties:
+        full_name:
+          type: string
+          maxLength: 255
+          minLength: 2
+          title: Full Name
+        email:
+          type: string
+          format: email
+          title: Email
+        phone_number:
+          type: string
+          maxLength: 20
+          minLength: 7
+          title: Phone Number
+        password:
+          type: string
+          minLength: 8
+          title: Password
+        terms_accepted:
+          type: boolean
+          title: Terms Accepted
+        captcha_token:
+          type: string
+          maxLength: 2048
+          minLength: 1
+          title: Captcha Token
+      type: object
+      required:
+      - full_name
+      - email
+      - phone_number
+      - password
+      - terms_accepted
+      - captcha_token
+      title: RegisterRequest
+    RegisterResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - id
+      - message
+      title: RegisterResponse
+    ResendEmailVerificationRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+      type: object
+      required:
+      - email
+      title: ResendEmailVerificationRequest
+    ResendPhoneOtpRequest:
+      properties:
+        phone_number:
+          type: string
+          maxLength: 20
+          minLength: 7
+          title: Phone Number
+      type: object
+      required:
+      - phone_number
+      title: ResendPhoneOtpRequest
+    ResendResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: ResendResponse
+    RevokeAllResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: RevokeAllResponse
+    SessionResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        jti:
+          type: string
+          title: Jti
+        ip_address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ip Address
+        user_agent:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: User Agent
+        device_fingerprint:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Fingerprint
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        last_used_at:
+          type: string
+          format: date-time
+          title: Last Used At
+      type: object
+      required:
+      - id
+      - jti
+      - ip_address
+      - user_agent
+      - device_fingerprint
+      - created_at
+      - last_used_at
+      title: SessionResponse
+    SignUploadRequest:
+      properties:
+        kind:
+          type: string
+          maxLength: 32
+          title: Kind
+        content_type:
+          type: string
+          maxLength: 64
+          title: Content Type
+        size_bytes:
+          type: integer
+          exclusiveMinimum: 0.0
+          title: Size Bytes
+      type: object
+      required:
+      - kind
+      - content_type
+      - size_bytes
+      title: SignUploadRequest
+    SignUploadResponse:
+      properties:
+        key:
+          type: string
+          title: Key
+        upload_url:
+          type: string
+          title: Upload Url
+        expires_at:
+          type: integer
+          title: Expires At
+        max_size_bytes:
+          type: integer
+          title: Max Size Bytes
+      type: object
+      required:
+      - key
+      - upload_url
+      - expires_at
+      - max_size_bytes
+      title: SignUploadResponse
+    UserAuditEventResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        action:
+          type: string
+          title: Action
+        entity_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Entity Type
+        summary:
+          type: string
+          title: Summary
+        ip_address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ip Address
+        device_fingerprint_hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Fingerprint Hash
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - action
+      - entity_type
+      - summary
+      - ip_address
+      - device_fingerprint_hash
+      - created_at
+      title: UserAuditEventResponse
+    UserProfileResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          title: Email
+        full_name:
+          type: string
+          title: Full Name
+        phone_number:
+          type: string
+          title: Phone Number
+        kyc_status:
+          type: string
+          title: Kyc Status
+        email_verified:
+          type: boolean
+          title: Email Verified
+        phone_verified:
+          type: boolean
+          title: Phone Verified
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - email
+      - full_name
+      - phone_number
+      - kyc_status
+      - email_verified
+      - phone_verified
+      - created_at
+      title: UserProfileResponse
+    UserSummaryResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          title: Email
+        full_name:
+          type: string
+          title: Full Name
+        kyc_status:
+          type: string
+          title: Kyc Status
+        email_verified:
+          type: boolean
+          title: Email Verified
+        phone_verified:
+          type: boolean
+          title: Phone Verified
+        is_admin:
+          type: boolean
+          title: Is Admin
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - email
+      - full_name
+      - kyc_status
+      - email_verified
+      - phone_verified
+      - is_admin
+      - created_at
+      title: UserSummaryResponse
+    VerifyEmailRequest:
+      properties:
+        token:
+          type: string
+          maxLength: 512
+          minLength: 1
+          title: Token
+      type: object
+      required:
+      - token
+      title: VerifyEmailRequest
+    VerifyPhoneRequest:
+      properties:
+        phone_number:
+          type: string
+          maxLength: 20
+          minLength: 7
+          title: Phone Number
+        otp:
+          type: string
+          maxLength: 6
+          minLength: 6
+          pattern: ^\d{6}$
+          title: Otp
+      type: object
+      required:
+      - phone_number
+      - otp
+      title: VerifyPhoneRequest
+    VerifyResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: VerifyResponse
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

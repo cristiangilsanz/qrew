@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "payment_id": {
+      "format": "uuid",
+      "title": "Payment Id",
+      "type": "string"
+    },
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "refund_cents": {
+      "title": "Refund Cents",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "payment_id",
+    "reservation_id",
+    "refund_cents"
+  ],
+  "title": "PaymentRefunded",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

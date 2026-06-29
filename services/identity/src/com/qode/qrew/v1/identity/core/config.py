@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import YamlConfigSettingsSource
 
 _SERVICE_DIR = Path(__file__).parents[7]
 
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     debug: bool = True
     host: str = "0.0.0.0"  # noqa: S104
-    port: int = 8006
+    port: int = 8001
     base_url: str = "http://localhost:3000"
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
@@ -108,6 +109,22 @@ class Settings(BaseSettings):
     outbox_backoff_delays_seconds: list[int] = [1, 5, 25, 125, 625]
 
     internal_api_key: str = ""
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            YamlConfigSettingsSource(settings_cls),
+        )  # noqa: E501
 
 
 settings = Settings()

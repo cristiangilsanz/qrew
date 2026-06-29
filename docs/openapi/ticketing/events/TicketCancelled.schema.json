@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "ticket_id": {
+      "format": "uuid",
+      "title": "Ticket Id",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "reason"
+  ],
+  "title": "TicketCancelled",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,58 @@
+<mxfile host="embed.diagrams.net">
+  <diagram name="C4 Level 3 - Gateway" id="c4-component-gateway">
+    <mxGraphModel dx="2567" dy="691" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" html="0" parent="1" style="rounded=1;dashed=1;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=14;fontStyle=1;fontColor=#333333;verticalAlign=top;html=0;" value="Gateway [Container]" vertex="1">
+          <mxGeometry height="280" width="680" x="220" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" html="0" parent="1" style="shape=mxgraph.basic.person;whiteSpace=wrap;fillColor=#08427B;fontColor=#ffffff;strokeColor=#052e56;fontSize=12;html=0;" value="User&#xa;[Person]&#xa;End user" vertex="1">
+          <mxGeometry height="120" width="120" x="-60" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="4" html="0" parent="1" style="shape=mxgraph.basic.person;whiteSpace=wrap;fillColor=#6b6b6b;fontColor=#ffffff;strokeColor=#4a4a4a;fontSize=12;html=0;" value="Scanner Device&#xa;[Person / External]&#xa;Gate device" vertex="1">
+          <mxGeometry height="120" width="120" x="40" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="5" html="0" parent="1" style="rounded=1;whiteSpace=wrap;fillColor=#85BBF0;fontColor=#000000;strokeColor=#5a9fd4;fontSize=12;html=0;" value="HTTP API&#xa;[Component / FastAPI]&#xa;WebSocket accept and dispatch" vertex="1">
+          <mxGeometry height="80" width="170" x="260" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="6" html="0" parent="1" style="rounded=1;whiteSpace=wrap;fillColor=#85BBF0;fontColor=#000000;strokeColor=#5a9fd4;fontSize=12;html=0;" value="Auth&#xa;[Component / Python]&#xa;Verifies user and scanner JWTs" vertex="1">
+          <mxGeometry height="80" width="170" x="700" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="7" html="0" parent="1" style="rounded=1;whiteSpace=wrap;fillColor=#85BBF0;fontColor=#000000;strokeColor=#5a9fd4;fontSize=12;html=0;" value="Channel Handler&#xa;[Component / Python]&#xa;Routes connections to NATS subjects" vertex="1">
+          <mxGeometry height="80" width="170" x="380" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="8" html="0" parent="1" style="rounded=1;whiteSpace=wrap;fillColor=#85BBF0;fontColor=#000000;strokeColor=#5a9fd4;fontSize=12;html=0;" value="NATS Bridge&#xa;[Component / Python]&#xa;Subscribes and forwards to WebSocket" vertex="1">
+          <mxGeometry height="80" width="170" x="700" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="9" html="0" parent="1" style="rounded=1;whiteSpace=wrap;fillColor=#438DD5;fontColor=#ffffff;strokeColor=#2e6da4;fontSize=12;html=0;" value="NATS JetStream&#xa;[Broker]&#xa;Client subject subscriptions" vertex="1">
+          <mxGeometry height="80" width="170" x="1070" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="10" html="0" parent="1" style="shape=mxgraph.basic.cylinder3;whiteSpace=wrap;fillColor=#438DD5;fontColor=#ffffff;strokeColor=#2e6da4;fontSize=12;html=0;" value="Redis&#xa;[Cache]&#xa;Rate limiting" vertex="1">
+          <mxGeometry height="80" width="140" x="240" y="414" as="geometry" />
+        </mxCell>
+        <mxCell id="11" edge="1" html="0" parent="1" source="3" style="endArrow=block;endFill=1;fontSize=11;html=0;" target="5" value="Connects via WebSocket">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" edge="1" html="0" parent="1" source="4" style="endArrow=block;endFill=1;fontSize=11;html=0;" target="5" value="Connects via WebSocket">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" edge="1" html="0" parent="1" source="5" style="endArrow=block;endFill=1;fontSize=11;html=0;" target="6" value="Authenticates connection">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="14" edge="1" html="0" parent="1" source="6" style="endArrow=block;endFill=1;fontSize=11;html=0;" target="7" value="Routes to channel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="15" edge="1" html="0" parent="1" source="7" style="endArrow=block;endFill=1;fontSize=11;html=0;" target="8" value="Passes resolved subjects">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="16" edge="1" html="0" parent="1" source="8" style="endArrow=block;endFill=1;fontSize=11;html=0;" target="9" value="Subscribes to subjects">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="17" edge="1" html="0" parent="1" source="5" style="endArrow=block;endFill=1;fontSize=11;html=0;" target="10" value="Rate limiting">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

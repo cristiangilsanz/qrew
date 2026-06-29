@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "device_id": {
+      "format": "uuid",
+      "title": "Device Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "platform": {
+      "title": "Platform",
+      "type": "string"
+    }
+  },
+  "required": [
+    "device_id",
+    "user_id",
+    "platform"
+  ],
+  "title": "DeviceBound",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

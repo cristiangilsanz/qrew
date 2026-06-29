@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import YamlConfigSettingsSource
 
 _SERVICE_DIR = Path(__file__).parents[7]
 
@@ -48,6 +49,22 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [o.strip() for o in v.split(",") if o.strip()]
         return v
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            YamlConfigSettingsSource(settings_cls),
+        )  # noqa: E501
 
 
 settings = Settings()

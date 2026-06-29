@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "ticket_id": {
+      "format": "uuid",
+      "title": "Ticket Id",
+      "type": "string"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "venue_id": {
+      "format": "uuid",
+      "title": "Venue Id",
+      "type": "string"
+    },
+    "scanner_id": {
+      "format": "uuid",
+      "title": "Scanner Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "event_id",
+    "venue_id",
+    "scanner_id"
+  ],
+  "title": "EntryValidated",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

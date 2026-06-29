@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "payment_id": {
+      "format": "uuid",
+      "title": "Payment Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "reservation_id",
+    "payment_id"
+  ],
+  "title": "ReservationPaid",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

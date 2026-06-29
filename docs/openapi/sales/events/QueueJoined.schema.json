@@ -1,0 +1,32 @@
+{
+  "properties": {
+    "queue_redemption_id": {
+      "format": "uuid",
+      "title": "Queue Redemption Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "position": {
+      "title": "Position",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "queue_redemption_id",
+    "user_id",
+    "event_id",
+    "position"
+  ],
+  "title": "QueueJoined",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

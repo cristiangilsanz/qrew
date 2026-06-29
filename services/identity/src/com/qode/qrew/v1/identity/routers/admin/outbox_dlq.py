@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.routers import Page, clamp_limit
+from pagination import Page, clamp_limit
 from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
 from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import limiter

@@ -3,7 +3,8 @@ import uuid
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.identity.routers import Page, clamp_limit, cursor_paginate
+from pagination import Page, clamp_limit
+from com.qode.qrew.v1.identity.core.utils.pagination import cursor_paginate
 from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
 from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import limiter

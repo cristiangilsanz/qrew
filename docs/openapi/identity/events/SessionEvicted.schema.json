@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "session_id": {
+      "format": "uuid",
+      "title": "Session Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id",
+    "user_id",
+    "reason"
+  ],
+  "title": "SessionEvicted",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

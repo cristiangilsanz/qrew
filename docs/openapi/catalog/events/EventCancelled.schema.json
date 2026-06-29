@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "reason"
+  ],
+  "title": "EventCancelled",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

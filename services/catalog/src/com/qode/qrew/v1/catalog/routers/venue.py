@@ -3,7 +3,8 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.catalog.routers import Page, clamp_limit, cursor_paginate
+from pagination import Page, clamp_limit
+from com.qode.qrew.v1.catalog.core.utils.pagination import cursor_paginate
 from com.qode.qrew.v1.catalog.core.principals import AuthenticatedUser, get_current_user
 from com.qode.qrew.v1.catalog.core.dependencies import get_db, get_venue_service, limiter
 from com.qode.qrew.v1.catalog.models.venue import Venue

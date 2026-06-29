@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "payment_id": {
+      "format": "uuid",
+      "title": "Payment Id",
+      "type": "string"
+    },
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "dispute_id": {
+      "title": "Dispute Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "payment_id",
+    "reservation_id",
+    "dispute_id"
+  ],
+  "title": "ChargebackOpened",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

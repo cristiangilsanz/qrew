@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "reservation_id": {
+      "format": "uuid",
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "fraud_reason": {
+      "title": "Fraud Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "reservation_id",
+    "fraud_reason"
+  ],
+  "title": "ReservationFlagged",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

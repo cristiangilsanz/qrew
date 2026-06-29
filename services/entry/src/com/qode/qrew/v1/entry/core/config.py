@@ -1,6 +1,11 @@
 from pathlib import Path
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    YamlConfigSettingsSource,
+)
 
 _SERVICE_DIR = Path(__file__).parents[7]
 
@@ -18,7 +23,7 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     debug: bool = True
     host: str = "0.0.0.0"  # noqa: S104
-    port: int = 8001
+    port: int = 8006
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
@@ -48,6 +53,22 @@ class Settings(BaseSettings):
     idempotency_lock_seconds: int = 30
 
     ratelimit_enabled: bool = True
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            YamlConfigSettingsSource(settings_cls),
+        )
 
 
 settings = Settings()
