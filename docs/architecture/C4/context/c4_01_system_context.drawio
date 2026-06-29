@@ -1,10 +1,10 @@
 <mxfile host="embed.diagrams.net">
   <diagram name="C4 Level 1 - System Context" id="c4-system-context">
-    <mxGraphModel dx="1010" dy="342" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="909" dy="449" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="2" html="0" parent="1" style="shape=mxgraph.basic.person;whiteSpace=wrap;fillColor=#08427B;fontColor=#ffffff;strokeColor=#052e56;fontSize=12;html=0;" value="User&#xa;[Person]&#xa;End user browsing events&#xa;and purchasing tickets" vertex="1">
+        <mxCell id="2" html="0" parent="1" style="shape=mxgraph.basic.person;whiteSpace=wrap;fillColor=#08427B;fontColor=#ffffff;strokeColor=#052e56;fontSize=12;html=0;" value="User&#xa;[Person]&#xa;End users purchasing tickets to attend events" vertex="1">
           <mxGeometry height="120" width="120" x="80" y="290" as="geometry" />
         </mxCell>
         <mxCell id="3" html="0" parent="1" style="shape=mxgraph.basic.person;whiteSpace=wrap;fillColor=#6b6b6b;fontColor=#ffffff;strokeColor=#4a4a4a;fontSize=12;html=0;" value="Scanner Device&#xa;[Person / External]&#xa;Gate device at&#xa;venue entry points" vertex="1">
@@ -36,6 +36,13 @@
               <mxPoint x="700" y="370" />
               <mxPoint x="580" y="370" />
             </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="10" edge="1" parent="1" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" width="80" as="geometry">
+            <Array as="points" />
+            <mxPoint x="470" y="240" as="sourcePoint" />
+            <mxPoint x="550" y="240" as="targetPoint" />
           </mxGeometry>
         </mxCell>
       </root>
