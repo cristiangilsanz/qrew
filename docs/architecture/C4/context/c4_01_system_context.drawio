@@ -38,13 +38,6 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="10" edge="1" parent="1" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=0;" value="">
-          <mxGeometry relative="1" width="80" as="geometry">
-            <Array as="points" />
-            <mxPoint x="470" y="240" as="sourcePoint" />
-            <mxPoint x="550" y="240" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
