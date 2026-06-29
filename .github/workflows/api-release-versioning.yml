@@ -3,6 +3,12 @@ name: Release Versioning
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_publish:
+        description: Publish Docker images without a release-please release
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -31,7 +37,7 @@ jobs:
   publish:
     name: Publish Docker Images
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    if: needs.release-please.outputs.release_created == 'true' || inputs.force_publish == true
     runs-on: ubuntu-latest
     permissions:
       packages: write
