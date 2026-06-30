@@ -10,7 +10,6 @@ resolution-markers = [
 [manifest]
 members = [
     "audit",
-    "auditor",
     "catalog",
     "contracts",
     "db",
@@ -333,7 +332,6 @@ source = { virtual = "apps/api/services/audit" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
-    { name = "auditor" },
     { name = "exceptions" },
     { name = "fastapi" },
     { name = "idempotency" },
@@ -366,7 +364,6 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "asyncpg", specifier = ">=0.29" },
-    { name = "auditor", editable = "packages/shared-python/auditor" },
     { name = "exceptions", editable = "packages/shared-python/exceptions" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "idempotency", editable = "packages/shared-python/idempotency" },
@@ -393,35 +390,6 @@ dev = [
     { name = "pytest-cov", specifier = ">=5" },
     { name = "ruff", specifier = ">=0.4" },
     { name = "testcontainers", extras = ["postgres"], specifier = ">=4.0" },
-]
-
-[[package]]
-name = "auditor"
-version = "0.1.0"
-source = { editable = "packages/shared-python/auditor" }
-dependencies = [
-    { name = "contracts" },
-    { name = "messaging" },
-    { name = "structlog" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "contracts", editable = "packages/contracts" },
-    { name = "messaging", editable = "packages/shared-python/messaging" },
-    { name = "structlog", specifier = ">=24.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8" },
-    { name = "pytest-asyncio", specifier = ">=0.24" },
 ]
 
 [[package]]

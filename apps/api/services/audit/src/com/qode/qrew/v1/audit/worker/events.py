@@ -5,7 +5,7 @@ from typing import Any
 
 import structlog
 
-from auditor import AUDIT_EVENTS_SUBJECT as SUBJECT
+from com.qode.qrew.v1.audit.worker.publisher import AUDIT_EVENTS_SUBJECT as SUBJECT
 from com.qode.qrew.v1.audit.services.writer import AuditService
 
 logger = structlog.get_logger(__name__)

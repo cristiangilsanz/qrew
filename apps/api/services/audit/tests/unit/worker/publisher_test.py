@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from auditor.publisher import publish_audit_event
+from com.qode.qrew.v1.audit.worker.publisher import publish_audit_event
 
 _PATCH_NATS = "messaging.client.get_nats"
 _PATCH_ENVELOPE = "contracts.messaging.envelope.EventEnvelope"

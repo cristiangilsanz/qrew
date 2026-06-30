@@ -21,7 +21,6 @@ members = [
   "apps/api/services/sales",
   "apps/api/services/identity",
   "packages/contracts",
-  "packages/shared-python/auditor",
   "packages/shared-python/messaging",
   "packages/shared-python/worker",
   "packages/shared-python/jobs",

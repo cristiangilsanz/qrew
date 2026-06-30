@@ -20,7 +20,6 @@ dependencies = [
     "locking",
     "observability",
     "worker",
-    "auditor",
 ]
 
 [tool.uv.sources]
@@ -30,7 +29,6 @@ middleware = { workspace = true }
 locking = { workspace = true }
 observability = { workspace = true }
 worker = { workspace = true }
-auditor = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.audit.__main__:main"
@@ -57,7 +55,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/worker/src", "../../packages/auditor/src", "../../packages/contracts/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/worker/src", "../../packages/contracts/src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

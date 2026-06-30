@@ -5,6 +5,8 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
+AUDIT_EVENTS_SUBJECT = "audit.events.v1"
+
 
 async def publish_audit_event(
     *,
