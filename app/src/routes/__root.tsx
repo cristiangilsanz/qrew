@@ -1,8 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { createRootRouteWithContext,Outlet } from '@tanstack/react-router'
+import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
-import { AnimatePresence } from 'framer-motion'
 import { Toaster } from 'sonner'
 
 interface RouterContext {
@@ -10,15 +9,13 @@ interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  component: RootLayout,
+  component: Root,
 })
 
-function RootLayout() {
+function Root() {
   return (
     <>
-      <AnimatePresence mode="wait">
-        <Outlet />
-      </AnimatePresence>
+      <Outlet />
       <Toaster richColors position="top-center" />
       {import.meta.env.DEV && (
         <>

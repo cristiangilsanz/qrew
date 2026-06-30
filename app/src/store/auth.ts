@@ -27,7 +27,6 @@ export const useAuthStore = create<AuthState>()(
     })),
     {
       name: 'qrew-auth',
-      // TODO: replace with @capacitor/preferences storage adapter for native builds
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ accessToken: state.accessToken }),
       onRehydrateStorage: () => (state) => {

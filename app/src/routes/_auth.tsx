@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 
 import { useAuthStore } from '@/store/auth'
 
@@ -8,13 +8,5 @@ export const Route = createFileRoute('/_auth')({
       throw redirect({ to: '/events' })
     }
   },
-  component: AuthLayout,
+  component: () => <Outlet />,
 })
-
-function AuthLayout() {
-  return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
-      <Outlet />
-    </div>
-  )
-}
