@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Final
 
 import jwt
+import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi import Depends, HTTPException, status
@@ -107,12 +108,12 @@ def sign(purpose: str, claims: dict[str, object]) -> str:
 
 def verify(purpose: str, token: str) -> dict[str, object]:
     keys = _KEYS[purpose]
-    header = jwt.get_unverified_header(token)
+    header = _sec_jwt.decode_unverified_header(token)
     kid = header.get("kid")
     public_pem = keys.verifiers.get(kid) if isinstance(kid, str) else None
     if public_pem is None:
         raise InvalidTokenError("Unknown signing key")
-    return jwt.decode(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[no-any-return]
+    return _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[no-any-return]
 
 
 def get_current_user(

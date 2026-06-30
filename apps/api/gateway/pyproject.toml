@@ -18,6 +18,7 @@ dependencies = [
     "idempotency",
     "middleware",
     "observability",
+    "security",
 ]
 
 [tool.uv.sources]
@@ -25,6 +26,7 @@ exceptions = { workspace = true }
 idempotency = { workspace = true }
 middleware = { workspace = true }
 observability = { workspace = true }
+security = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.gateway.__main__:main"
@@ -38,7 +40,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../packages/shared-python/exceptions/src", "../packages/shared-python/idempotency/src", "../packages/shared-python/middleware/src", "../packages/shared-python/observability/src", "../packages/contracts/src"]
+extraPaths = ["../packages/shared-python/exceptions/src", "../packages/shared-python/idempotency/src", "../packages/shared-python/middleware/src", "../packages/shared-python/observability/src", "../packages/contracts/src", "../packages/shared-python/security/src"]
 
 [dependency-groups]
 dev = [

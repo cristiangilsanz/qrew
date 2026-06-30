@@ -26,6 +26,7 @@ dependencies = [
     "worker",
     "observability",
     "contracts",
+    "security",
 ]
 
 [tool.uv.sources]
@@ -35,6 +36,7 @@ messaging = { workspace = true }
 worker = { workspace = true }
 observability = { workspace = true }
 contracts = { workspace = true }
+security = { workspace = true }
 
 [project.scripts]
 dev = "com.qode.qrew.v1.sales.__main__:main"
@@ -61,13 +63,13 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src"]
+extraPaths = ["../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src"]
+pythonpath = ["src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
 markers = ["integration: marks tests as integration tests (require running Postgres)"]

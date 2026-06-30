@@ -9,11 +9,14 @@ def decode_token(
     *,
     algorithms: list[str] | None = None,
     audience: str | None = None,
+    issuer: str | None = None,
 ) -> dict[str, Any]:
     """Decodes and verifies a JWT, returning its claims on success."""
     opts: dict[str, Any] = {}
     if audience is not None:
         opts["audience"] = audience
+    if issuer is not None:
+        opts["issuer"] = issuer
     return pyjwt.decode(  # type: ignore[no-any-return]
         token,
         public_key,

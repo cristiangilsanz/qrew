@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Final
 
 import jwt
+import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from jwt import InvalidTokenError
@@ -122,12 +123,12 @@ def sign(purpose: str, claims: dict[str, object]) -> str:
 def verify(purpose: str, token: str) -> dict[str, object]:
     """Verify a token against the keypair for a given purpose."""
     keys = _KEYS[purpose]
-    header = jwt.get_unverified_header(token)
+    header = _sec_jwt.decode_unverified_header(token)
     kid = header.get("kid")
     public_pem = keys.verifiers.get(kid) if isinstance(kid, str) else None
     if public_pem is None:
         raise InvalidTokenError("Unknown signing key")
-    return jwt.decode(  # type: ignore[no-any-return]
+    return _sec_jwt.decode_token(  # type: ignore[no-any-return]
         token,
         public_pem,
         algorithms=[ALGORITHM],
@@ -136,13 +137,13 @@ def verify(purpose: str, token: str) -> dict[str, object]:
 
 def verify_any(purposes: tuple[str, ...], token: str) -> tuple[str, dict[str, object]]:
     """Verify a token against any of the given purposes."""
-    header = jwt.get_unverified_header(token)
+    header = _sec_jwt.decode_unverified_header(token)
     kid = header.get("kid")
     if not isinstance(kid, str):
         raise InvalidTokenError("Unknown signing key")
     for purpose in purposes:
         public_pem = _KEYS[purpose].verifiers.get(kid)
         if public_pem is not None:
-            payload = jwt.decode(token, public_pem, algorithms=[ALGORITHM])
+            payload = _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])
             return purpose, payload
     raise InvalidTokenError("Unknown signing key")

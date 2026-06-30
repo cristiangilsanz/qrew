@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import jwt
+import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -62,12 +63,11 @@ def create_scanner_token(
 
 
 def decode_scanner_token(token: str) -> dict[str, object]:
-    return jwt.decode(  # type: ignore[no-any-return]
+    return _sec_jwt.decode_token(  # type: ignore[no-any-return]
         token,
         _PUBLIC_KEY,
         algorithms=["RS256"],
         audience=SCANNER_AUDIENCE,
-        options={"verify_aud": False},
     )
 
 

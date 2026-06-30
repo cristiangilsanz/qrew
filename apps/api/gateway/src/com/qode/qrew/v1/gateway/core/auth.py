@@ -2,6 +2,7 @@ import functools
 from dataclasses import dataclass
 
 import jwt
+import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from fastapi import WebSocket
 
@@ -72,7 +73,7 @@ def _try_verify(token: str, public_keys: list[str]) -> dict[str, object] | None:
     issuer = settings.jwt_issuer or None
     for public_pem in public_keys:
         try:
-            return jwt.decode(  # type: ignore[return-value]
+            return _sec_jwt.decode_token(  # type: ignore[return-value]
                 token,
                 public_pem,
                 algorithms=[ALGORITHM],

@@ -5,6 +5,7 @@ from enum import StrEnum
 from typing import Any
 
 import jwt
+import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, generate_private_key
 from fastapi import Depends, HTTPException, status
@@ -76,7 +77,7 @@ def sign(purpose: Purpose, payload: dict[str, Any]) -> str:
 
 def verify(purpose: Purpose, token: str) -> dict[str, Any]:
     _, public_pem = _get(purpose)
-    return jwt.decode(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[return-value]
+    return _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[return-value]
 
 
 def verify_any(purposes: tuple[Purpose, ...], token: str) -> tuple[Purpose, dict[str, Any]]:
