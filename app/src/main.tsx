@@ -2,7 +2,7 @@ import './styles/globals.css'
 import './i18n'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createRouter,RouterProvider } from '@tanstack/react-router'
+import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 

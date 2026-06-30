@@ -86,8 +86,7 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    '/' | '/login' | '/register' | '/events/' | '/profile/' | '/tickets/'
+  fullPaths: '/' | '/login' | '/register' | '/events/' | '/profile/' | '/tickets/'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/login' | '/register' | '/events' | '/profile' | '/tickets'
   id:
