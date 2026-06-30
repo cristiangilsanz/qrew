@@ -1660,6 +1660,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-redis" },
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
+    { name = "outbox" },
     { name = "pagination" },
     { name = "passlib", extra = ["argon2", "bcrypt"] },
     { name = "phonenumbers" },
@@ -1729,6 +1730,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-redis", specifier = ">=0.48b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.48b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
+    { name = "outbox", editable = "packages/shared-python/outbox" },
     { name = "pagination", editable = "packages/shared-python/pagination" },
     { name = "passlib", extras = ["bcrypt", "argon2"], specifier = ">=1.7" },
     { name = "phonenumbers", specifier = ">=8.13" },
@@ -2515,7 +2517,7 @@ wheels = [
 [[package]]
 name = "outbox"
 version = "0.1.0"
-source = { virtual = "packages/shared-python/outbox" }
+source = { editable = "packages/shared-python/outbox" }
 
 [[package]]
 name = "packaging"

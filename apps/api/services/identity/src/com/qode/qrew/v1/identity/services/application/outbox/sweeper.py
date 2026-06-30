@@ -2,6 +2,8 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from outbox import OutboxSweeper as _OutboxSweeperProtocol
+
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -99,3 +101,13 @@ async def drain_once(
     if drained:
         await logger.ainfo("outbox_drained", count=drained)
     return drained
+
+
+class IdentityOutboxSweeper:
+    """Concrete OutboxSweeper for the identity service."""
+
+    async def sweep(self, batch_size: int = 50) -> int:
+        return await drain_once(batch_size=batch_size)
+
+
+_: _OutboxSweeperProtocol = IdentityOutboxSweeper()  # static conformance check
