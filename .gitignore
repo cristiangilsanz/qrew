@@ -172,8 +172,8 @@ env/
 env.bak/
 ENV/
 ipython_config.py
-lib/
-lib64/
+/lib/
+/lib64/
 MANIFEST
 parts/
 pip-wheel-metadata/
