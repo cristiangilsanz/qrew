@@ -5,14 +5,14 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /app
 
 COPY pyproject.toml ./
-COPY services/audit/pyproject.toml services/audit/pyproject.toml
+COPY apps/api/services/audit/pyproject.toml apps/api/services/audit/pyproject.toml
 COPY packages/shared-python/exceptions/pyproject.toml packages/shared-python/exceptions/pyproject.toml
 COPY packages/shared-python/idempotency/pyproject.toml packages/shared-python/idempotency/pyproject.toml
 COPY packages/shared-python/middleware/pyproject.toml packages/shared-python/middleware/pyproject.toml
 COPY packages/shared-python/locking/pyproject.toml packages/shared-python/locking/pyproject.toml
 COPY packages/shared-python/observability/pyproject.toml packages/shared-python/observability/pyproject.toml
 COPY packages/shared-python/worker/pyproject.toml packages/shared-python/worker/pyproject.toml
-COPY packages/auditor/pyproject.toml packages/auditor/pyproject.toml
+COPY packages/shared-python/auditor/pyproject.toml packages/shared-python/auditor/pyproject.toml
 COPY packages/shared-python/messaging/pyproject.toml packages/shared-python/messaging/pyproject.toml
 COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
 COPY uv.lock ./
@@ -24,14 +24,14 @@ FROM python:3.12-slim AS runtime
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 
-COPY services/audit/src/ ./src/
+COPY apps/api/services/audit/src/ ./src/
 COPY packages/shared-python/exceptions/src/ ./src/
 COPY packages/shared-python/idempotency/src/ ./src/
 COPY packages/shared-python/middleware/src/ ./src/
 COPY packages/shared-python/locking/src/ ./src/
 COPY packages/shared-python/observability/src/ ./src/
 COPY packages/shared-python/worker/src/ ./src/
-COPY packages/auditor/src/ ./src/
+COPY packages/shared-python/auditor/src/ ./src/
 COPY packages/shared-python/messaging/src/ ./src/
 COPY packages/contracts/src/ ./src/
 

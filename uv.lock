@@ -329,7 +329,7 @@ wheels = [
 [[package]]
 name = "audit"
 version = "0.1.0"
-source = { virtual = "services/audit" }
+source = { virtual = "apps/api/services/audit" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -366,7 +366,7 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "asyncpg", specifier = ">=0.29" },
-    { name = "auditor", editable = "packages/auditor" },
+    { name = "auditor", editable = "packages/shared-python/auditor" },
     { name = "exceptions", editable = "packages/shared-python/exceptions" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "idempotency", editable = "packages/shared-python/idempotency" },
@@ -398,7 +398,7 @@ dev = [
 [[package]]
 name = "auditor"
 version = "0.1.0"
-source = { editable = "packages/auditor" }
+source = { editable = "packages/shared-python/auditor" }
 dependencies = [
     { name = "contracts" },
     { name = "messaging" },
@@ -448,7 +448,7 @@ wheels = [
 [[package]]
 name = "catalog"
 version = "0.1.0"
-source = { virtual = "services/catalog" }
+source = { virtual = "apps/api/services/catalog" }
 dependencies = [
     { name = "alembic" },
     { name = "arq" },
@@ -964,7 +964,7 @@ wheels = [
 [[package]]
 name = "entry"
 version = "0.1.0"
-source = { editable = "services/entry" }
+source = { editable = "apps/api/services/entry" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -1254,7 +1254,7 @@ wheels = [
 [[package]]
 name = "gateway"
 version = "0.1.0"
-source = { virtual = "gateway" }
+source = { virtual = "apps/api/gateway" }
 dependencies = [
     { name = "cryptography" },
     { name = "exceptions" },
@@ -1655,7 +1655,7 @@ wheels = [
 [[package]]
 name = "identity"
 version = "0.1.0"
-source = { virtual = "services/identity" }
+source = { virtual = "apps/api/services/identity" }
 dependencies = [
     { name = "aiosmtplib" },
     { name = "alembic" },
@@ -2599,7 +2599,7 @@ bcrypt = [
 [[package]]
 name = "payments"
 version = "0.1.0"
-source = { editable = "services/payments" }
+source = { editable = "apps/api/services/payments" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -3277,7 +3277,7 @@ wheels = [
 
 [[package]]
 name = "qrew-workspace"
-version = "1.1.0"
+version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "cryptography" },
@@ -3395,7 +3395,7 @@ wheels = [
 [[package]]
 name = "sales"
 version = "0.1.0"
-source = { virtual = "services/sales" }
+source = { virtual = "apps/api/services/sales" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -3626,7 +3626,7 @@ redis = [
 [[package]]
 name = "ticketing"
 version = "0.1.0"
-source = { virtual = "services/ticketing" }
+source = { virtual = "apps/api/services/ticketing" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },

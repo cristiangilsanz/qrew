@@ -8,56 +8,56 @@ updates:
       - security
 
   - package-ecosystem: docker
-    directory: /services/audit
+    directory: /apps/api/services/audit
     schedule:
       interval: weekly
     labels:
       - security
 
   - package-ecosystem: docker
-    directory: /services/catalog
+    directory: /apps/api/services/catalog
     schedule:
       interval: weekly
     labels:
       - security
 
   - package-ecosystem: docker
-    directory: /services/entry
+    directory: /apps/api/services/entry
     schedule:
       interval: weekly
     labels:
       - security
 
   - package-ecosystem: docker
-    directory: /services/gateway
+    directory: /apps/api/gateway
     schedule:
       interval: weekly
     labels:
       - security
 
   - package-ecosystem: docker
-    directory: /services/identity
+    directory: /apps/api/services/identity
     schedule:
       interval: weekly
     labels:
       - security
 
   - package-ecosystem: docker
-    directory: /services/payments
+    directory: /apps/api/services/payments
     schedule:
       interval: weekly
     labels:
       - security
 
   - package-ecosystem: docker
-    directory: /services/sales
+    directory: /apps/api/services/sales
     schedule:
       interval: weekly
     labels:
       - security
 
   - package-ecosystem: docker
-    directory: /services/ticketing
+    directory: /apps/api/services/ticketing
     schedule:
       interval: weekly
     labels:

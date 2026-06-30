@@ -1,13 +1,13 @@
 set shell := ["bash", "-c"]
 
-IDENTITY := "services/identity"
-ENTRY := "services/entry"
-PAYMENTS := "services/payments"
-CATALOG := "services/catalog"
-TICKETING := "services/ticketing"
-SALES := "services/sales"
-AUDIT := "services/audit"
-GATEWAY := "gateway"
+IDENTITY := "apps/api/services/identity"
+ENTRY := "apps/api/services/entry"
+PAYMENTS := "apps/api/services/payments"
+CATALOG := "apps/api/services/catalog"
+TICKETING := "apps/api/services/ticketing"
+SALES := "apps/api/services/sales"
+AUDIT := "apps/api/services/audit"
+GATEWAY := "apps/api/gateway"
 
 PKG_IDEMPOTENCY   := "packages/shared-python/idempotency"
 PKG_RATELIMIT     := "packages/shared-python/ratelimit"
@@ -20,7 +20,7 @@ PKG_MIDDLEWARE    := "packages/shared-python/middleware"
 PKG_OBSERVABILITY := "packages/shared-python/observability"
 PKG_PROBES        := "packages/shared-python/probes"
 PKG_SECURITY      := "packages/shared-python/security"
-PKG_AUDITOR       := "packages/auditor"
+PKG_AUDITOR       := "packages/shared-python/auditor"
 
 default: help
 

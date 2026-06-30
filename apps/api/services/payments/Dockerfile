@@ -5,7 +5,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /app
 
 COPY pyproject.toml ./
-COPY services/payments/pyproject.toml services/payments/pyproject.toml
+COPY apps/api/services/payments/pyproject.toml apps/api/services/payments/pyproject.toml
 COPY packages/shared-python/exceptions/pyproject.toml packages/shared-python/exceptions/pyproject.toml
 COPY packages/shared-python/idempotency/pyproject.toml packages/shared-python/idempotency/pyproject.toml
 COPY packages/shared-python/middleware/pyproject.toml packages/shared-python/middleware/pyproject.toml
@@ -22,7 +22,7 @@ FROM python:3.12-slim AS runtime
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 
-COPY services/payments/src/ ./src/
+COPY apps/api/services/payments/src/ ./src/
 COPY packages/shared-python/exceptions/src/ ./src/
 COPY packages/shared-python/idempotency/src/ ./src/
 COPY packages/shared-python/middleware/src/ ./src/
