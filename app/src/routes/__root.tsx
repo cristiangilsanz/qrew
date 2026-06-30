@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { RouterDevtools } from '@tanstack/router-devtools'
-import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
+import { createRootRouteWithContext,Outlet } from '@tanstack/react-router'
+import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AnimatePresence } from 'framer-motion'
 import { Toaster } from 'sonner'
 
@@ -22,7 +22,7 @@ function RootLayout() {
       <Toaster richColors position="top-center" />
       {import.meta.env.DEV && (
         <>
-          <RouterDevtools />
+          <TanStackRouterDevtools />
           <ReactQueryDevtools />
         </>
       )}

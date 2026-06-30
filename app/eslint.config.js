@@ -9,10 +9,11 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 
 export default [
-  { ignores: ['dist', 'routeTree.gen.ts', 'coverage', 'playwright-report'] },
+  { ignores: ['dist', 'src/routeTree.gen.ts', 'coverage', 'playwright-report', 'node_modules'] },
   js.configs.recommended,
+  // Type-aware rules scoped to src only (uses tsconfig.app.json)
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -40,6 +41,23 @@ export default [
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
     settings: { react: { version: 'detect' } },
+  },
+  // Non-type-aware rules for config and e2e files
+  {
+    files: ['*.ts', 'e2e/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      globals: { ...globals.node },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+      'simple-import-sort': simpleImportSort,
+    },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+    },
   },
   prettierConfig,
 ]

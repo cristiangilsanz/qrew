@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "sync": "cap sync",
     "ios": "cap open ios",
@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@capacitor/app": "^7.0.0",
-    "@capacitor/barcode-scanning": "^7.0.0",
     "@capacitor/camera": "^7.0.0",
     "@capacitor/core": "^7.0.0",
     "@capacitor/haptics": "^7.0.0",

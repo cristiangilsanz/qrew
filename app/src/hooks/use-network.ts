@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
-
 import { Network } from '@capacitor/network'
+import { useEffect, useState } from 'react'
 
 export function useNetwork() {
   const [isOnline, setIsOnline] = useState(true)
