@@ -18,13 +18,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/app/package-lock.json
       - run: npm ci
-        working-directory: apps/app
-      - run: npm run build
-        working-directory: apps/app
-      - run: npm run typecheck
-        working-directory: apps/app
+      - run: npm run build -w apps/app
+      - run: npm run typecheck -w apps/app
 
   lint:
     name: Lint
@@ -35,13 +31,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/app/package-lock.json
       - run: npm ci
-        working-directory: apps/app
-      - run: npm run lint
-        working-directory: apps/app
-      - run: npm run format:check
-        working-directory: apps/app
+      - run: npm run lint -w apps/app
+      - run: npm run format:check -w apps/app
 
   test:
     name: Unit Test
@@ -52,11 +44,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/app/package-lock.json
       - run: npm ci
-        working-directory: apps/app
-      - run: npm run test:run
-        working-directory: apps/app
+      - run: npm run test:run -w apps/app
 
   build:
     name: Build
@@ -67,8 +56,5 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/app/package-lock.json
       - run: npm ci
-        working-directory: apps/app
-      - run: npm run build
-        working-directory: apps/app
+      - run: npm run build -w apps/app
