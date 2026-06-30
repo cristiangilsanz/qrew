@@ -3,7 +3,7 @@ name: App CI
 on:
   pull_request:
     branches: [main]
-    paths: [app/**]
+    paths: [apps/app/**]
     types: [opened, synchronize, reopened]
   workflow_call:
   workflow_dispatch:
@@ -18,13 +18,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: apps/app/package-lock.json
       - run: npm ci
-        working-directory: app
+        working-directory: apps/app
       - run: npm run build
-        working-directory: app
+        working-directory: apps/app
       - run: npm run typecheck
-        working-directory: app
+        working-directory: apps/app
 
   lint:
     name: Lint
@@ -35,13 +35,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: apps/app/package-lock.json
       - run: npm ci
-        working-directory: app
+        working-directory: apps/app
       - run: npm run lint
-        working-directory: app
+        working-directory: apps/app
       - run: npm run format:check
-        working-directory: app
+        working-directory: apps/app
 
   test:
     name: Unit Test
@@ -52,11 +52,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: apps/app/package-lock.json
       - run: npm ci
-        working-directory: app
+        working-directory: apps/app
       - run: npm run test:run
-        working-directory: app
+        working-directory: apps/app
 
   build:
     name: Build
@@ -67,8 +67,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: apps/app/package-lock.json
       - run: npm ci
-        working-directory: app
+        working-directory: apps/app
       - run: npm run build
-        working-directory: app
+        working-directory: apps/app
