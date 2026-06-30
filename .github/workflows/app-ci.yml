@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  typecheck:
-    name: Type Check
+  quality-checks:
+    name: Quality Checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,11 +19,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build -w apps/app
-      - run: npm run typecheck -w apps/app
+      - name: Lint
+        run: npm run lint -w apps/app
+      - name: Format
+        run: npm run format:check -w apps/app
+      - name: Build
+        run: npm run build -w apps/app
+      - name: Type Check
+        run: npm run typecheck -w apps/app
 
-  lint:
-    name: Lint
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,29 +38,5 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run lint -w apps/app
-      - run: npm run format:check -w apps/app
-
-  test:
-    name: Unit Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run test:run -w apps/app
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build -w apps/app
+      - name: Unit Tests
+        run: npm run test:run -w apps/app
