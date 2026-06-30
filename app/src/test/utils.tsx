@@ -1,7 +1,6 @@
-import type { ReactElement } from 'react'
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, type RenderOptions } from '@testing-library/react'
+import type { ReactElement, ReactNode } from 'react'
 
 function makeQueryClient() {
   return new QueryClient({
@@ -9,7 +8,7 @@ function makeQueryClient() {
   })
 }
 
-function AllProviders({ children }: { children: React.ReactNode }) {
+function AllProviders({ children }: { children: ReactNode }) {
   const queryClient = makeQueryClient()
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
