@@ -1,0 +1,28 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back"
+  },
+  "auth": {
+    "login": "Sign in",
+    "register": "Create account",
+    "logout": "Sign out",
+    "email": "Email",
+    "password": "Password"
+  },
+  "events": {
+    "title": "Events",
+    "empty": "No events available"
+  },
+  "tickets": {
+    "title": "My Tickets",
+    "empty": "You have no tickets yet"
+  },
+  "profile": {
+    "title": "Profile"
+  }
+}
