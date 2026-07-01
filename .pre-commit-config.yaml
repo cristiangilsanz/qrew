@@ -15,3 +15,17 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: eslint-app
+        name: eslint (app)
+        entry: npm run lint:fix -w apps/app
+        language: system
+        pass_filenames: false
+        files: ^apps/app/
+
+      - id: prettier-app
+        name: prettier (app)
+        entry: npm run format -w apps/app
+        language: system
+        pass_filenames: false
+        files: ^apps/app/
+
