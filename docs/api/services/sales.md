@@ -11,7 +11,7 @@ Sales is the reservation and queue management service in the platform. It create
 1. Creates ticket reservations with distributed inventory locking.
 2. Expires reservations via background sweep when the TTL elapses.
 3. Manages queue join and admission for sold-out events.
-4. Scores reservation attempts for fraud using device fingerprint, IP velocity, account age, and time to purchase signals.
+4. Scores reservation attempts for fraud using device fingerprint, IP velocity, account age, time to purchase, and VoIP phone carrier signals.
 5. Settles paid reservations in response to payment events.
 6. Maintains projections of catalog events and identity signals for availability and fraud decisions.
 7. Does not create or issue tickets.
@@ -53,7 +53,7 @@ Schemas: [`docs/openapi/sales/events/`](../openapi/sales/events/)
 | `EventCancelled` | `catalog.event.cancelled.v1` | Marks event context as cancelled and cancels open reservations. |
 | `TicketTypeCreated` | `catalog.ticket_type.created.v1` | Upserts the `TicketTypeInventory` projection. |
 | `TicketTypeUpdated` | `catalog.ticket_type.updated.v1` | Updates the inventory projection. |
-| `UserRegistered` | `identity.user.registered.v1` | Upserts the `UserAgeContext` projection for fraud scoring. |
+| `UserRegistered` | `identity.user.registered.v1` | Upserts the `UserAgeContext` projection for fraud scoring, including `phone_e164` for VoIP carrier lookup. |
 | `FingerprintSeen` | `identity.fingerprint.seen.v1` | Upserts the `FingerprintContext` projection for device reuse fraud signal. |
 | `PaymentSucceeded` | `payments.payment.succeeded.v1` | Marks the linked reservation as paid via `SettlementService`. |
 | `PaymentRefunded` | `payments.payment.refunded.v1` | Cancels the reservation on full refund. |
@@ -108,6 +108,9 @@ Schemas: [`docs/openapi/sales/events/`](../openapi/sales/events/)
 | `FRAUD_SIGNALS_ENABLED` | Flag to enable fraud scoring on reservations. Defaults to true. |
 | `FRAUD_SCORE_BLOCK_THRESHOLD` | Score above which a reservation is auto-blocked. Defaults to 80. |
 | `FRAUD_SCORE_REVIEW_THRESHOLD` | Score above which a reservation is flagged for review. Defaults to 40. |
+| `FRAUD_WEIGHT_VOIP_PHONE` | Fraud score added when the user's phone is detected as VoIP. Defaults to 60. |
+| `TWILIO_ACCOUNT_SID` | Twilio account SID for phone carrier lookup. Optional; VoIP signal is skipped if unset. |
+| `TWILIO_AUTH_TOKEN` | Twilio auth token for phone carrier lookup. |
 | `TRUSTED_PROXY_IP` | Trusted reverse proxy IP for real client IP extraction. |
 | `IDEMPOTENCY_ENABLED` | Flag to enable idempotency key enforcement. Defaults to true. |
 | `RATELIMIT_ENABLED` | Flag to enable API rate limiting. Defaults to true. |

@@ -8,7 +8,7 @@ Payments is the Stripe integration service in the platform. It creates and track
 
 ## Responsibilities
 
-1. Creates and tracks Stripe PaymentIntents.
+1. Creates and tracks Stripe PaymentIntents with 3DS2 enforcement (`request_three_d_secure: any`).
 2. Receives and verifies Stripe webhook callbacks.
 3. Publishes payment outcome events to the platform.
 4. Encrypts PII associated with payments at rest.
