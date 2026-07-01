@@ -34,8 +34,10 @@ class VoipPhoneSignal:
                     auth=(settings.twilio_account_sid, settings.twilio_auth_token),
                 )
             resp.raise_for_status()
-            data = resp.json()
-            line_type: str = (data.get("line_type_intelligence") or {}).get("type") or ""
+            data: dict[str, object] = resp.json()
+            raw_lti: object = data.get("line_type_intelligence")
+            lti: dict[str, object] = raw_lti if isinstance(raw_lti, dict) else {}
+            line_type: str = str(lti.get("type") or "")
         except Exception as exc:
             await logger.awarning("voip_signal.lookup_failed", error=repr(exc))
             return SignalResult(name=self.name, score=0, reason="lookup_failed")

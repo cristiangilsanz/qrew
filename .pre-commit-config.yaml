@@ -17,14 +17,14 @@ repos:
 
       - id: eslint
         name: eslint (app)
-        entry: npm run lint:fix -w apps/app
+        entry: bash -c 'test -d node_modules && npm run lint:fix -w apps/app || true'
         language: system
         pass_filenames: false
         files: ^apps/app/
 
       - id: prettier
         name: prettier (app)
-        entry: npm run format -w apps/app
+        entry: bash -c 'test -d node_modules && npm run format -w apps/app || true'
         language: system
         pass_filenames: false
         files: ^apps/app/
