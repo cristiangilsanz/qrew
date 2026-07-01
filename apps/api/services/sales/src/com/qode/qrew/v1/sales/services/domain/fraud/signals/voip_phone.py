@@ -1,3 +1,5 @@
+from typing import cast
+
 import structlog
 
 import httpx
@@ -36,7 +38,7 @@ class VoipPhoneSignal:
             resp.raise_for_status()
             data: dict[str, object] = resp.json()
             raw_lti: object = data.get("line_type_intelligence")
-            lti: dict[str, object] = raw_lti if isinstance(raw_lti, dict) else {}
+            lti = cast("dict[str, object]", raw_lti) if isinstance(raw_lti, dict) else {}
             line_type: str = str(lti.get("type") or "")
         except Exception as exc:
             await logger.awarning("voip_signal.lookup_failed", error=repr(exc))
