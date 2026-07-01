@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     fraud_fingerprint_threshold: int = 3
     fraud_ip_velocity_window_minutes: int = 10
     fraud_ip_velocity_threshold: int = 5
+    fraud_weight_voip_phone: int = 60
+
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
 
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"

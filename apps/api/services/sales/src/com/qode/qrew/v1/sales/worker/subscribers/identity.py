@@ -28,8 +28,11 @@ async def handle_user_registered(raw: bytes) -> None:
     except (KeyError, ValueError):
         await logger.awarning("identity_events.user_registered.bad_payload")
         return
+    phone_e164: str | None = data["data"].get("phone_e164") or None
     async with AsyncSessionLocal() as session:
-        await UserAgeContextRepository(session).upsert(user_id=user_id, registered_at=registered_at)
+        await UserAgeContextRepository(session).upsert(
+            user_id=user_id, registered_at=registered_at, phone_e164=phone_e164
+        )
         await session.commit()
     await logger.ainfo("identity_events.user_age_upserted", user_id=str(user_id))
 

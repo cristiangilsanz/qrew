@@ -63,11 +63,13 @@ async def build_engine_for_user(
         if fp_ctx is not None:
             fingerprint_lookup[fingerprint_hash] = fp_ctx.distinct_user_count
 
+    phone_e164 = age_ctx.phone_e164 if age_ctx is not None else None
+
     return FraudRuleEngine(
         [
             AccountAgeSignal(registered_at_lookup),
             TimeToPurchaseSignal(registered_at_lookup),
-            VoipPhoneSignal(),
+            VoipPhoneSignal(phone_e164),
             IpVelocitySignal(redis_client),
             FingerprintReuseSignal(fingerprint_lookup),
         ]

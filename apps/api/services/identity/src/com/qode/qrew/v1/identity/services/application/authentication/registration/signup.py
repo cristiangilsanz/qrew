@@ -137,6 +137,7 @@ class RegistrationService:
                     "registered_at": user.created_at.isoformat()
                     if hasattr(user, "created_at") and user.created_at
                     else datetime.now(UTC).isoformat(),
+                    "phone_e164": user.phone_number,
                 },
             )
             await nats_publish("identity.user.registered.v1", envelope)

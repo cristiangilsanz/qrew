@@ -45,6 +45,7 @@ class StripeRealClient:
                 amount=amount_cents,
                 currency=currency.lower(),
                 automatic_payment_methods={"enabled": True},
+                payment_method_options={"card": {"request_three_d_secure": "any"}},
                 metadata=metadata,
                 idempotency_key=idempotency_key,
             )

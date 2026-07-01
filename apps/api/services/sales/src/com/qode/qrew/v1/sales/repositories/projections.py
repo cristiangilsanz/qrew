@@ -97,13 +97,23 @@ class UserAgeContextRepository:
     async def get_by_user_id(self, user_id: uuid.UUID) -> UserAgeContext | None:
         return await self._session.get(UserAgeContext, user_id)
 
-    async def upsert(self, *, user_id: uuid.UUID, registered_at: datetime) -> None:
+    async def upsert(
+        self,
+        *,
+        user_id: uuid.UUID,
+        registered_at: datetime,
+        phone_e164: str | None = None,
+    ) -> None:
         ctx = await self._session.get(UserAgeContext, user_id)
         if ctx is None:
-            ctx = UserAgeContext(user_id=user_id, registered_at=registered_at)
+            ctx = UserAgeContext(
+                user_id=user_id, registered_at=registered_at, phone_e164=phone_e164
+            )
             self._session.add(ctx)
         else:
             ctx.registered_at = registered_at
+            if phone_e164 is not None:
+                ctx.phone_e164 = phone_e164
         ctx.updated_at = datetime.now(UTC)
         await self._session.flush()
 
