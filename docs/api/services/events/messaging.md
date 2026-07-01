@@ -41,7 +41,7 @@ Every message published to a JetStream stream uses this envelope:
 
 ## Audit events
 
-Every service publishes security and business audit records to `audit.events.v1` via the shared `auditor` package. The Audit service subscribes and appends each record to a cryptographically chained log. No service reads the audit log directly.
+Every service publishes security and business audit records to `audit.events.v1` using the `publish_audit_event()` helper. The Audit service subscribes and appends each record to a cryptographically chained log. No service reads the audit log directly.
 
 ## Naming convention
 

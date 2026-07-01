@@ -10,18 +10,20 @@ Emitted when a new user account is successfully created.
 
 | Field | Type | Description |
 |---|---|---|
-| `email` | string | Registered email address |
-| `display_name` | string | User full name |
+| `user_id` | UUID | Newly created user identifier |
+| `registered_at` | ISO 8601 datetime | Account creation timestamp |
+| `phone_e164` | string \| null | Phone number in E.164 format, used by Sales for VoIP fraud scoring |
 
 ---
 
 ## `identity.fingerprint.seen.v1`
 
-Emitted when a device fingerprint is observed during login, used by Sales for fraud scoring.
+Emitted when a device fingerprint is observed, used by Sales for fraud scoring.
 
 | Field | Type | Description |
 |---|---|---|
-| `user_id` | UUID | User who authenticated |
+| `fingerprint_hash` | string | Device fingerprint hash |
+| `occurred_at` | ISO 8601 datetime | Timestamp of the observation |
 
 ---
 

@@ -33,7 +33,7 @@ This service does not publish domain events.
 |-------|-------------|--------|
 | All audit events | `audit.events.v1` | Persists the event to the append only audit log. |
 
-> All services publish audit events through the shared `auditor` package. The subject and schema are defined centrally in that package. Audit does not need to know which service emitted each event.
+> All services publish audit events directly to `audit.events.v1` using the `publish_audit_event()` helper co-located in the Audit service worker. Audit does not need to know which service emitted each event.
 
 ## Background Workers
 
@@ -46,7 +46,7 @@ This service does not publish domain events.
 
 | Package | Purpose |
 |---------|---------|
-| `auditor` | Shared audit event schema and NATS subject definitions |
+| `messaging` | NATS client for consuming audit events |
 | `exceptions` | Shared HTTP exception types |
 | `idempotency` | Redis backed idempotency keys |
 | `locking` | Redis distributed locks |

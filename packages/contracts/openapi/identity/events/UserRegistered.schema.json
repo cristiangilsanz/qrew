@@ -1,17 +1,23 @@
 {
   "properties": {
-    "email": {
-      "title": "Email",
-      "type": "string"
+    "user_id": {
+      "title": "User Id",
+      "type": "string",
+      "format": "uuid"
     },
-    "display_name": {
-      "title": "Display Name",
-      "type": "string"
+    "registered_at": {
+      "title": "Registered At",
+      "type": "string",
+      "format": "date-time"
+    },
+    "phone_e164": {
+      "title": "Phone E164",
+      "type": ["string", "null"]
     }
   },
   "required": [
-    "email",
-    "display_name"
+    "user_id",
+    "registered_at"
   ],
   "title": "UserRegistered",
   "type": "object",
