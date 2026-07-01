@@ -46,14 +46,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - { service: identity,  path: services/identity }
-          - { service: entry,     path: services/entry }
-          - { service: payments,  path: services/payments }
-          - { service: catalog,   path: services/catalog }
-          - { service: ticketing, path: services/ticketing }
-          - { service: sales,     path: services/sales }
-          - { service: audit,     path: services/audit }
-          - { service: gateway,   path: gateway }
+          - { service: identity,  path: apps/api/services/identity}
+          - { service: entry,     path: apps/api/services/entry}
+          - { service: payments,  path: apps/api/services/payments}
+          - { service: catalog,   path: apps/api/services/catalog}
+          - { service: ticketing, path: apps/api/services/ticketing}
+          - { service: sales,     path: apps/api/services/sales}
+          - { service: audit,     path: apps/api/services/audit}
+          - { service: gateway,   path: apps/api/gateway }
     steps:
       - uses: actions/checkout@v4
 
@@ -107,14 +107,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - { service: identity,  path: services/identity }
-          - { service: entry,     path: services/entry }
-          - { service: payments,  path: services/payments }
-          - { service: catalog,   path: services/catalog }
-          - { service: ticketing, path: services/ticketing }
-          - { service: sales,     path: services/sales }
-          - { service: audit,     path: services/audit }
-          - { service: gateway,   path: gateway }
+          - { service: identity,  path: apps/api/services/identity}
+          - { service: entry,     path: apps/api/services/entry}
+          - { service: payments,  path: apps/api/services/payments}
+          - { service: catalog,   path: apps/api/services/catalog}
+          - { service: ticketing, path: apps/api/services/ticketing}
+          - { service: sales,     path: apps/api/services/sales}
+          - { service: audit,     path: apps/api/services/audit}
+          - { service: gateway,   path: apps/api/gateway }
     steps:
       - uses: actions/checkout@v4
 
