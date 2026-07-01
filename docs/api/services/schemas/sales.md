@@ -40,6 +40,7 @@ erDiagram
     user_age_context["user_age_context (projection)"] {
         UUID user_id PK
         timestamp registered_at
+        string phone_e164
         timestamp updated_at
     }
 
