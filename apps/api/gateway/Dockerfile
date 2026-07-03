@@ -9,6 +9,7 @@ COPY apps/api/gateway/pyproject.toml apps/api/gateway/pyproject.toml
 COPY packages/shared-python/exceptions/pyproject.toml packages/shared-python/exceptions/pyproject.toml
 COPY packages/shared-python/idempotency/pyproject.toml packages/shared-python/idempotency/pyproject.toml
 COPY packages/shared-python/middleware/pyproject.toml packages/shared-python/middleware/pyproject.toml
+COPY packages/shared-python/security/pyproject.toml packages/shared-python/security/pyproject.toml
 COPY packages/shared-python/observability/pyproject.toml packages/shared-python/observability/pyproject.toml
 COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
 COPY uv.lock ./
@@ -26,6 +27,7 @@ COPY apps/api/gateway/src/ ./src/
 COPY packages/shared-python/exceptions/src/ ./src/
 COPY packages/shared-python/idempotency/src/ ./src/
 COPY packages/shared-python/middleware/src/ ./src/
+COPY packages/shared-python/security/src/ ./src/
 COPY packages/shared-python/observability/src/ ./src/
 COPY packages/contracts/src/ ./src/
 
