@@ -19,7 +19,7 @@ Audit is the append only audit log service in the platform. It receives structur
 |--------|------|-------------|------|
 | `GET` | `/audit` | Query the audit log with filters, paginated | Internal |
 
-Full spec: [`docs/openapi/audit/openapi.yaml`](../openapi/audit/openapi.yaml)
+Full spec: [`packages/contracts/openapi/audit/openapi.yaml`](../../../../packages/contracts/openapi/audit/openapi.yaml)
 
 ## Events
 

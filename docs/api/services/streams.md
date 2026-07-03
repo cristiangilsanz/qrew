@@ -1,4 +1,4 @@
-# JetStream Configuration
+# Streams Configuration
 
 ## Streams
 

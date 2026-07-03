@@ -48,7 +48,7 @@ Identity is the authentication and JWT issuance authority in the platform. It ma
 | `GET` | `/admin/fingerprints` | Query device fingerprints | JWT |
 | `GET` | `/admin/outbox/dlq` | Inspect the outbox dead letter queue | JWT |
 
-Full spec: [`docs/openapi/identity/openapi.yaml`](../openapi/identity/openapi.yaml)
+Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../packages/contracts/openapi/identity/openapi.yaml)
 
 ## Events
 
@@ -63,7 +63,7 @@ Full spec: [`docs/openapi/identity/openapi.yaml`](../openapi/identity/openapi.ya
 | `SessionEvicted` | `identity.session.evicted.v1` | Emitted when a session was forcibly terminated. |
 | `PasskeyReasserted` | `identity.passkey.reasserted.v1` | Emitted when a passkey was re-verified on a device. |
 
-Schemas: [`docs/openapi/identity/events/`](../openapi/identity/events/)
+Schemas: [`packages/contracts/openapi/identity/events/`](../../../../packages/contracts/openapi/identity/events/)
 
 ### Consumed
 

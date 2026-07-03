@@ -42,7 +42,7 @@ Catalog is the source of truth for the public event catalog in the platform. It 
 | `PATCH` | `/events/{id}/ticket-types/{tid}` | Update a ticket type | JWT |
 | `DELETE` | `/events/{id}/ticket-types/{tid}` | Delete a ticket type | JWT |
 
-Full spec: [`docs/openapi/catalog/openapi.yaml`](../openapi/catalog/openapi.yaml)
+Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../packages/contracts/openapi/catalog/openapi.yaml)
 
 ## Events
 
@@ -56,7 +56,7 @@ Full spec: [`docs/openapi/catalog/openapi.yaml`](../openapi/catalog/openapi.yaml
 | `TicketTypeCreated` | `catalog.ticket_type.created.v1` | Emitted when a ticket type was added to an event. |
 | `TicketTypeDeleted` | `catalog.ticket_type.deleted.v1` | Emitted when a ticket type was removed from an event. |
 
-Schemas: [`docs/openapi/catalog/events/`](../openapi/catalog/events/)
+Schemas: [`packages/contracts/openapi/catalog/events/`](../../../../packages/contracts/openapi/catalog/events/)
 
 ### Consumed
 

@@ -22,7 +22,7 @@ Gateway is the real time WebSocket edge service in the platform. It authenticate
 | `WS` | `/ws/{channel_key}` | Open a WebSocket connection to a named channel | JWT |
 | `WS` | `/ws/{channel_key}` | Open a WebSocket connection as a scanner device | Scanner JWT |
 
-Full spec: [`docs/openapi/gateway/openapi.yaml`](../openapi/gateway/openapi.yaml)
+Full spec: [`packages/contracts/openapi/gateway/openapi.yaml`](../../../../packages/contracts/openapi/gateway/openapi.yaml)
 
 ### Channels
 

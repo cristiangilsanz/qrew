@@ -21,7 +21,7 @@ Payments is the Stripe integration service in the platform. It creates and track
 | `POST` | `/payments` | Initiate a payment for a reservation | Internal |
 | `POST` | `/payments/webhook` | Receive a Stripe webhook for payment outcomes | Stripe signature |
 
-Full spec: [`docs/openapi/payments/openapi.yaml`](../openapi/payments/openapi.yaml)
+Full spec: [`packages/contracts/openapi/payments/openapi.yaml`](../../../../packages/contracts/openapi/payments/openapi.yaml)
 
 ## Events
 
@@ -35,7 +35,7 @@ Full spec: [`docs/openapi/payments/openapi.yaml`](../openapi/payments/openapi.ya
 | `PaymentRefunded` | `payments.payment.refunded.v1` | Emitted when a full or partial refund was processed. |
 | `ChargebackOpened` | `payments.chargeback.opened.v1` | Emitted when a chargeback dispute was opened by the card issuer. |
 
-Schemas: [`docs/openapi/payments/events/`](../openapi/payments/events/)
+Schemas: [`packages/contracts/openapi/payments/events/`](../../../../packages/contracts/openapi/payments/events/)
 
 ### Consumed
 

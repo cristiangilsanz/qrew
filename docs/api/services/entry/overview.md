@@ -20,7 +20,7 @@ Entry is the gate control service in the platform. It registers scanner devices,
 |--------|------|-------------|------|
 | `POST` | `/scanners` | Register a scanner device and issue scanner credentials | Internal |
 
-Full spec: [`docs/openapi/entry/openapi.yaml`](../openapi/entry/openapi.yaml)
+Full spec: [`packages/contracts/openapi/entry/openapi.yaml`](../../../../packages/contracts/openapi/entry/openapi.yaml)
 
 > Ticket scanning is handled internally via the WebSocket gateway entry channel and the ticketing service HTTP call. There is no public scan endpoint.
 
@@ -33,7 +33,7 @@ Full spec: [`docs/openapi/entry/openapi.yaml`](../openapi/entry/openapi.yaml)
 | `EntryValidated` | `entry.entry.validated.v1` | Emitted when a ticket was successfully scanned and admitted. |
 | `EntryRejected` | `entry.entry.rejected.v1` | Emitted when a scan attempt was rejected due to an invalid token, wrong venue, or already used ticket. |
 
-Schemas: [`docs/openapi/entry/events/`](../openapi/entry/events/)
+Schemas: [`packages/contracts/openapi/entry/events/`](../../../../packages/contracts/openapi/entry/events/)
 
 ### Consumed
 

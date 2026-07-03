@@ -27,7 +27,7 @@ Sales is the reservation and queue management service in the platform. It create
 | `GET` | `/queue/{id}` | Get queue position and status | JWT |
 | `POST` | `/queue/{id}/admit` | Admit a queued user and open a reservation window | Internal |
 
-Full spec: [`docs/openapi/sales/openapi.yaml`](../openapi/sales/openapi.yaml)
+Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../packages/contracts/openapi/sales/openapi.yaml)
 
 ## Events
 
@@ -43,7 +43,7 @@ Full spec: [`docs/openapi/sales/openapi.yaml`](../openapi/sales/openapi.yaml)
 | `QueueJoined` | `sales.queue.joined.v1` | Emitted when a user joined the waitlist queue. |
 | `QueueAdmitted` | `sales.queue.admitted.v1` | Emitted when a queued user was admitted and a reservation window opened. |
 
-Schemas: [`docs/openapi/sales/events/`](../openapi/sales/events/)
+Schemas: [`packages/contracts/openapi/sales/events/`](../../../../packages/contracts/openapi/sales/events/)
 
 ### Consumed
 

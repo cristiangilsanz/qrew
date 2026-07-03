@@ -26,7 +26,7 @@ Ticketing is the ticket lifecycle authority in the platform. It creates and issu
 | `POST` | `/tickets/{id}/restore` | Restore a frozen or cancelled ticket | Internal |
 | `POST` | `/tickets/{id}/use` | Mark a ticket as used after a successful entry scan | Internal |
 
-Full spec: [`docs/openapi/ticketing/openapi.yaml`](../openapi/ticketing/openapi.yaml)
+Full spec: [`packages/contracts/openapi/ticketing/openapi.yaml`](../../../../packages/contracts/openapi/ticketing/openapi.yaml)
 
 ## Events
 
@@ -42,7 +42,7 @@ Full spec: [`docs/openapi/ticketing/openapi.yaml`](../openapi/ticketing/openapi.
 | `QrMinted` | `ticketing.qr.minted.v1` | Emitted when a QR token was successfully minted. |
 | `QrDenied` | `ticketing.qr.denied.v1` | Emitted when a QR token request was denied. |
 
-Schemas: [`docs/openapi/ticketing/events/`](../openapi/ticketing/events/)
+Schemas: [`packages/contracts/openapi/ticketing/events/`](../../../../packages/contracts/openapi/ticketing/events/)
 
 ### Consumed
 

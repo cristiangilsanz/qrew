@@ -1,4 +1,4 @@
-# Event System
+# Messaging System
 
 Qrew uses NATS JetStream for asynchronous cross-service communication.
 
