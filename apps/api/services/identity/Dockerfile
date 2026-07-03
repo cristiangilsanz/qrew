@@ -19,6 +19,7 @@ COPY packages/shared-python/messaging/pyproject.toml packages/shared-python/mess
 COPY packages/shared-python/worker/pyproject.toml packages/shared-python/worker/pyproject.toml
 COPY packages/shared-python/probes/pyproject.toml packages/shared-python/probes/pyproject.toml
 COPY packages/shared-python/pagination/pyproject.toml packages/shared-python/pagination/pyproject.toml
+COPY packages/shared-python/outbox/pyproject.toml packages/shared-python/outbox/pyproject.toml
 COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
 COPY uv.lock ./
 
@@ -47,6 +48,7 @@ COPY packages/shared-python/messaging/src/ ./src/
 COPY packages/shared-python/worker/src/ ./src/
 COPY packages/shared-python/probes/src/ ./src/
 COPY packages/shared-python/pagination/src/ ./src/
+COPY packages/shared-python/outbox/src/ ./src/
 COPY packages/contracts/src/ ./src/
 
 ENV PATH="/app/.venv/bin:$PATH"
