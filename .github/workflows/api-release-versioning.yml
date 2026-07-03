@@ -78,7 +78,7 @@ jobs:
           cache-from: type=gha
 
       - name: Scan Docker Image for Vulnerabilities
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: qrew-${{ matrix.service }}:scan
           format: table
