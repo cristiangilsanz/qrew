@@ -1,0 +1,78 @@
+[project]
+name = "sales"
+version = "0.1.0"
+description = "Qrew sales service."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic-settings[yaml]>=2.0",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+    "redis[hiredis]>=5.0",
+    "PyJWT>=2.8",
+    "slowapi>=0.1",
+    "structlog>=24.0",
+    "opentelemetry-api>=1.24",
+    "opentelemetry-sdk>=1.24",
+    "opentelemetry-instrumentation-fastapi>=0.45b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.45b0",
+    "cryptography>=42",
+    "nats-py>=2.6",
+    "idempotency",
+    "locking",
+    "messaging",
+    "worker",
+    "observability",
+    "contracts",
+    "security",
+]
+
+[tool.uv.sources]
+idempotency = { workspace = true }
+locking = { workspace = true }
+messaging = { workspace = true }
+worker = { workspace = true }
+observability = { workspace = true }
+contracts = { workspace = true }
+security = { workspace = true }
+
+[project.scripts]
+dev = "com.qode.qrew.v1.sales.__main__:main"
+worker = "com.qode.qrew.v1.sales.worker.__main__:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=5",
+    "pyright>=1.1",
+    "ruff>=0.4",
+    "testcontainers[postgres]>=4.8",
+    "fakeredis[lua]>=2.23",
+    "httpx>=0.27",
+]
+
+[tool.uv]
+venvPath = "../.."
+venv = ".venv"
+
+[tool.pyright]
+reportMissingTypeStubs = false
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+extraPaths = ["../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+testpaths = ["tests"]
+pythonpath = ["src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
+python_files = ["*_test.py"]
+addopts = ["--tb=short", "--strict-markers", "--no-header"]
+markers = ["integration: marks tests as integration tests (require running Postgres)"]
+
+[tool.ruff]
+line-length = 100

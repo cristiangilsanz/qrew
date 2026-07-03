@@ -10,7 +10,6 @@ resolution-markers = [
 [manifest]
 members = [
     "audit",
-    "auditor",
     "catalog",
     "contracts",
     "db",
@@ -329,11 +328,10 @@ wheels = [
 [[package]]
 name = "audit"
 version = "0.1.0"
-source = { virtual = "services/audit" }
+source = { virtual = "apps/api/services/audit" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
-    { name = "auditor" },
     { name = "exceptions" },
     { name = "fastapi" },
     { name = "idempotency" },
@@ -366,7 +364,6 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "asyncpg", specifier = ">=0.29" },
-    { name = "auditor", editable = "packages/auditor" },
     { name = "exceptions", editable = "packages/shared-python/exceptions" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "idempotency", editable = "packages/shared-python/idempotency" },
@@ -396,35 +393,6 @@ dev = [
 ]
 
 [[package]]
-name = "auditor"
-version = "0.1.0"
-source = { editable = "packages/auditor" }
-dependencies = [
-    { name = "contracts" },
-    { name = "messaging" },
-    { name = "structlog" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "contracts", editable = "packages/contracts" },
-    { name = "messaging", editable = "packages/shared-python/messaging" },
-    { name = "structlog", specifier = ">=24.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8" },
-    { name = "pytest-asyncio", specifier = ">=0.24" },
-]
-
-[[package]]
 name = "bcrypt"
 version = "3.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -448,7 +416,7 @@ wheels = [
 [[package]]
 name = "catalog"
 version = "0.1.0"
-source = { virtual = "services/catalog" }
+source = { virtual = "apps/api/services/catalog" }
 dependencies = [
     { name = "alembic" },
     { name = "arq" },
@@ -473,6 +441,7 @@ dependencies = [
     { name = "pydantic-settings", extra = ["yaml"] },
     { name = "pyjwt" },
     { name = "redis", extra = ["hiredis"] },
+    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -516,6 +485,7 @@ requires-dist = [
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "security", editable = "packages/shared-python/security" },
     { name = "slowapi", specifier = ">=0.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
@@ -964,7 +934,7 @@ wheels = [
 [[package]]
 name = "entry"
 version = "0.1.0"
-source = { editable = "services/entry" }
+source = { editable = "apps/api/services/entry" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -990,6 +960,7 @@ dependencies = [
     { name = "pydantic-settings", extra = ["yaml"] },
     { name = "pyjwt", extra = ["crypto"] },
     { name = "redis", extra = ["hiredis"] },
+    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -1039,6 +1010,7 @@ requires-dist = [
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.4" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "security", editable = "packages/shared-python/security" },
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.1" },
@@ -1254,7 +1226,7 @@ wheels = [
 [[package]]
 name = "gateway"
 version = "0.1.0"
-source = { virtual = "gateway" }
+source = { virtual = "apps/api/gateway" }
 dependencies = [
     { name = "cryptography" },
     { name = "exceptions" },
@@ -1266,6 +1238,7 @@ dependencies = [
     { name = "pydantic-settings", extra = ["yaml"] },
     { name = "pyjwt" },
     { name = "redis", extra = ["hiredis"] },
+    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -1295,6 +1268,7 @@ requires-dist = [
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "security", editable = "packages/shared-python/security" },
     { name = "slowapi", specifier = ">=0.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
@@ -1655,7 +1629,7 @@ wheels = [
 [[package]]
 name = "identity"
 version = "0.1.0"
-source = { virtual = "services/identity" }
+source = { virtual = "apps/api/services/identity" }
 dependencies = [
     { name = "aiosmtplib" },
     { name = "alembic" },
@@ -1686,6 +1660,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-redis" },
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
+    { name = "outbox" },
     { name = "pagination" },
     { name = "passlib", extra = ["argon2", "bcrypt"] },
     { name = "phonenumbers" },
@@ -1697,6 +1672,7 @@ dependencies = [
     { name = "python-multipart" },
     { name = "ratelimit" },
     { name = "redis", extra = ["hiredis"] },
+    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -1754,6 +1730,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-redis", specifier = ">=0.48b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.48b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
+    { name = "outbox", editable = "packages/shared-python/outbox" },
     { name = "pagination", editable = "packages/shared-python/pagination" },
     { name = "passlib", extras = ["bcrypt", "argon2"], specifier = ">=1.7" },
     { name = "phonenumbers", specifier = ">=8.13" },
@@ -1765,6 +1742,7 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.9" },
     { name = "ratelimit", editable = "packages/shared-python/ratelimit" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "security", editable = "packages/shared-python/security" },
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.1" },
@@ -2539,7 +2517,7 @@ wheels = [
 [[package]]
 name = "outbox"
 version = "0.1.0"
-source = { virtual = "packages/shared-python/outbox" }
+source = { editable = "packages/shared-python/outbox" }
 
 [[package]]
 name = "packaging"
@@ -2599,7 +2577,7 @@ bcrypt = [
 [[package]]
 name = "payments"
 version = "0.1.0"
-source = { editable = "services/payments" }
+source = { editable = "apps/api/services/payments" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -2624,6 +2602,7 @@ dependencies = [
     { name = "pydantic-settings", extra = ["yaml"] },
     { name = "pyjwt", extra = ["crypto"] },
     { name = "redis", extra = ["hiredis"] },
+    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "stripe" },
@@ -2669,6 +2648,7 @@ requires-dist = [
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.4" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "security", editable = "packages/shared-python/security" },
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "stripe", specifier = ">=10.0" },
@@ -3277,7 +3257,7 @@ wheels = [
 
 [[package]]
 name = "qrew-workspace"
-version = "1.1.0"
+version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "cryptography" },
@@ -3395,7 +3375,7 @@ wheels = [
 [[package]]
 name = "sales"
 version = "0.1.0"
-source = { virtual = "services/sales" }
+source = { virtual = "apps/api/services/sales" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -3414,6 +3394,7 @@ dependencies = [
     { name = "pydantic-settings", extra = ["yaml"] },
     { name = "pyjwt" },
     { name = "redis", extra = ["hiredis"] },
+    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -3452,6 +3433,7 @@ requires-dist = [
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "security", editable = "packages/shared-python/security" },
     { name = "slowapi", specifier = ">=0.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
@@ -3474,7 +3456,7 @@ dev = [
 [[package]]
 name = "security"
 version = "0.1.0"
-source = { virtual = "packages/shared-python/security" }
+source = { editable = "packages/shared-python/security" }
 dependencies = [
     { name = "cryptography" },
     { name = "pydantic" },
@@ -3626,7 +3608,7 @@ redis = [
 [[package]]
 name = "ticketing"
 version = "0.1.0"
-source = { virtual = "services/ticketing" }
+source = { virtual = "apps/api/services/ticketing" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
@@ -3648,6 +3630,7 @@ dependencies = [
     { name = "pydantic-settings", extra = ["yaml"] },
     { name = "pyjwt", extra = ["crypto"] },
     { name = "redis", extra = ["hiredis"] },
+    { name = "security" },
     { name = "slowapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -3689,6 +3672,7 @@ requires-dist = [
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.0" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "security", editable = "packages/shared-python/security" },
     { name = "slowapi", specifier = ">=0.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },

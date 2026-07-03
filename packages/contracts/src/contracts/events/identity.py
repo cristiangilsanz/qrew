@@ -8,8 +8,9 @@ from contracts.messaging.envelope import EventEnvelope
 
 
 class UserRegisteredData(BaseModel):
-    email: str
-    display_name: str
+    user_id: uuid.UUID
+    registered_at: str
+    phone_e164: str | None = None
 
 
 class UserVerifiedData(BaseModel):

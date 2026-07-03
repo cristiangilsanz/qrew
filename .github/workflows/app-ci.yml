@@ -3,14 +3,14 @@ name: App CI
 on:
   pull_request:
     branches: [main]
-    paths: [app/**]
+    paths: [apps/app/**]
     types: [opened, synchronize, reopened]
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  typecheck:
-    name: Type Check
+  quality-checks:
+    name: Quality Checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,16 +18,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
       - run: npm ci
-        working-directory: app
-      - run: npm run build
-        working-directory: app
-      - run: npm run typecheck
-        working-directory: app
+      - name: Lint
+        run: npm run lint -w apps/app
+      - name: Format
+        run: npm run format:check -w apps/app
+      - name: Build
+        run: npm run build -w apps/app
+      - name: Type Check
+        run: npm run typecheck -w apps/app
 
-  lint:
-    name: Lint
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,40 +37,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
       - run: npm ci
-        working-directory: app
-      - run: npm run lint
-        working-directory: app
-      - run: npm run format:check
-        working-directory: app
-
-  test:
-    name: Unit Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-      - run: npm ci
-        working-directory: app
-      - run: npm run test:run
-        working-directory: app
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-      - run: npm ci
-        working-directory: app
-      - run: npm run build
-        working-directory: app
+      - name: Unit Tests
+        run: npm run test:run -w apps/app

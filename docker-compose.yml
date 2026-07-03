@@ -47,11 +47,11 @@ services:
   identity:
     build:
       context: .
-      dockerfile: services/identity/Dockerfile
+      dockerfile: apps/api/services/identity/Dockerfile
     ports:
       - "8001:8001"
     volumes:
-      - ./services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -75,10 +75,10 @@ services:
   identity-worker:
     build:
       context: .
-      dockerfile: services/identity/Dockerfile
+      dockerfile: apps/api/services/identity/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.identity.worker"]
     volumes:
-      - ./services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -92,10 +92,10 @@ services:
   identity-arq-worker:
     build:
       context: .
-      dockerfile: services/identity/Dockerfile
+      dockerfile: apps/api/services/identity/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.identity.worker.arq_worker"]
     volumes:
-      - ./services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -108,11 +108,11 @@ services:
   entry:
     build:
       context: .
-      dockerfile: services/entry/Dockerfile
+      dockerfile: apps/api/services/entry/Dockerfile
     ports:
       - "8006:8006"
     volumes:
-      - ./services/entry/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/entry/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -139,10 +139,10 @@ services:
   entry-worker:
     build:
       context: .
-      dockerfile: services/entry/Dockerfile
+      dockerfile: apps/api/services/entry/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.entry.worker"]
     volumes:
-      - ./services/entry/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/entry/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
@@ -155,11 +155,11 @@ services:
   payments:
     build:
       context: .
-      dockerfile: services/payments/Dockerfile
+      dockerfile: apps/api/services/payments/Dockerfile
     ports:
       - "8004:8004"
     volumes:
-      - ./services/payments/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/payments/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -184,11 +184,11 @@ services:
   catalog:
     build:
       context: .
-      dockerfile: services/catalog/Dockerfile
+      dockerfile: apps/api/services/catalog/Dockerfile
     ports:
       - "8002:8002"
     volumes:
-      - ./services/catalog/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/catalog/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -212,10 +212,10 @@ services:
   catalog-worker:
     build:
       context: .
-      dockerfile: services/catalog/Dockerfile
+      dockerfile: apps/api/services/catalog/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.catalog.worker"]
     volumes:
-      - ./services/catalog/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/catalog/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -231,11 +231,11 @@ services:
   ticketing:
     build:
       context: .
-      dockerfile: services/ticketing/Dockerfile
+      dockerfile: apps/api/services/ticketing/Dockerfile
     ports:
       - "8005:8005"
     volumes:
-      - ./services/ticketing/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/ticketing/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -259,10 +259,10 @@ services:
   ticketing-worker:
     build:
       context: .
-      dockerfile: services/ticketing/Dockerfile
+      dockerfile: apps/api/services/ticketing/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.ticketing.worker"]
     volumes:
-      - ./services/ticketing/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/ticketing/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
@@ -275,11 +275,11 @@ services:
   sales:
     build:
       context: .
-      dockerfile: services/sales/Dockerfile
+      dockerfile: apps/api/services/sales/Dockerfile
     ports:
       - "8003:8003"
     volumes:
-      - ./services/sales/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/sales/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -303,10 +303,10 @@ services:
   sales-worker:
     build:
       context: .
-      dockerfile: services/sales/Dockerfile
+      dockerfile: apps/api/services/sales/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.sales.worker"]
     volumes:
-      - ./services/sales/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/sales/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
@@ -319,11 +319,11 @@ services:
   audit:
     build:
       context: .
-      dockerfile: services/audit/Dockerfile
+      dockerfile: apps/api/services/audit/Dockerfile
     ports:
       - "8007:8007"
     volumes:
-      - ./services/audit/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/audit/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
@@ -344,10 +344,10 @@ services:
   audit-worker:
     build:
       context: .
-      dockerfile: services/audit/Dockerfile
+      dockerfile: apps/api/services/audit/Dockerfile
     command: ["python", "-m", "com.qode.qrew.v1.audit.worker"]
     volumes:
-      - ./services/audit/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/services/audit/config/local.yaml:/app/config/local.yaml:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       NATS_URL: nats://nats:4222
@@ -360,11 +360,11 @@ services:
   gateway:
     build:
       context: .
-      dockerfile: gateway/Dockerfile
+      dockerfile: apps/api/gateway/Dockerfile
     ports:
       - "8008:8008"
     volumes:
-      - ./gateway/config/local.yaml:/app/config/local.yaml:ro
+      - ./apps/api/gateway/config/local.yaml:/app/config/local.yaml:ro
     environment:
       NATS_URL: nats://nats:4222
       HOST: 0.0.0.0

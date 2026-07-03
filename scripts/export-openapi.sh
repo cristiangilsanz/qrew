@@ -2,18 +2,18 @@
 set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT_DIR="$REPO_ROOT/docs/openapi"
+OUT_DIR="$REPO_ROOT/packages/contracts/openapi"
 CONTRACTS_SRC="$REPO_ROOT/packages/contracts/src"
 
 declare -A SERVICES=(
-  [identity]="services/identity:com.qode.qrew.v1.identity.app"
-  [catalog]="services/catalog:com.qode.qrew.v1.catalog.app"
-  [entry]="services/entry:com.qode.qrew.v1.entry.app"
-  [payments]="services/payments:com.qode.qrew.v1.payments.app"
-  [sales]="services/sales:com.qode.qrew.v1.sales.app"
-  [ticketing]="services/ticketing:com.qode.qrew.v1.ticketing.app"
-  [audit]="services/audit:com.qode.qrew.v1.audit.app"
-  [gateway]="gateway:com.qode.qrew.v1.gateway.app"
+  [identity]="apps/api/services/identity:com.qode.qrew.v1.identity.app"
+  [catalog]="apps/api/services/catalog:com.qode.qrew.v1.catalog.app"
+  [entry]="apps/api/services/entry:com.qode.qrew.v1.entry.app"
+  [payments]="apps/api/services/payments:com.qode.qrew.v1.payments.app"
+  [sales]="apps/api/services/sales:com.qode.qrew.v1.sales.app"
+  [ticketing]="apps/api/services/ticketing:com.qode.qrew.v1.ticketing.app"
+  [audit]="apps/api/services/audit:com.qode.qrew.v1.audit.app"
+  [gateway]="apps/api/gateway:com.qode.qrew.v1.gateway.app"
 )
 
 # Services that publish domain events (name maps to contracts.events.<name>)
@@ -48,7 +48,7 @@ spec = app.openapi()
 with open('$svc_dir/openapi.yaml', 'w') as f:
     yaml.dump(spec, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 "
-  echo "  -> docs/openapi/$svc/openapi.yaml"
+  echo "  -> packages/contracts/openapi/$svc/openapi.yaml"
 done
 
 echo ""
@@ -74,9 +74,9 @@ for name, cls in inspect.getmembers(mod, inspect.isclass):
         out_path = '$events_dir/' + event_name + '.schema.json'
         with open(out_path, 'w') as f:
             json.dump(schema, f, indent=2)
-        print(f'  -> docs/openapi/$svc/events/{event_name}.schema.json')
+        print(f'  -> packages/contracts/openapi/$svc/events/{event_name}.schema.json')
 "
 done
 
 echo ""
-echo "Done. All specs exported to docs/openapi/"
+echo "Done. All specs exported to packages/contracts/openapi/"
