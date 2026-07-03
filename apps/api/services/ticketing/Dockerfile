@@ -9,6 +9,7 @@ COPY apps/api/services/ticketing/pyproject.toml apps/api/services/ticketing/pypr
 COPY packages/shared-python/exceptions/pyproject.toml packages/shared-python/exceptions/pyproject.toml
 COPY packages/shared-python/idempotency/pyproject.toml packages/shared-python/idempotency/pyproject.toml
 COPY packages/shared-python/middleware/pyproject.toml packages/shared-python/middleware/pyproject.toml
+COPY packages/shared-python/security/pyproject.toml packages/shared-python/security/pyproject.toml
 COPY packages/shared-python/observability/pyproject.toml packages/shared-python/observability/pyproject.toml
 COPY packages/shared-python/locking/pyproject.toml packages/shared-python/locking/pyproject.toml
 COPY packages/shared-python/worker/pyproject.toml packages/shared-python/worker/pyproject.toml
@@ -28,6 +29,7 @@ COPY apps/api/services/ticketing/src/ ./src/
 COPY packages/shared-python/exceptions/src/ ./src/
 COPY packages/shared-python/idempotency/src/ ./src/
 COPY packages/shared-python/middleware/src/ ./src/
+COPY packages/shared-python/security/src/ ./src/
 COPY packages/shared-python/observability/src/ ./src/
 COPY packages/shared-python/locking/src/ ./src/
 COPY packages/shared-python/worker/src/ ./src/

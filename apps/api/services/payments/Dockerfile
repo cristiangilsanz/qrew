@@ -9,6 +9,7 @@ COPY apps/api/services/payments/pyproject.toml apps/api/services/payments/pyproj
 COPY packages/shared-python/exceptions/pyproject.toml packages/shared-python/exceptions/pyproject.toml
 COPY packages/shared-python/idempotency/pyproject.toml packages/shared-python/idempotency/pyproject.toml
 COPY packages/shared-python/middleware/pyproject.toml packages/shared-python/middleware/pyproject.toml
+COPY packages/shared-python/security/pyproject.toml packages/shared-python/security/pyproject.toml
 COPY packages/shared-python/observability/pyproject.toml packages/shared-python/observability/pyproject.toml
 COPY packages/shared-python/db/pyproject.toml packages/shared-python/db/pyproject.toml
 COPY packages/shared-python/probes/pyproject.toml packages/shared-python/probes/pyproject.toml
@@ -26,6 +27,7 @@ COPY apps/api/services/payments/src/ ./src/
 COPY packages/shared-python/exceptions/src/ ./src/
 COPY packages/shared-python/idempotency/src/ ./src/
 COPY packages/shared-python/middleware/src/ ./src/
+COPY packages/shared-python/security/src/ ./src/
 COPY packages/shared-python/observability/src/ ./src/
 COPY packages/shared-python/db/src/ ./src/
 COPY packages/shared-python/probes/src/ ./src/
