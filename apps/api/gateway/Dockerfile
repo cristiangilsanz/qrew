@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.10.12 /uv /usr/local/bin/uv
 
@@ -16,7 +16,7 @@ COPY uv.lock ./
 
 RUN uv sync --package gateway --no-dev --frozen
 
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 RUN useradd --system --no-create-home --uid 1001 appuser
 
