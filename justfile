@@ -45,23 +45,50 @@ resume:
     docker compose start postgres redis nats
     just db-upgrade
 
+# Build and run all services in containers
+up:
+    docker compose up postgres redis nats -d --wait
+    just db-upgrade
+    docker compose up --build -d
+    docker compose logs -f
+
 # Tear down dev environment
 shutdown:
     docker compose down --volumes --rmi local --remove-orphans
 
+# Apply pending migrations for all services
+db-upgrade:
+    cd {{IDENTITY}}  && uv run alembic upgrade head
+    cd {{ENTRY}}     && uv run alembic upgrade head
+    cd {{PAYMENTS}}  && uv run alembic upgrade head
+    cd {{CATALOG}}   && uv run alembic upgrade head
+    cd {{TICKETING}} && uv run alembic upgrade head
+    cd {{SALES}}     && uv run alembic upgrade head
+    cd {{AUDIT}}     && uv run alembic upgrade head
+
+# Rollback last migration for all services
+db-downgrade:
+    cd {{IDENTITY}}  && uv run alembic downgrade -1
+    cd {{ENTRY}}     && uv run alembic downgrade -1
+    cd {{PAYMENTS}}  && uv run alembic downgrade -1
+    cd {{CATALOG}}   && uv run alembic downgrade -1
+    cd {{TICKETING}} && uv run alembic downgrade -1
+    cd {{SALES}}     && uv run alembic downgrade -1
+    cd {{AUDIT}}     && uv run alembic downgrade -1
+
+# Wipe and re-apply all migrations from scratch
+db-clean:
+    cd {{IDENTITY}}  && uv run alembic downgrade base && uv run alembic upgrade head
+    cd {{ENTRY}}     && uv run alembic downgrade base && uv run alembic upgrade head
+    cd {{PAYMENTS}}  && uv run alembic downgrade base && uv run alembic upgrade head
+    cd {{CATALOG}}   && uv run alembic downgrade base && uv run alembic upgrade head
+    cd {{TICKETING}} && uv run alembic downgrade base && uv run alembic upgrade head
+    cd {{SALES}}     && uv run alembic downgrade base && uv run alembic upgrade head
+    cd {{AUDIT}}     && uv run alembic downgrade base && uv run alembic upgrade head
+
 # Install dependencies
 install:
     uv sync --all-packages --all-groups
-
-# Run dev environment
-dev:
-    -fuser -k 8006/tcp
-    just db-upgrade
-    cd {{IDENTITY}} && uv run dev
-
-# Run background job worker
-worker:
-    cd {{IDENTITY}} && uv run worker
 
 # Launch Jaeger for local trace viewing
 trace:
@@ -130,35 +157,19 @@ fix: lint-fix format-fix
 # Verify all checks
 check: lint-check format-check type-check test
 
-# Create a new auto-generated migration
-migrate message:
-    cd {{IDENTITY}} && uv run alembic revision --autogenerate -m "{{message}}"
-
-# Apply all pending migrations
-db-upgrade:
-    cd {{IDENTITY}} && uv run alembic upgrade head
-
-# Rollback last migration
-db-downgrade:
-    cd {{IDENTITY}} && uv run alembic downgrade -1
-
-# Drop all tables and re-apply migrations from scratch
-db-clean:
-    cd {{IDENTITY}} && uv run alembic downgrade base && uv run alembic upgrade head
-
 # ── Identity service ──────────────────────────────────────────────────────────
 
 # Run identity service with auto-reload
 identity-dev:
-    cd {{IDENTITY}} && uv run dev
+    cd {{IDENTITY}} && uv run alembic upgrade head && uv run identity-dev
 
 # Run identity NATS worker
 identity-worker:
-    cd {{IDENTITY}} && uv run worker
+    cd {{IDENTITY}} && uv run identity-worker
 
 # Run identity Arq background job worker
 identity-arq-worker:
-    cd {{IDENTITY}} && uv run arq-worker
+    cd {{IDENTITY}} && uv run identity-arq-worker
 
 # Apply identity migrations
 identity-db-upgrade:
@@ -176,11 +187,11 @@ identity-type-check:
 
 # Run entry service with auto-reload
 entry-dev:
-    cd {{ENTRY}} && uv run dev
+    cd {{ENTRY}} && uv run alembic upgrade head && uv run entry-dev
 
 # Run entry NATS worker
 entry-worker:
-    cd {{ENTRY}} && uv run worker
+    cd {{ENTRY}} && uv run entry-worker
 
 # Apply entry migrations
 entry-db-upgrade:
@@ -198,7 +209,7 @@ entry-type-check:
 
 # Run payments service with auto-reload
 payments-dev:
-    cd {{PAYMENTS}} && uv run dev
+    cd {{PAYMENTS}} && uv run alembic upgrade head && uv run payments-dev
 
 # Apply payments migrations
 payments-db-upgrade:
@@ -216,11 +227,11 @@ payments-type-check:
 
 # Run catalog service with auto-reload
 catalog-dev:
-    cd {{CATALOG}} && uv run dev
+    cd {{CATALOG}} && uv run alembic upgrade head && uv run catalog-dev
 
 # Run catalog Arq worker
 catalog-worker:
-    cd {{CATALOG}} && uv run worker
+    cd {{CATALOG}} && uv run catalog-worker
 
 # Apply catalog migrations
 catalog-db-upgrade:
@@ -238,11 +249,11 @@ catalog-type-check:
 
 # Run ticketing service with auto-reload
 ticketing-dev:
-    cd {{TICKETING}} && uv run dev
+    cd {{TICKETING}} && uv run alembic upgrade head && uv run ticketing-dev
 
 # Run ticketing NATS worker
 ticketing-worker:
-    cd {{TICKETING}} && uv run worker
+    cd {{TICKETING}} && uv run ticketing-worker
 
 # Apply ticketing migrations
 ticketing-db-upgrade:
@@ -260,11 +271,11 @@ ticketing-type-check:
 
 # Run sales service with auto-reload
 sales-dev:
-    cd {{SALES}} && uv run dev
+    cd {{SALES}} && uv run alembic upgrade head && uv run sales-dev
 
 # Run sales NATS worker
 sales-worker:
-    cd {{SALES}} && uv run worker
+    cd {{SALES}} && uv run sales-worker
 
 # Apply sales migrations
 sales-db-upgrade:
@@ -282,11 +293,11 @@ sales-type-check:
 
 # Run audit service with auto-reload
 audit-dev:
-    cd {{AUDIT}} && uv run dev
+    cd {{AUDIT}} && uv run alembic upgrade head && uv run audit-dev
 
 # Run audit NATS worker
 audit-worker:
-    cd {{AUDIT}} && uv run worker
+    cd {{AUDIT}} && uv run audit-worker
 
 # Apply audit migrations
 audit-db-upgrade:
@@ -304,7 +315,7 @@ audit-type-check:
 
 # Run gateway service with auto-reload
 gateway-dev:
-    cd {{GATEWAY}} && uv run dev
+    cd {{GATEWAY}} && uv run gateway-dev
 
 # Type-check gateway service
 gateway-type-check:

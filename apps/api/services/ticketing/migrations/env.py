@@ -40,6 +40,7 @@ def run_migrations_offline() -> None:
         dialect_opts={"paramstyle": "named"},
         include_schemas=True,
         include_object=include_object,  # type: ignore[arg-type]
+        version_table="alembic_version_ticketing",
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -51,6 +52,7 @@ def do_run_migrations(connection: object) -> None:
         target_metadata=target_metadata,
         include_schemas=True,
         include_object=include_object,  # type: ignore[arg-type]
+        version_table="alembic_version_ticketing",
     )
     with context.begin_transaction():
         context.run_migrations()
