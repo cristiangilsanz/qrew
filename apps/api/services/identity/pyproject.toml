@@ -1,3 +1,8 @@
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "identity"
 version = "0.1.0"
@@ -56,9 +61,9 @@ dependencies = [
 ]
 
 [project.scripts]
-dev = "com.qode.qrew.v1.identity.__main__:main"
-worker = "com.qode.qrew.v1.identity.worker.__main__:main"
-arq-worker = "com.qode.qrew.v1.identity.worker.runner:main"
+identity-dev = "com.qode.qrew.v1.identity.__main__:main"
+identity-worker = "com.qode.qrew.v1.identity.worker.__main__:main"
+identity-arq-worker = "com.qode.qrew.v1.identity.worker.runner:main"
 
 [dependency-groups]
 dev = [
@@ -95,6 +100,7 @@ security = { workspace = true }
 outbox = { workspace = true }
 
 [tool.uv]
+package = true
 venvPath = "../.."
 venv = ".venv"
 
@@ -135,3 +141,6 @@ omit = ["*/__main__.py"]
 show_missing = true
 skip_covered = false
 fail_under = 0
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/com"]

@@ -54,7 +54,7 @@ contracts = { workspace = true }
 security = { workspace = true }
 
 [project.scripts]
-dev = "com.qode.qrew.v1.payments.__main__:main"
+payments-dev = "com.qode.qrew.v1.payments.__main__:main"
 
 [dependency-groups]
 dev = [

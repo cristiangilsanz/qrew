@@ -9,10 +9,23 @@
   },
   "auth": {
     "login": "Sign in",
+    "loginSubtitle": "Welcome back",
     "register": "Create account",
+    "registerSubtitle": "Join qrew to discover events",
     "logout": "Sign out",
     "email": "Email",
-    "password": "Password"
+    "password": "Password",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Jane Doe",
+    "phoneNumber": "Phone number",
+    "acceptTerms": "I accept the terms and conditions",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "registrationSuccess": "Account created! Check your email to verify.",
+    "errors": {
+      "loginFailed": "Invalid email or password",
+      "registerFailed": "Registration failed. Please try again."
+    }
   },
   "events": {
     "title": "Events",

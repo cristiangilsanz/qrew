@@ -1,3 +1,8 @@
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "audit"
 version = "0.1.0"
@@ -31,8 +36,8 @@ observability = { workspace = true }
 worker = { workspace = true }
 
 [project.scripts]
-dev = "com.qode.qrew.v1.audit.__main__:main"
-worker = "com.qode.qrew.v1.audit.worker.__main__:main"
+audit-dev = "com.qode.qrew.v1.audit.__main__:main"
+audit-worker = "com.qode.qrew.v1.audit.worker.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -47,6 +52,7 @@ dev = [
 ]
 
 [tool.uv]
+package = true
 venvPath = "../.."
 venv = ".venv"
 
@@ -67,3 +73,6 @@ addopts = ["--tb=short", "--strict-markers", "--no-header"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/com"]

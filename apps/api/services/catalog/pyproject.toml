@@ -1,3 +1,8 @@
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "catalog"
 version = "0.1.0"
@@ -48,8 +53,8 @@ contracts = { workspace = true }
 security = { workspace = true }
 
 [project.scripts]
-dev = "com.qode.qrew.v1.catalog.__main__:main"
-worker = "com.qode.qrew.v1.catalog.worker.__main__:main"
+catalog-dev = "com.qode.qrew.v1.catalog.__main__:main"
+catalog-worker = "com.qode.qrew.v1.catalog.worker.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -64,6 +69,7 @@ dev = [
 ]
 
 [tool.uv]
+package = true
 venvPath = "../.."
 venv = ".venv"
 
@@ -85,3 +91,6 @@ extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/sha
 
 [tool.ruff]
 line-length = 100
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/com"]

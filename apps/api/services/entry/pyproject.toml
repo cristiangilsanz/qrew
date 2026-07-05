@@ -58,8 +58,8 @@ contracts = { workspace = true }
 security = { workspace = true }
 
 [project.scripts]
-dev = "com.qode.qrew.v1.entry.__main__:main"
-worker = "com.qode.qrew.v1.entry.worker.__main__:main"
+entry-dev = "com.qode.qrew.v1.entry.__main__:main"
+entry-worker = "com.qode.qrew.v1.entry.worker.__main__:main"
 
 [dependency-groups]
 dev = [

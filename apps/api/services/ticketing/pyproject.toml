@@ -1,3 +1,8 @@
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "ticketing"
 version = "0.1.0"
@@ -45,8 +50,8 @@ contracts = { workspace = true }
 security = { workspace = true }
 
 [project.scripts]
-dev = "com.qode.qrew.v1.ticketing.__main__:main"
-worker = "com.qode.qrew.v1.ticketing.worker.__main__:main"
+ticketing-dev = "com.qode.qrew.v1.ticketing.__main__:main"
+ticketing-worker = "com.qode.qrew.v1.ticketing.worker.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -61,6 +66,7 @@ dev = [
 ]
 
 [tool.uv]
+package = true
 venvPath = "../.."
 venv = ".venv"
 
@@ -82,3 +88,6 @@ markers = ["integration: marks tests as integration tests (require real Postgres
 
 [tool.ruff]
 line-length = 100
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/com"]
