@@ -3,23 +3,23 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { useAuthStore } from '@/store/auth'
+import { type ApiErrorDetail, extractErrorMessage } from '@/features/auth/api'
 
-import { type ApiErrorDetail, authApi, extractErrorMessage, type RegisterRequest } from '../api'
+import { onboardingApi } from '../api'
 
-export function useRegister() {
+export function useVerifyEmail(onSuccess?: () => void) {
   const { t } = useTranslation()
-  const setPhoneNumber = useAuthStore((s) => s.setPhoneNumber)
 
   return useMutation({
-    mutationFn: (data: RegisterRequest) => authApi.register(data),
-    onSuccess: (_data, variables) => {
-      setPhoneNumber(variables.phone_number)
+    mutationFn: (data: { token: string }) => onboardingApi.verifyEmail(data),
+    onSuccess: () => {
+      toast.success(t('onboarding.email.successToast'))
+      onSuccess?.()
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
       const message = extractErrorMessage(
         error.response?.data?.detail,
-        t('auth.errors.registerFailed'),
+        t('onboarding.errors.verifyEmailFailed'),
       )
       toast.error(message)
     },
