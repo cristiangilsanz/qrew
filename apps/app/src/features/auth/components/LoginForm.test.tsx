@@ -138,9 +138,7 @@ describe('LoginForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign in with passkey/i }))
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/enter your email to sign in with a passkey/i),
-      ).toBeInTheDocument()
+      expect(screen.getByText(/enter your email to sign in with a passkey/i)).toBeInTheDocument()
     })
   })
 })
