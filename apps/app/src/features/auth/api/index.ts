@@ -50,4 +50,12 @@ export const authApi = {
     apiClient
       .post<RegisterResponse>('/v1/auth/registration/', { ...data, captcha_token: 'dev-bypass' })
       .then((r) => r.data),
+
+  passkeyAuthBegin: (email: string) =>
+    apiClient.post('/v1/auth/passkeys/authenticate/begin', { email }).then((r) => r.data),
+
+  passkeyAuthComplete: (credential: object) =>
+    apiClient
+      .post<LoginResponse>('/v1/auth/passkeys/authenticate/complete', credential)
+      .then((r) => r.data),
 }

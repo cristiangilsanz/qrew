@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { Eye, EyeOff, KeyRound, Lock, Mail } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input'
 
 import { useLogin } from '../hooks/useLogin'
+import { usePasskeyLogin } from '../hooks/usePasskeyLogin'
 import { AuthLayout } from './AuthLayout'
 
 const loginSchema = z.object({
@@ -31,6 +32,7 @@ export function LoginForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const login = useLogin()
+  const passkeyLogin = usePasskeyLogin()
   const [showPassword, setShowPassword] = useState(false)
 
   const form = useForm<LoginFormValues>({
@@ -40,6 +42,17 @@ export function LoginForm() {
 
   const onSubmit = (values: LoginFormValues) => {
     login.mutate(values, {
+      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/events' }),
+    })
+  }
+
+  const onPasskeyLogin = () => {
+    const email = form.getValues('email')
+    if (!email) {
+      form.setError('email', { message: t('auth.emailRequiredForPasskey') })
+      return
+    }
+    passkeyLogin.mutate(email, {
       onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/events' }),
     })
   }
@@ -107,6 +120,26 @@ export function LoginForm() {
           </Button>
         </form>
       </Form>
+
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="border-border w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background text-muted-foreground px-2">{t('auth.or')}</span>
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        isLoading={passkeyLogin.isPending}
+        onClick={onPasskeyLogin}
+      >
+        <KeyRound className="mr-2 h-4 w-4" />
+        {t('auth.passkeyLogin')}
+      </Button>
 
       <p className="text-muted-foreground mt-4 text-center text-sm">
         {t('auth.noAccount')}{' '}
