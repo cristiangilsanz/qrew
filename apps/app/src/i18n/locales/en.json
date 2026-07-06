@@ -32,7 +32,23 @@
   },
   "events": {
     "title": "Events",
-    "empty": "No events available"
+    "empty": "No events found. Try adjusting your search.",
+    "notFound": "Event not found.",
+    "backToList": "Back to events",
+    "searchPlaceholder": "Search events…",
+    "cityPlaceholder": "City",
+    "searchButton": "Search",
+    "soldOut": "Sold out",
+    "available": "{{count}} available",
+    "ticketTypes": "Tickets",
+    "venue": "Venue",
+    "organiser": "Organiser",
+    "unknownOrganiser": "Unknown organiser",
+    "starts": "Starts",
+    "ends": "Ends",
+    "saleEnds": "Sale ends",
+    "maxPerUser": "Max {{count}} per user",
+    "free": "Free"
   },
   "tickets": {
     "title": "My Tickets",

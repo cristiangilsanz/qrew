@@ -20,6 +20,7 @@ import { Route as AppTicketsIndexRouteImport } from './routes/_app/tickets/index
 import { Route as AppProfileIndexRouteImport } from './routes/_app/profile/index'
 import { Route as AppEventsIndexRouteImport } from './routes/_app/events/index'
 import { Route as AppProfilePasskeysRouteImport } from './routes/_app/profile/passkeys'
+import { Route as AppEventsEventIdRouteImport } from './routes/_app/events/$eventId'
 
 const ConfirmEmailChangeRoute = ConfirmEmailChangeRouteImport.update({
   id: '/confirm-email-change',
@@ -74,6 +75,11 @@ const AppProfilePasskeysRoute = AppProfilePasskeysRouteImport.update({
   path: '/profile/passkeys',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEventsEventIdRoute = AppEventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/setup': typeof AuthSetupRoute
+  '/events/$eventId': typeof AppEventsEventIdRoute
   '/profile/passkeys': typeof AppProfilePasskeysRoute
   '/events/': typeof AppEventsIndexRoute
   '/profile/': typeof AppProfileIndexRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/setup': typeof AuthSetupRoute
+  '/events/$eventId': typeof AppEventsEventIdRoute
   '/profile/passkeys': typeof AppProfilePasskeysRoute
   '/events': typeof AppEventsIndexRoute
   '/profile': typeof AppProfileIndexRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/setup': typeof AuthSetupRoute
+  '/_app/events/$eventId': typeof AppEventsEventIdRoute
   '/_app/profile/passkeys': typeof AppProfilePasskeysRoute
   '/_app/events/': typeof AppEventsIndexRoute
   '/_app/profile/': typeof AppProfileIndexRoute
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/setup'
+    | '/events/$eventId'
     | '/profile/passkeys'
     | '/events/'
     | '/profile/'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/setup'
+    | '/events/$eventId'
     | '/profile/passkeys'
     | '/events'
     | '/profile'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/register'
     | '/_auth/setup'
+    | '/_app/events/$eventId'
     | '/_app/profile/passkeys'
     | '/_app/events/'
     | '/_app/profile/'
@@ -235,10 +247,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfilePasskeysRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/events/$eventId': {
+      id: '/_app/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof AppEventsEventIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppEventsEventIdRoute: typeof AppEventsEventIdRoute
   AppProfilePasskeysRoute: typeof AppProfilePasskeysRoute
   AppEventsIndexRoute: typeof AppEventsIndexRoute
   AppProfileIndexRoute: typeof AppProfileIndexRoute
@@ -246,6 +266,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppEventsEventIdRoute: AppEventsEventIdRoute,
   AppProfilePasskeysRoute: AppProfilePasskeysRoute,
   AppEventsIndexRoute: AppEventsIndexRoute,
   AppProfileIndexRoute: AppProfileIndexRoute,
