@@ -22,6 +22,9 @@
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "registrationSuccess": "Account created! Check your email to verify.",
+    "or": "or",
+    "passkeyLogin": "Sign in with passkey",
+    "emailRequiredForPasskey": "Enter your email to sign in with a passkey",
     "errors": {
       "loginFailed": "Invalid email or password",
       "registerFailed": "Registration failed. Please try again."
@@ -38,13 +41,35 @@
   "profile": {
     "title": "Profile"
   },
+  "passkeys": {
+    "title": "Passkeys",
+    "empty": "No passkeys registered yet.",
+    "unnamedPasskey": "Unnamed passkey",
+    "lastUsed": "Last used {{date}}",
+    "registerSuccess": "Passkey registered!",
+    "deleteSuccess": "Passkey removed.",
+    "renameSuccess": "Passkey renamed.",
+    "register": {
+      "title": "Add a passkey",
+      "description": "Use your device's biometric sensor or PIN to authenticate quickly and securely.",
+      "submit": "Register passkey"
+    },
+    "errors": {
+      "registerFailed": "Passkey registration failed. Please try again.",
+      "loginFailed": "Passkey sign-in failed. Please try again.",
+      "deleteFailed": "Failed to remove passkey.",
+      "lastPasskey": "Cannot remove your only passkey.",
+      "renameFailed": "Failed to rename passkey."
+    }
+  },
   "onboarding": {
     "title": "Set up your account",
     "subtitle": "Complete these steps to get started",
     "steps": {
       "email": "Verify email",
       "phone": "Verify phone",
-      "kyc": "Identity check"
+      "kyc": "Identity",
+      "passkey": "Add passkey"
     },
     "email": {
       "title": "Verify your email",

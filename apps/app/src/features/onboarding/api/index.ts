@@ -52,4 +52,12 @@ export const onboardingApi = {
 
   completeSetup: () =>
     apiClient.post<CompleteSetupResponse>('/v1/auth/setup/complete-setup').then((r) => r.data),
+
+  passkeyRegisterBegin: () =>
+    apiClient.post('/v1/auth/passkeys/register/begin').then((r) => r.data),
+
+  passkeyRegisterComplete: (credential: object) =>
+    apiClient
+      .post<{ message: string }>('/v1/auth/passkeys/register/complete', credential)
+      .then((r) => r.data),
 }

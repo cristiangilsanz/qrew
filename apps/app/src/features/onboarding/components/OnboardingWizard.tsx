@@ -8,19 +8,22 @@ import { useOnboardingStatus } from '../hooks/useOnboardingStatus'
 import { EmailVerificationStep } from './EmailVerificationStep'
 import { KycPendingStep } from './KycPendingStep'
 import { KycUploadStep } from './KycUploadStep'
+import { PasskeyRegistrationStep } from './PasskeyRegistrationStep'
 import { PhoneVerificationStep } from './PhoneVerificationStep'
 
-const STEPS = ['email', 'phone', 'kyc'] as const
+const STEPS = ['email', 'phone', 'kyc', 'passkey'] as const
 type Step = (typeof STEPS)[number]
 
 function stepFromStatus(
   emailVerified: boolean,
   phoneVerified: boolean,
   kycSubmitted: boolean,
+  passkeyRegistered: boolean,
 ): Step | 'pending' {
   if (!emailVerified) return 'email'
   if (!phoneVerified) return 'phone'
   if (!kycSubmitted) return 'kyc'
+  if (!passkeyRegistered) return 'passkey'
   return 'pending'
 }
 
@@ -30,6 +33,7 @@ function StepIndicator({ current }: { current: Step | 'pending' }) {
     email: t('onboarding.steps.email'),
     phone: t('onboarding.steps.phone'),
     kyc: t('onboarding.steps.kyc'),
+    passkey: t('onboarding.steps.passkey'),
   }
   const currentIndex = STEPS.indexOf(current as Step)
 
@@ -74,11 +78,21 @@ export function OnboardingWizard() {
 
   const currentStep =
     status && !kycRetry
-      ? stepFromStatus(status.email_verified, status.phone_verified, status.kyc_submitted)
+      ? stepFromStatus(
+          status.email_verified,
+          status.phone_verified,
+          status.kyc_submitted,
+          status.passkey_registered,
+        )
       : status
         ? kycRetry
           ? 'kyc'
-          : stepFromStatus(status.email_verified, status.phone_verified, status.kyc_submitted)
+          : stepFromStatus(
+              status.email_verified,
+              status.phone_verified,
+              status.kyc_submitted,
+              status.passkey_registered,
+            )
         : 'email'
 
   const handleStepSuccess = () => {
@@ -110,6 +124,7 @@ export function OnboardingWizard() {
       {currentStep === 'email' && <EmailVerificationStep onSuccess={handleStepSuccess} />}
       {currentStep === 'phone' && <PhoneVerificationStep onSuccess={handleStepSuccess} />}
       {currentStep === 'kyc' && <KycUploadStep onSuccess={handleKycSuccess} />}
+      {currentStep === 'passkey' && <PasskeyRegistrationStep onSuccess={handleStepSuccess} />}
       {currentStep === 'pending' && (
         <KycPendingStep
           onRetry={() => {
