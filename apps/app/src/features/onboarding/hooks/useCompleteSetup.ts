@@ -3,28 +3,25 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { type ApiErrorDetail, extractErrorMessage } from '@/features/auth/api'
 import { useAuthStore } from '@/store/auth'
 
-import { type ApiErrorDetail, authApi, extractErrorMessage, type LoginRequest } from '../api'
+import { type CompleteSetupResponse, onboardingApi } from '../api'
 
-export function useLogin() {
+export function useCompleteSetup(onSuccess?: (data: CompleteSetupResponse) => void) {
   const { t } = useTranslation()
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
-  const setSetupToken = useAuthStore((s) => s.setSetupToken)
+  const completeSetup = useAuthStore((s) => s.completeSetup)
 
   return useMutation({
-    mutationFn: (data: LoginRequest) => authApi.login(data),
+    mutationFn: () => onboardingApi.completeSetup(),
     onSuccess: (data) => {
-      if (data.setup_required) {
-        setSetupToken(data.access_token)
-      } else {
-        setAccessToken(data.access_token)
-      }
+      completeSetup(data.access_token)
+      onSuccess?.(data)
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
       const message = extractErrorMessage(
         error.response?.data?.detail,
-        t('auth.errors.loginFailed'),
+        t('onboarding.errors.completeFailed'),
       )
       toast.error(message)
     },

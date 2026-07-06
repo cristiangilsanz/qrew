@@ -37,5 +37,56 @@
   },
   "profile": {
     "title": "Profile"
+  },
+  "onboarding": {
+    "title": "Set up your account",
+    "subtitle": "Complete these steps to get started",
+    "steps": {
+      "email": "Verify email",
+      "phone": "Verify phone",
+      "kyc": "Identity check"
+    },
+    "email": {
+      "title": "Verify your email",
+      "description": "Check your email for a verification link or code.",
+      "label": "Verification code",
+      "placeholder": "Paste your verification token",
+      "submit": "Verify email",
+      "successToast": "Email verified!"
+    },
+    "phone": {
+      "title": "Verify your phone",
+      "description": "Enter the 6-digit code sent to your registered phone number.",
+      "label": "Verification code",
+      "placeholder": "123456",
+      "submit": "Verify phone number",
+      "resend": "Resend code",
+      "resendSuccess": "Code resent successfully.",
+      "successToast": "Phone number verified!"
+    },
+    "kyc": {
+      "title": "Identity verification",
+      "description": "Upload a clear photo of your national ID or passport.",
+      "label": "Document",
+      "dropzone": "Click to select a file",
+      "submit": "Upload document",
+      "successToast": "Document uploaded successfully."
+    },
+    "pending": {
+      "title": "Under review",
+      "description": "Your identity documents have been submitted. We'll verify them within 24 hours.",
+      "approved": "Identity verified!",
+      "approvedDescription": "Your identity has been verified. You're ready to go.",
+      "rejected": "Verification failed",
+      "rejectedDescription": "We couldn't verify your identity. Please try again with a clearer photo.",
+      "retry": "Upload new document",
+      "continue": "Continue to app"
+    },
+    "errors": {
+      "verifyEmailFailed": "Email verification failed. Please check your code.",
+      "verifyPhoneFailed": "Phone verification failed. Please check your code.",
+      "kycUploadFailed": "Document upload failed. Please try again.",
+      "completeFailed": "Setup completion failed. Please try again."
+    }
   }
 }

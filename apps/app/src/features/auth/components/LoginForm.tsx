@@ -40,7 +40,7 @@ export function LoginForm() {
 
   const onSubmit = (values: LoginFormValues) => {
     login.mutate(values, {
-      onSuccess: () => navigate({ to: '/events' }),
+      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/events' }),
     })
   }
 
