@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     env: {
-      VITE_API_URL: 'http://localhost:8001',
+      VITE_IDENTITY_URL: 'http://localhost:8001',
       VITE_CATALOG_URL: 'http://localhost:8002',
     },
     exclude: ['e2e/**', 'node_modules/**'],
