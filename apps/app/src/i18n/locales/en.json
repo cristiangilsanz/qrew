@@ -68,7 +68,7 @@
     "steps": {
       "email": "Verify email",
       "phone": "Verify phone",
-      "kyc": "Identity check",
+      "kyc": "Identity",
       "passkey": "Add passkey"
     },
     "email": {
