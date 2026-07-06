@@ -39,7 +39,78 @@
     "empty": "You have no tickets yet"
   },
   "profile": {
-    "title": "Profile"
+    "title": "Profile",
+    "subtitle": "Manage your account",
+    "memberSince": "Member since",
+    "backToProfile": "Back to profile",
+    "managePasskeys": "Manage",
+    "kycStatus": {
+      "label": "Identity",
+      "approved": "Verified",
+      "pending": "Under review",
+      "rejected": "Rejected",
+      "not_submitted": "Not submitted"
+    },
+    "sections": {
+      "personal": "Personal info",
+      "security": "Security",
+      "sessions": "Active sessions",
+      "passkeys": "Passkeys",
+      "dangerZone": "Danger zone"
+    },
+    "changePassword": {
+      "title": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "submit": "Update password",
+      "success": "Password updated."
+    },
+    "changeEmail": {
+      "title": "Change email address",
+      "newEmail": "New email",
+      "currentPassword": "Password confirmation",
+      "submit": "Send confirmation link",
+      "success": "Confirmation link sent. Check your inbox.",
+      "confirmTitle": "Email address updated",
+      "confirmDescription": "Your email address has been changed successfully.",
+      "confirmError": "This link is invalid or has expired."
+    },
+    "changePhone": {
+      "title": "Change phone number",
+      "newPhone": "New phone number",
+      "currentPassword": "Password confirmation",
+      "otpSent": "Enter the code sent to your new number",
+      "submit": "Send verification code",
+      "otp": "Verification code",
+      "confirmSubmit": "Confirm",
+      "success": "Phone number updated."
+    },
+    "sessions": {
+      "revokeAll": "Revoke all",
+      "revoke": "Revoke",
+      "revokeAllSuccess": "All sessions revoked.",
+      "revokeSuccess": "Session revoked.",
+      "unknownDevice": "Unknown device",
+      "unknownIp": "Unknown IP",
+      "lastUsed": "Last used {{date}}"
+    },
+    "deleteAccount": {
+      "title": "Delete account",
+      "description": "This is permanent and cannot be undone.",
+      "button": "Delete my account",
+      "currentPassword": "Current password",
+      "confirm": "Permanently delete account",
+      "cancel": "Cancel",
+      "success": "Account deleted."
+    },
+    "errors": {
+      "changePasswordFailed": "Password change failed. Check your current password.",
+      "changeEmailFailed": "Email change failed. Check your password.",
+      "changePhoneFailed": "Phone change failed. Check your password.",
+      "confirmPhoneFailed": "Verification failed. Check your code.",
+      "deleteAccountFailed": "Deletion failed. Check your password.",
+      "fetchFailed": "Failed to load profile."
+    }
   },
   "passkeys": {
     "title": "Passkeys",

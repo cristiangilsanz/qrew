@@ -55,6 +55,66 @@ export const authHandlers = [
     })
   }),
 
+  http.get(`${API_URL}/v1/auth/profile/me`, () => {
+    return HttpResponse.json({
+      id: 'mock-user-id',
+      email: 'user@example.com',
+      full_name: 'Test User',
+      phone_number: '+34600000000',
+      kyc_status: 'approved',
+      email_verified: true,
+      phone_verified: true,
+      created_at: '2026-01-01T00:00:00Z',
+    })
+  }),
+
+  http.post(`${API_URL}/v1/auth/account/change-password`, () =>
+    HttpResponse.json({ message: 'Password changed successfully.' }),
+  ),
+
+  http.post(`${API_URL}/v1/auth/account/change-email`, () =>
+    HttpResponse.json({ message: 'Confirmation link sent to your new email address.' }),
+  ),
+
+  http.post(`${API_URL}/v1/auth/account/confirm-email-change`, () =>
+    HttpResponse.json({ message: 'Email address updated successfully.' }),
+  ),
+
+  http.post(`${API_URL}/v1/auth/account/change-phone`, () =>
+    HttpResponse.json({ message: 'Verification code sent to your new phone number.' }),
+  ),
+
+  http.post(`${API_URL}/v1/auth/account/confirm-phone-change`, () =>
+    HttpResponse.json({ message: 'Phone number updated successfully.' }),
+  ),
+
+  http.get(`${API_URL}/v1/auth/sessions`, () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: 'session-1',
+          jti: 'jti-1',
+          ip_address: '192.168.1.1',
+          user_agent: 'Mozilla/5.0 Chrome/120',
+          device_fingerprint: null,
+          created_at: '2026-07-01T10:00:00Z',
+          last_used_at: '2026-07-06T10:00:00Z',
+        },
+      ],
+      next_cursor: null,
+    }),
+  ),
+
+  http.delete(`${API_URL}/v1/auth/sessions/:jti`, () => new HttpResponse(null, { status: 204 })),
+
+  http.post(`${API_URL}/v1/auth/sessions/revoke-all`, () =>
+    HttpResponse.json({ message: 'All sessions have been revoked.' }),
+  ),
+
+  http.post(`${API_URL}/v1/auth/account/delete`, () =>
+    HttpResponse.json({ message: 'Account deleted.' }),
+  ),
+
   http.get(`${API_URL}/v1/auth/passkeys/`, () => {
     return HttpResponse.json({
       items: [
