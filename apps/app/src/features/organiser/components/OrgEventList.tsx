@@ -1,0 +1,69 @@
+import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
+
+import { Button } from '@/components/ui/button'
+
+import { useOrgEvents } from '../hooks/useOrgEvents'
+
+interface Props {
+  orgId: string
+}
+
+const statusColors: Record<string, string> = {
+  draft: 'bg-gray-100 text-gray-700',
+  published: 'bg-green-100 text-green-700',
+  cancelled: 'bg-red-100 text-red-700',
+}
+
+export function OrgEventList({ orgId }: Props) {
+  const { t } = useTranslation()
+  const { data, isLoading } = useOrgEvents(orgId)
+  const events = data?.items ?? []
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-4">
+        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <Button asChild size="sm">
+          <Link to="/organiser/$orgId/events/new" params={{ orgId }}>
+            {t('organiser.events.create')}
+          </Link>
+        </Button>
+      </div>
+      {events.length === 0 && (
+        <p className="text-muted-foreground py-4 text-center text-sm">
+          {t('organiser.events.empty')}
+        </p>
+      )}
+      <div className="space-y-2">
+        {events.map((event) => (
+          <Link
+            key={event.id}
+            to="/organiser/$orgId/events/$eventId"
+            params={{ orgId, eventId: event.id }}
+            className="hover:bg-muted/50 flex items-center justify-between rounded-md border p-3 transition-colors"
+          >
+            <div>
+              <p className="font-medium">{event.name}</p>
+              <p className="text-muted-foreground text-xs">
+                {new Date(event.starts_at).toLocaleDateString()} · {event.venue_city}
+              </p>
+            </div>
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[event.status] ?? ''}`}
+            >
+              {event.status}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}

@@ -149,6 +149,84 @@
       "renameFailed": "Failed to rename passkey."
     }
   },
+  "organiser": {
+    "title": "My Organisations",
+    "backToOrgs": "Back to organisations",
+    "backToOrg": "Back to organisation",
+    "org": {
+      "create": "New organisation",
+      "createTitle": "Create organisation",
+      "createSuccess": "Organisation created.",
+      "empty": "You have no organisations yet.",
+      "loading": "Loading…",
+      "slugLabel": "Slug",
+      "slugPlaceholder": "my-org",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description (optional)"
+    },
+    "events": {
+      "title": "Events",
+      "create": "Create event",
+      "createSuccess": "Event created.",
+      "updateSuccess": "Event updated.",
+      "publishSuccess": "Event published.",
+      "cancelSuccess": "Event cancelled.",
+      "empty": "No events yet.",
+      "edit": "Edit event",
+      "publish": "Publish",
+      "cancel": "Cancel event",
+      "confirmPublish": "Confirm publish",
+      "confirmCancel": "Confirm cancellation",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "venueLabel": "Venue",
+      "venueEmpty": "No venues available — create one first",
+      "startsAtLabel": "Starts at",
+      "endsAtLabel": "Ends at",
+      "saleStartsAtLabel": "Sale starts at",
+      "saleEndsAtLabel": "Sale ends at",
+      "maxTicketsLabel": "Max tickets per person",
+      "saleEndBeforeStart": "Sale must end before event starts"
+    },
+    "ticketTypes": {
+      "title": "Ticket types",
+      "createSuccess": "Ticket type created.",
+      "updateSuccess": "Ticket type updated.",
+      "deleteSuccess": "Ticket type deleted.",
+      "addButton": "Add ticket type",
+      "nameLabel": "Name",
+      "capacityLabel": "Capacity",
+      "priceLabel": "Price (cents)",
+      "currencyLabel": "Currency (3-char ISO)",
+      "positionLabel": "Position"
+    },
+    "members": {
+      "title": "Members",
+      "inviteSuccess": "Invitation sent.",
+      "removeSuccess": "Member removed.",
+      "emailLabel": "Email",
+      "roleLabel": "Role",
+      "inviteButton": "Invite"
+    },
+    "venues": {
+      "createSuccess": "Venue created.",
+      "createTitle": "Create venue",
+      "newVenue": "New venue"
+    },
+    "errors": {
+      "createOrgFailed": "Failed to create organisation.",
+      "createEventFailed": "Failed to create event.",
+      "updateEventFailed": "Failed to update event.",
+      "publishFailed": "Failed to publish event.",
+      "cancelFailed": "Failed to cancel event.",
+      "createTicketTypeFailed": "Failed to create ticket type.",
+      "updateTicketTypeFailed": "Failed to update ticket type.",
+      "deleteTicketTypeFailed": "Failed to delete ticket type.",
+      "inviteFailed": "Failed to invite member.",
+      "removeFailed": "Failed to remove member.",
+      "createVenueFailed": "Failed to create venue."
+    }
+  },
   "onboarding": {
     "title": "Set up your account",
     "subtitle": "Complete these steps to get started",
