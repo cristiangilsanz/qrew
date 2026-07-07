@@ -18,6 +18,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS catalog")
+    op.execute("CREATE TYPE organisation_role AS ENUM ('member', 'manager', 'owner')")
 
     op.execute("""
         CREATE TABLE IF NOT EXISTS catalog.organisations (
@@ -38,7 +39,7 @@ def upgrade() -> None:
         CREATE TABLE IF NOT EXISTS catalog.organisation_members (
             organisation_id UUID NOT NULL REFERENCES catalog.organisations(id) ON DELETE CASCADE,
             user_id UUID NOT NULL,
-            role VARCHAR(16) NOT NULL DEFAULT 'member',
+            role organisation_role NOT NULL DEFAULT 'member',
             joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             PRIMARY KEY (organisation_id, user_id)
         )
@@ -136,4 +137,5 @@ def downgrade() -> None:
     op.execute("DROP TABLE IF EXISTS catalog.venues")
     op.execute("DROP TABLE IF EXISTS catalog.organisation_members")
     op.execute("DROP TABLE IF EXISTS catalog.organisations")
+    op.execute("DROP TYPE IF EXISTS organisation_role")
     op.execute("DROP SCHEMA IF EXISTS catalog CASCADE")
