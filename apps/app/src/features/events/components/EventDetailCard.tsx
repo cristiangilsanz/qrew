@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { Calendar, MapPin, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -95,6 +96,26 @@ export function EventDetailCard({ event }: Props) {
             ))}
         </CardContent>
       </Card>
+
+      <div className="pt-2">
+        {event.queue_required ? (
+          <Link
+            to="/events/$eventId/queue"
+            params={{ eventId: event.id }}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-10 w-full items-center justify-center rounded-md px-4 text-sm font-medium"
+          >
+            {t('tickets.queue.joinButton')}
+          </Link>
+        ) : (
+          <Link
+            to="/events/$eventId/checkout"
+            params={{ eventId: event.id }}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-10 w-full items-center justify-center rounded-md px-4 text-sm font-medium"
+          >
+            {t('tickets.checkout.buyButton')}
+          </Link>
+        )}
+      </div>
     </div>
   )
 }

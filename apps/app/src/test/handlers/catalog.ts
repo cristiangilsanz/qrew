@@ -278,6 +278,7 @@ export const catalogHandlers = [
         sale_starts_at: '2026-07-01T00:00:00Z',
         sale_ends_at: '2026-08-14T23:59:00Z',
         max_tickets_per_user: 4,
+        queue_required: false,
         published_at: '2026-07-01T00:00:00Z',
         organisation: {
           id: 'org-1',
