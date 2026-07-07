@@ -27,7 +27,11 @@ const createSchema = z.object({
     .min(1)
     .max(32)
     .transform((v) => v.toLowerCase())
-    .pipe(z.string().regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars')),
+    .pipe(
+      z
+        .string()
+        .regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars'),
+    ),
   description: z.string().optional(),
   capacity: z.coerce.number().int().min(1).max(100000),
   price_cents: z.coerce.number().int().min(0).max(10000000),
@@ -41,7 +45,11 @@ const editSchema = z.object({
     .min(1)
     .max(32)
     .transform((v) => v.toLowerCase())
-    .pipe(z.string().regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars')),
+    .pipe(
+      z
+        .string()
+        .regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars'),
+    ),
   description: z.string().optional(),
   capacity: z.coerce.number().int().min(1).max(100000),
   price_cents: z.coerce.number().int().min(0).max(10000000),
