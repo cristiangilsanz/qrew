@@ -20,9 +20,10 @@ import { useCreateOrganisation } from '../hooks/useCreateOrganisation'
 const schema = z.object({
   slug: z
     .string()
-    .min(3)
-    .max(64)
-    .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens'),
+    .regex(
+      /^[a-z][a-z0-9_-]{2,63}$/,
+      'Must start with a letter, 3–64 chars, lowercase letters/numbers/hyphens/underscores only',
+    ),
   name: z.string().min(1).max(128),
   description: z.string().optional(),
 })

@@ -22,16 +22,34 @@ import { useOrgTicketTypes } from '../hooks/useOrgTicketTypes'
 import { useUpdateTicketType } from '../hooks/useUpdateTicketType'
 
 const createSchema = z.object({
-  name: z.string().min(1).max(32),
+  name: z
+    .string()
+    .min(1)
+    .max(32)
+    .transform((v) => v.toLowerCase())
+    .pipe(
+      z
+        .string()
+        .regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars'),
+    ),
   description: z.string().optional(),
   capacity: z.coerce.number().int().min(1).max(100000),
   price_cents: z.coerce.number().int().min(0).max(10000000),
-  currency: z.string().length(3),
+  currency: z.enum(['EUR', 'USD', 'GBP']),
   position: z.coerce.number().int().optional(),
 })
 
 const editSchema = z.object({
-  name: z.string().min(1).max(32),
+  name: z
+    .string()
+    .min(1)
+    .max(32)
+    .transform((v) => v.toLowerCase())
+    .pipe(
+      z
+        .string()
+        .regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars'),
+    ),
   description: z.string().optional(),
   capacity: z.coerce.number().int().min(1).max(100000),
   price_cents: z.coerce.number().int().min(0).max(10000000),
@@ -271,7 +289,7 @@ export function TicketTypeList({ eventId }: Props) {
         ) : (
           <div key={tt.id} className="flex items-center justify-between rounded-md border p-3">
             <div>
-              <p className="font-medium">{tt.name}</p>
+              <p className="font-medium capitalize">{tt.name}</p>
               <p className="text-muted-foreground text-xs">
                 {(tt.price_cents / 100).toFixed(2)} {tt.currency} · {tt.available}/{tt.capacity}{' '}
                 available

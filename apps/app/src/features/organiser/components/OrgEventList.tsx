@@ -1,8 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
-
 import { useOrgEvents } from '../hooks/useOrgEvents'
 
 interface Props {
@@ -31,11 +29,13 @@ export function OrgEventList({ orgId }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
-        <Button asChild size="sm">
-          <Link to="/organiser/$orgId/events/new" params={{ orgId }}>
-            {t('organiser.events.create')}
-          </Link>
-        </Button>
+        <Link
+          to="/organiser/$orgId/events/new"
+          params={{ orgId }}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-8 items-center rounded-md px-3 text-sm font-medium"
+        >
+          {t('organiser.events.create')}
+        </Link>
       </div>
       {events.length === 0 && (
         <p className="text-muted-foreground py-4 text-center text-sm">
