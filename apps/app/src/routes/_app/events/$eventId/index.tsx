@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { EventDetailCard } from '@/features/events/components/EventDetailCard'
 import { useEvent } from '@/features/events/hooks/useEvent'
 
-export const Route = createFileRoute('/_app/events/$eventId')({
+export const Route = createFileRoute('/_app/events/$eventId/')({
   component: EventDetailPage,
 })
 

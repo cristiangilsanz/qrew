@@ -407,6 +407,7 @@ async def get_public_event(
         sale_starts_at=event.sale_starts_at,
         sale_ends_at=event.sale_ends_at,
         max_tickets_per_user=event.max_tickets_per_user,
+        queue_required=event.queue_required,
         published_at=event.published_at,
         organisation=OrganisationPublicResponse(
             id=org.id, slug=org.slug, name=org.name, description=org.description

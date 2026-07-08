@@ -82,6 +82,7 @@ class PublicEventDetailResponse(BaseModel):
     sale_starts_at: datetime
     sale_ends_at: datetime
     max_tickets_per_user: int
+    queue_required: bool
     published_at: datetime | None
     organisation: OrganisationPublicResponse
     venue: VenuePublicResponse

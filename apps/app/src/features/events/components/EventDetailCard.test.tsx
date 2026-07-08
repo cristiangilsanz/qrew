@@ -1,10 +1,24 @@
 import { render, screen } from '@testing-library/react'
+import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { type EventDetail } from '../api'
 import { EventDetailCard } from './EventDetailCard'
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
+
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return {
+    ...actual,
+    Link: ({
+      children,
+      ...props
+    }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { children?: React.ReactNode }) => (
+      <a {...props}>{children}</a>
+    ),
+  }
+})
 
 const mockEvent: EventDetail = {
   id: 'event-1',
@@ -15,6 +29,7 @@ const mockEvent: EventDetail = {
   sale_starts_at: '2026-07-01T00:00:00Z',
   sale_ends_at: '2026-08-14T23:59:00Z',
   max_tickets_per_user: 4,
+  queue_required: false,
   published_at: '2026-07-01T00:00:00Z',
   organisation: { id: 'org-1', slug: 'qrew-events', name: 'Qrew Events', description: null },
   venue: {

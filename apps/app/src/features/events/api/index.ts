@@ -30,6 +30,7 @@ export interface EventDetail {
   sale_starts_at: string
   sale_ends_at: string
   max_tickets_per_user: number
+  queue_required: boolean
   published_at: string | null
   organisation: {
     id: string
