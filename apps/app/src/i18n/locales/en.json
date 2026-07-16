@@ -313,7 +313,7 @@
     "ticketCancelled": "A ticket has been cancelled.",
     "ticketFrozen": "A ticket has been frozen. Contact support.",
     "paymentSucceeded": "Payment confirmed! Your ticket is on its way.",
-    "reconnecting": "Connection lost — reconnecting…"
+    "reconnecting": "Connection lost. Reconnecting..."
   },
   "onboarding": {
     "title": "Set up your account",
