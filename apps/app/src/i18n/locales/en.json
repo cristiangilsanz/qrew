@@ -308,6 +308,13 @@
       "createVenueFailed": "Failed to create venue."
     }
   },
+  "realtime": {
+    "ticketIssued": "Your ticket has been issued!",
+    "ticketCancelled": "A ticket has been cancelled.",
+    "ticketFrozen": "A ticket has been frozen. Contact support.",
+    "paymentSucceeded": "Payment confirmed! Your ticket is on its way.",
+    "reconnecting": "Connection lost — reconnecting…"
+  },
   "onboarding": {
     "title": "Set up your account",
     "subtitle": "Complete these steps to get started",
