@@ -16,14 +16,14 @@ export function BottomDock() {
 
   return (
     <nav className="bg-background/80 fixed right-0 bottom-0 left-0 z-50 border-t backdrop-blur-md">
-      <div className="mx-auto flex max-w-lg items-center justify-around px-2 py-2">
+      <div className="flex items-center">
         {tabs.map(({ to, icon: Icon, labelKey }) => (
           <Link
             key={to}
             to={to}
             className={({ isActive }) =>
               cn(
-                'flex flex-col items-center gap-1 rounded-xl px-5 py-2 transition-colors',
+                'flex flex-1 flex-col items-center gap-1 rounded-xl py-2 transition-colors',
                 isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
               )
             }
