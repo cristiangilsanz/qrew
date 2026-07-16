@@ -45,7 +45,7 @@ async def _get_reservation_context(
 ) -> _ReservationContext:
     async with httpx.AsyncClient(base_url=settings.sales_url) as client:
         resp = await client.post(
-            f"/billing/reservations/{reservation_id}/charge",
+            f"/v1/billing/reservations/{reservation_id}/charge",
             json={"user_id": str(user_id)},
             headers={"X-Internal-Key": settings.internal_api_key},
             timeout=5.0,

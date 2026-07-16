@@ -13,6 +13,8 @@ from com.qode.qrew.v1.ticketing.core.principals import AuthenticatedUser, get_cu
 from com.qode.qrew.v1.ticketing.core.database import get_db
 from com.qode.qrew.v1.ticketing.core.dependencies import get_audit_service, limiter
 from com.qode.qrew.v1.ticketing.schemas.tickets.qr import QrIssueRequest, QrResponse
+from com.qode.qrew.v1.ticketing.models.projections import DeviceContext, EventVenueContext
+from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
 from com.qode.qrew.v1.ticketing.services.domain.gate import (
     DenialReason,
     GateInputs,
@@ -21,6 +23,8 @@ from com.qode.qrew.v1.ticketing.services.domain.gate import (
 )
 from com.qode.qrew.v1.ticketing.services.application.tickets.mint import mint_qr, record_denial
 from com.qode.qrew.v1.ticketing.core.config import settings
+
+_BYPASS_DEVICE_ID = uuid.UUID("00000000-0000-0000-0000-000000000000")
 
 router = APIRouter(prefix="/tickets", tags=["ticket-qr"])
 
@@ -41,6 +45,30 @@ def _denied_exception(reason: DenialReason) -> HTTPException:
     )
 
 
+async def _resolve_or_deny_bypass(
+    db: AsyncSession,
+    *,
+    ticket_id: uuid.UUID,
+    current_user: AuthenticatedUser,
+) -> GateInputs:
+    ticket = await db.get(Ticket, ticket_id)
+    if ticket is None or ticket.owner_user_id != current_user.id:
+        raise _denied_exception(DenialReason.not_found)
+    if ticket.state not in {TicketState.issued, TicketState.entry_pending}:
+        raise _denied_exception(DenialReason.state)
+    event_ctx = await db.get(EventVenueContext, ticket.event_id)
+    if event_ctx is None:
+        raise _denied_exception(DenialReason.not_found)
+    device_ctx = DeviceContext(
+        device_id=_BYPASS_DEVICE_ID,
+        user_id=current_user.id,
+        attested_at=datetime.now(UTC),
+        revoked_at=None,
+        updated_at=datetime.now(UTC),
+    )
+    return GateInputs(ticket=ticket, event_ctx=event_ctx, device_ctx=device_ctx)
+
+
 async def _resolve_or_deny(
     db: AsyncSession,
     *,
@@ -51,6 +79,8 @@ async def _resolve_or_deny(
     now: datetime,
     audit: AuditService,
 ) -> GateInputs:
+    if settings.gate_bypass:
+        return await _resolve_or_deny_bypass(db, ticket_id=ticket_id, current_user=current_user)
     device_id = current_user.device_id
     if device_id is None:
         await record_denial(
@@ -110,7 +140,6 @@ async def issue_qr(
 ) -> QrResponse:
     del request
     now = datetime.now(UTC)
-    device_id = current_user.device_id
     inputs = await _resolve_or_deny(
         db,
         ticket_id=ticket_id,
@@ -120,10 +149,11 @@ async def issue_qr(
         now=now,
         audit=audit,
     )
+    device_id = current_user.device_id or _BYPASS_DEVICE_ID
     minted = await mint_qr(
         inputs=inputs,
         user_id=current_user.id,
-        device_id=device_id,  # type: ignore[arg-type]
+        device_id=device_id,
         audit=audit,
         now=now,
     )
@@ -154,7 +184,7 @@ async def stream_qr(
     del request
     latitude = float(body.latitude)
     longitude = float(body.longitude)
-    device_id = current_user.device_id
+    device_id = current_user.device_id or _BYPASS_DEVICE_ID
 
     async def _events() -> AsyncGenerator[bytes, None]:
         deadline = datetime.now(UTC).timestamp() + settings.ticket_qr_stream_max_seconds
@@ -177,7 +207,7 @@ async def stream_qr(
             minted = await mint_qr(
                 inputs=inputs,
                 user_id=current_user.id,
-                device_id=device_id,  # type: ignore[arg-type]
+                device_id=device_id,
                 audit=audit,
                 now=now,
             )

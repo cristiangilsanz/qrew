@@ -1,5 +1,6 @@
 import { paymentsClient } from '@/lib/paymentsApi'
 import { salesClient } from '@/lib/salesApi'
+import { ticketingClient } from '@/lib/ticketingApi'
 
 export interface QueueJoinResponse {
   position: number
@@ -37,6 +38,28 @@ export interface Payment {
   created_at: string
 }
 
+export type TicketState =
+  'reserved' | 'issued' | 'entry_pending' | 'used' | 'cancelled' | 'frozen' | 'flagged'
+
+export interface Ticket {
+  id: string
+  reservation_id: string
+  event_id: string
+  ticket_type_id: string
+  state: TicketState
+  state_updated_at: string | null
+  created_at: string
+}
+
+export interface QrToken {
+  ticket_id: string
+  jwt: string
+  jti: string
+  issued_at: string
+  expires_at: string
+  rotates_at: string
+}
+
 export const ticketsApi = {
   joinQueue: (eventId: string) =>
     salesClient.post<QueueJoinResponse>(`/v1/events/${eventId}/queue/join`).then((r) => r.data),
@@ -66,4 +89,14 @@ export const ticketsApi = {
 
   initiatePayment: (reservationId: string) =>
     paymentsClient.post<Payment>(`/v1/reservations/${reservationId}/payment`).then((r) => r.data),
+
+  listTickets: () => ticketingClient.get<Ticket[]>('/v1/tickets').then((r) => r.data),
+
+  getTicket: (ticketId: string) =>
+    ticketingClient.get<Ticket>(`/v1/tickets/${ticketId}`).then((r) => r.data),
+
+  getQr: (ticketId: string, latitude: number, longitude: number) =>
+    ticketingClient
+      .get<QrToken>(`/v1/tickets/${ticketId}/qr`, { params: { latitude, longitude } })
+      .then((r) => r.data),
 }

@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     ticket_qr_audience: str = "qrew.scan"
     ticket_qr_stream_max_seconds: int = 1800
 
+    gate_bypass: bool = False
+
     idempotency_enabled: bool = True
     idempotency_lock_seconds: int = 30
 

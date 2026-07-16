@@ -59,7 +59,7 @@ security = { workspace = true }
 
 [project.scripts]
 entry-dev = "com.qode.qrew.v1.entry.__main__:main"
-entry-worker = "com.qode.qrew.v1.entry.worker.__main__:main"
+entry-worker = "com.qode.qrew.v1.entry.worker.__main__:run"
 
 [dependency-groups]
 dev = [

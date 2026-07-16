@@ -5,6 +5,8 @@ export const env = {
   PAYMENTS_URL:
     (import.meta.env.VITE_PAYMENTS_URL as string | undefined) ?? 'http://localhost:8004',
   STRIPE_PUBLISHABLE_KEY: (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined) ?? '',
+  TICKETING_URL:
+    (import.meta.env.VITE_TICKETING_URL as string | undefined) ?? 'http://localhost:8005',
   DEV: import.meta.env.DEV,
   PROD: import.meta.env.PROD,
 } as const

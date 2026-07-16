@@ -62,7 +62,7 @@ dependencies = [
 
 [project.scripts]
 identity-dev = "com.qode.qrew.v1.identity.__main__:main"
-identity-worker = "com.qode.qrew.v1.identity.worker.__main__:main"
+identity-worker = "com.qode.qrew.v1.identity.worker.__main__:run"
 identity-arq-worker = "com.qode.qrew.v1.identity.worker.runner:main"
 
 [dependency-groups]
