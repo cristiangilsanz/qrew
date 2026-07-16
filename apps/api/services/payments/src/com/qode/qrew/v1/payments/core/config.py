@@ -48,6 +48,8 @@ class Settings(BaseSettings):
 
     ratelimit_enabled: bool = True
 
+    billing_bypass: bool = False
+
     @classmethod
     def settings_customise_sources(
         cls,

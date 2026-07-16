@@ -144,6 +144,8 @@ class PaymentService:
             },
             actor_id=actor_id,
         )
+        if settings.billing_bypass and intent.intent_id:
+            await self.apply_succeeded(intent_id=intent.intent_id)
         return payment
 
     def decrypt_client_secret(self, payment: Payment) -> str | None:
