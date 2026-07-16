@@ -20,7 +20,7 @@ function TicketsPage() {
   const past = tickets?.filter((ticket) => !ACTIVE_STATES.includes(ticket.state)) ?? []
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
+    <div className="space-y-6 p-4">
       <h1 className="text-2xl font-bold">{t('tickets.title')}</h1>
 
       {isLoading && (

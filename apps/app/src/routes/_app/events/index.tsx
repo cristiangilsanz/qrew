@@ -18,7 +18,7 @@ function EventsPage() {
   const { data, isLoading } = useEvents(filters)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-6">
+    <div className="space-y-6 p-4">
       <h1 className="text-2xl font-semibold">{t('events.title')}</h1>
       <EventFiltersBar onFiltersChange={setFilters} />
       {isLoading && (

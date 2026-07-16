@@ -15,7 +15,7 @@ export function BottomDock() {
   const { t } = useTranslation()
 
   return (
-    <nav className="bg-background/80 fixed right-0 bottom-0 left-0 z-50 border-t backdrop-blur-md">
+    <nav className="bg-background/80 fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t backdrop-blur-md">
       <div className="flex items-center">
         {tabs.map(({ to, icon: Icon, labelKey }) => (
           <Link

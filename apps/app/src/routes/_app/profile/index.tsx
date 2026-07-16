@@ -16,7 +16,7 @@ export const Route = createFileRoute('/_app/profile/')({
 function ProfilePage() {
   const { t } = useTranslation()
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
+    <div className="space-y-6 p-4">
       <h1 className="text-2xl font-semibold">{t('profile.title')}</h1>
 
       <ProfileCard />

@@ -12,8 +12,10 @@ export const Route = createFileRoute('/_app')({
   },
   component: () => (
     <RealtimeProvider>
-      <div className="min-h-screen pb-20">
-        <Outlet />
+      <div className="bg-background relative mx-auto min-h-screen max-w-[430px] border-x">
+        <div className="pb-20">
+          <Outlet />
+        </div>
       </div>
       <BottomDock />
     </RealtimeProvider>

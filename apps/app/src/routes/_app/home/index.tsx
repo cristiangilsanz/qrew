@@ -33,7 +33,7 @@ function HomePage() {
   const activeTickets = tickets?.filter((t) => ACTIVE_STATES.includes(t.state)) ?? []
 
   return (
-    <div className="mx-auto max-w-lg space-y-8 px-4 pt-8 pb-4">
+    <div className="space-y-8 px-4 pt-8 pb-4">
       {/* Greeting */}
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">
