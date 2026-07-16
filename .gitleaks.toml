@@ -1,0 +1,5 @@
+[allowlist]
+description = "Allowlist for test mock values"
+stopwords = [
+  "eyJzdWIiOiJ1c2VyLTEifQ",
+]
