@@ -23,13 +23,13 @@ export function BottomDock() {
             to={to}
             className={({ isActive }) =>
               cn(
-                'flex flex-1 flex-col items-center gap-1 rounded-xl py-2 transition-colors',
+                'flex flex-1 flex-col items-center justify-center gap-1 rounded-xl py-2 transition-colors',
                 isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
               )
             }
           >
             <Icon className="h-5 w-5" strokeWidth={1.75} />
-            <span className="text-[10px] font-medium tracking-wide">{t(labelKey)}</span>
+            <span className="text-center text-[10px] font-medium leading-none tracking-wide">{t(labelKey)}</span>
           </Link>
         ))}
       </div>
