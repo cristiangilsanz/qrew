@@ -37,7 +37,7 @@ worker = { workspace = true }
 
 [project.scripts]
 audit-dev = "com.qode.qrew.v1.audit.__main__:main"
-audit-worker = "com.qode.qrew.v1.audit.worker.__main__:main"
+audit-worker = "com.qode.qrew.v1.audit.worker.__main__:run"
 
 [dependency-groups]
 dev = [

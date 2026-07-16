@@ -45,7 +45,7 @@ security = { workspace = true }
 
 [project.scripts]
 sales-dev = "com.qode.qrew.v1.sales.__main__:main"
-sales-worker = "com.qode.qrew.v1.sales.worker.__main__:main"
+sales-worker = "com.qode.qrew.v1.sales.worker.__main__:run"
 
 [dependency-groups]
 dev = [

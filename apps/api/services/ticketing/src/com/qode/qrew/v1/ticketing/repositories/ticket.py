@@ -34,5 +34,11 @@ class TicketRepository:
         )
         return list(result.scalars().all())
 
+    async def list_by_user(self, user_id: uuid.UUID) -> list[Ticket]:
+        result = await self._session.execute(
+            select(Ticket).where(Ticket.owner_user_id == user_id).order_by(Ticket.created_at.desc())
+        )
+        return list(result.scalars().all())
+
     async def flush(self) -> None:
         await self._session.flush()

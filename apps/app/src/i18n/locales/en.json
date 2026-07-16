@@ -55,6 +55,43 @@
     "title": "My Tickets",
     "empty": "You have no tickets yet",
     "browseEvents": "Browse events",
+    "backToTickets": "Back to my tickets",
+    "sections": {
+      "active": "Active",
+      "past": "Past"
+    },
+    "ticket": {
+      "title": "Ticket",
+      "id": "Ticket #{{id}}",
+      "idLabel": "Ticket ID",
+      "issuedLabel": "Issued",
+      "notFound": "Ticket not found.",
+      "frozenHint": "This ticket has been frozen. Contact support if you believe this is an error.",
+      "flaggedHint": "This ticket has been flagged for review. Contact support for assistance.",
+      "states": {
+        "reserved": "Reserved",
+        "issued": "Issued",
+        "entry_pending": "Entry pending",
+        "used": "Used",
+        "cancelled": "Cancelled",
+        "frozen": "Frozen",
+        "flagged": "Flagged"
+      }
+    },
+    "qr": {
+      "title": "Entry QR Code",
+      "description": "Show your QR code at the venue entrance. Your location is required.",
+      "showButton": "Show QR Code",
+      "locating": "Getting your location…",
+      "expiresAt": "Rotates at {{time}}",
+      "retry": "Try again",
+      "denied": "QR unavailable.",
+      "deniedLocation": "Location access denied. Enable location in your browser and try again.",
+      "deniedGeofence": "You must be at the venue to display your QR code.",
+      "deniedAttestation": "Device not verified. QR codes are available on attested devices only.",
+      "deniedState": "This ticket cannot be used for entry in its current state.",
+      "error": "Could not load QR code. Please try again."
+    },
     "queue": {
       "title": "Waiting Room",
       "description": "This is a high-demand event. Join the queue to get your tickets.",
