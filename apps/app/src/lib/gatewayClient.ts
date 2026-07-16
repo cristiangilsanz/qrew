@@ -33,8 +33,15 @@ export class GatewayClient {
       clearTimeout(this.reconnectTimer)
       this.reconnectTimer = null
     }
-    this.ws?.close(1000, 'client stop')
-    this.ws = null
+    if (this.ws) {
+      if (this.ws.readyState === WebSocket.CONNECTING) {
+        const ws = this.ws
+        ws.onopen = () => ws.close(1000)
+      } else {
+        this.ws.close(1000, 'client stop')
+      }
+      this.ws = null
+    }
     this._emitStatus('closed')
   }
 
