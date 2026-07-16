@@ -1,4 +1,20 @@
 {
+  "nav": {
+    "home": "Home",
+    "discover": "Discover",
+    "tickets": "Tickets",
+    "profile": "Profile"
+  },
+  "home": {
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "subtitle": "What's happening today?",
+    "upcomingEvents": "Upcoming Events",
+    "activeTickets": "Your Tickets",
+    "seeAll": "See all",
+    "noEvents": "No upcoming events."
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",
