@@ -320,3 +320,7 @@ gateway-dev:
 # Type-check gateway service
 gateway-type-check:
     cd {{GATEWAY}} && uv run pyright
+
+# Forward Stripe webhooks to local payments service (copy the whsec_ key to payments config/local.yaml)
+stripe-dev:
+    stripe listen --forward-to localhost:8004/v1/payments/webhook

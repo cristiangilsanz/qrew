@@ -63,11 +63,8 @@ async def start_fanout_subscriber(
 
     try:
         await js.find_stream_name_by_subject(SUBJECT)
-    except Exception as exc:
-        raise RuntimeError(
-            f"NATS JetStream stream '{STREAM}' for subject '{SUBJECT}' not found"
-            " — provision it via infrastructure before starting the gateway."
-        ) from exc
+    except Exception:
+        await js.add_stream(name=STREAM, subjects=["ws.>"])  # type: ignore[misc]
 
     config = ConsumerConfig(
         durable_name=DURABLE,

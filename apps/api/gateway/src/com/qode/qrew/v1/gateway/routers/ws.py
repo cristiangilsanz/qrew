@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 import json
 import time
-from types import MappingProxyType
 from typing import Any
 
 import structlog
@@ -24,8 +23,7 @@ logger = structlog.get_logger(__name__)
 
 router = APIRouter()
 
-# Frozen proxy prevents accidental mutation of the shared ping payload.
-_PING: MappingProxyType[str, Any] = MappingProxyType({"type": "ping"})
+_PING: dict[str, Any] = {"type": "ping"}
 
 _MAX_WS_MESSAGE_BYTES = 4096
 

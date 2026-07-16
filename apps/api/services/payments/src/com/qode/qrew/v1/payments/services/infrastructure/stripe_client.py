@@ -57,12 +57,13 @@ class StripeRealClient:
         )
 
     async def verify_webhook(self, payload: bytes, signature: str) -> dict[str, Any]:
-        event: Any = await anyio.to_thread.run_sync(  # type: ignore[misc]
+        import json
+
+        await anyio.to_thread.run_sync(  # type: ignore[misc]
             lambda: stripe.Webhook.construct_event(  # type: ignore[no-untyped-call]
                 payload=payload,
                 sig_header=signature,
                 secret=settings.stripe_webhook_signing_secret,
             )
         )
-        result: dict[str, Any] = dict(event.to_dict_recursive())  # type: ignore[no-untyped-call]
-        return result
+        return cast("dict[str, Any]", json.loads(payload))

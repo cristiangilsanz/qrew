@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 
+import { RealtimeProvider } from '@/features/realtime/RealtimeProvider'
 import { useAuthStore } from '@/store/auth'
 
 export const Route = createFileRoute('/_app')({
@@ -8,5 +9,9 @@ export const Route = createFileRoute('/_app')({
       throw redirect({ to: '/login' })
     }
   },
-  component: () => <Outlet />,
+  component: () => (
+    <RealtimeProvider>
+      <Outlet />
+    </RealtimeProvider>
+  ),
 })
