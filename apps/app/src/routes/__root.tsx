@@ -16,7 +16,7 @@ function Root() {
   return (
     <>
       <Outlet />
-      <Toaster richColors position="top-center" />
+      <Toaster richColors theme="dark" position="top-center" />
       {import.meta.env.DEV && (
         <>
           <TanStackRouterDevtools />

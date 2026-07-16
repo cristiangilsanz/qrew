@@ -19,6 +19,7 @@ import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTicketsIndexRouteImport } from './routes/_app/tickets/index'
 import { Route as AppProfileIndexRouteImport } from './routes/_app/profile/index'
 import { Route as AppOrganiserIndexRouteImport } from './routes/_app/organiser/index'
+import { Route as AppHomeIndexRouteImport } from './routes/_app/home/index'
 import { Route as AppEventsIndexRouteImport } from './routes/_app/events/index'
 import { Route as AppTicketsTicketIdRouteImport } from './routes/_app/tickets/$ticketId'
 import { Route as AppProfilePasskeysRouteImport } from './routes/_app/profile/passkeys'
@@ -77,6 +78,11 @@ const AppProfileIndexRoute = AppProfileIndexRouteImport.update({
 const AppOrganiserIndexRoute = AppOrganiserIndexRouteImport.update({
   id: '/organiser/',
   path: '/organiser/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHomeIndexRoute = AppHomeIndexRouteImport.update({
+  id: '/home/',
+  path: '/home/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/profile/passkeys': typeof AppProfilePasskeysRoute
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/events/': typeof AppEventsIndexRoute
+  '/home/': typeof AppHomeIndexRoute
   '/organiser/': typeof AppOrganiserIndexRoute
   '/profile/': typeof AppProfileIndexRoute
   '/tickets/': typeof AppTicketsIndexRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/profile/passkeys': typeof AppProfilePasskeysRoute
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/events': typeof AppEventsIndexRoute
+  '/home': typeof AppHomeIndexRoute
   '/organiser': typeof AppOrganiserIndexRoute
   '/profile': typeof AppProfileIndexRoute
   '/tickets': typeof AppTicketsIndexRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/_app/profile/passkeys': typeof AppProfilePasskeysRoute
   '/_app/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/_app/events/': typeof AppEventsIndexRoute
+  '/_app/home/': typeof AppHomeIndexRoute
   '/_app/organiser/': typeof AppOrganiserIndexRoute
   '/_app/profile/': typeof AppProfileIndexRoute
   '/_app/tickets/': typeof AppTicketsIndexRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/profile/passkeys'
     | '/tickets/$ticketId'
     | '/events/'
+    | '/home/'
     | '/organiser/'
     | '/profile/'
     | '/tickets/'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/profile/passkeys'
     | '/tickets/$ticketId'
     | '/events'
+    | '/home'
     | '/organiser'
     | '/profile'
     | '/tickets'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/_app/profile/passkeys'
     | '/_app/tickets/$ticketId'
     | '/_app/events/'
+    | '/_app/home/'
     | '/_app/organiser/'
     | '/_app/profile/'
     | '/_app/tickets/'
@@ -353,6 +365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrganiserIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/home/': {
+      id: '/_app/home/'
+      path: '/home'
+      fullPath: '/home/'
+      preLoaderRoute: typeof AppHomeIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/events/': {
       id: '/_app/events/'
       path: '/events'
@@ -437,6 +456,7 @@ interface AppRouteChildren {
   AppProfilePasskeysRoute: typeof AppProfilePasskeysRoute
   AppTicketsTicketIdRoute: typeof AppTicketsTicketIdRoute
   AppEventsIndexRoute: typeof AppEventsIndexRoute
+  AppHomeIndexRoute: typeof AppHomeIndexRoute
   AppOrganiserIndexRoute: typeof AppOrganiserIndexRoute
   AppProfileIndexRoute: typeof AppProfileIndexRoute
   AppTicketsIndexRoute: typeof AppTicketsIndexRoute
@@ -454,6 +474,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfilePasskeysRoute: AppProfilePasskeysRoute,
   AppTicketsTicketIdRoute: AppTicketsTicketIdRoute,
   AppEventsIndexRoute: AppEventsIndexRoute,
+  AppHomeIndexRoute: AppHomeIndexRoute,
   AppOrganiserIndexRoute: AppOrganiserIndexRoute,
   AppProfileIndexRoute: AppProfileIndexRoute,
   AppTicketsIndexRoute: AppTicketsIndexRoute,

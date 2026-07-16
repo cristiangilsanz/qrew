@@ -1,4 +1,5 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
+import type { LucideIcon } from 'lucide-react'
 import { Compass, Home, Ticket, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -11,26 +12,45 @@ const tabs = [
   { to: '/profile' as const, icon: User, labelKey: 'nav.profile' },
 ]
 
-export function BottomDock() {
+function DockTab({
+  to,
+  icon: Icon,
+  labelKey,
+}: {
+  to: string
+  icon: LucideIcon
+  labelKey: string
+}) {
   const { t } = useTranslation()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isActive = pathname.startsWith(to)
 
   return (
-    <nav className="bg-background/80 fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t backdrop-blur-md">
-      <div className="flex">
-        {tabs.map(({ to, icon: Icon, labelKey }) => (
-          <Link
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              cn(
-                'flex h-16 flex-1 flex-col items-center justify-center gap-1 transition-colors',
-                isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
-              )
-            }
-          >
-            <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
-            <span className="text-[10px] font-medium leading-none">{t(labelKey)}</span>
-          </Link>
+    <Link
+      to={to}
+      className={cn(
+        'flex h-16 flex-1 flex-col items-center justify-center gap-1 transition-colors',
+        isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <span
+        className={cn(
+          'mb-1 h-0.5 w-8 rounded-full transition-all duration-300',
+          isActive ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary))]' : 'bg-transparent',
+        )}
+      />
+      <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+      <span className="mt-1 text-[10px] font-medium leading-none">{t(labelKey)}</span>
+    </Link>
+  )
+}
+
+export function BottomDock() {
+  return (
+    <nav className="bg-background/90 fixed inset-x-0 bottom-0 z-50 backdrop-blur-md">
+      <div className="mx-auto flex max-w-[430px]">
+        {tabs.map((tab) => (
+          <DockTab key={tab.to} {...tab} />
         ))}
       </div>
     </nav>

@@ -1,3 +1,4 @@
+import homeHero from '@/assets/images/home.jpg'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -28,23 +29,37 @@ function HomePage() {
   const { data: eventsData, isLoading: eventsLoading } = useEvents({})
   const { data: tickets, isLoading: ticketsLoading } = useTickets()
 
-  const firstName = profile?.full_name?.split(' ')[0] ?? ''
+  const rawFirst = profile?.full_name?.split(' ')[0] ?? ''
+  const firstName = rawFirst ? rawFirst[0].toUpperCase() + rawFirst.slice(1) : ''
   const upcomingEvents = eventsData?.items.slice(0, 3) ?? []
   const activeTickets = tickets?.filter((t) => ACTIVE_STATES.includes(t.state)) ?? []
 
   return (
-    <div className="space-y-8 px-4 pt-8 pb-4">
-      {/* Greeting */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {t(greeting())}
-          {firstName ? `, ${firstName}` : ''}
-        </h1>
-        <p className="text-muted-foreground text-sm">{t('home.subtitle')}</p>
+    <div className="space-y-8 pb-4">
+      {/* Greeting + Hero — full bleed, no padding, no rounding */}
+      <div className="relative h-96 overflow-hidden">
+        <img
+          src={homeHero}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-[hsl(0,0%,5%)]" />
+        <div className="absolute inset-x-0 top-0 space-y-1 px-5 pt-6">
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            {t(greeting())}
+            {firstName ? `, ${firstName}` : ''}
+          </h1>
+          <p className="text-sm text-white/70">{t('home.subtitle')}</p>
+        </div>
+        <div className="absolute inset-x-0 bottom-0 px-5 pb-6">
+          <p className="text-2xl font-bold leading-tight tracking-tight text-white">
+            Your next experience<br />is waiting for you.
+          </p>
+        </div>
       </div>
 
       {/* Upcoming Events */}
-      <section className="space-y-3">
+      <section className="space-y-3 px-4">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">{t('home.upcomingEvents')}</h2>
           <button
@@ -81,7 +96,7 @@ function HomePage() {
 
       {/* Active Tickets */}
       {!ticketsLoading && activeTickets.length > 0 && (
-        <section className="space-y-3">
+        <section className="space-y-3 px-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">{t('home.activeTickets')}</h2>
             <button
