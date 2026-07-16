@@ -16,20 +16,20 @@ export function BottomDock() {
 
   return (
     <nav className="bg-background/80 fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 border-t backdrop-blur-md">
-      <div className="flex h-16 items-center">
+      <div className="flex">
         {tabs.map(({ to, icon: Icon, labelKey }) => (
           <Link
             key={to}
             to={to}
             className={({ isActive }) =>
               cn(
-                'flex flex-1 flex-col items-center justify-center gap-1 self-stretch transition-colors',
+                'flex h-16 flex-1 flex-col items-center justify-center gap-1 transition-colors',
                 isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
               )
             }
           >
             <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
-            <span className="block text-center text-[10px] font-medium leading-none">{t(labelKey)}</span>
+            <span className="text-[10px] font-medium leading-none">{t(labelKey)}</span>
           </Link>
         ))}
       </div>
