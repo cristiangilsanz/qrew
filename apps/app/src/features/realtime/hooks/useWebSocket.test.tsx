@@ -5,7 +5,7 @@ import { useWebSocket } from './useWebSocket'
 
 vi.mock('@/store/auth', () => ({
   useAuthStore: (selector: (s: { accessToken: string }) => unknown) =>
-    selector({ accessToken: 'test.eyJzdWIiOiJ1c2VyLTEifQ.sig' }),
+    selector({ accessToken: 'test.eyJzdWIiOiJ1c2VyLTEifQ.sig' }), // gitleaks:allow
 }))
 
 vi.mock('@/config/env', () => ({
