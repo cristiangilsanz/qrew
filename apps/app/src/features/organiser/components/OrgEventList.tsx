@@ -57,9 +57,9 @@ export function OrgEventList({ orgId }: Props) {
               </p>
             </div>
             <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[event.status] ?? ''}`}
+              className={`rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide uppercase ${statusColors[event.status] ?? ''}`}
             >
-              {event.status}
+              {event.status.toUpperCase()}
             </span>
           </Link>
         ))}

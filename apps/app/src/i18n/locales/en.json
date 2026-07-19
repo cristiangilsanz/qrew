@@ -3,7 +3,8 @@
     "home": "Home",
     "discover": "Discover",
     "tickets": "Tickets",
-    "profile": "Profile"
+    "profile": "Profile",
+    "organiser": "Organiser"
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -91,6 +92,7 @@
         "entry_pending": "Entry pending",
         "used": "Used",
         "cancelled": "Cancelled",
+        "expired": "Expired",
         "frozen": "Frozen",
         "flagged": "Flagged"
       }
@@ -248,7 +250,7 @@
     }
   },
   "organiser": {
-    "title": "My Organisations",
+    "title": "Organisations",
     "backToOrgs": "Back to organisations",
     "backToOrg": "Back to organisation",
     "org": {
@@ -283,7 +285,7 @@
       "endsAtLabel": "Ends at",
       "saleStartsAtLabel": "Sale starts at",
       "saleEndsAtLabel": "Sale ends at",
-      "maxTicketsLabel": "Max tickets per person",
+      "maxTicketsLabel": "Max tickets per user",
       "saleEndBeforeStart": "Sale must end before event starts"
     },
     "ticketTypes": {

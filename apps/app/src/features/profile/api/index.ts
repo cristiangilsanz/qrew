@@ -8,6 +8,7 @@ export interface UserProfile {
   kyc_status: 'not_submitted' | 'pending' | 'approved' | 'rejected'
   email_verified: boolean
   phone_verified: boolean
+  is_admin: boolean
   created_at: string
 }
 

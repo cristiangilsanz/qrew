@@ -43,6 +43,7 @@ class UserProfileResponse(BaseModel):
     kyc_status: str
     email_verified: bool
     phone_verified: bool
+    is_admin: bool
     created_at: datetime
 
 

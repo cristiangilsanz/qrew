@@ -26,6 +26,7 @@ _MUTABLE_FIELDS: frozenset[str] = frozenset(
     {
         "name",
         "description",
+        "image_url",
         "starts_at",
         "ends_at",
         "sale_starts_at",
@@ -130,6 +131,7 @@ class EventService:
         venue_id: uuid.UUID,
         name: str,
         description: str | None,
+        image_url: str | None,
         starts_at: datetime,
         ends_at: datetime,
         sale_starts_at: datetime,
@@ -150,6 +152,7 @@ class EventService:
             venue_id=venue.id,
             name=name,
             description=description,
+            image_url=image_url,
             starts_at=starts_at,
             ends_at=ends_at,
             sale_starts_at=sale_starts_at,

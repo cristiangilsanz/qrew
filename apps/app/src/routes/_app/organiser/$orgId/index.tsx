@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router'
+
+import { BackButton } from '@/components/ui/back-button'
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,13 +20,7 @@ function OrgDashboardPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <Link
-        to="/organiser"
-        className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('organiser.backToOrgs')}
-      </Link>
+      <BackButton to="/organiser" />
       <h1 className="text-2xl font-semibold">{org?.name ?? t('organiser.org.loading')}</h1>
       <Card>
         <CardHeader>

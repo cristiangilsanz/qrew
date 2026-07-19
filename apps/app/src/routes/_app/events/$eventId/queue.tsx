@@ -1,5 +1,6 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+
+import { BackButton } from '@/components/ui/back-button'
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,14 +24,7 @@ function QueuePage() {
 
   return (
     <div className="mx-auto max-w-md space-y-6 p-6">
-      <Link
-        to="/events/$eventId"
-        params={{ eventId }}
-        className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('events.backToEvent')}
-      </Link>
+      <BackButton to="/events/$eventId" params={{ eventId }} />
 
       <Card>
         <CardHeader>

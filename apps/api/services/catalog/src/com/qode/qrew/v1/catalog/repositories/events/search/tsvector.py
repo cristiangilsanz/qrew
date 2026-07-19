@@ -1,8 +1,23 @@
 from com.qode.qrew.v1.catalog.repositories.events.search.config import SearchConfig
 
 
+import re as _re
+
 def normalise_query(raw: str) -> str:
     return " ".join(raw.split()).strip()
+
+
+def to_prefix_tsquery(raw: str) -> str:
+    """Convert a raw search string to a prefix-matching tsquery value.
+
+    Each word becomes 'word:*' so 'par eve' matches 'party event'.
+    Non-alphanumeric characters are stripped to avoid tsquery syntax errors.
+    """
+    words = [_re.sub(r"[^\w]", "", w) for w in raw.split()]
+    words = [w for w in words if w]
+    if not words:
+        return ""
+    return " & ".join(f"{w}:*" for w in words)
 
 
 def vector_sql(config: SearchConfig) -> str:

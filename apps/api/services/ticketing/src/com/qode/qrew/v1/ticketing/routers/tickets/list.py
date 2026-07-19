@@ -23,6 +23,10 @@ def _to_response(ticket: object) -> TicketResponse:
         ticket_type_id=t.ticket_type_id,
         state=t.state.value,
         state_updated_at=t.state_updated_at,
+        issued_at=t.issued_at,
+        expired_at=t.expired_at,
+        holder_name=t.holder_name,
+        holder_dni=t.holder_dni,
         created_at=t.created_at,
     )
 

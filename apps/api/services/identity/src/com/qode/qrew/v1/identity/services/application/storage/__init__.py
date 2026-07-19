@@ -17,6 +17,7 @@ storage = StorageService(
     LocalFilesystemBackend(
         root=settings.storage_root,
         signing_secret=settings.storage_signing_key,
+        url_prefix=f"{settings.storage_base_url.rstrip('/')}/v1/uploads/local/",
     )
 )
 

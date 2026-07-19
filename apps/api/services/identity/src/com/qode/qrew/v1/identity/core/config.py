@@ -99,6 +99,7 @@ class Settings(BaseSettings):
     storage_root: str = "./var/storage"
     storage_signing_key: str = ""
     storage_signed_url_ttl_seconds: int = 300
+    storage_base_url: str = "http://localhost:8001"
     kyc_document_retention_days: int = 30
 
     notification_enabled: bool = True

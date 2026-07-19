@@ -44,6 +44,7 @@ async def get_me(
         kyc_status=current_user.kyc_status,
         email_verified=current_user.email_verified,
         phone_verified=current_user.phone_number_verified,
+        is_admin=current_user.is_admin,
         created_at=current_user.created_at,
     )
 

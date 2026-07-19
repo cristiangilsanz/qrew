@@ -23,26 +23,39 @@ class SearchService:
         *,
         q: str | None,
         city: str | None,
+        cities: list[str] | None,
         category: str | None,
         from_: datetime | None,
         to: datetime | None,
         cursor: str | None,
         limit: int,
     ) -> Page[EventSearchResult]:
+        # Merge single city + multi-city into one list
+        all_cities: list[str] = []
+        if cities:
+            all_cities = [c for c in cities if c]
+        elif city:
+            all_cities = [city]
+
         clause = build_search_clause(
             config=EVENTS_SEARCH_CONFIG,
             q=q,
-            filters={"category": category, "venue_city": city},
+            filters={"category": category},
             cursor=cursor,
         )
 
-        select_fragments = ["id", "name", "organiser_name", "venue_city", "starts_at"]
+        select_fragments = ["id", "name", "description", "image_url", "organiser_name", "venue_city", "starts_at"]
         if clause.rank_expression is not None:
             select_fragments.append(
                 f"{clause.rank_expression} AS {EVENTS_SEARCH_CONFIG.rank_column_alias}"
             )
 
         where_fragments = list(clause.where_fragments)
+        if all_cities:
+            placeholders = ", ".join(f":city_{i}" for i in range(len(all_cities)))
+            where_fragments.append(f"venue_city IN ({placeholders})")
+            for i, c in enumerate(all_cities):
+                clause.parameters[f"city_{i}"] = c
         if from_ is not None:
             clause.parameters["from_ts"] = from_
             where_fragments.append("starts_at >= :from_ts")
@@ -76,6 +89,8 @@ class SearchService:
             EventSearchResult(
                 id=uuid.UUID(str(row["id"])),
                 name=row["name"],
+                description=row.get("description"),
+                image_url=row.get("image_url"),
                 organiser_name=row.get("organiser_name"),
                 venue_city=row.get("venue_city"),
                 starts_at=row.get("starts_at"),

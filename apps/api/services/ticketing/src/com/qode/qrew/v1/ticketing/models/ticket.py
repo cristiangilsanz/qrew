@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum as SAEnum, Index, func
+from sqlalchemy import DateTime, Enum as SAEnum, Index, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -15,6 +15,7 @@ class TicketState(enum.StrEnum):
     entry_pending = "entry_pending"
     used = "used"
     cancelled = "cancelled"
+    expired = "expired"
     frozen = "frozen"
     flagged = "flagged"
 
@@ -44,6 +45,10 @@ class Ticket(Base):
     state_updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    holder_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    holder_dni: Mapped[str | None] = mapped_column(String(50), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

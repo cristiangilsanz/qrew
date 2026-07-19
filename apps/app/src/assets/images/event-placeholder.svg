@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#111111"/>
+      <stop offset="100%" stop-color="#1e1e1e"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="600" cy="280" r="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#be7318" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#be7318" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#ffffff" fill-opacity="0.035"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="600" fill="url(#bg)"/>
+  <rect width="1200" height="600" fill="url(#dots)"/>
+  <rect width="1200" height="600" fill="url(#glow)"/>
+
+  <!-- Ticket icon — Lucide Ticket (24×24) scaled ×8.0, centered at 600,272 -->
+  <!-- 24×8 = 192 → offset: 600−96 = 504, 272−96 = 176 -->
+  <g transform="translate(504,176) scale(8)"
+     stroke="#be7318" stroke-width="1.5" fill="none"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+    <path d="M13 5v2"/>
+    <path d="M13 11v2"/>
+    <path d="M13 17v2"/>
+  </g>
+
+
+</svg>

@@ -20,3 +20,19 @@ class ReservationResponse(BaseModel):
     status: ReservationStatus
     expires_at: datetime
     created_at: datetime
+
+
+class HolderInput(BaseModel):
+    position: int = Field(..., ge=1)
+    holder_name: str = Field(..., min_length=1, max_length=255)
+    holder_dni: str = Field(..., min_length=1, max_length=50)
+
+
+class SetHoldersRequest(BaseModel):
+    holders: list[HolderInput]
+
+
+class HolderResponse(BaseModel):
+    position: int
+    holder_name: str
+    holder_dni: str

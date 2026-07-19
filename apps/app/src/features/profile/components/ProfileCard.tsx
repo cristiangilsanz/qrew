@@ -50,7 +50,9 @@ export function ProfileCard() {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">{t('profile.kycStatus.label')}</span>
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}>
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide uppercase ${badgeClass}`}
+          >
             {t(`profile.kycStatus.${profile.kyc_status}`)}
           </span>
         </div>

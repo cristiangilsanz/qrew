@@ -29,7 +29,7 @@ function ConfirmEmailChangePage() {
   }, [token])
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
+    <div className="text-foreground flex min-h-screen items-center justify-center p-6">
       <div className="max-w-sm space-y-4 text-center">
         {status === 'loading' && <p>{t('common.loading')}</p>}
         {status === 'success' && (

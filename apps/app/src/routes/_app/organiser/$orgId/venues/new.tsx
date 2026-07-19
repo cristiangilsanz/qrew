@@ -1,5 +1,6 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+
+import { BackButton } from '@/components/ui/back-button'
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,14 +17,7 @@ function NewVenuePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <Link
-        to="/organiser/$orgId"
-        params={{ orgId }}
-        className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('organiser.backToOrg')}
-      </Link>
+      <BackButton to="/organiser/$orgId" params={{ orgId }} />
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">{t('organiser.venues.createTitle')}</CardTitle>

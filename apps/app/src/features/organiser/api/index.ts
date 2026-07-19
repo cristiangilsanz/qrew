@@ -21,6 +21,7 @@ export interface OrgEvent {
   venue_id: string
   name: string
   description: string | null
+  image_url: string | null
   starts_at: string
   ends_at: string
   sale_starts_at: string
@@ -64,6 +65,7 @@ export interface CreateEventData {
   venue_id: string
   name: string
   description?: string
+  image_url?: string | null
   starts_at: string
   ends_at: string
   sale_starts_at: string
@@ -74,6 +76,7 @@ export interface CreateEventData {
 export interface UpdateEventData {
   name?: string
   description?: string
+  image_url?: string | null
   starts_at?: string
   ends_at?: string
   sale_starts_at?: string

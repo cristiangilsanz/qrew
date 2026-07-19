@@ -56,6 +56,14 @@ up:
 shutdown:
     docker compose down --volumes --rmi local --remove-orphans
 
+# Seed database with test users, events, tickets (truncates existing data)
+db-seed:
+    cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py
+
+# Wipe all application data rows (preserves schema/migrations)
+db-truncate:
+    cd {{IDENTITY}} && uv run python ../../../../scripts/clean_db.py
+
 # Apply pending migrations for all services
 db-upgrade:
     cd {{IDENTITY}}  && uv run alembic upgrade head

@@ -12,6 +12,7 @@ class EventCreateRequest(BaseModel):
     venue_id: uuid.UUID
     name: str = Field(..., min_length=1, max_length=160)
     description: str | None = Field(default=None, max_length=10000)
+    image_url: str | None = Field(default=None, max_length=500)
     starts_at: datetime
     ends_at: datetime
     sale_starts_at: datetime
@@ -22,6 +23,7 @@ class EventCreateRequest(BaseModel):
 class EventUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=160)
     description: str | None = Field(default=None, max_length=10000)
+    image_url: str | None = Field(default=None, max_length=500)
     starts_at: datetime | None = None
     ends_at: datetime | None = None
     sale_starts_at: datetime | None = None
@@ -37,6 +39,7 @@ class EventResponse(BaseModel):
     venue_id: uuid.UUID
     name: str
     description: str | None
+    image_url: str | None
     starts_at: datetime
     ends_at: datetime
     sale_starts_at: datetime
@@ -55,6 +58,8 @@ class EventResponse(BaseModel):
 class EventSearchResult(BaseModel):
     id: uuid.UUID
     name: str
+    description: str | None = None
+    image_url: str | None = None
     organiser_name: str | None = None
     venue_city: str | None = None
     starts_at: datetime | None = None
@@ -77,6 +82,7 @@ class PublicEventDetailResponse(BaseModel):
     id: uuid.UUID
     name: str
     description: str | None
+    image_url: str | None
     starts_at: datetime
     ends_at: datetime
     sale_starts_at: datetime

@@ -11,4 +11,8 @@ class TicketResponse(BaseModel):
     ticket_type_id: uuid.UUID
     state: str
     state_updated_at: datetime | None
+    issued_at: datetime | None
+    expired_at: datetime | None
+    holder_name: str | None
+    holder_dni: str | None
     created_at: datetime

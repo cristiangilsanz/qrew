@@ -75,22 +75,29 @@ async def handle_reservation_paid(raw: bytes) -> None:
         await logger.awarning("sales_events.reservation_paid.bad_payload")
         return
 
+    holders_raw: list[dict] = data["data"].get("holders", [])
+    holders_by_position = {int(h["position"]): h for h in holders_raw}
+
     async with AsyncSessionLocal() as session:
         async with redlock(
             f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
         ):
             audit = AuditService()
             tickets = await TicketRepository(session).list_by_reservation(reservation_id)
-            for ticket in tickets:
-                if ticket.state == TicketState.reserved:
-                    await transition_ticket(
-                        session,
-                        ticket_id=ticket.id,
-                        to_state=TicketState.issued,
-                        reason="reservation_paid",
-                        actor_id=user_id,
-                        audit=audit,
-                    )
+            reserved = [t for t in tickets if t.state == TicketState.reserved]
+            for idx, ticket in enumerate(reserved):
+                await transition_ticket(
+                    session,
+                    ticket_id=ticket.id,
+                    to_state=TicketState.issued,
+                    reason="reservation_paid",
+                    actor_id=user_id,
+                    audit=audit,
+                )
+                holder = holders_by_position.get(idx + 1)
+                if holder:
+                    ticket.holder_name = str(holder["holder_name"])
+                    ticket.holder_dni = str(holder["holder_dni"])
             await session.commit()
     await logger.ainfo("sales_events.tickets_issued", reservation_id=str(reservation_id))
 
@@ -107,6 +114,37 @@ async def handle_reservation_cancelled(raw: bytes) -> None:
         await logger.awarning("sales_events.reservation_cancelled.bad_payload")
         return
     await _cancel_tickets_for_reservation(reservation_id, user_id, reason="reservation_cancelled")
+
+
+async def handle_reservation_expired(raw: bytes) -> None:
+    """Transition tickets to expired state when the reservation times out without payment."""
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
+        user_id = uuid.UUID(str(data["data"]["user_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("sales_events.reservation_expired.bad_payload")
+        return
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            audit = AuditService()
+            tickets = await TicketRepository(session).list_by_reservation(reservation_id)
+            for ticket in tickets:
+                if ticket.state == TicketState.reserved:
+                    await transition_ticket(
+                        session,
+                        ticket_id=ticket.id,
+                        to_state=TicketState.expired,
+                        reason="reservation_expired",
+                        actor_id=user_id,
+                        audit=audit,
+                    )
+            await session.commit()
+    await logger.ainfo("sales_events.tickets_expired", reservation_id=str(reservation_id))
 
 
 async def _cancel_tickets_for_reservation(
@@ -144,6 +182,7 @@ _HANDLERS = {
     "sales.reservation.created.v1": handle_reservation_created,
     "sales.reservation.paid.v1": handle_reservation_paid,
     "sales.reservation.cancelled.v1": handle_reservation_cancelled,
+    "sales.reservation.expired.v1": handle_reservation_expired,
 }
 
 

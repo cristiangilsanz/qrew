@@ -1,7 +1,9 @@
 import { Calendar, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { Card, CardContent } from '@/components/ui/card'
+import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
+import { getEventImageUrl } from '@/lib/imageUrl'
+import { cn } from '@/lib/utils'
 
 import { type EventSummary } from '../api'
 
@@ -16,7 +18,6 @@ function formatEventDate(isoString: string | null): string {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
-    year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   })
@@ -24,33 +25,55 @@ function formatEventDate(isoString: string | null): string {
 
 export function EventCard({ event, onClick }: Props) {
   const { t } = useTranslation()
+  const imageUrl = getEventImageUrl(event.image_url)
 
   return (
-    <Card
-      className="hover:border-primary cursor-pointer transition-colors"
-      onClick={onClick}
+    <article
       role="article"
+      onClick={onClick}
+      className={cn(
+        'bg-card border-border overflow-hidden rounded-xl border transition-colors',
+        onClick && 'hover:border-primary cursor-pointer',
+      )}
     >
-      <CardContent className="p-4">
-        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+      <div className="relative h-44 w-full overflow-hidden bg-[#111]">
+        <ImageWithSkeleton
+          src={imageUrl}
+          alt={event.name}
+          className={cn('h-full w-full', event.image_url ? 'object-cover' : 'object-contain p-4')}
+        />
+        {event.image_url && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        )}
+      </div>
+
+      <div className="space-y-2 p-4">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
           {event.organiser_name ?? t('events.unknownOrganiser')}
         </p>
-        <h2 className="mb-2 text-base font-semibold">{event.name}</h2>
-        <div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
+        <h2 className="text-base leading-snug font-semibold">{event.name}</h2>
+
+        {event.description && (
+          <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
+            {event.description}
+          </p>
+        )}
+
+        <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
           {event.venue_city && (
             <span className="flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" />
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
               {event.venue_city}
             </span>
           )}
           {event.starts_at && (
             <span className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3.5 w-3.5 shrink-0" />
               {formatEventDate(event.starts_at)}
             </span>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </article>
   )
 }

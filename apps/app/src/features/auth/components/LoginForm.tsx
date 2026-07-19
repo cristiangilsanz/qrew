@@ -42,7 +42,7 @@ export function LoginForm() {
 
   const onSubmit = (values: LoginFormValues) => {
     login.mutate(values, {
-      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/events' }),
+      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/home' }),
     })
   }
 
@@ -53,7 +53,7 @@ export function LoginForm() {
       return
     }
     passkeyLogin.mutate(email, {
-      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/events' }),
+      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/home' }),
     })
   }
 

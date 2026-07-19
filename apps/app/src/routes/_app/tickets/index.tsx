@@ -1,67 +1,80 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Ticket } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { TicketState } from '@/features/tickets/api'
-import { TicketCard } from '@/features/tickets/components/TicketCard'
+import noTicketsImg from '@/assets/images/no-tickets.png'
+
+import { TicketCardSkeleton } from '@/components/ui/skeleton'
+
+import type { Ticket } from '@/features/tickets/api'
+import { ReservationRow } from '@/features/tickets/components/ReservationRow'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
 
 export const Route = createFileRoute('/_app/tickets/')({
   component: TicketsPage,
 })
 
-const ACTIVE_STATES: TicketState[] = ['reserved', 'issued', 'entry_pending']
+function groupByReservation(tickets: Ticket[]): Map<string, Ticket[]> {
+  const map = new Map<string, Ticket[]>()
+  for (const ticket of tickets) {
+    const group = map.get(ticket.reservation_id) ?? []
+    group.push(ticket)
+    map.set(ticket.reservation_id, group)
+  }
+  return map
+}
 
 function TicketsPage() {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const { data: tickets, isLoading } = useTickets()
 
-  const active = tickets?.filter((ticket) => ACTIVE_STATES.includes(ticket.state)) ?? []
-  const past = tickets?.filter((ticket) => !ACTIVE_STATES.includes(ticket.state)) ?? []
+  useEffect(() => {
+    void queryClient.invalidateQueries({ queryKey: ['tickets'] })
+  }, [])
+
+  const sorted = (tickets ?? [])
+    .slice()
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  const groups = groupByReservation(sorted)
+  const reservationIds = [...new Set(sorted.map((t) => t.reservation_id))]
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6 p-4 pb-24">
       <h1 className="text-2xl font-bold">{t('tickets.title')}</h1>
 
       {isLoading && (
-        <div className="flex justify-center py-12">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+        <div className="flex flex-col gap-6">
+          {[0, 1, 2].map((i) => (
+            <TicketCardSkeleton key={i} />
+          ))}
         </div>
       )}
 
       {!isLoading && tickets?.length === 0 && (
-        <div className="flex flex-col items-center gap-4 py-12 text-center">
-          <Ticket className="text-muted-foreground h-12 w-12" />
-          <p className="text-muted-foreground">{t('tickets.empty')}</p>
+        <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 px-6 text-center">
+          <img
+            src={noTicketsImg}
+            alt="No tickets yet"
+            className="max-h-[35vh] w-auto object-contain"
+          />
           <Link
             to="/events"
-            className="text-primary hover:text-primary/80 text-sm underline underline-offset-4"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-11 items-center rounded-full px-6 text-sm font-semibold transition-colors"
           >
             {t('tickets.browseEvents')}
           </Link>
         </div>
       )}
 
-      {active.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-            {t('tickets.sections.active')}
-          </h2>
-          {active.map((ticket) => (
-            <TicketCard key={ticket.id} ticket={ticket} />
+      {reservationIds.length > 0 && (
+        <div className="flex flex-col gap-8">
+          {reservationIds.map((reservationId) => (
+            <ReservationRow key={reservationId} tickets={groups.get(reservationId)!} />
           ))}
-        </section>
-      )}
-
-      {past.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-            {t('tickets.sections.past')}
-          </h2>
-          {past.map((ticket) => (
-            <TicketCard key={ticket.id} ticket={ticket} />
-          ))}
-        </section>
+        </div>
       )}
     </div>
   )

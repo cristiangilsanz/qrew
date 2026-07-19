@@ -1,9 +1,9 @@
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
+import { CreditCard } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
 import { env } from '@/config/env'
 
 const stripePromise = loadStripe(env.STRIPE_PUBLISHABLE_KEY)
@@ -48,9 +48,20 @@ function PaymentForm({ onSuccess }: FormProps) {
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
       <PaymentElement />
       {error && <p className="text-destructive text-sm">{error}</p>}
-      <Button type="submit" className="w-full" isLoading={loading} disabled={!stripe || !elements}>
-        {t('tickets.payment.confirmButton')}
-      </Button>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={loading || !stripe || !elements}
+          className="bg-primary flex h-12 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
+        >
+          {loading ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : (
+            <CreditCard className="h-4 w-4" />
+          )}
+          {t('tickets.payment.confirmButton')}
+        </button>
+      </div>
     </form>
   )
 }
