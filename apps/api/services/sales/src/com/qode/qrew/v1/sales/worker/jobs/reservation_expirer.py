@@ -1,5 +1,6 @@
 import asyncio
 from datetime import UTC, datetime
+from typing import Any
 
 import structlog
 from sqlalchemy import text
@@ -36,7 +37,7 @@ _DECREMENT_INVENTORY = text(
 async def sweep_expired() -> int:
     """Marks timed-out reservations as expired, releases inventory, and publishes expiry events."""
     swept = 0
-    expired_rows: list[dict] = []
+    expired_rows: list[dict[str, Any]] = []
 
     async with AsyncSessionLocal() as session, session.begin():
         result = await session.execute(
@@ -60,7 +61,7 @@ async def sweep_expired() -> int:
     return swept
 
 
-async def _publish_expired(row: dict) -> None:
+async def _publish_expired(row: dict[str, Any]) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]

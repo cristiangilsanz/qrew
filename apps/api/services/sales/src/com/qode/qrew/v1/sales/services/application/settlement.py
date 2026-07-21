@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
+from com.qode.qrew.v1.sales.models.reservation_holder import ReservationHolder
 from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 from locking import redlock
@@ -68,7 +69,7 @@ class SettlementService:
         return reservation
 
 
-async def _publish_paid(reservation: Reservation, holders: list) -> None:
+async def _publish_paid(reservation: Reservation, holders: list[ReservationHolder]) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
