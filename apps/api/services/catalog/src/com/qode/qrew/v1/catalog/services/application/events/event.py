@@ -65,6 +65,18 @@ def _validate_max_tickets(value: int) -> None:
         )
 
 
+def _event_data(event: Any) -> dict[str, Any]:
+    return {
+        "event_id": str(event.id),
+        "organisation_id": str(event.organisation_id),
+        "sale_starts_at": event.sale_starts_at.isoformat() if event.sale_starts_at else None,
+        "sale_ends_at": event.sale_ends_at.isoformat() if event.sale_ends_at else None,
+        "max_tickets_per_user": event.max_tickets_per_user,
+        "queue_required": event.queue_required,
+        "queue_admit_rate_per_minute": event.queue_admit_rate_per_minute,
+    }
+
+
 async def _publish_nats(
     subject: str, aggregate_type: str, aggregate_id: str, data: dict[str, Any]
 ) -> None:
@@ -137,6 +149,8 @@ class EventService:
         sale_starts_at: datetime,
         sale_ends_at: datetime,
         max_tickets_per_user: int,
+        queue_required: bool = False,
+        queue_admit_rate_per_minute: int = 60,
     ) -> Event:
         _validate_windows(
             starts_at=starts_at,
@@ -158,6 +172,8 @@ class EventService:
             sale_starts_at=sale_starts_at,
             sale_ends_at=sale_ends_at,
             max_tickets_per_user=max_tickets_per_user,
+            queue_required=queue_required,
+            queue_admit_rate_per_minute=queue_admit_rate_per_minute,
             status=EventStatus.draft,
             organiser_name=org.name,
             venue_city=venue.city,
@@ -182,8 +198,8 @@ class EventService:
         event = await self._repo.get_by_id(event_id)
         if event is None:
             raise EventError("Event not found", field="event_id")
-        if event.status != EventStatus.draft:
-            raise EventError("Only draft events can be edited", field="status")
+        if event.status == EventStatus.cancelled:
+            raise EventError("Cancelled events cannot be edited", field="status")
         unknown = set(changes) - _MUTABLE_FIELDS
         if unknown:
             raise EventError(f"Cannot edit fields: {sorted(unknown)}", field=None)
@@ -202,6 +218,12 @@ class EventService:
             actor_id=actor_id,
             event_id=event.id,
             payload={"fields": sorted(changes.keys())},
+        )
+        await _publish_nats(
+            "catalog.event.updated.v1",
+            aggregate_type="event",
+            aggregate_id=str(event.id),
+            data=_event_data(event),
         )
         return event
 
@@ -231,7 +253,7 @@ class EventService:
                 "catalog.event.published.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),
-                data={"event_id": str(event.id), "organisation_id": str(event.organisation_id)},
+                data=_event_data(event),
             )
             return event
 
@@ -259,10 +281,7 @@ class EventService:
                 "catalog.event.cancelled.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),
-                data={
-                    "event_id": str(event.id),
-                    "organisation_id": str(event.organisation_id),
-                },
+                data=_event_data(event),
             )
             return event
 

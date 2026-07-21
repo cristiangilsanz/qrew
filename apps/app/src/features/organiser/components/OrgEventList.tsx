@@ -1,16 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { StatusChip } from '@/components/ui/status-chip'
+
 import { useOrgEvents } from '../hooks/useOrgEvents'
 
 interface Props {
   orgId: string
-}
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  published: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
 }
 
 export function OrgEventList({ orgId }: Props) {
@@ -56,11 +52,7 @@ export function OrgEventList({ orgId }: Props) {
                 {new Date(event.starts_at).toLocaleDateString()} · {event.venue_city}
               </p>
             </div>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide uppercase ${statusColors[event.status] ?? ''}`}
-            >
-              {event.status.toUpperCase()}
-            </span>
+            <StatusChip label={event.status} />
           </Link>
         ))}
       </div>

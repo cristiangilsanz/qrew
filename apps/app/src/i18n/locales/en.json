@@ -1,10 +1,10 @@
 {
   "nav": {
     "home": "Home",
-    "discover": "Discover",
+    "discover": "Events",
     "tickets": "Tickets",
     "profile": "Profile",
-    "organiser": "Organiser"
+    "organiser": "Management"
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -23,7 +23,10 @@
     "retry": "Try again",
     "save": "Save",
     "cancel": "Cancel",
-    "back": "Back"
+    "back": "Back",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "goBack": "Go back"
   },
   "auth": {
     "login": "Sign in",
@@ -113,11 +116,13 @@
     },
     "queue": {
       "title": "Waiting Room",
-      "description": "This is a high-demand event. Join the queue to get your tickets.",
+      "descriptionTitle": "This is a high-demand event",
+      "descriptionSub": "Join the queue to get your tickets",
       "joinButton": "Join Queue",
       "joinFailed": "Failed to join queue. Please try again.",
       "waiting": "Your position in the queue",
-      "positionHint": "Position updates every few seconds",
+      "updatingIn": "Updating in {{seconds}}s",
+      "doNotClose": "Do not close this page",
       "ready": "You're next!",
       "readyDescription": "Your slot is ready. Check back shortly for your redemption link.",
       "notInQueue": "You are not in the queue.",
@@ -129,7 +134,10 @@
       "ticketTypeLabel": "Ticket type",
       "quantityLabel": "Quantity",
       "total": "Total",
-      "reserveButton": "Reserve Tickets"
+      "reserveButton": "Reserve Tickets",
+      "selected": "selected",
+      "alreadyHeld": "already held",
+      "limitReached": "You already hold the maximum number of tickets for this event."
     },
     "reservation": {
       "title": "Your Reservation",
@@ -317,7 +325,7 @@
     "backToOrgs": "Back to organisations",
     "backToOrg": "Back to organisation",
     "org": {
-      "create": "New organisation",
+      "create": "Create organisation",
       "createTitle": "Create organisation",
       "createSuccess": "Organisation created.",
       "empty": "You have no organisations yet.",
@@ -325,7 +333,11 @@
       "slugLabel": "Slug",
       "slugPlaceholder": "my-org",
       "nameLabel": "Name",
-      "descriptionLabel": "Description (optional)"
+      "descriptionLabel": "Description (optional)",
+      "deleteButton": "Delete organisation",
+      "deleteTitle": "Delete organisation",
+      "deleteDesc": "This will permanently delete the organisation and all its events, ticket types and members.\n\nThis action cannot be undone.",
+      "deleteSuccess": "Organisation deleted."
     },
     "events": {
       "title": "Events",
@@ -335,11 +347,11 @@
       "publishSuccess": "Event published.",
       "cancelSuccess": "Event cancelled.",
       "empty": "No events yet.",
-      "edit": "Edit event",
+      "edit": "Edit event information",
       "publish": "Publish",
       "cancel": "Cancel event",
       "confirmPublish": "Confirm publish",
-      "confirmCancel": "Confirm cancellation",
+      "confirmCancel": "Cancel event",
       "nameLabel": "Name",
       "descriptionLabel": "Description",
       "venueLabel": "Venue",
@@ -349,32 +361,73 @@
       "saleStartsAtLabel": "Sale starts at",
       "saleEndsAtLabel": "Sale ends at",
       "maxTicketsLabel": "Max tickets per user",
-      "saleEndBeforeStart": "Sale must end before event starts"
+      "saleEndBeforeStart": "Sale must end before event starts",
+      "searchPlaceholder": "Search events…",
+      "cancelDesc": "Issued tickets will be cancelled and reimbursed in the next 30 days.",
+      "updateEvent": "Update"
     },
     "ticketTypes": {
-      "title": "Ticket types",
+      "title": "Edit ticket type details",
       "createSuccess": "Ticket type created.",
       "updateSuccess": "Ticket type updated.",
       "deleteSuccess": "Ticket type deleted.",
       "addButton": "Add ticket type",
+      "deleteTitle": "Delete ticket type",
+      "deleteDesc": "This ticket type will be permanently removed. Tickets already issued will not be affected.",
+      "deleteConfirm": "Delete",
       "nameLabel": "Name",
       "capacityLabel": "Capacity",
-      "priceLabel": "Price (cents)",
+      "priceLabel": "Price",
       "currencyLabel": "Currency (3-char ISO)",
       "positionLabel": "Position"
     },
     "members": {
       "title": "Members",
-      "inviteSuccess": "Invitation sent.",
+      "inviteSuccess": "Member added.",
       "removeSuccess": "Member removed.",
-      "emailLabel": "Email",
+      "emailLabel": "User",
       "roleLabel": "Role",
-      "inviteButton": "Invite"
+      "inviteButton": "Add",
+      "joined": "Joined",
+      "invite": "Add member",
+      "addMember": "Add member",
+      "empty": "No members yet.",
+      "emailPlaceholder": "Search by name or email…",
+      "roleMemberDesc": "Can view events and members",
+      "roleManagerDesc": "Can manage events and add or remove members",
+      "selectUser": "Please select a user from the list",
+      "searchPlaceholder": "Search members…",
+      "removeTitle": "Remove member",
+      "removeConfirmDesc": "This person will lose access to the organisation and its events.",
+      "removeConfirm": "Remove",
+      "roleValidationNote": "Both managers and members can validate tickets at entry"
     },
     "venues": {
       "createSuccess": "Venue created.",
       "createTitle": "Create venue",
-      "newVenue": "New venue"
+      "newVenue": "Create venue",
+      "searchLabel": "Search on Google Maps",
+      "searchPlaceholder": "Search for a venue, address…",
+      "searchUnavailable": "Maps search unavailable",
+      "manualHint": "Fields are pre-filled from the map.\nYou can edit them below if needed.",
+      "nameLabel": "Venue name",
+      "addressLabel": "Street address",
+      "cityLabel": "City",
+      "countryLabel": "Country (2-char)",
+      "latLabel": "Latitude",
+      "lngLabel": "Longitude",
+      "timezoneLabel": "Timezone",
+      "geofenceLabel": "Geofence radius (m)"
+    },
+    "scanner": {
+      "title": "Ticket Scanner",
+      "scanTickets": "Scan tickets",
+      "prompt": "Point the camera at a ticket QR code.",
+      "start": "Start",
+      "notSupported": "QR scanning is not supported on this browser.\nPlease use Chrome or the Qrew app.",
+      "scanned": "scanned",
+      "admitted": "Admitted",
+      "rejected": "Rejected"
     },
     "errors": {
       "createOrgFailed": "Failed to create organisation.",
@@ -387,7 +440,13 @@
       "deleteTicketTypeFailed": "Failed to delete ticket type.",
       "inviteFailed": "Failed to invite member.",
       "removeFailed": "Failed to remove member.",
-      "createVenueFailed": "Failed to create venue."
+      "createVenueFailed": "Failed to create venue.",
+      "addMemberFailed": "Failed to add member.",
+      "deleteFailed": "Failed to delete organisation."
+    },
+    "search": {
+      "placeholder": "Search organisations…",
+      "empty": "No organisations found."
     }
   },
   "realtime": {

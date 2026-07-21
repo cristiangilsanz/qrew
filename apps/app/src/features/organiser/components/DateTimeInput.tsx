@@ -25,7 +25,7 @@ export function DateTimeInput({ value, onChange }: Props) {
   const timePart = toTimePart(value)
 
   const base =
-    'border-input bg-background text-foreground ring-offset-background focus-visible:ring-ring h-10 rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 [color-scheme:dark]'
+    'h-10 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-sm text-white/50 outline-none transition-all duration-150 focus:border-primary/50 focus:bg-white/8 focus:text-white [color-scheme:dark]'
 
   return (
     <div className="flex gap-2">

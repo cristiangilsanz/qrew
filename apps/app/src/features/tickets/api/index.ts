@@ -8,6 +8,7 @@ export interface QueueJoinResponse {
 
 export interface QueuePositionResponse {
   position: number | null
+  redeem_token: string | null
 }
 
 export interface QueueRedeemResponse {

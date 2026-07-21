@@ -1,5 +1,17 @@
 import { apiClient } from '@/lib/api'
 
+export interface UserPublicProfile {
+  id: string
+  full_name: string
+  email: string
+}
+
+export interface UserSearchResult {
+  id: string
+  email: string
+  full_name: string
+}
+
 export interface UserProfile {
   id: string
   email: string
@@ -95,4 +107,14 @@ export const profileApi = {
 
   revokeAllDevices: () =>
     apiClient.post<{ message: string }>('/v1/auth/devices/revoke-all').then((r) => r.data),
+
+  getPublicProfiles: (userIds: string[]) =>
+    apiClient
+      .post<UserPublicProfile[]>('/v1/auth/profile/users/public', { user_ids: userIds })
+      .then((r) => r.data),
+
+  searchUsers: (q: string) =>
+    apiClient
+      .get<UserSearchResult[]>('/v1/admin/users/search', { params: { q } })
+      .then((r) => r.data),
 }

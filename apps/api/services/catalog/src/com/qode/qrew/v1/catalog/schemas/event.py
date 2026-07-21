@@ -18,6 +18,8 @@ class EventCreateRequest(BaseModel):
     sale_starts_at: datetime
     sale_ends_at: datetime
     max_tickets_per_user: int = Field(default=4, ge=1, le=20)
+    queue_required: bool = False
+    queue_admit_rate_per_minute: int = Field(default=60, ge=1, le=600)
 
 
 class EventUpdateRequest(BaseModel):

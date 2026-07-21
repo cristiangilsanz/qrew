@@ -1,15 +1,9 @@
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { StatusChip } from '@/components/ui/status-chip'
 
 import { useProfile } from '../hooks/useProfile'
-
-const kycColors: Record<string, string> = {
-  approved: 'bg-green-100 text-green-800',
-  pending: 'bg-yellow-100 text-yellow-800',
-  rejected: 'bg-red-100 text-red-800',
-  not_submitted: 'bg-gray-100 text-gray-600',
-}
 
 export function ProfileCard() {
   const { t, i18n } = useTranslation()
@@ -26,9 +20,6 @@ export function ProfileCard() {
   }
 
   if (!profile) return null
-
-  const kycKey = profile.kyc_status as keyof typeof kycColors
-  const badgeClass = kycColors[kycKey] ?? kycColors.not_submitted
 
   return (
     <Card>
@@ -50,11 +41,7 @@ export function ProfileCard() {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">{t('profile.kycStatus.label')}</span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide uppercase ${badgeClass}`}
-          >
-            {t(`profile.kycStatus.${profile.kyc_status}`)}
-          </span>
+          <StatusChip label={t(`profile.kycStatus.${profile.kyc_status}`)} variant={profile.kyc_status} />
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">

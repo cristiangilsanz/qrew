@@ -92,8 +92,6 @@ function TicketDetailPage() {
   } else if (ticket.state === 'cancelled') {
     if (ticket.issued_at) {
       timeline.push({ label: 'Issued', date: fmt(ticket.issued_at), status: 'done' })
-    } else {
-      timeline.push({ label: 'Issued', date: null, status: 'pending' })
     }
     timeline.push({
       label: 'Cancelled',
@@ -101,7 +99,7 @@ function TicketDetailPage() {
       status: 'error',
     })
   } else if (ticket.state === 'reserved') {
-    timeline.push({ label: 'Issued', date: null, status: 'pending' })
+    // still pending issuance — no placeholder shown
   } else {
     // issued, entry_pending, used, frozen, flagged
     timeline.push({

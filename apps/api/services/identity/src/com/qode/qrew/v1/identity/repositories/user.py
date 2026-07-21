@@ -76,6 +76,24 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_ids(self, user_ids: list[uuid.UUID]) -> list[User]:
+        """Return all users matching the given ids (order not guaranteed)."""
+        if not user_ids:
+            return []
+        result = await self._session.execute(select(User).where(User.id.in_(user_ids)))
+        return list(result.scalars().all())
+
+    async def search_by_email_partial(self, q: str, *, limit: int = 50) -> list[User]:
+        """Return users whose decrypted email/name contains q; all users when q is empty."""
+        result = await self._session.execute(select(User))
+        pattern = q.strip().lower()
+        if not pattern:
+            return list(result.scalars())[:limit]
+        return [
+            u for u in result.scalars()
+            if pattern in u.email.lower() or pattern in u.full_name.lower()
+        ][:limit]
+
     async def save(self, user: User) -> User:
         """Persist pending changes for an already-tracked user."""
         await self._session.flush()

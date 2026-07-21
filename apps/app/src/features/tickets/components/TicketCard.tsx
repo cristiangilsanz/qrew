@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
+import { StatusChip } from '@/components/ui/status-chip'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
@@ -11,16 +12,6 @@ import { cn } from '@/lib/utils'
 import type { Ticket, TicketState } from '../api'
 import { useReservation } from '../hooks/useReservation'
 
-const STATE_COLOR: Record<TicketState, string> = {
-  reserved: 'bg-yellow-500/20 text-yellow-400',
-  issued: 'bg-green-500/20 text-green-400',
-  entry_pending: 'bg-blue-500/20 text-blue-400',
-  used: 'bg-muted text-muted-foreground',
-  cancelled: 'bg-red-500/20 text-red-400',
-  expired: 'bg-orange-500/20 text-orange-400',
-  frozen: 'bg-cyan-500/20 text-cyan-400',
-  flagged: 'bg-amber-500/20 text-amber-400',
-}
 
 interface Props {
   ticket: Ticket
@@ -66,17 +57,6 @@ export function TicketCard({ ticket }: Props) {
           {event?.image_url && (
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           )}
-          {/* State badge overlaid on image */}
-          {badgeReady && (
-            <span
-              className={cn(
-                'absolute right-3 bottom-3 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase',
-                STATE_COLOR[displayState],
-              )}
-            >
-              {t(`tickets.ticket.states.${displayState}`)}
-            </span>
-          )}
         </div>
 
         {/* Text section */}
@@ -115,8 +95,16 @@ export function TicketCard({ ticket }: Props) {
                     })}
                   </span>
                 )}
-                <span className="ml-auto font-mono text-xs">
-                  #{ticket.id.slice(0, 8).toUpperCase()}
+                <span className="ml-auto flex items-center gap-2">
+                  {badgeReady && (
+                    <StatusChip
+                      label={t(`tickets.ticket.states.${displayState}`)}
+                      variant={displayState}
+                    />
+                  )}
+                  <span className="font-mono text-xs">
+                    #{ticket.id.slice(0, 8).toUpperCase()}
+                  </span>
                 </span>
               </div>
             </>

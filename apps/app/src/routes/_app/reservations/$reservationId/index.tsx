@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { CheckCircle2, Clock, CreditCard } from 'lucide-react'
+import { CheckCircle2, Clock, CreditCard, Save } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -90,8 +90,22 @@ function ReservationPage() {
     setHoldersSaved(false)
   }
 
+  const validateDni = (dni: string): boolean => {
+    const v = dni.trim().toUpperCase()
+    const letters = 'TRWAGMYFPDXBNJZSQVHLCKE'
+    const dniRe = /^\d{8}[A-Z]$/
+    const nieRe = /^[XYZ]\d{7}[A-Z]$/
+    if (dniRe.test(v)) return letters[parseInt(v.slice(0, 8)) % 23] === v[8]
+    if (nieRe.test(v)) {
+      const prefix: Record<string, string> = { X: '0', Y: '1', Z: '2' }
+      const digits = prefix[v[0]] + v.slice(1, 8)
+      return letters[parseInt(digits) % 23] === v[8]
+    }
+    return false
+  }
+
   const holdersComplete = initializedHolders.every(
-    (h) => h.holder_name.trim().length > 0 && h.holder_dni.trim().length > 0,
+    (h) => h.holder_name.trim().length > 0 && validateDni(h.holder_dni),
   )
 
   const ticketType = event?.ticket_types.find((tt) => tt.id === reservation.ticket_type_id)
@@ -190,13 +204,22 @@ function ReservationPage() {
                 onChange={(e) => updateHolder(i, 'holder_name', e.target.value)}
                 className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
               />
-              <input
-                type="text"
-                placeholder="DNI / ID number"
-                value={holder.holder_dni}
-                onChange={(e) => updateHolder(i, 'holder_dni', e.target.value)}
-                className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
-              />
+              <div>
+                <input
+                  type="text"
+                  placeholder="DNI / NIE"
+                  value={holder.holder_dni}
+                  onChange={(e) => updateHolder(i, 'holder_dni', e.target.value)}
+                  className={`placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none ${
+                    holder.holder_dni && !validateDni(holder.holder_dni)
+                      ? 'border-red-500/60 focus:border-red-500/80'
+                      : 'border-white/10 focus:border-white/30'
+                  }`}
+                />
+                {holder.holder_dni && !validateDni(holder.holder_dni) && (
+                  <p className="mt-1 px-1 text-xs text-red-400">Invalid DNI / NIE</p>
+                )}
+              </div>
             </div>
           ))}
 
@@ -204,11 +227,13 @@ function ReservationPage() {
             <button
               onClick={() => saveHolders.mutate()}
               disabled={!holdersComplete || saveHolders.isPending}
-              className="flex h-9 items-center gap-1.5 rounded-full bg-white/10 px-4 text-sm font-semibold text-white enabled:hover:bg-white/15 disabled:opacity-40"
+              className="bg-primary flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-lg transition-opacity disabled:opacity-40"
             >
               {saveHolders.isPending ? (
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : null}
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               Save
             </button>
           </div>

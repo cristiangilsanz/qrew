@@ -14,6 +14,7 @@ from com.qode.qrew.v1.catalog.models.organisation import (
 )
 from com.qode.qrew.v1.catalog.repositories.identity import UserRepository
 from com.qode.qrew.v1.catalog.repositories.organisation import (
+    MemberRow,
     OrganisationMemberRepository,
     OrganisationRepository,
 )
@@ -45,6 +46,12 @@ class OrganisationService:
 
     async def get_by_id(self, organisation_id: uuid.UUID) -> Organisation | None:
         return await self._orgs.get_by_id(organisation_id)
+
+    async def search(self, q: str, *, limit: int = 20) -> list[Organisation]:
+        return await self._orgs.search(q, limit=limit)
+
+    async def list_members(self, organisation_id: uuid.UUID) -> list[MemberRow]:
+        return await self._members.list_members(organisation_id)
 
     @traced("organisation.create")
     async def create_organisation(
@@ -101,6 +108,31 @@ class OrganisationService:
         )
         return member
 
+    @traced("organisation.add_member")
+    async def add_member(
+        self,
+        *,
+        actor_id: uuid.UUID,
+        organisation_id: uuid.UUID,
+        user_id: uuid.UUID,
+        role: OrganisationRole,
+    ) -> OrganisationMember:
+        if role == OrganisationRole.owner:
+            raise OrganisationError("Owners are promoted, not added", field="role")
+        existing = await self._members.get(organisation_id, user_id)
+        if existing is not None:
+            raise OrganisationError("User is already a member of this organisation", field="user_id")
+        member = await self._members.insert(
+            organisation_id=organisation_id, user_id=user_id, role=role
+        )
+        await self._audit_safe(
+            "organisation_member_added",
+            actor_id=actor_id,
+            organisation_id=organisation_id,
+            payload={"member_user_id": str(user_id), "role": str(role)},
+        )
+        return member
+
     @traced("organisation.remove_member")
     async def remove_member(
         self,
@@ -124,6 +156,23 @@ class OrganisationService:
             actor_id=actor_id,
             organisation_id=organisation_id,
             payload={"member_user_id": str(member_user_id)},
+        )
+
+    @traced("organisation.delete")
+    async def delete_organisation(
+        self,
+        *,
+        actor_id: uuid.UUID,
+        organisation_id: uuid.UUID,
+    ) -> None:
+        deleted = await self._orgs.soft_delete(organisation_id)
+        if not deleted:
+            raise OrganisationError("Organisation not found")
+        await self._audit_safe(
+            "organisation_deleted",
+            actor_id=actor_id,
+            organisation_id=organisation_id,
+            payload={},
         )
 
     async def _audit_safe(

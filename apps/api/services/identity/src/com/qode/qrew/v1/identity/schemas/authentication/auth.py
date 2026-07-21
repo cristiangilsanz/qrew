@@ -47,6 +47,16 @@ class UserProfileResponse(BaseModel):
     created_at: datetime
 
 
+class UserPublicProfile(BaseModel):
+    id: uuid.UUID
+    full_name: str
+    email: str
+
+
+class UserPublicProfilesRequest(BaseModel):
+    user_ids: list[uuid.UUID]
+
+
 class OnboardingStatusResponse(BaseModel):
     email_verified: bool
     phone_verified: bool

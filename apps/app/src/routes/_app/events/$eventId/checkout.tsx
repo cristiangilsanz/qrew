@@ -9,11 +9,15 @@ import { z } from 'zod'
 import { BackButton } from '@/components/ui/back-button'
 import { CheckoutSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
-import { ticketsApi } from '@/features/tickets/api'
+import { type TicketState, ticketsApi } from '@/features/tickets/api'
+import { useTickets } from '@/features/tickets/hooks/useTickets'
 import { cn } from '@/lib/utils'
+
+const ACTIVE_STATES: TicketState[] = ['reserved', 'issued', 'entry_pending', 'frozen', 'flagged']
 
 const searchSchema = z.object({
   reservation_window_token: z.string().optional(),
+  admitted: z.boolean().optional(),
 })
 
 export const Route = createFileRoute('/_app/events/$eventId/checkout')({
@@ -29,10 +33,11 @@ function formatPrice(cents: number, currency: string): string {
 function CheckoutPage() {
   const { t } = useTranslation()
   const { eventId } = Route.useParams()
-  const { reservation_window_token } = useSearch({ from: '/_app/events/$eventId/checkout' })
+  const { reservation_window_token, admitted } = useSearch({ from: '/_app/events/$eventId/checkout' })
   const navigate = useNavigate()
 
   const { data: event, isLoading, isError } = useEvent(eventId)
+  const { data: myTickets } = useTickets()
 
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [isPending, setIsPending] = useState(false)
@@ -47,8 +52,8 @@ function CheckoutPage() {
     )
   }
 
-  // Queue flow
-  if (event.queue_required) {
+  // Queue flow — show join button unless user was admitted from the queue
+  if (event.queue_required && !admitted) {
     return (
       <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">
         <BackButton
@@ -70,7 +75,10 @@ function CheckoutPage() {
 
   const ticketTypes = event.ticket_types.slice().sort((a, b) => a.position - b.position)
   const totalSelected = Object.values(quantities).reduce((sum, q) => sum + q, 0)
-  const maxTotal = event.max_tickets_per_user
+  const alreadyHeld = myTickets?.filter(
+    (t) => t.event_id === eventId && ACTIVE_STATES.includes(t.state),
+  ).length ?? 0
+  const maxTotal = Math.max(0, event.max_tickets_per_user - alreadyHeld)
 
   const handleIncrement = (id: string, available: number) => {
     if (available === 0) return
@@ -155,9 +163,19 @@ function CheckoutPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">{t('events.ticketTypes')}</h2>
           <span className="text-muted-foreground text-xs">
-            {totalSelected}/{maxTotal} selected
+            {totalSelected}/{maxTotal} {t('tickets.checkout.selected')}
+            {alreadyHeld > 0 && (
+              <span className="text-muted-foreground ml-1">
+                ({alreadyHeld} {t('tickets.checkout.alreadyHeld')})
+              </span>
+            )}
           </span>
         </div>
+        {maxTotal === 0 && (
+          <p className="text-muted-foreground text-sm">
+            {t('tickets.checkout.limitReached')}
+          </p>
+        )}
 
         {ticketTypes.map((tt) => {
           const qty = quantities[tt.id] ?? 0

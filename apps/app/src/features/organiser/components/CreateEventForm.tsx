@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Plus } from 'lucide-react'
+import { Plus, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -15,7 +15,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
 
 import type { OrgEvent, Venue } from '../api'
 import { useCreateEvent } from '../hooks/useCreateEvent'
@@ -35,6 +34,7 @@ const schema = z
     sale_starts_at: z.string().min(1),
     sale_ends_at: z.string().min(1),
     max_tickets_per_user: z.coerce.number().int().min(1).max(20),
+    queue_required: z.boolean(),
   })
   .refine((v) => new Date(v.ends_at) > new Date(v.starts_at), {
     message: 'End time must be after start time',
@@ -51,6 +51,9 @@ interface Props {
   orgId: string
   onSuccess?: (eventId: string) => void
 }
+
+const frostedInput =
+  'w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5 text-sm text-white/50 outline-none transition-all duration-150 placeholder:text-white/20 focus:border-primary/50 focus:bg-white/8 focus:text-white'
 
 export function CreateEventForm({ orgId, onSuccess }: Props) {
   const { t } = useTranslation()
@@ -70,6 +73,7 @@ export function CreateEventForm({ orgId, onSuccess }: Props) {
       sale_starts_at: '',
       sale_ends_at: '',
       max_tickets_per_user: 4,
+      queue_required: false,
     },
   })
 
@@ -109,7 +113,7 @@ export function CreateEventForm({ orgId, onSuccess }: Props) {
               <FormItem>
                 <FormLabel>{t('organiser.events.nameLabel')}</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <input className={frostedInput} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -124,7 +128,7 @@ export function CreateEventForm({ orgId, onSuccess }: Props) {
                 <FormControl>
                   <textarea
                     rows={3}
-                    className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[60px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    className={`${frostedInput} resize-none`}
                     {...field}
                   />
                 </FormControl>
@@ -163,7 +167,7 @@ export function CreateEventForm({ orgId, onSuccess }: Props) {
                 </div>
                 <FormControl>
                   <select
-                    className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    className={`${frostedInput} [&>option]:bg-[hsl(0,0%,12%)]`}
                     {...field}
                   >
                     <option value="">
@@ -211,15 +215,52 @@ export function CreateEventForm({ orgId, onSuccess }: Props) {
               <FormItem>
                 <FormLabel>{t('organiser.events.maxTicketsLabel')}</FormLabel>
                 <FormControl>
-                  <Input type="number" min={1} max={20} {...field} />
+                  <input type="number" min={1} max={20} className={frostedInput} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" isLoading={createEvent.isPending}>
-            {t('organiser.events.create')}
-          </Button>
+
+          <FormField
+            control={form.control}
+            name="queue_required"
+            render={({ field }) => (
+              <FormItem>
+                <button
+                  type="button"
+                  onClick={() => field.onChange(!field.value)}
+                  className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all duration-150 ${
+                    field.value
+                      ? 'border-primary/40 bg-primary/10 text-white'
+                      : 'border-white/8 bg-white/[0.03] text-white/50'
+                  }`}
+                >
+                  <Users className={`h-4 w-4 shrink-0 ${field.value ? 'text-primary' : ''}`} />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Enable queue</p>
+                    <p className={`text-xs ${field.value ? 'text-white/60' : 'text-white/30'}`}>
+                      Attendees join a virtual queue before entry
+                    </p>
+                  </div>
+                  <div
+                    className={`h-5 w-9 rounded-full transition-colors ${field.value ? 'bg-primary' : 'bg-white/20'}`}
+                  >
+                    <div
+                      className={`m-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${field.value ? 'translate-x-4' : 'translate-x-0'}`}
+                    />
+                  </div>
+                </button>
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end">
+            <Button type="submit" isLoading={createEvent.isPending} className="rounded-full px-6">
+              <Plus className="h-4 w-4" />
+              {t('organiser.events.create')}
+            </Button>
+          </div>
         </form>
       </Form>
     </>

@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Building2, Compass, Home, Ticket, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useReservedTicketsCount } from '@/features/tickets/hooks/useReservedTicketsCount'
 import { cn } from '@/lib/utils'
@@ -60,7 +61,10 @@ function DockTab({
 
 export function BottomDock() {
   const { data: profile } = useProfile()
+  const { data: orgsData } = useMyOrganisations()
   const reservedCount = useReservedTicketsCount()
+
+  const showOrganiser = profile?.is_admin || (orgsData?.items.length ?? 0) > 0
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/25 bg-black/95 backdrop-blur-md">
@@ -72,7 +76,7 @@ export function BottomDock() {
             badge={tab.to === '/tickets' ? reservedCount : undefined}
           />
         ))}
-        {profile?.is_admin && <DockTab {...organiserTab} />}
+        {showOrganiser && <DockTab {...organiserTab} />}
       </div>
     </nav>
   )

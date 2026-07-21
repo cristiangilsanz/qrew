@@ -27,8 +27,26 @@ class OrganisationPublicResponse(BaseModel):
     description: str | None
 
 
+class OrganisationSearchResult(BaseModel):
+    id: uuid.UUID
+    slug: str
+    name: str
+    description: str | None
+
+
+class OrgMemberListItem(BaseModel):
+    user_id: uuid.UUID
+    role: OrganisationRole
+    joined_at: datetime
+
+
 class OrganisationMemberInviteRequest(BaseModel):
     email: EmailStr
+    role: OrganisationRole = OrganisationRole.member
+
+
+class OrganisationMemberAddRequest(BaseModel):
+    user_id: uuid.UUID
     role: OrganisationRole = OrganisationRole.member
 
 

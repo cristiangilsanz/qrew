@@ -23,7 +23,8 @@
     "retry": "Intentar de nuevo",
     "save": "Guardar",
     "cancel": "Cancelar",
-    "back": "Volver"
+    "back": "Volver",
+    "confirm": "Confirmar"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -349,7 +350,8 @@
       "saleStartsAtLabel": "Venta desde",
       "saleEndsAtLabel": "Venta hasta",
       "maxTicketsLabel": "Máx. entradas por usuario",
-      "saleEndBeforeStart": "La venta debe terminar antes de que comience el evento"
+      "saleEndBeforeStart": "La venta debe terminar antes de que comience el evento",
+      "searchPlaceholder": "Buscar eventos…"
     },
     "ticketTypes": {
       "title": "Tipos de entrada",
@@ -365,11 +367,20 @@
     },
     "members": {
       "title": "Miembros",
-      "inviteSuccess": "Invitación enviada.",
+      "inviteSuccess": "Miembro añadido.",
       "removeSuccess": "Miembro eliminado.",
-      "emailLabel": "Correo electrónico",
+      "emailLabel": "Usuario",
       "roleLabel": "Rol",
-      "inviteButton": "Invitar"
+      "inviteButton": "Añadir",
+      "joined": "Se unió",
+      "invite": "Añadir miembro",
+      "addMember": "Añadir miembro",
+      "empty": "Aún no hay miembros.",
+      "emailPlaceholder": "Buscar por nombre o email…",
+      "roleMemberDesc": "Puede ver eventos y miembros, y escanear entradas",
+      "roleManagerDesc": "Puede gestionar eventos y añadir o eliminar miembros",
+      "selectUser": "Selecciona un usuario de la lista",
+      "searchPlaceholder": "Buscar miembros…"
     },
     "venues": {
       "createSuccess": "Lugar creado.",
@@ -387,7 +398,12 @@
       "deleteTicketTypeFailed": "No se pudo eliminar el tipo de entrada.",
       "inviteFailed": "No se pudo enviar la invitación.",
       "removeFailed": "No se pudo eliminar al miembro.",
-      "createVenueFailed": "No se pudo crear el lugar."
+      "createVenueFailed": "No se pudo crear el lugar.",
+      "addMemberFailed": "Error al añadir miembro."
+    },
+    "search": {
+      "placeholder": "Buscar organizaciones…",
+      "empty": "No se encontraron organizaciones."
     }
   },
   "realtime": {

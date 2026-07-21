@@ -1,21 +1,29 @@
 import uuid
 from datetime import date as date_type
+from datetime import date as today_date
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from com.qode.qrew.v1.entry.core.database import get_db
 from com.qode.qrew.v1.entry.core.dependencies import (
     get_admin_user,
+    get_current_user,
     get_scanner_service,
     limiter,
+    require_event_member,
 )
+from com.qode.qrew.v1.entry.core.errors import EventNotFoundError, NotEventMemberError
 from com.qode.qrew.v1.entry.core.utils.jwt import decode_scanner_token_for_refresh
 from com.qode.qrew.v1.entry.models.projections import User
+from com.qode.qrew.v1.entry.repositories.projections import EventRepository
 from com.qode.qrew.v1.entry.schemas.scanner import (
     ScannerCreateRequest,
     ScannerDeactivateResponse,
+    ScannerForEventRequest,
     ScannerListResponse,
     ScannerRotateRequest,
     ScannerSummaryResponse,
@@ -88,6 +96,57 @@ async def refresh_scanner(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"message": exc.message, "field": exc.field},
         ) from exc
+    return ScannerTokenResponse(
+        scanner_id=scanner.id,
+        token=token,
+        expires_in_hours=service.token_ttl_hours,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Org-member scanner creation
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/for-event/{event_id}",
+    response_model=ScannerTokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a scanner token for an event (org members and admins)",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def create_scanner_for_event(
+    request: Request,
+    event_id: uuid.UUID,
+    body: ScannerForEventRequest,
+    current_user: User = Depends(get_current_user),
+    service: ScannerService = Depends(get_scanner_service),
+    db: AsyncSession = Depends(get_db),
+) -> ScannerTokenResponse:
+    del request
+    event = await EventRepository(db).get_by_id(event_id)
+    if event is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Event not found", "field": "event_id"},
+        )
+    if not current_user.is_admin:
+        try:
+            await require_event_member(db, event_id, current_user.id)
+        except EventNotFoundError:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"message": "Event not found", "field": "event_id"},
+            ) from None
+        except NotEventMemberError:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"message": "Not a member of this organisation", "field": None},
+            ) from None
+    scan_date = body.date if body.date is not None else today_date.today()
+    scanner, token = await service.create(
+        current_user.id, body.name, event.venue_id, event_id, scan_date
+    )
     return ScannerTokenResponse(
         scanner_id=scanner.id,
         token=token,

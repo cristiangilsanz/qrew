@@ -7,6 +7,7 @@ import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { EventDetailSkeleton, Skeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
+import { QueuePanel } from '@/features/tickets/components/QueuePanel'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
@@ -55,6 +56,7 @@ function EventDetailPage() {
   const navigate = useNavigate()
   const { data: event, isLoading, isError } = useEvent(eventId)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [showQueue, setShowQueue] = useState(false)
 
   const now = new Date()
   const saleStarts = event ? new Date(event.sale_starts_at) : null
@@ -63,6 +65,16 @@ function EventDetailPage() {
   const secondsUntilSale = useCountdown(saleNotStarted && event ? event.sale_starts_at : null)
 
   if (isLoading) return <EventDetailSkeleton />
+
+  if (showQueue && event) {
+    return (
+      <QueueWaitingRoom
+        eventId={eventId}
+        eventName={event.name}
+        onBack={() => setShowQueue(false)}
+      />
+    )
+  }
 
   if (isError || !event) {
     return (
@@ -148,7 +160,7 @@ function EventDetailPage() {
 
       {/* Sticky FAB — bottom right, above dock */}
       {saleNotStarted ? (
-        <div className="fixed inset-x-0 bottom-20 z-40 flex justify-center">
+        <div className="fixed inset-x-0 bottom-24 z-40 flex justify-center">
           <div className="mx-auto w-full max-w-[430px] px-4 text-center">
             <p className="text-muted-foreground mb-0.5 text-xs">Tickets on sale in</p>
             <p className="font-mono text-2xl font-bold text-white tabular-nums">
@@ -159,7 +171,7 @@ function EventDetailPage() {
       ) : saleEnded ? (
         <button
           disabled
-          className="fixed bottom-20 z-40 flex h-14 items-center gap-2 rounded-full bg-white/20 px-5 text-white/50 shadow-lg"
+          className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-white/20 px-5 text-white/50 shadow-lg"
           style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
         >
           <Ticket className="h-5 w-5 shrink-0" />
@@ -168,7 +180,7 @@ function EventDetailPage() {
       ) : allSoldOut ? (
         <button
           disabled
-          className="fixed bottom-20 z-40 flex h-14 items-center gap-2 rounded-full bg-white/20 px-5 text-white/50 shadow-lg"
+          className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-white/20 px-5 text-white/50 shadow-lg"
           style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
         >
           <Ticket className="h-5 w-5 shrink-0" />
@@ -176,8 +188,8 @@ function EventDetailPage() {
         </button>
       ) : event.queue_required ? (
         <button
-          onClick={() => void navigate({ to: '/events/$eventId/queue', params: { eventId } })}
-          className="bg-primary hover:bg-primary/90 fixed bottom-20 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+          onClick={() => setShowQueue(true)}
+          className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
           style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
         >
           <Users className="h-5 w-5 shrink-0" />
@@ -186,13 +198,52 @@ function EventDetailPage() {
       ) : (
         <button
           onClick={() => void navigate({ to: '/events/$eventId/checkout', params: { eventId } })}
-          className="bg-primary hover:bg-primary/90 fixed bottom-20 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+          className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
           style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
         >
           <Ticket className="h-5 w-5 shrink-0" />
           <span className="text-sm font-semibold">{t('tickets.checkout.buyButton')}</span>
         </button>
       )}
+    </div>
+  )
+}
+
+function QueueWaitingRoom({
+  eventId,
+  eventName,
+  onBack,
+}: {
+  eventId: string
+  eventName: string
+  onBack: () => void
+}) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  return (
+    <div className="flex min-h-screen flex-col px-6 pt-12">
+      <BackButton onClick={onBack} className="mb-6 self-start" />
+      <h1 className="pt-2 text-2xl font-bold text-white">{eventName}</h1>
+
+      <div className="mt-8 rounded-2xl border border-white/8 bg-white/[0.03] p-6">
+        <p className="mb-6 text-base font-semibold text-white">{t('tickets.queue.title')}</p>
+        <QueuePanel
+          eventId={eventId}
+          onAdmitted={(reservationWindowToken) =>
+            void navigate({
+              to: '/events/$eventId/checkout',
+              params: { eventId },
+              search: {
+                admitted: true,
+                ...(reservationWindowToken
+                  ? { reservation_window_token: reservationWindowToken }
+                  : {}),
+              },
+            })
+          }
+        />
+      </div>
     </div>
   )
 }

@@ -145,10 +145,10 @@ export function DeleteAccountDialog() {
                   <div className="flex items-center justify-between pt-1">
                     <button
                       type="button"
-                      className="text-muted-foreground text-sm hover:text-white"
+                      className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
                       onClick={closeModal}
                     >
-                      {t('profile.deleteAccount.cancel')}
+                      {t('common.goBack')}
                     </button>
                     <button
                       type="submit"

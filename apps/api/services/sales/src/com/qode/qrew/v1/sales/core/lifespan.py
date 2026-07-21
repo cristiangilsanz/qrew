@@ -21,11 +21,11 @@ logger = structlog.get_logger(__name__)
 
 async def _run_periodic(fn: object, interval_seconds: int) -> None:
     while True:
-        await asyncio.sleep(interval_seconds)
         try:
             await fn()  # type: ignore[operator]
         except Exception as exc:
             await logger.awarning("periodic_job_failed", fn=str(fn), error=repr(exc))
+        await asyncio.sleep(interval_seconds)
 
 
 @asynccontextmanager
@@ -49,7 +49,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             await logger.awarning("sales.nats_unavailable", error=repr(exc))
 
     sweep_task = asyncio.create_task(_run_periodic(sweep_expired, 60))
-    admit_task = asyncio.create_task(_run_periodic(admit_next, 60))
+    admit_task = asyncio.create_task(_run_periodic(admit_next, 10))
 
     yield
 

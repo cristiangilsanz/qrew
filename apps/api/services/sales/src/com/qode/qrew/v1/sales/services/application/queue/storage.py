@@ -16,6 +16,7 @@ logger = structlog.get_logger(__name__)
 _QUEUE_KEY = "queue:event:{event_id}"
 _REDEEMED_KEY = "queue:redeemed:{event_id}"
 _RESERVATION_KEY = "queue:reservation:{event_id}"
+_REDEEM_TOKEN_KEY = "queue:redeem_token:{event_id}:{user_id}"
 
 REDEEM_SCOPE = "queue.redeem"
 RESERVATION_SCOPE = "queue.reservation"
@@ -129,8 +130,18 @@ async def admit_batch(*, event_id: uuid.UUID, batch_size: int) -> list[AdmittedS
     for raw in members:
         user_id = raw if isinstance(raw, str) else raw.decode()
         token, jti = _build_redeem_token(event_id=event_id, user_id=user_id)
+        key = _REDEEM_TOKEN_KEY.format(event_id=event_id, user_id=user_id)
+        await redis.set(key, token, ex=_settings.queue_redeem_window_seconds)  # type: ignore[misc]
         admitted.append(AdmittedSlot(user_id=user_id, redeem_token=token, jti=jti))
     return admitted
+
+
+@traced("queue.get_redeem_token")
+async def get_redeem_token(event_id: uuid.UUID, user_id: uuid.UUID) -> str | None:
+    """Return the stored redeem token for an admitted user, or None."""
+    redis = _shared_client()
+    key = _REDEEM_TOKEN_KEY.format(event_id=event_id, user_id=user_id)
+    return await redis.get(key)  # type: ignore[no-any-return]
 
 
 @traced("queue.redeem")

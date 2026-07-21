@@ -1,4 +1,4 @@
-import { Loader2, ShieldX } from 'lucide-react'
+import { Loader2, QrCode, ShieldX } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import QRCode from 'react-qr-code'
@@ -118,7 +118,8 @@ export function QrDisplay({ ticketId }: Props) {
             <QRCode value="qrew-placeholder-blurred" size={200} />
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <Button onClick={startStream} className="shadow-lg">
+            <Button onClick={startStream} className="rounded-full px-6 shadow-lg">
+              <QrCode className="h-4 w-4" />
               {t('tickets.qr.showButton')}
             </Button>
           </div>

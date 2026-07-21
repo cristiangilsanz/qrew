@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react'
+import { Clock, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -90,18 +90,24 @@ export function ReservationSummary({ reservation, onCancel, onPay, payLoading }:
         )}
 
         {canAct && (
-          <div className="flex gap-2">
-            <Button className="flex-1" onClick={onPay} isLoading={payLoading}>
+          <div className="flex flex-col gap-3">
+            <Button className="w-full" onClick={onPay} isLoading={payLoading}>
               {t('tickets.payment.payButton')}
             </Button>
-            <Button
-              variant="outline"
+            <button
               onClick={() => cancel.mutate()}
-              isLoading={cancel.isPending}
-              className="flex-1"
+              disabled={cancel.isPending}
+              className="flex w-full items-center gap-3 rounded-2xl bg-red-500 px-4 py-3 text-left text-white transition-colors hover:bg-red-600 disabled:opacity-50"
             >
-              {t('tickets.reservation.cancelButton')}
-            </Button>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
+                {cancel.isPending ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+              </div>
+              <span className="text-sm font-semibold">{t('tickets.reservation.cancelButton')}</span>
+            </button>
           </div>
         )}
       </CardContent>

@@ -6,6 +6,7 @@ import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { StatusChip } from '@/components/ui/status-chip'
 import { KycUploadStep } from '@/features/onboarding/components/KycUploadStep'
 import { useOnboardingStatus } from '@/features/onboarding/hooks/useOnboardingStatus'
 import { ChangeEmailForm } from '@/features/profile/components/ChangeEmailForm'
@@ -21,13 +22,6 @@ type ExpandedRow = 'email' | 'phone' | 'kyc' | null
 
 type KycStatus = 'not_submitted' | 'pending' | 'approved' | 'rejected'
 
-const kycChipStyles: Record<KycStatus, string> = {
-  approved: 'bg-green-500/20 text-green-400',
-  pending: 'bg-amber-500/20 text-amber-400',
-  rejected: 'bg-red-500/20 text-red-400',
-  not_submitted: 'bg-white/10 text-muted-foreground',
-}
-
 const expandVariants = {
   hidden: { height: 0, opacity: 0 },
   visible: { height: 'auto', opacity: 1, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } },
@@ -37,29 +31,16 @@ const expandVariants = {
 function VerifiedChip({ verified }: { verified: boolean }) {
   const { t } = useTranslation()
   return (
-    <span
-      className={cn(
-        'rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase',
-        verified ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground bg-white/10',
-      )}
-    >
-      {verified ? t('profile.verified') : t('profile.unverified')}
-    </span>
+    <StatusChip
+      label={verified ? t('profile.verified') : t('profile.unverified')}
+      variant={verified ? 'approved' : 'not_submitted'}
+    />
   )
 }
 
 function KycStatusChip({ status }: { status: KycStatus }) {
   const { t } = useTranslation()
-  return (
-    <span
-      className={cn(
-        'rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase',
-        kycChipStyles[status],
-      )}
-    >
-      {t(`profile.kycStatus.${status}`)}
-    </span>
-  )
+  return <StatusChip label={t(`profile.kycStatus.${status}`)} variant={status} />
 }
 
 function Row({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {

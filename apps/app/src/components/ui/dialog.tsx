@@ -9,9 +9,10 @@ interface DialogProps {
   title?: string
   children: ReactNode
   className?: string
+  size?: 'default' | 'lg'
 }
 
-export function Dialog({ open, onClose, title, children, className }: DialogProps) {
+export function Dialog({ open, onClose, title, children, className, size = 'default' }: DialogProps) {
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => {
@@ -35,7 +36,8 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       {/* Panel */}
       <div
         className={cn(
-          'bg-card relative z-10 w-full max-w-[430px] rounded-t-2xl p-5 shadow-xl sm:rounded-2xl',
+          'bg-card relative z-10 w-full rounded-t-2xl p-5 shadow-xl sm:rounded-2xl',
+          size === 'lg' ? 'max-w-2xl' : 'max-w-[430px]',
           className,
         )}
       >
@@ -49,7 +51,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="pb-safe max-h-[80vh] overflow-y-auto">{children}</div>
+        <div className={cn('pb-safe overflow-y-auto', size === 'lg' ? 'max-h-[85vh]' : 'max-h-[80vh]')}>{children}</div>
       </div>
     </div>
   )

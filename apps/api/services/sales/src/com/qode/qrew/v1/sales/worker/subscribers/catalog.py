@@ -6,6 +6,7 @@ from typing import Any
 import structlog
 
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
+from com.qode.qrew.v1.sales.models.projections import EventContext
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
     TicketTypeInventoryRepository,
@@ -79,6 +80,22 @@ async def handle_event_draft(raw: bytes) -> None:
     await _upsert_event_ctx(data, status="draft")
 
 
+async def handle_event_updated(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    # Preserve existing lifecycle status — update only propagates field changes
+    try:
+        event_id = uuid.UUID(str(data["data"]["event_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("catalog_events.upsert_event_ctx.bad_payload")
+        return
+    async with AsyncSessionLocal() as session:
+        existing = await session.get(EventContext, event_id)
+        status = existing.status if existing is not None else "draft"
+    await _upsert_event_ctx(data, status=status)
+
+
 async def handle_ticket_type_created(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -112,6 +129,7 @@ _HANDLERS = {
     "catalog.event.published.v1": handle_event_published,
     "catalog.event.cancelled.v1": handle_event_cancelled,
     "catalog.event.draft.v1": handle_event_draft,
+    "catalog.event.updated.v1": handle_event_updated,
     "catalog.ticket_type.created.v1": handle_ticket_type_created,
     "catalog.ticket_type.updated.v1": handle_ticket_type_updated,
 }

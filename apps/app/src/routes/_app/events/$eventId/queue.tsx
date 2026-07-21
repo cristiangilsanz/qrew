@@ -31,7 +31,22 @@ function QueuePage() {
           {event && <p className="text-muted-foreground text-sm">{event.name}</p>}
         </CardHeader>
         <CardContent>
-          <QueuePanel eventId={eventId} />
+          <QueuePanel
+            eventId={eventId}
+            onAdmitted={(reservationWindowToken) =>
+              void navigate({
+                to: '/events/$eventId/checkout',
+                params: { eventId },
+                search: {
+                  admitted: true,
+                  ...(reservationWindowToken
+                    ? { reservation_window_token: reservationWindowToken }
+                    : {}),
+                },
+                replace: true,
+              })
+            }
+          />
         </CardContent>
       </Card>
     </div>

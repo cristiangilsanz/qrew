@@ -41,18 +41,45 @@ async def handle_event_cancelled(raw: bytes) -> None:
         return
     try:
         event_id = uuid.UUID(str(data["data"]["event_id"]))
-        venue_id = uuid.UUID(str(data["data"]["venue_id"]))
     except (KeyError, ValueError):
         await logger.awarning("catalog_events.event_cancelled.bad_payload")
         return
+
+    from com.qode.qrew.v1.ticketing.repositories.ticket import TicketRepository
+    from com.qode.qrew.v1.ticketing.services.domain.tickets.lifecycle import (
+        TicketTransitionError,
+        transition_ticket,
+    )
+    from com.qode.qrew.v1.ticketing.models.ticket import TicketState
+
+    SYSTEM_ACTOR = uuid.UUID("00000000-0000-0000-0000-000000000000")
+
     async with AsyncSessionLocal() as session:
-        await EventVenueContextRepository(session).upsert_event(
-            event_id=event_id,
-            venue_id=venue_id,
-            event_status="cancelled",
-        )
+        tickets = await TicketRepository(session).list_active_by_event(event_id)
+        cancelled = 0
+        for ticket in tickets:
+            try:
+                await transition_ticket(
+                    session,
+                    ticket_id=ticket.id,
+                    to_state=TicketState.cancelled,
+                    reason="event_cancelled",
+                    actor_id=SYSTEM_ACTOR,
+                )
+                cancelled += 1
+            except (TicketTransitionError, Exception) as exc:
+                await logger.awarning(
+                    "catalog_events.event_cancelled.ticket_cancel_failed",
+                    ticket_id=str(ticket.id),
+                    error=repr(exc),
+                )
         await session.commit()
-    await logger.ainfo("catalog_events.event_cancelled", event_id=str(event_id))
+
+    await logger.ainfo(
+        "catalog_events.event_cancelled",
+        event_id=str(event_id),
+        tickets_cancelled=cancelled,
+    )
 
 
 async def handle_event_draft(raw: bytes) -> None:
