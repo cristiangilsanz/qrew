@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E501
 """
 Seed the database with test data for development.
 
@@ -84,7 +85,7 @@ async def seed() -> None:
         await conn.close()
 
 
-async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:  # noqa: C901
+async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
 
     now = datetime.now(UTC)
 
@@ -146,33 +147,33 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:  # noqa: 
     print("  Creating users…")
 
     users = [
-        dict(
-            id=user_alice,
-            email="alice@qrew.dev",
-            full_name="Alice Dev",
-            phone="+34600000001",
-            password="Password123!",
-            kyc_status="approved",
-            is_admin=False,
-        ),
-        dict(
-            id=user_bob,
-            email="bob@qrew.dev",
-            full_name="Bob Dev",
-            phone="+34600000002",
-            password="Password123!",
-            kyc_status="pending",
-            is_admin=False,
-        ),
-        dict(
-            id=user_admin,
-            email="admin@qrew.dev",
-            full_name="Admin User",
-            phone="+34600000003",
-            password="AdminPass1!",
-            kyc_status="approved",
-            is_admin=True,
-        ),
+        {
+            "id": user_alice,
+            "email": "alice@qrew.dev",
+            "full_name": "Alice Dev",
+            "phone": "+34600000001",
+            "password": "Password123!",
+            "kyc_status": "approved",
+            "is_admin": False,
+        },
+        {
+            "id": user_bob,
+            "email": "bob@qrew.dev",
+            "full_name": "Bob Dev",
+            "phone": "+34600000002",
+            "password": "Password123!",
+            "kyc_status": "pending",
+            "is_admin": False,
+        },
+        {
+            "id": user_admin,
+            "email": "admin@qrew.dev",
+            "full_name": "Admin User",
+            "phone": "+34600000003",
+            "password": "AdminPass1!",
+            "kyc_status": "approved",
+            "is_admin": True,
+        },
     ]
 
     for u in users:
