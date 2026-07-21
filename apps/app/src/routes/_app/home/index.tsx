@@ -1,8 +1,8 @@
-import homeHero from '@/assets/images/home.jpg'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import homeHero from '@/assets/images/home.jpg'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { EventCard } from '@/features/events/components/EventCard'
 import { useEvents } from '@/features/events/hooks/useEvents'

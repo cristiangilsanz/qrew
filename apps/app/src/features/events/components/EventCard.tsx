@@ -28,8 +28,8 @@ export function EventCard({ event, onClick }: Props) {
   const imageUrl = getEventImageUrl(event.image_url)
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <article
-      role="article"
       onClick={onClick}
       className={cn(
         'bg-card border-border overflow-hidden rounded-xl border transition-colors',

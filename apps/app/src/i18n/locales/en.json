@@ -160,12 +160,74 @@
     "memberSince": "Member since",
     "backToProfile": "Back to profile",
     "managePasskeys": "Manage",
+    "myProfile": "My Profile",
+    "myAccount": "My Account",
+    "privacySecurity": "Privacy & Security",
+    "helpSupport": "Help & Support",
+    "logout": "Log out",
+    "language": "Language",
+    "verified": "Verified",
+    "unverified": "Unverified",
     "kycStatus": {
       "label": "Identity",
+      "rowLabel": "KYC",
+      "subtitle": "Government-issued ID required",
+      "description": "Upload a clear photo of your national ID or passport. Required for age-restricted events and ticket purchases.",
       "approved": "Verified",
       "pending": "Under review",
       "rejected": "Rejected",
       "not_submitted": "Not submitted"
+    },
+    "account": {
+      "title": "My Account",
+      "fullName": "Full name",
+      "createdAt": "Created at",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone",
+      "stepper": {
+        "email": "Email",
+        "phone": "Phone",
+        "identity": "Identity",
+        "passkey": "Passkey"
+      }
+    },
+    "security": {
+      "title": "Privacy & Security",
+      "authSection": "Authentication",
+      "passwordLabel": "Password",
+      "passkeysLabel": "Passkeys",
+      "sessionsSection": "Sessions & Devices",
+      "activeSessionsLabel": "Active Sessions",
+      "trustedDevicesLabel": "Trusted Devices",
+      "activitySection": "Activity",
+      "recentActivityLabel": "Recent Activity",
+      "noDevices": "No trusted devices",
+      "noActivity": "No activity yet",
+      "showMore": "Show more",
+      "revokeAll": "Revoke all"
+    },
+    "help": {
+      "title": "Help & Support",
+      "faqSection": "FAQ",
+      "contactSection": "Contact",
+      "contactSupport": "Contact support",
+      "contactSupportDesc": "We'll get back to you shortly",
+      "reportBug": "Report a bug",
+      "reportBugDesc": "Open an issue on GitHub",
+      "faq": {
+        "q1": "How do I buy a ticket?",
+        "a1": "Head to the home screen, find an event you like, and tap on it. From there you can select your tickets and go through checkout.",
+        "q2": "What is a passkey?",
+        "a2": "A passkey lets you sign in using your face, fingerprint, or device PIN instead of a password. It is faster and much more secure.",
+        "q3": "How do I get a refund?",
+        "a3": "Refund policies are decided by the event organiser. You can contact them directly through the event page or get in touch with our support team."
+      }
+    },
+    "about": {
+      "title": "About",
+      "version": "Version",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
     },
     "sections": {
       "personal": "Personal info",
@@ -213,9 +275,10 @@
     "deleteAccount": {
       "title": "Delete account",
       "description": "This is permanent and cannot be undone.",
+      "irreversible": "This action is irreversible",
       "button": "Delete my account",
       "currentPassword": "Current password",
-      "confirm": "Permanently delete account",
+      "confirm": "Delete account",
       "cancel": "Cancel",
       "success": "Account deleted."
     },

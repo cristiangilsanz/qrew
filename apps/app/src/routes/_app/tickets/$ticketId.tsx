@@ -9,20 +9,19 @@ import {
   ShieldX,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { TicketDetailSkeleton } from '@/components/ui/skeleton'
-import { useTranslation } from 'react-i18next'
-
 import { useEvent } from '@/features/events/hooks/useEvent'
-import { cn } from '@/lib/utils'
-import { QrDisplay } from '@/features/tickets/components/QrDisplay'
-import { useTicket } from '@/features/tickets/hooks/useTicket'
-import { useReservation } from '@/features/tickets/hooks/useReservation'
-import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import type { TicketState } from '@/features/tickets/api'
+import { QrDisplay } from '@/features/tickets/components/QrDisplay'
+import { useCountdown } from '@/features/tickets/hooks/useCountdown'
+import { useReservation } from '@/features/tickets/hooks/useReservation'
+import { useTicket } from '@/features/tickets/hooks/useTicket'
 import { getEventImageUrl } from '@/lib/imageUrl'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/tickets/$ticketId')({
   component: TicketDetailPage,

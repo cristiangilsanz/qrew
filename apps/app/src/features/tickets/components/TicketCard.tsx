@@ -1,15 +1,15 @@
-import { Calendar, MapPin } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { Calendar, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
-import { useReservation } from '../hooks/useReservation'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
 import type { Ticket, TicketState } from '../api'
+import { useReservation } from '../hooks/useReservation'
 
 const STATE_COLOR: Record<TicketState, string> = {
   reserved: 'bg-yellow-500/20 text-yellow-400',

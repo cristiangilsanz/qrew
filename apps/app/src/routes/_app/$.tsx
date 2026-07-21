@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+
 import notFoundImg from '@/assets/images/404.png'
 
 export const Route = createFileRoute('/_app/$')({

@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useEffect } from 'react'
+import { type ReactNode, useEffect } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -7,7 +7,7 @@ interface DialogProps {
   open: boolean
   onClose: () => void
   title?: string
-  children: React.ReactNode
+  children: ReactNode
   className?: string
 }
 
@@ -26,7 +26,12 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <button
+        type="button"
+        aria-label="Close"
+        className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
       {/* Panel */}
       <div
         className={cn(

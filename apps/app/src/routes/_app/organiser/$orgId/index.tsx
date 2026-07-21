@@ -1,8 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-
-import { BackButton } from '@/components/ui/back-button'
 import { useTranslation } from 'react-i18next'
 
+import { BackButton } from '@/components/ui/back-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { InviteMemberForm } from '@/features/organiser/components/InviteMemberForm'
 import { OrgEventList } from '@/features/organiser/components/OrgEventList'

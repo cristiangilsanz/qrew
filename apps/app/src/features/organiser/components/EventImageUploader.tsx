@@ -1,5 +1,5 @@
 import { ImagePlus, Loader2, X } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { apiClient } from '@/lib/api'
 import { getEventImageUrl } from '@/lib/imageUrl'

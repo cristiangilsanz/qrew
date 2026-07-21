@@ -3,9 +3,9 @@ import type { LucideIcon } from 'lucide-react'
 import { Building2, Compass, Home, Ticket, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { cn } from '@/lib/utils'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useReservedTicketsCount } from '@/features/tickets/hooks/useReservedTicketsCount'
+import { cn } from '@/lib/utils'
 
 const baseTabs = [
   { to: '/home' as const, icon: Home, labelKey: 'nav.home' },

@@ -24,7 +24,13 @@ import { Route as AppOrganiserIndexRouteImport } from './routes/_app/organiser/i
 import { Route as AppHomeIndexRouteImport } from './routes/_app/home/index'
 import { Route as AppEventsIndexRouteImport } from './routes/_app/events/index'
 import { Route as AppTicketsTicketIdRouteImport } from './routes/_app/tickets/$ticketId'
+import { Route as AppProfileTermsRouteImport } from './routes/_app/profile/terms'
+import { Route as AppProfileSecurityRouteImport } from './routes/_app/profile/security'
+import { Route as AppProfilePrivacyRouteImport } from './routes/_app/profile/privacy'
 import { Route as AppProfilePasskeysRouteImport } from './routes/_app/profile/passkeys'
+import { Route as AppProfileHelpRouteImport } from './routes/_app/profile/help'
+import { Route as AppProfileAccountRouteImport } from './routes/_app/profile/account'
+import { Route as AppProfileAboutRouteImport } from './routes/_app/profile/about'
 import { Route as AppReservationsReservationIdIndexRouteImport } from './routes/_app/reservations/$reservationId/index'
 import { Route as AppOrganiserOrgIdIndexRouteImport } from './routes/_app/organiser/$orgId/index'
 import { Route as AppEventsEventIdIndexRouteImport } from './routes/_app/events/$eventId/index'
@@ -107,9 +113,39 @@ const AppTicketsTicketIdRoute = AppTicketsTicketIdRouteImport.update({
   path: '/tickets/$ticketId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProfileTermsRoute = AppProfileTermsRouteImport.update({
+  id: '/profile/terms',
+  path: '/profile/terms',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileSecurityRoute = AppProfileSecurityRouteImport.update({
+  id: '/profile/security',
+  path: '/profile/security',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfilePrivacyRoute = AppProfilePrivacyRouteImport.update({
+  id: '/profile/privacy',
+  path: '/profile/privacy',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfilePasskeysRoute = AppProfilePasskeysRouteImport.update({
   id: '/profile/passkeys',
   path: '/profile/passkeys',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileHelpRoute = AppProfileHelpRouteImport.update({
+  id: '/profile/help',
+  path: '/profile/help',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileAccountRoute = AppProfileAccountRouteImport.update({
+  id: '/profile/account',
+  path: '/profile/account',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileAboutRoute = AppProfileAboutRouteImport.update({
+  id: '/profile/about',
+  path: '/profile/about',
   getParentRoute: () => AppRoute,
 } as any)
 const AppReservationsReservationIdIndexRoute =
@@ -166,7 +202,13 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/setup': typeof AuthSetupRoute
+  '/profile/about': typeof AppProfileAboutRoute
+  '/profile/account': typeof AppProfileAccountRoute
+  '/profile/help': typeof AppProfileHelpRoute
   '/profile/passkeys': typeof AppProfilePasskeysRoute
+  '/profile/privacy': typeof AppProfilePrivacyRoute
+  '/profile/security': typeof AppProfileSecurityRoute
+  '/profile/terms': typeof AppProfileTermsRoute
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/events/': typeof AppEventsIndexRoute
   '/home/': typeof AppHomeIndexRoute
@@ -189,7 +231,13 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/setup': typeof AuthSetupRoute
+  '/profile/about': typeof AppProfileAboutRoute
+  '/profile/account': typeof AppProfileAccountRoute
+  '/profile/help': typeof AppProfileHelpRoute
   '/profile/passkeys': typeof AppProfilePasskeysRoute
+  '/profile/privacy': typeof AppProfilePrivacyRoute
+  '/profile/security': typeof AppProfileSecurityRoute
+  '/profile/terms': typeof AppProfileTermsRoute
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/events': typeof AppEventsIndexRoute
   '/home': typeof AppHomeIndexRoute
@@ -216,7 +264,13 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/setup': typeof AuthSetupRoute
+  '/_app/profile/about': typeof AppProfileAboutRoute
+  '/_app/profile/account': typeof AppProfileAccountRoute
+  '/_app/profile/help': typeof AppProfileHelpRoute
   '/_app/profile/passkeys': typeof AppProfilePasskeysRoute
+  '/_app/profile/privacy': typeof AppProfilePrivacyRoute
+  '/_app/profile/security': typeof AppProfileSecurityRoute
+  '/_app/profile/terms': typeof AppProfileTermsRoute
   '/_app/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/_app/events/': typeof AppEventsIndexRoute
   '/_app/home/': typeof AppHomeIndexRoute
@@ -242,7 +296,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/setup'
+    | '/profile/about'
+    | '/profile/account'
+    | '/profile/help'
     | '/profile/passkeys'
+    | '/profile/privacy'
+    | '/profile/security'
+    | '/profile/terms'
     | '/tickets/$ticketId'
     | '/events/'
     | '/home/'
@@ -265,7 +325,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/setup'
+    | '/profile/about'
+    | '/profile/account'
+    | '/profile/help'
     | '/profile/passkeys'
+    | '/profile/privacy'
+    | '/profile/security'
+    | '/profile/terms'
     | '/tickets/$ticketId'
     | '/events'
     | '/home'
@@ -291,7 +357,13 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/register'
     | '/_auth/setup'
+    | '/_app/profile/about'
+    | '/_app/profile/account'
+    | '/_app/profile/help'
     | '/_app/profile/passkeys'
+    | '/_app/profile/privacy'
+    | '/_app/profile/security'
+    | '/_app/profile/terms'
     | '/_app/tickets/$ticketId'
     | '/_app/events/'
     | '/_app/home/'
@@ -422,11 +494,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTicketsTicketIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profile/terms': {
+      id: '/_app/profile/terms'
+      path: '/profile/terms'
+      fullPath: '/profile/terms'
+      preLoaderRoute: typeof AppProfileTermsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile/security': {
+      id: '/_app/profile/security'
+      path: '/profile/security'
+      fullPath: '/profile/security'
+      preLoaderRoute: typeof AppProfileSecurityRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile/privacy': {
+      id: '/_app/profile/privacy'
+      path: '/profile/privacy'
+      fullPath: '/profile/privacy'
+      preLoaderRoute: typeof AppProfilePrivacyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profile/passkeys': {
       id: '/_app/profile/passkeys'
       path: '/profile/passkeys'
       fullPath: '/profile/passkeys'
       preLoaderRoute: typeof AppProfilePasskeysRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile/help': {
+      id: '/_app/profile/help'
+      path: '/profile/help'
+      fullPath: '/profile/help'
+      preLoaderRoute: typeof AppProfileHelpRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile/account': {
+      id: '/_app/profile/account'
+      path: '/profile/account'
+      fullPath: '/profile/account'
+      preLoaderRoute: typeof AppProfileAccountRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile/about': {
+      id: '/_app/profile/about'
+      path: '/profile/about'
+      fullPath: '/profile/about'
+      preLoaderRoute: typeof AppProfileAboutRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/reservations/$reservationId/': {
@@ -512,7 +626,13 @@ const AppOrganiserRouteWithChildren = AppOrganiserRoute._addFileChildren(
 interface AppRouteChildren {
   AppSplatRoute: typeof AppSplatRoute
   AppOrganiserRoute: typeof AppOrganiserRouteWithChildren
+  AppProfileAboutRoute: typeof AppProfileAboutRoute
+  AppProfileAccountRoute: typeof AppProfileAccountRoute
+  AppProfileHelpRoute: typeof AppProfileHelpRoute
   AppProfilePasskeysRoute: typeof AppProfilePasskeysRoute
+  AppProfilePrivacyRoute: typeof AppProfilePrivacyRoute
+  AppProfileSecurityRoute: typeof AppProfileSecurityRoute
+  AppProfileTermsRoute: typeof AppProfileTermsRoute
   AppTicketsTicketIdRoute: typeof AppTicketsTicketIdRoute
   AppEventsIndexRoute: typeof AppEventsIndexRoute
   AppHomeIndexRoute: typeof AppHomeIndexRoute
@@ -527,7 +647,13 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppSplatRoute: AppSplatRoute,
   AppOrganiserRoute: AppOrganiserRouteWithChildren,
+  AppProfileAboutRoute: AppProfileAboutRoute,
+  AppProfileAccountRoute: AppProfileAccountRoute,
+  AppProfileHelpRoute: AppProfileHelpRoute,
   AppProfilePasskeysRoute: AppProfilePasskeysRoute,
+  AppProfilePrivacyRoute: AppProfilePrivacyRoute,
+  AppProfileSecurityRoute: AppProfileSecurityRoute,
+  AppProfileTermsRoute: AppProfileTermsRoute,
   AppTicketsTicketIdRoute: AppTicketsTicketIdRoute,
   AppEventsIndexRoute: AppEventsIndexRoute,
   AppHomeIndexRoute: AppHomeIndexRoute,

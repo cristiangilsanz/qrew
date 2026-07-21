@@ -1,12 +1,10 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import noTicketsImg from '@/assets/images/no-tickets.png'
-
 import { TicketCardSkeleton } from '@/components/ui/skeleton'
-
 import type { Ticket } from '@/features/tickets/api'
 import { ReservationRow } from '@/features/tickets/components/ReservationRow'
 import { useTickets } from '@/features/tickets/hooks/useTickets'

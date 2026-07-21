@@ -1,18 +1,18 @@
+import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { CheckCircle2, Clock, CreditCard } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { useMutation } from '@tanstack/react-query'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ReservationSkeleton } from '@/components/ui/skeleton'
-import { StripeCheckout } from '@/features/tickets/components/StripeCheckout'
-import { useInitiatePayment } from '@/features/tickets/hooks/useInitiatePayment'
-import { useReservation } from '@/features/tickets/hooks/useReservation'
-import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { ticketsApi } from '@/features/tickets/api'
+import { StripeCheckout } from '@/features/tickets/components/StripeCheckout'
+import { useCountdown } from '@/features/tickets/hooks/useCountdown'
+import { useInitiatePayment } from '@/features/tickets/hooks/useInitiatePayment'
+import { useReservation } from '@/features/tickets/hooks/useReservation'
 
 export const Route = createFileRoute('/_app/reservations/$reservationId/')({
   component: ReservationPage,
@@ -167,7 +167,7 @@ function ReservationPage() {
       {!isPaid && !isCancelled && !clientSecret && (
         <div className="mt-4 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold">Who's attending?</p>
+            <p className="text-sm font-semibold">Who&apos;s attending?</p>
             {holdersSaved && (
               <span className="flex items-center gap-1 text-xs text-green-400">
                 <CheckCircle2 className="h-3.5 w-3.5" />

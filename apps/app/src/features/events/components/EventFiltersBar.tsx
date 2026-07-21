@@ -1,7 +1,6 @@
+import { useQuery } from '@tanstack/react-query'
 import { Calendar, ChevronDown, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-
-import { useQuery } from '@tanstack/react-query'
 
 import { type EventFilters, eventsApi } from '../api'
 
@@ -188,7 +187,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
         <div className="flex flex-wrap items-center gap-2">
           {appliedQ.trim() && (
             <span className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium">
-              "{appliedQ.trim()}"
+              &quot;{appliedQ.trim()}&quot;
               <button
                 type="button"
                 onClick={() => {

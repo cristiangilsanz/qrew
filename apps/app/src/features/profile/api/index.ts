@@ -12,6 +12,23 @@ export interface UserProfile {
   created_at: string
 }
 
+export interface AuditEvent {
+  id: string
+  action: string
+  entity_type: string | null
+  summary: string
+  ip_address: string | null
+  device_fingerprint_hash: string | null
+  created_at: string
+}
+
+export interface Device {
+  id: string
+  name: string
+  created_at: string
+  last_seen_at: string | null
+}
+
 export interface Session {
   id: string
   jti: string
@@ -60,4 +77,22 @@ export const profileApi = {
     apiClient
       .post<{ message: string }>('/v1/auth/account/delete', { current_password })
       .then((r) => r.data),
+
+  getAuditLog: (cursor?: string) =>
+    apiClient
+      .get<{ items: AuditEvent[]; next_cursor: string | null }>('/v1/auth/profile/audit', {
+        params: cursor ? { cursor } : {},
+      })
+      .then((r) => r.data),
+
+  getDevices: () =>
+    apiClient
+      .get<{ items: Device[]; next_cursor: string | null }>('/v1/auth/devices')
+      .then((r) => r.data),
+
+  revokeDevice: (deviceId: string) =>
+    apiClient.post<{ message: string }>(`/v1/auth/devices/${deviceId}/revoke`).then((r) => r.data),
+
+  revokeAllDevices: () =>
+    apiClient.post<{ message: string }>('/v1/auth/devices/revoke-all').then((r) => r.data),
 }

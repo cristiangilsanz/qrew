@@ -12,7 +12,7 @@ const kycColors: Record<string, string> = {
 }
 
 export function ProfileCard() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { data: profile, isLoading } = useProfile()
 
   if (isLoading) {
@@ -60,7 +60,9 @@ export function ProfileCard() {
           <span className="text-muted-foreground">
             {t('profile.memberSince', { date: '' }).trim()}
           </span>
-          <span className="font-medium">{new Date(profile.created_at).toLocaleDateString()}</span>
+          <span className="font-medium">
+            {new Date(profile.created_at).toLocaleDateString(i18n.language)}
+          </span>
         </div>
       </CardContent>
     </Card>
