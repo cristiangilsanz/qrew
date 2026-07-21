@@ -2,7 +2,10 @@ from dataclasses import dataclass
 
 from pagination import decode_cursor, encode_cursor
 from com.qode.qrew.v1.catalog.repositories.events.search.config import SearchConfig
-from com.qode.qrew.v1.catalog.repositories.events.search.tsvector import normalise_query, to_prefix_tsquery
+from com.qode.qrew.v1.catalog.repositories.events.search.tsvector import (
+    normalise_query,
+    to_prefix_tsquery,
+)
 
 
 @dataclass(frozen=True)
@@ -45,9 +48,7 @@ def build_search_clause(
             if desc_col:
                 ilike_clauses.append(f"coalesce({desc_col}, '') ILIKE :ilike_q")
             ilike_expr = " OR ".join(ilike_clauses)
-            where.append(
-                f"({config.vector_column} @@ {tsquery} OR {ilike_expr})"
-            )
+            where.append(f"({config.vector_column} @@ {tsquery} OR {ilike_expr})")
             rank_expression = f"ts_rank_cd({config.vector_column}, {tsquery})"
             order_by = f"{config.rank_column_alias} DESC, {config.primary_key} DESC"
 

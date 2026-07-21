@@ -44,7 +44,15 @@ class SearchService:
             cursor=cursor,
         )
 
-        select_fragments = ["id", "name", "description", "image_url", "organiser_name", "venue_city", "starts_at"]
+        select_fragments = [
+            "id",
+            "name",
+            "description",
+            "image_url",
+            "organiser_name",
+            "venue_city",
+            "starts_at",
+        ]
         if clause.rank_expression is not None:
             select_fragments.append(
                 f"{clause.rank_expression} AS {EVENTS_SEARCH_CONFIG.rank_column_alias}"

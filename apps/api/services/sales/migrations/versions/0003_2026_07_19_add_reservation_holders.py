@@ -21,13 +21,20 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "reservation_holders",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("reservation_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("position", sa.Integer(), nullable=False),
         sa.Column("holder_name", sa.String(255), nullable=False),
         sa.Column("holder_dni", sa.String(50), nullable=False),
         sa.CheckConstraint("position >= 1", name="ck_reservation_holders_position"),
-        sa.UniqueConstraint("reservation_id", "position", name="uq_reservation_holders_reservation_position"),
+        sa.UniqueConstraint(
+            "reservation_id", "position", name="uq_reservation_holders_reservation_position"
+        ),
         schema="sales",
     )
     op.create_index(
@@ -39,5 +46,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_reservation_holders_reservation_id", table_name="reservation_holders", schema="sales")
+    op.drop_index(
+        "ix_reservation_holders_reservation_id", table_name="reservation_holders", schema="sales"
+    )
     op.drop_table("reservation_holders", schema="sales")

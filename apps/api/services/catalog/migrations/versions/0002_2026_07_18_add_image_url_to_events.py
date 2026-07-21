@@ -14,9 +14,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute(
-        "ALTER TABLE catalog.events ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)"
-    )
+    op.execute("ALTER TABLE catalog.events ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)")
 
 
 def downgrade() -> None:

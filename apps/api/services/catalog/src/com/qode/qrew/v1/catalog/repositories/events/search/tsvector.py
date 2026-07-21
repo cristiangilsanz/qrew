@@ -3,6 +3,7 @@ from com.qode.qrew.v1.catalog.repositories.events.search.config import SearchCon
 
 import re as _re
 
+
 def normalise_query(raw: str) -> str:
     return " ".join(raw.split()).strip()
 
