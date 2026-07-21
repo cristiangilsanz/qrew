@@ -172,9 +172,9 @@
       "label": "Identity",
       "rowLabel": "KYC",
       "subtitle": "Government-issued ID required",
-      "description": "Upload a clear photo of your national ID or passport. Required for age-restricted events and ticket purchases.",
+      "description": "Upload a clear photo of your national ID or passport.",
       "approved": "Verified",
-      "pending": "Under review",
+      "pending": "In Review",
       "rejected": "Rejected",
       "not_submitted": "Not submitted"
     },
@@ -433,7 +433,7 @@
       "successToast": "Document uploaded successfully."
     },
     "pending": {
-      "title": "Under review",
+      "title": "In Review",
       "description": "Your identity documents have been submitted. We'll verify them within 24 hours.",
       "approved": "Identity verified!",
       "approvedDescription": "Your identity has been verified. You're ready to go.",

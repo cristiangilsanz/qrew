@@ -212,9 +212,6 @@ function AccountPage() {
                   style={{ overflow: 'hidden' }}
                 >
                   <div className="border-t border-white/10 bg-white/[0.03] px-4 pt-4 pb-5">
-                    <p className="text-muted-foreground mb-4 text-sm">
-                      {t('profile.kycStatus.description')}
-                    </p>
                     <KycUploadStep
                       onSuccess={() => {
                         void queryClient.invalidateQueries({ queryKey: ['profile'] })

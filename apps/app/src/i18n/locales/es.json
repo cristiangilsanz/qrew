@@ -172,9 +172,9 @@
       "label": "Identidad",
       "rowLabel": "KYC",
       "subtitle": "Se requiere documento de identidad oficial",
-      "description": "Sube una foto clara de tu DNI o pasaporte. Necesaria para eventos con restricción de edad y compras de entradas.",
+      "description": "Sube una foto clara de tu DNI o pasaporte.",
       "approved": "Verificado",
-      "pending": "En revisión",
+      "pending": "En Revisión",
       "rejected": "Rechazado",
       "not_submitted": "No enviado"
     },
