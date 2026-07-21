@@ -41,6 +41,7 @@ IDENTITY_CFG = REPO_ROOT / "apps/api/services/identity/config/local.yaml"
 
 # ── PII helpers ──────────────────────────────────────────────────────────────
 
+
 def _make_fernet(key: str, prev: str = "") -> MultiFernet:
     keys = [Fernet(key.encode())]
     for raw in prev.splitlines():
@@ -65,12 +66,16 @@ _pwd = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 def _hpw(password: str) -> str:
     return _pwd.hash(password)
 
+
 # ── DB URL ───────────────────────────────────────────────────────────────────
+
 
 def _pg_url(url: str) -> str:
     return url.replace("postgresql+asyncpg://", "postgresql://")
 
+
 # ── Seed ─────────────────────────────────────────────────────────────────────
+
 
 async def seed() -> None:
     cfg = yaml.safe_load(IDENTITY_CFG.read_text())
@@ -91,35 +96,35 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
 
     # ── Fixed UUIDs ──────────────────────────────────────────────────────────
 
-    user_alice  = uuid.UUID("aaaaaaaa-0001-0001-0001-000000000001")
-    user_bob    = uuid.UUID("bbbbbbbb-0002-0002-0002-000000000002")
-    user_admin  = uuid.UUID("cccccccc-0003-0003-0003-000000000003")
+    user_alice = uuid.UUID("aaaaaaaa-0001-0001-0001-000000000001")
+    user_bob = uuid.UUID("bbbbbbbb-0002-0002-0002-000000000002")
+    user_admin = uuid.UUID("cccccccc-0003-0003-0003-000000000003")
 
-    org_id      = uuid.UUID("00000000-aaaa-aaaa-aaaa-000000000001")
+    org_id = uuid.UUID("00000000-aaaa-aaaa-aaaa-000000000001")
 
-    venue_mad   = uuid.UUID("11111111-0001-0001-0001-000000000001")
-    venue_bcn   = uuid.UUID("11111111-0002-0002-0002-000000000002")
+    venue_mad = uuid.UUID("11111111-0001-0001-0001-000000000001")
+    venue_bcn = uuid.UUID("11111111-0002-0002-0002-000000000002")
 
-    event_past   = uuid.UUID("22222222-0001-0001-0001-000000000001")
-    event_now    = uuid.UUID("22222222-0002-0002-0002-000000000002")
+    event_past = uuid.UUID("22222222-0001-0001-0001-000000000001")
+    event_now = uuid.UUID("22222222-0002-0002-0002-000000000002")
     event_future = uuid.UUID("22222222-0003-0003-0003-000000000003")
 
-    tt_past_ga    = uuid.UUID("33333333-0001-0001-0001-000000000001")
-    tt_past_vip   = uuid.UUID("33333333-0002-0002-0002-000000000002")
-    tt_now_ga     = uuid.UUID("33333333-0003-0003-0003-000000000003")
-    tt_now_vip    = uuid.UUID("33333333-0004-0004-0004-000000000004")
+    tt_past_ga = uuid.UUID("33333333-0001-0001-0001-000000000001")
+    tt_past_vip = uuid.UUID("33333333-0002-0002-0002-000000000002")
+    tt_now_ga = uuid.UUID("33333333-0003-0003-0003-000000000003")
+    tt_now_vip = uuid.UUID("33333333-0004-0004-0004-000000000004")
     tt_now_artist = uuid.UUID("33333333-0005-0005-0005-000000000005")
-    tt_fut_early  = uuid.UUID("33333333-0006-0006-0006-000000000006")
-    tt_fut_ga     = uuid.UUID("33333333-0007-0007-0007-000000000007")
+    tt_fut_early = uuid.UUID("33333333-0006-0006-0006-000000000006")
+    tt_fut_ga = uuid.UUID("33333333-0007-0007-0007-000000000007")
 
     res_alice_past = uuid.UUID("44444444-0001-0001-0001-000000000001")
-    res_alice_now  = uuid.UUID("44444444-0002-0002-0002-000000000002")
-    res_bob_now    = uuid.UUID("44444444-0003-0003-0003-000000000003")
+    res_alice_now = uuid.UUID("44444444-0002-0002-0002-000000000002")
+    res_bob_now = uuid.UUID("44444444-0003-0003-0003-000000000003")
 
     tk_alice_past = uuid.UUID("55555555-0001-0001-0001-000000000001")
     tk_alice_now1 = uuid.UUID("55555555-0002-0002-0002-000000000002")
     tk_alice_now2 = uuid.UUID("55555555-0003-0003-0003-000000000003")
-    tk_bob_now    = uuid.UUID("55555555-0004-0004-0004-000000000004")
+    tk_bob_now = uuid.UUID("55555555-0004-0004-0004-000000000004")
 
     # ── Truncate all seed tables ──────────────────────────────────────────────
     print("  Truncating tables…")
@@ -203,12 +208,12 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             _enc(fernet, u["phone"]),
             _hash(u["phone"]),
             _hpw(u["password"]),
-            True,   # email_verified
-            True,   # phone_number_verified
+            True,  # email_verified
+            True,  # phone_number_verified
             u["kyc_status"],
-            now,    # terms_accepted_at
+            now,  # terms_accepted_at
             "127.0.0.1",
-            True,   # is_active
+            True,  # is_active
             u["is_admin"],
             now,
             now,
@@ -222,9 +227,12 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         INSERT INTO catalog.organisations (id, slug, name, description, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6)
         """,
-        org_id, "qrew-events", "Qrew Events",
+        org_id,
+        "qrew-events",
+        "Qrew Events",
         "Official Qrew Events organisation for development testing.",
-        now, now,
+        now,
+        now,
     )
     await conn.execute(
         """
@@ -233,8 +241,12 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             ($1, $2, 'owner'::organisation_role,   $3),
             ($4, $5, 'manager'::organisation_role, $6)
         """,
-        org_id, user_admin, now,
-        org_id, user_alice, now,
+        org_id,
+        user_admin,
+        now,
+        org_id,
+        user_alice,
+        now,
     )
 
     # ── Venues ────────────────────────────────────────────────────────────────
@@ -248,10 +260,32 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
         """,
         [
-            (venue_mad, "WiZink Center", "Av. de Felipe II, s/n",
-             "Madrid", "ES", 40.437775, -3.661543, 200, "Europe/Madrid", now, now),
-            (venue_bcn, "Palau Sant Jordi", "Passeig Olímpic, 5-7",
-             "Barcelona", "ES", 41.364667, 2.153028, 200, "Europe/Madrid", now, now),
+            (
+                venue_mad,
+                "WiZink Center",
+                "Av. de Felipe II, s/n",
+                "Madrid",
+                "ES",
+                40.437775,
+                -3.661543,
+                200,
+                "Europe/Madrid",
+                now,
+                now,
+            ),
+            (
+                venue_bcn,
+                "Palau Sant Jordi",
+                "Passeig Olímpic, 5-7",
+                "Barcelona",
+                "ES",
+                41.364667,
+                2.153028,
+                200,
+                "Europe/Madrid",
+                now,
+                now,
+            ),
         ],
     )
 
@@ -260,34 +294,43 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
 
     event_rows = [
         (
-            event_past, org_id, venue_mad,
+            event_past,
+            org_id,
+            venue_mad,
             "Midnight Festival 2025",
             "An unforgettable night of electronic music at WiZink Center.",
             datetime(2025, 12, 20, 22, 0, tzinfo=UTC),
-            datetime(2025, 12, 21,  6, 0, tzinfo=UTC),
-            datetime(2025, 11,  1, 10, 0, tzinfo=UTC),
+            datetime(2025, 12, 21, 6, 0, tzinfo=UTC),
+            datetime(2025, 11, 1, 10, 0, tzinfo=UTC),
             datetime(2025, 12, 19, 23, 59, tzinfo=UTC),
-            4, "Madrid",
+            4,
+            "Madrid",
         ),
         (
-            event_now, org_id, venue_bcn,
+            event_now,
+            org_id,
+            venue_bcn,
             "Summer Beats 2026",
             "The biggest summer festival hits Barcelona's iconic Palau Sant Jordi.",
-            datetime(2026,  8, 15, 20, 0, tzinfo=UTC),
-            datetime(2026,  8, 16,  2, 0, tzinfo=UTC),
-            datetime(2026,  7,  1, 10, 0, tzinfo=UTC),
-            datetime(2026,  8, 14, 23, 59, tzinfo=UTC),
-            4, "Barcelona",
+            datetime(2026, 8, 15, 20, 0, tzinfo=UTC),
+            datetime(2026, 8, 16, 2, 0, tzinfo=UTC),
+            datetime(2026, 7, 1, 10, 0, tzinfo=UTC),
+            datetime(2026, 8, 14, 23, 59, tzinfo=UTC),
+            4,
+            "Barcelona",
         ),
         (
-            event_future, org_id, venue_mad,
+            event_future,
+            org_id,
+            venue_mad,
             "Techno Underground 2026",
             "Halloween night goes underground. Limited capacity, maximum vibes.",
             datetime(2026, 10, 31, 23, 0, tzinfo=UTC),
-            datetime(2026, 11,  1,  7, 0, tzinfo=UTC),
-            datetime(2026,  9,  1, 10, 0, tzinfo=UTC),
+            datetime(2026, 11, 1, 7, 0, tzinfo=UTC),
+            datetime(2026, 9, 1, 10, 0, tzinfo=UTC),
             datetime(2026, 10, 30, 23, 59, tzinfo=UTC),
-            4, "Madrid",
+            4,
+            "Madrid",
         ),
     ]
 
@@ -308,13 +351,21 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 $13,$14,$15
             )
             """,
-            row[0], row[1], row[2],  # id, org, venue
-            row[3], row[4],          # name, description
-            row[5], row[6],          # starts_at, ends_at
-            row[7], row[8],          # sale_starts_at, sale_ends_at
-            row[9],                  # max_tickets_per_user
-            "Qrew Events", row[10],  # organiser_name, venue_city
-            now, now, now,           # created, updated, published
+            row[0],
+            row[1],
+            row[2],  # id, org, venue
+            row[3],
+            row[4],  # name, description
+            row[5],
+            row[6],  # starts_at, ends_at
+            row[7],
+            row[8],  # sale_starts_at, sale_ends_at
+            row[9],  # max_tickets_per_user
+            "Qrew Events",
+            row[10],  # organiser_name, venue_city
+            now,
+            now,
+            now,  # created, updated, published
         )
 
     # ── Ticket types ──────────────────────────────────────────────────────────
@@ -322,15 +373,65 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
 
     ticket_types = [
         # Past event
-        (tt_past_ga,    event_past,   "General Admission", "Standard entry",          500, 100, 3500, "EUR", 0),
-        (tt_past_vip,   event_past,   "VIP",               "VIP lounge",              100,  20, 7500, "EUR", 1),
+        (
+            tt_past_ga,
+            event_past,
+            "General Admission",
+            "Standard entry",
+            500,
+            100,
+            3500,
+            "EUR",
+            0,
+        ),
+        (tt_past_vip, event_past, "VIP", "VIP lounge", 100, 20, 7500, "EUR", 1),
         # Current sale
-        (tt_now_ga,     event_now,    "General Admission", "Standard entry",         1000,   3, 2500, "EUR", 0),
-        (tt_now_vip,    event_now,    "VIP",               "VIP area",               200,   1, 6500, "EUR", 1),
-        (tt_now_artist, event_now,    "Artist Meet",       "Meet & greet pass",        50,   0, 12000, "EUR", 2),
+        (
+            tt_now_ga,
+            event_now,
+            "General Admission",
+            "Standard entry",
+            1000,
+            3,
+            2500,
+            "EUR",
+            0,
+        ),
+        (tt_now_vip, event_now, "VIP", "VIP area", 200, 1, 6500, "EUR", 1),
+        (
+            tt_now_artist,
+            event_now,
+            "Artist Meet",
+            "Meet & greet pass",
+            50,
+            0,
+            12000,
+            "EUR",
+            2,
+        ),
         # Future sale
-        (tt_fut_early,  event_future, "Early Bird",        "Limited early access",    200,   0, 2000, "EUR", 0),
-        (tt_fut_ga,     event_future, "General Admission", "Standard entry",          800,   0, 3000, "EUR", 1),
+        (
+            tt_fut_early,
+            event_future,
+            "Early Bird",
+            "Limited early access",
+            200,
+            0,
+            2000,
+            "EUR",
+            0,
+        ),
+        (
+            tt_fut_ga,
+            event_future,
+            "General Admission",
+            "Standard entry",
+            800,
+            0,
+            3000,
+            "EUR",
+            1,
+        ),
     ]
 
     await conn.executemany(
@@ -340,8 +441,10 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
              price_cents, currency, position, created_at, updated_at)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
         """,
-        [(t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], now, now)
-         for t in ticket_types],
+        [
+            (t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], now, now)
+            for t in ticket_types
+        ],
     )
 
     # ── Sales projections ─────────────────────────────────────────────────────
@@ -356,15 +459,36 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
         """,
         [
-            (event_past,   "published",
-             datetime(2025, 11,  1, 10, 0, tzinfo=UTC), datetime(2025, 12, 19, 23, 59, tzinfo=UTC),
-             4, False, 60, now),
-            (event_now,    "published",
-             datetime(2026,  7,  1, 10, 0, tzinfo=UTC), datetime(2026,  8, 14, 23, 59, tzinfo=UTC),
-             4, False, 60, now),
-            (event_future, "published",
-             datetime(2026,  9,  1, 10, 0, tzinfo=UTC), datetime(2026, 10, 30, 23, 59, tzinfo=UTC),
-             4, False, 60, now),
+            (
+                event_past,
+                "published",
+                datetime(2025, 11, 1, 10, 0, tzinfo=UTC),
+                datetime(2025, 12, 19, 23, 59, tzinfo=UTC),
+                4,
+                False,
+                60,
+                now,
+            ),
+            (
+                event_now,
+                "published",
+                datetime(2026, 7, 1, 10, 0, tzinfo=UTC),
+                datetime(2026, 8, 14, 23, 59, tzinfo=UTC),
+                4,
+                False,
+                60,
+                now,
+            ),
+            (
+                event_future,
+                "published",
+                datetime(2026, 9, 1, 10, 0, tzinfo=UTC),
+                datetime(2026, 10, 30, 23, 59, tzinfo=UTC),
+                4,
+                False,
+                60,
+                now,
+            ),
         ],
     )
 
@@ -377,13 +501,13 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         VALUES ($1,$2,$3,$4,$5,$6,$7)
         """,
         [
-            (tt_past_ga,    event_past,   500, 100, 3500,  "EUR", now),
-            (tt_past_vip,   event_past,   100,  20, 7500,  "EUR", now),
-            (tt_now_ga,     event_now,   1000,   3, 2500,  "EUR", now),
-            (tt_now_vip,    event_now,    200,   1, 6500,  "EUR", now),
-            (tt_now_artist, event_now,     50,   0, 12000, "EUR", now),
-            (tt_fut_early,  event_future,  200,  0, 2000,  "EUR", now),
-            (tt_fut_ga,     event_future,  800,  0, 3000,  "EUR", now),
+            (tt_past_ga, event_past, 500, 100, 3500, "EUR", now),
+            (tt_past_vip, event_past, 100, 20, 7500, "EUR", now),
+            (tt_now_ga, event_now, 1000, 3, 2500, "EUR", now),
+            (tt_now_vip, event_now, 200, 1, 6500, "EUR", now),
+            (tt_now_artist, event_now, 50, 0, 12000, "EUR", now),
+            (tt_fut_early, event_future, 200, 0, 2000, "EUR", now),
+            (tt_fut_ga, event_future, 800, 0, 3000, "EUR", now),
         ],
     )
 
@@ -407,9 +531,36 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
         """,
         [
-            (event_past,   venue_mad, "published", 40.437775, -3.661543, 200, "Europe/Madrid", now),
-            (event_now,    venue_bcn, "published", 41.364667,  2.153028, 200, "Europe/Madrid", now),
-            (event_future, venue_mad, "published", 40.437775, -3.661543, 200, "Europe/Madrid", now),
+            (
+                event_past,
+                venue_mad,
+                "published",
+                40.437775,
+                -3.661543,
+                200,
+                "Europe/Madrid",
+                now,
+            ),
+            (
+                event_now,
+                venue_bcn,
+                "published",
+                41.364667,
+                2.153028,
+                200,
+                "Europe/Madrid",
+                now,
+            ),
+            (
+                event_future,
+                venue_mad,
+                "published",
+                40.437775,
+                -3.661543,
+                200,
+                "Europe/Madrid",
+                now,
+            ),
         ],
     )
 
@@ -427,11 +578,41 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         """,
         [
             # alice — 1 GA at past event (paid)
-            (res_alice_past, user_alice, event_past, tt_past_ga, 1, "paid", far_future, now, now),
+            (
+                res_alice_past,
+                user_alice,
+                event_past,
+                tt_past_ga,
+                1,
+                "paid",
+                far_future,
+                now,
+                now,
+            ),
             # alice — 2 GA at Summer Beats (paid)
-            (res_alice_now,  user_alice, event_now,  tt_now_ga,  2, "paid", far_future, now, now),
+            (
+                res_alice_now,
+                user_alice,
+                event_now,
+                tt_now_ga,
+                2,
+                "paid",
+                far_future,
+                now,
+                now,
+            ),
             # bob — 1 GA at Summer Beats (pending payment)
-            (res_bob_now,    user_bob,   event_now,  tt_now_ga,  1, "reserved", far_future, now, now),
+            (
+                res_bob_now,
+                user_bob,
+                event_now,
+                tt_now_ga,
+                1,
+                "reserved",
+                far_future,
+                now,
+                now,
+            ),
         ],
     )
 
@@ -448,12 +629,68 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         """,
         [
             # alice's past-event ticket — used
-            (tk_alice_past, res_alice_past, event_past, tt_past_ga, user_alice, "used", now, now, None, "Alice Dev", None, now, now),
+            (
+                tk_alice_past,
+                res_alice_past,
+                event_past,
+                tt_past_ga,
+                user_alice,
+                "used",
+                now,
+                now,
+                None,
+                "Alice Dev",
+                None,
+                now,
+                now,
+            ),
             # alice's Summer Beats tickets — issued
-            (tk_alice_now1, res_alice_now, event_now, tt_now_ga, user_alice, "issued", now, now, None, "Alice Dev", None, now, now),
-            (tk_alice_now2, res_alice_now, event_now, tt_now_ga, user_alice, "issued", now, now, None, "Alice Dev", None, now, now),
+            (
+                tk_alice_now1,
+                res_alice_now,
+                event_now,
+                tt_now_ga,
+                user_alice,
+                "issued",
+                now,
+                now,
+                None,
+                "Alice Dev",
+                None,
+                now,
+                now,
+            ),
+            (
+                tk_alice_now2,
+                res_alice_now,
+                event_now,
+                tt_now_ga,
+                user_alice,
+                "issued",
+                now,
+                now,
+                None,
+                "Alice Dev",
+                None,
+                now,
+                now,
+            ),
             # bob's pending ticket — reserved
-            (tk_bob_now, res_bob_now, event_now, tt_now_ga, user_bob, "reserved", now, None, None, None, None, now, now),
+            (
+                tk_bob_now,
+                res_bob_now,
+                event_now,
+                tt_now_ga,
+                user_bob,
+                "reserved",
+                now,
+                None,
+                None,
+                None,
+                None,
+                now,
+                now,
+            ),
         ],
     )
 
@@ -467,8 +704,12 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
     print("  admin@qrew.dev  — admin, owner of Qrew Events  [password: AdminPass1!]")
     print()
     print("Events:")
-    print("  Midnight Festival 2025   — past, WiZink Center Madrid   (alice has 1 used ticket)")
-    print("  Summer Beats 2026        — upcoming, sale open now       (alice: 2 issued, bob: 1 reserved)")
+    print(
+        "  Midnight Festival 2025   — past, WiZink Center Madrid   (alice has 1 used ticket)"
+    )
+    print(
+        "  Summer Beats 2026        — upcoming, sale open now       (alice: 2 issued, bob: 1 reserved)"
+    )
     print("  Techno Underground 2026  — upcoming, sale opens Sep 2026")
 
 
