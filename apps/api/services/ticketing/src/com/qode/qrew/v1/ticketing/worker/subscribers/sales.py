@@ -75,8 +75,8 @@ async def handle_reservation_paid(raw: bytes) -> None:
         await logger.awarning("sales_events.reservation_paid.bad_payload")
         return
 
-    holders_raw: list[dict] = data["data"].get("holders", [])
-    holders_by_position = {int(h["position"]): h for h in holders_raw}
+    holders_raw: list[dict[str, Any]] = data["data"].get("holders", [])
+    holders_by_position: dict[int, dict[str, Any]] = {int(h["position"]): h for h in holders_raw}
 
     async with AsyncSessionLocal() as session:
         async with redlock(
@@ -94,7 +94,7 @@ async def handle_reservation_paid(raw: bytes) -> None:
                     actor_id=user_id,
                     audit=audit,
                 )
-                holder = holders_by_position.get(idx + 1)
+                holder: dict[str, Any] | None = holders_by_position.get(idx + 1)
                 if holder:
                     ticket.holder_name = str(holder["holder_name"])
                     ticket.holder_dni = str(holder["holder_dni"])
