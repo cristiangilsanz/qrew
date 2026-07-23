@@ -8,9 +8,9 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 from com.qode.qrew.v1.gateway.core.auth import (
     WebSocketAuthError,
-    _access_public_keys,
+    access_public_keys,
     _extract_token,
-    _scanner_public_keys,
+    scanner_public_keys,
     authenticate,
 )
 from com.qode.qrew.v1.gateway.core.config import settings
@@ -49,8 +49,8 @@ def patch_access_keys(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "scanner_jwt_private_key", "")
     monkeypatch.setattr(settings, "jwt_audience", "")
     monkeypatch.setattr(settings, "jwt_issuer", "")
-    _access_public_keys.cache_clear()
-    _scanner_public_keys.cache_clear()
+    access_public_keys.cache_clear()
+    scanner_public_keys.cache_clear()
 
 
 def _ws_with_protocol(protocol: str | None) -> MagicMock:

@@ -1,22 +1,31 @@
 import { Link } from '@tanstack/react-router'
+import { Building2, ChevronRight } from 'lucide-react'
 
-import { Card, CardContent } from '@/components/ui/card'
-
-import type { Organisation } from '../api'
+interface OrgCardItem {
+  id: string
+  slug: string
+  name: string
+}
 
 interface Props {
-  org: Organisation
+  org: OrgCardItem
 }
 
 export function OrgCard({ org }: Props) {
   return (
-    <Link to="/organiser/$orgId" params={{ orgId: org.id }}>
-      <Card className="hover:bg-muted/50 cursor-pointer transition-colors">
-        <CardContent className="p-4">
-          <p className="font-medium">{org.name}</p>
-          <p className="text-muted-foreground text-sm">@{org.slug}</p>
-        </CardContent>
-      </Card>
+    <Link
+      to="/organiser/$orgId"
+      params={{ orgId: org.id }}
+      className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
+        <Building2 className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{org.name}</p>
+        <p className="text-muted-foreground truncate text-xs">@{org.slug}</p>
+      </div>
+      <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
     </Link>
   )
 }

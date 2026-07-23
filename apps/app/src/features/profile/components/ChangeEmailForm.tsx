@@ -1,10 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Send } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
-import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -24,7 +24,14 @@ const schema = z.object({
 
 type Values = z.infer<typeof schema>
 
-export function ChangeEmailForm() {
+interface Props {
+  hideTitle?: boolean
+}
+
+const darkInput =
+  'border-white/5 bg-black/30 text-white/70 placeholder:text-white/15 focus-visible:border-white/15 focus-visible:ring-0 focus-visible:ring-offset-0'
+
+export function ChangeEmailForm({ hideTitle }: Props) {
   const { t } = useTranslation()
   const [sent, setSent] = useState(false)
 
@@ -38,7 +45,7 @@ export function ChangeEmailForm() {
   if (sent) {
     return (
       <div className="space-y-2">
-        <h3 className="font-medium">{t('profile.changeEmail.title')}</h3>
+        {!hideTitle && <h3 className="font-medium">{t('profile.changeEmail.title')}</h3>}
         <p className="text-muted-foreground text-sm">{t('profile.changeEmail.success')}</p>
         <button className="text-primary text-sm hover:underline" onClick={() => setSent(false)}>
           {t('common.back')}
@@ -49,17 +56,19 @@ export function ChangeEmailForm() {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium">{t('profile.changeEmail.title')}</h3>
+      {!hideTitle && <h3 className="font-medium">{t('profile.changeEmail.title')}</h3>}
       <Form {...form}>
         <form onSubmit={form.handleSubmit((v) => changeEmail.mutate(v))} className="space-y-3">
           <FormField
             control={form.control}
             name="new_email"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('profile.changeEmail.newEmail')}</FormLabel>
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-muted-foreground text-xs">
+                  {t('profile.changeEmail.newEmail')}
+                </FormLabel>
                 <FormControl>
-                  <Input type="email" autoComplete="email" {...field} />
+                  <Input type="email" autoComplete="email" className={darkInput} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -69,18 +78,38 @@ export function ChangeEmailForm() {
             control={form.control}
             name="current_password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('profile.changeEmail.currentPassword')}</FormLabel>
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-muted-foreground text-xs">
+                  {t('profile.changeEmail.currentPassword')}
+                </FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="current-password" {...field} />
+                  <Input
+                    type="password"
+                    autoComplete="current-password"
+                    className={darkInput}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" isLoading={changeEmail.isPending}>
-            {t('profile.changeEmail.submit')}
-          </Button>
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={changeEmail.isPending}
+              className="bg-primary flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {changeEmail.isPending ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <Send className="h-3.5 w-3.5" />
+                  {t('profile.changeEmail.submit')}
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </Form>
     </div>

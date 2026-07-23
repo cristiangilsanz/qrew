@@ -42,9 +42,19 @@ export function extractErrorMessage(detail: ApiErrorDetail | undefined, fallback
   return detail[0]?.msg ?? fallback
 }
 
+export interface RefreshResponse {
+  access_token: string
+  refresh_token: string
+}
+
 export const authApi = {
   login: (data: LoginRequest) =>
     apiClient.post<LoginResponse>('/v1/auth/login', data).then((r) => r.data),
+
+  refresh: (refreshToken: string) =>
+    apiClient
+      .post<RefreshResponse>('/v1/auth/refresh', { refresh_token: refreshToken })
+      .then((r) => r.data),
 
   register: (data: RegisterRequest) =>
     apiClient

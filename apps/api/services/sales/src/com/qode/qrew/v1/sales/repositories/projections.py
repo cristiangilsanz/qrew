@@ -26,6 +26,7 @@ class EventContextRepository:
         status: str,
         sale_starts_at: datetime | None = None,
         sale_ends_at: datetime | None = None,
+        starts_at: datetime | None = None,
         max_tickets_per_user: int = 10,
         queue_required: bool = False,
         queue_admit_rate_per_minute: int = 50,
@@ -37,6 +38,7 @@ class EventContextRepository:
                 status=status,
                 sale_starts_at=sale_starts_at,
                 sale_ends_at=sale_ends_at,
+                starts_at=starts_at,
                 max_tickets_per_user=max_tickets_per_user,
                 queue_required=queue_required,
                 queue_admit_rate_per_minute=queue_admit_rate_per_minute,
@@ -48,6 +50,8 @@ class EventContextRepository:
                 ctx.sale_starts_at = sale_starts_at
             if sale_ends_at is not None:
                 ctx.sale_ends_at = sale_ends_at
+            if starts_at is not None:
+                ctx.starts_at = starts_at
             ctx.max_tickets_per_user = max_tickets_per_user
             ctx.queue_required = queue_required
             ctx.queue_admit_rate_per_minute = queue_admit_rate_per_minute

@@ -9,6 +9,7 @@ from com.qode.qrew.v1.sales.services.application.audit import AuditService
 from com.qode.qrew.v1.sales.core.errors import DomainError
 from observability import traced
 from com.qode.qrew.v1.sales.services.application.queue.storage import (
+    get_redeem_token,
     join_queue,
     queue_position,
     redeem_window_token,
@@ -77,8 +78,12 @@ class QueueService:
         return result.position
 
     @traced("queue.service.position")
-    async def position(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> int | None:
-        return await queue_position(event_id, user_id)
+    async def position(
+        self, *, user_id: uuid.UUID, event_id: uuid.UUID
+    ) -> tuple[int | None, str | None]:
+        pos = await queue_position(event_id, user_id)
+        redeem = await get_redeem_token(event_id, user_id) if pos is None else None
+        return pos, redeem
 
     @traced("queue.service.redeem")
     async def redeem(self, *, user_id: uuid.UUID, token: str) -> str:

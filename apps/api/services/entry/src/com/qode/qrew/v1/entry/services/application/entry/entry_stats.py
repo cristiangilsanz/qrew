@@ -71,8 +71,8 @@ async def _compute_uncached(
 ) -> EntryStats:
     counted_states = {
         TicketState.issued.value,
-        TicketState.entry_pending.value,
-        TicketState.used.value,
+        TicketState.scanning.value,
+        TicketState.redeemed.value,
     }
     rows = await db.execute(
         select(TicketContext.state, func.count())
@@ -84,7 +84,7 @@ async def _compute_uncached(
         if isinstance(state_value, str):
             counts[state_value] = int(count)
     total_issued = sum(n for s, n in counts.items() if s in counted_states)
-    total_entered = counts.get(TicketState.used.value, 0)
+    total_entered = counts.get(TicketState.redeemed.value, 0)
     total_remaining = max(total_issued - total_entered, 0)
 
     rejection_rows = await db.execute(

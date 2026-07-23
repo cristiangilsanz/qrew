@@ -8,8 +8,21 @@ export interface Organisation {
   created_at: string
 }
 
+export interface OrganisationSearchResult {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+}
+
 export interface OrgMember {
   organisation_id: string
+  user_id: string
+  role: 'member' | 'manager' | 'owner'
+  joined_at: string
+}
+
+export interface OrgMemberListItem {
   user_id: string
   role: 'member' | 'manager' | 'owner'
   joined_at: string
@@ -21,6 +34,7 @@ export interface OrgEvent {
   venue_id: string
   name: string
   description: string | null
+  image_url: string | null
   starts_at: string
   ends_at: string
   sale_starts_at: string
@@ -64,21 +78,25 @@ export interface CreateEventData {
   venue_id: string
   name: string
   description?: string
+  image_url?: string | null
   starts_at: string
   ends_at: string
   sale_starts_at: string
   sale_ends_at: string
   max_tickets_per_user?: number
+  queue_required?: boolean
 }
 
 export interface UpdateEventData {
   name?: string
   description?: string
+  image_url?: string | null
   starts_at?: string
   ends_at?: string
   sale_starts_at?: string
   sale_ends_at?: string
   max_tickets_per_user?: number
+  queue_required?: boolean
 }
 
 export interface CreateTicketTypeData {
@@ -86,7 +104,7 @@ export interface CreateTicketTypeData {
   description?: string
   capacity: number
   price_cents: number
-  currency: string
+  currency?: string
   position?: number
 }
 
@@ -116,14 +134,31 @@ export const organiserApi = {
       .get<{ items: Organisation[]; next_cursor: string | null }>('/v1/organisations')
       .then((r) => r.data),
 
+  searchOrgs: (q: string) =>
+    catalogClient
+      .get<OrganisationSearchResult[]>('/v1/organisations/search', { params: { q } })
+      .then((r) => r.data),
+
   createOrg: (data: { slug: string; name: string; description?: string }) =>
     catalogClient.post<Organisation>('/v1/organisations', data).then((r) => r.data),
+
+  listMembers: (orgId: string) =>
+    catalogClient
+      .get<OrgMemberListItem[]>(`/v1/organisations/${orgId}/members`)
+      .then((r) => r.data),
+
+  addMember: (orgId: string, data: { user_id: string; role: 'member' | 'manager' }) =>
+    catalogClient
+      .post<OrgMember>(`/v1/organisations/${orgId}/members/add`, data)
+      .then((r) => r.data),
 
   inviteMember: (orgId: string, data: { email: string; role: 'member' | 'manager' | 'owner' }) =>
     catalogClient.post<OrgMember>(`/v1/organisations/${orgId}/members`, data).then((r) => r.data),
 
   removeMember: (orgId: string, userId: string) =>
     catalogClient.delete(`/v1/organisations/${orgId}/members/${userId}`),
+
+  deleteOrganisation: (orgId: string) => catalogClient.delete(`/v1/organisations/${orgId}`),
 
   listOrgEvents: (orgId: string) =>
     catalogClient

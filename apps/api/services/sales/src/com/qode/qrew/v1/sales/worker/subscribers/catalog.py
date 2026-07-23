@@ -6,6 +6,7 @@ from typing import Any
 import structlog
 
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
+from com.qode.qrew.v1.sales.models.projections import EventContext
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
     TicketTypeInventoryRepository,
@@ -41,6 +42,7 @@ async def _upsert_event_ctx(
     d = data["data"]
     sale_starts_at = _parse_dt(d.get("sale_starts_at"))
     sale_ends_at = _parse_dt(d.get("sale_ends_at"))
+    starts_at = _parse_dt(d.get("starts_at"))
     max_tickets_per_user = int(d.get("max_tickets_per_user", 10))
     queue_required = bool(d.get("queue_required", False))
     queue_admit_rate = int(d.get("queue_admit_rate_per_minute", 50))
@@ -51,6 +53,7 @@ async def _upsert_event_ctx(
                 status=status,
                 sale_starts_at=sale_starts_at,
                 sale_ends_at=sale_ends_at,
+                starts_at=starts_at,
                 max_tickets_per_user=max_tickets_per_user,
                 queue_required=queue_required,
                 queue_admit_rate_per_minute=queue_admit_rate,
@@ -77,6 +80,22 @@ async def handle_event_draft(raw: bytes) -> None:
     if data is None:
         return
     await _upsert_event_ctx(data, status="draft")
+
+
+async def handle_event_updated(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    # Preserve existing lifecycle status — update only propagates field changes
+    try:
+        event_id = uuid.UUID(str(data["data"]["event_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("catalog_events.upsert_event_ctx.bad_payload")
+        return
+    async with AsyncSessionLocal() as session:
+        existing = await session.get(EventContext, event_id)
+        status = existing.status if existing is not None else "draft"
+    await _upsert_event_ctx(data, status=status)
 
 
 async def handle_ticket_type_created(raw: bytes) -> None:
@@ -112,6 +131,7 @@ _HANDLERS = {
     "catalog.event.published.v1": handle_event_published,
     "catalog.event.cancelled.v1": handle_event_cancelled,
     "catalog.event.draft.v1": handle_event_draft,
+    "catalog.event.updated.v1": handle_event_updated,
     "catalog.ticket_type.created.v1": handle_ticket_type_created,
     "catalog.ticket_type.updated.v1": handle_ticket_type_updated,
 }

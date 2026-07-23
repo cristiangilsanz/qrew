@@ -2,7 +2,10 @@ from dataclasses import dataclass
 
 from pagination import decode_cursor, encode_cursor
 from com.qode.qrew.v1.catalog.repositories.events.search.config import SearchConfig
-from com.qode.qrew.v1.catalog.repositories.events.search.tsvector import normalise_query
+from com.qode.qrew.v1.catalog.repositories.events.search.tsvector import (
+    normalise_query,
+    to_prefix_tsquery,
+)
 
 
 @dataclass(frozen=True)
@@ -27,11 +30,27 @@ def build_search_clause(
 
     if q is not None and normalise_query(q):
         cleaned = normalise_query(q)
-        parameters["search_q"] = cleaned
-        tsquery = f"websearch_to_tsquery('{config.language}', :search_q)"
-        where.append(f"{config.vector_column} @@ {tsquery}")
-        rank_expression = f"ts_rank_cd({config.vector_column}, {tsquery})"
-        order_by = f"{config.rank_column_alias} DESC, {config.primary_key} DESC"
+        prefix_q = to_prefix_tsquery(cleaned)
+        if prefix_q:
+            parameters["search_q"] = prefix_q
+            tsquery = f"to_tsquery('{config.language}', :search_q)"
+            parameters["ilike_q"] = f"%{cleaned}%"
+            # Match either full-text prefix OR a raw substring (ILIKE) on the name column
+            name_col = next(
+                (f.column_name for f in config.fields if f.weight == "A"),
+                config.fields[0].column_name if config.fields else "name",
+            )
+            desc_col = next(
+                (f.column_name for f in config.fields if f.weight == "B"),
+                None,
+            )
+            ilike_clauses = [f"{name_col} ILIKE :ilike_q"]
+            if desc_col:
+                ilike_clauses.append(f"coalesce({desc_col}, '') ILIKE :ilike_q")
+            ilike_expr = " OR ".join(ilike_clauses)
+            where.append(f"({config.vector_column} @@ {tsquery} OR {ilike_expr})")
+            rank_expression = f"ts_rank_cd({config.vector_column}, {tsquery})"
+            order_by = f"{config.rank_column_alias} DESC, {config.primary_key} DESC"
 
     for column, value in (filters or {}).items():
         if value is None:

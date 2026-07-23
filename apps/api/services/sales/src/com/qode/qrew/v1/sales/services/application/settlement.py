@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
+from com.qode.qrew.v1.sales.models.reservation_holder import ReservationHolder
 from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 from locking import redlock
@@ -37,7 +38,15 @@ class SettlementService:
                 return None
             reservation.status = ReservationStatus.paid
             await self._session.commit()
-        await _publish_paid(reservation)
+
+        from com.qode.qrew.v1.sales.repositories.reservation_holder import (
+            ReservationHolderRepository,
+        )
+
+        holders = await ReservationHolderRepository(self._session).list_by_reservation(
+            reservation_id
+        )
+        await _publish_paid(reservation, holders)
         return reservation
 
     async def cancel(self, reservation_id: uuid.UUID, *, reason: str) -> Reservation | None:
@@ -60,7 +69,7 @@ class SettlementService:
         return reservation
 
 
-async def _publish_paid(reservation: Reservation) -> None:
+async def _publish_paid(reservation: Reservation, holders: list[ReservationHolder]) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
@@ -76,6 +85,14 @@ async def _publish_paid(reservation: Reservation) -> None:
                 "event_id": str(reservation.event_id),
                 "ticket_type_id": str(reservation.ticket_type_id),
                 "quantity": reservation.quantity,
+                "holders": [
+                    {
+                        "position": h.position,
+                        "holder_name": h.holder_name,
+                        "holder_dni": h.holder_dni,
+                    }
+                    for h in holders
+                ],
             },
         )
         await nats_publish("sales.reservation.paid.v1", envelope)

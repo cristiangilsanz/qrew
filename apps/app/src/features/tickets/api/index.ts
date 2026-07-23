@@ -8,6 +8,7 @@ export interface QueueJoinResponse {
 
 export interface QueuePositionResponse {
   position: number | null
+  redeem_token: string | null
 }
 
 export interface QueueRedeemResponse {
@@ -39,7 +40,7 @@ export interface Payment {
 }
 
 export type TicketState =
-  'reserved' | 'issued' | 'entry_pending' | 'used' | 'cancelled' | 'frozen' | 'flagged'
+  'reserved' | 'issued' | 'scanning' | 'redeemed' | 'cancelled' | 'expired' | 'on_sale' | 'flagged'
 
 export interface Ticket {
   id: string
@@ -48,7 +49,19 @@ export interface Ticket {
   ticket_type_id: string
   state: TicketState
   state_updated_at: string | null
+  issued_at: string | null
+  expired_at: string | null
+  holder_name: string | null
+  holder_dni: string | null
   created_at: string
+  qr_eligible: boolean
+  counts_toward_limit: boolean
+}
+
+export interface HolderInput {
+  position: number
+  holder_name: string
+  holder_dni: string
 }
 
 export interface QrToken {
@@ -99,4 +112,7 @@ export const ticketsApi = {
     ticketingClient
       .get<QrToken>(`/v1/tickets/${ticketId}/qr`, { params: { latitude, longitude } })
       .then((r) => r.data),
+
+  setHolders: (reservationId: string, holders: HolderInput[]) =>
+    salesClient.put(`/v1/reservations/${reservationId}/holders`, { holders }).then((r) => r.data),
 }

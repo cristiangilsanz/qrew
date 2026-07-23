@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, Phone, User, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -189,7 +189,8 @@ export function RegisterForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" isLoading={register.isPending}>
+          <Button type="submit" className="w-full rounded-full" isLoading={register.isPending}>
+            <UserPlus className="mr-2 h-4 w-4" />
             {t('auth.register')}
           </Button>
         </form>

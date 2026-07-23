@@ -9,7 +9,7 @@ class TicketTypeCreateRequest(BaseModel):
     description: str | None = Field(default=None, max_length=2000)
     capacity: int = Field(..., ge=1, le=100_000)
     price_cents: int = Field(..., ge=0, le=10_000_000)
-    currency: str = Field(..., min_length=3, max_length=3)
+    currency: str = Field(default="EUR", min_length=3, max_length=3)
     position: int = Field(default=0, ge=0)
 
 

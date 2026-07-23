@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -43,7 +44,18 @@ class UserProfileResponse(BaseModel):
     kyc_status: str
     email_verified: bool
     phone_verified: bool
+    is_admin: bool
     created_at: datetime
+
+
+class UserPublicProfile(BaseModel):
+    id: uuid.UUID
+    full_name: str
+    email: str
+
+
+class UserPublicProfilesRequest(BaseModel):
+    user_ids: list[uuid.UUID]
 
 
 class OnboardingStatusResponse(BaseModel):
@@ -52,3 +64,4 @@ class OnboardingStatusResponse(BaseModel):
     kyc_submitted: bool
     passkey_registered: bool
     is_complete: bool
+    current_step: Literal["email", "phone", "kyc", "passkey", "pending"]

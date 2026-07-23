@@ -8,6 +8,10 @@ from conftest import make_inventory, make_reservation
 
 _PATCH_REDLOCK = "com.qode.qrew.v1.sales.services.application.settlement.redlock"
 _PATCH_SETTINGS = "com.qode.qrew.v1.sales.services.application.settlement.settings"
+_PATCH_PUBLISH_PAID = "com.qode.qrew.v1.sales.services.application.settlement._publish_paid"
+_PATCH_HOLDERS_REPO = (
+    "com.qode.qrew.v1.sales.repositories.reservation_holder.ReservationHolderRepository"
+)
 
 
 def _make_svc(
@@ -79,10 +83,14 @@ class TestSettlementMarkPaid:
             ticket_type_id=ticket_type_id,
             status=ReservationStatus.reserved,
         )
+        mock_holder_repo = MagicMock()
+        mock_holder_repo.return_value.list_by_reservation = AsyncMock(return_value=[])
         svc, session = _make_svc(reservation=reservation)
         with (
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
+            patch(_PATCH_PUBLISH_PAID, new=AsyncMock()),
+            patch(_PATCH_HOLDERS_REPO, mock_holder_repo),
         ):
             result = await svc.mark_paid(reservation.id)
         assert result is reservation

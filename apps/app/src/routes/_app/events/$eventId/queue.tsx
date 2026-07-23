@@ -1,7 +1,7 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { BackButton } from '@/components/ui/back-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { QueuePanel } from '@/features/tickets/components/QueuePanel'
@@ -23,14 +23,7 @@ function QueuePage() {
 
   return (
     <div className="mx-auto max-w-md space-y-6 p-6">
-      <Link
-        to="/events/$eventId"
-        params={{ eventId }}
-        className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('events.backToEvent')}
-      </Link>
+      <BackButton to="/events/$eventId" params={{ eventId }} />
 
       <Card>
         <CardHeader>
@@ -38,7 +31,22 @@ function QueuePage() {
           {event && <p className="text-muted-foreground text-sm">{event.name}</p>}
         </CardHeader>
         <CardContent>
-          <QueuePanel eventId={eventId} />
+          <QueuePanel
+            eventId={eventId}
+            onAdmitted={(reservationWindowToken) =>
+              void navigate({
+                to: '/events/$eventId/checkout',
+                params: { eventId },
+                search: {
+                  admitted: true,
+                  ...(reservationWindowToken
+                    ? { reservation_window_token: reservationWindowToken }
+                    : {}),
+                },
+                replace: true,
+              })
+            }
+          />
         </CardContent>
       </Card>
     </div>

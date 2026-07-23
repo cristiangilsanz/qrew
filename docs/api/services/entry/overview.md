@@ -75,7 +75,7 @@ Schemas: [`packages/contracts/openapi/entry/events/`](../../../../packages/contr
 | `REDIS_URL` | Redis connection URL. |
 | `NATS_URL` | NATS server address. |
 | `INTERNAL_API_KEY` | Shared secret for internal service-to-service calls. |
-| `TICKETING_URL` | Base URL of the ticketing service. Defaults to `http://localhost:8004`. |
+| `TICKETING_URL` | Base URL of the ticketing service. Defaults to `http://localhost:8005`. |
 | `ACCESS_JWT_PRIVATE_KEY` | EC private key for user JWT verification. |
 | `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma-separated previous public keys for key rotation. |
 | `TICKET_QR_JWT_PRIVATE_KEY` | EC private key for QR token verification. |

@@ -11,6 +11,8 @@ from locking import close_locking
 from com.qode.qrew.v1.sales.core.database import engine
 from com.qode.qrew.v1.sales.services.application.queue.storage import close_queue
 from observability import setup_tracing, shutdown_tracing
+from com.qode.qrew.v1.sales.worker.jobs.market_assigner import assign_pending
+from com.qode.qrew.v1.sales.worker.jobs.market_expirer import sweep_expired as market_sweep_expired
 from com.qode.qrew.v1.sales.worker.jobs.queue_admitter import admit_next
 from com.qode.qrew.v1.sales.worker.jobs.reservation_expirer import sweep_expired
 from com.qode.qrew.v1.sales.services.domain.fraud.dependencies import close_fraud
@@ -21,11 +23,11 @@ logger = structlog.get_logger(__name__)
 
 async def _run_periodic(fn: object, interval_seconds: int) -> None:
     while True:
-        await asyncio.sleep(interval_seconds)
         try:
             await fn()  # type: ignore[operator]
         except Exception as exc:
             await logger.awarning("periodic_job_failed", fn=str(fn), error=repr(exc))
+        await asyncio.sleep(interval_seconds)
 
 
 @asynccontextmanager
@@ -49,14 +51,28 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             await logger.awarning("sales.nats_unavailable", error=repr(exc))
 
     sweep_task = asyncio.create_task(_run_periodic(sweep_expired, 60))
-    admit_task = asyncio.create_task(_run_periodic(admit_next, 60))
+    admit_task = asyncio.create_task(_run_periodic(admit_next, 10))
+    market_assign_task = asyncio.create_task(
+        _run_periodic(assign_pending, settings.market_assigner_interval_seconds)
+    )
+    market_expire_task = asyncio.create_task(
+        _run_periodic(market_sweep_expired, settings.market_expirer_interval_seconds)
+    )
 
     yield
 
     sweep_task.cancel()
     admit_task.cancel()
+    market_assign_task.cancel()
+    market_expire_task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
-        await asyncio.gather(sweep_task, admit_task, return_exceptions=True)
+        await asyncio.gather(
+            sweep_task,
+            admit_task,
+            market_assign_task,
+            market_expire_task,
+            return_exceptions=True,
+        )
     await engine.dispose()
     await close_queue()
     await close_fraud()

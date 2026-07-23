@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     ticket_qr_jwt_previous_public_keys: str = ""
     scanner_jwt_private_key: str = ""
     scanner_jwt_public_key: str = ""
+    scanner_jwt_algorithm: str = "RS256"
     scanner_token_expire_hours: int = 12
 
     ticket_qr_audience: str = "qrew.scan"

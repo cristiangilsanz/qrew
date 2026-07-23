@@ -1,13 +1,16 @@
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
+
+const _wsHost =
+  (import.meta.env.VITE_GATEWAY_URL as string | undefined) ??
+  (typeof window !== 'undefined'
+    ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
+    : 'ws://localhost:5173')
+
 export const env = {
-  IDENTITY_URL: import.meta.env.VITE_IDENTITY_URL as string,
-  CATALOG_URL: import.meta.env.VITE_CATALOG_URL as string,
-  SALES_URL: (import.meta.env.VITE_SALES_URL as string | undefined) ?? 'http://localhost:8003',
-  PAYMENTS_URL:
-    (import.meta.env.VITE_PAYMENTS_URL as string | undefined) ?? 'http://localhost:8004',
+  API_URL,
   STRIPE_PUBLISHABLE_KEY: (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined) ?? '',
-  TICKETING_URL:
-    (import.meta.env.VITE_TICKETING_URL as string | undefined) ?? 'http://localhost:8005',
-  GATEWAY_URL: (import.meta.env.VITE_GATEWAY_URL as string | undefined) ?? 'ws://localhost:8008',
+  GATEWAY_URL: _wsHost,
+  GOOGLE_MAPS_API_KEY: (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) ?? '',
   DEV: import.meta.env.DEV,
   PROD: import.meta.env.PROD,
 } as const

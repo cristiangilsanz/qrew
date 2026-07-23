@@ -3,6 +3,8 @@ import { catalogClient } from '@/lib/catalogApi'
 export interface EventSummary {
   id: string
   name: string
+  description: string | null
+  image_url: string | null
   organiser_name: string | null
   venue_city: string | null
   starts_at: string | null
@@ -21,10 +23,13 @@ export interface TicketType {
   position: number
 }
 
+export type AvailabilityStatus = 'not_started' | 'open' | 'ended' | 'sold_out'
+
 export interface EventDetail {
   id: string
   name: string
   description: string | null
+  image_url: string | null
   starts_at: string
   ends_at: string
   sale_starts_at: string
@@ -32,6 +37,7 @@ export interface EventDetail {
   max_tickets_per_user: number
   queue_required: boolean
   published_at: string | null
+  availability_status: AvailabilityStatus
   organisation: {
     id: string
     slug: string
@@ -54,6 +60,7 @@ export interface EventDetail {
 export interface EventFilters {
   q?: string
   city?: string
+  cities?: string[]
   category?: string
   from?: string
   to?: string

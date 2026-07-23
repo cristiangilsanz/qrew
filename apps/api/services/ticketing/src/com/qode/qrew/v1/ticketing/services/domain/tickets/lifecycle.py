@@ -28,20 +28,27 @@ class TicketTransitionError(DomainError):
     pass
 
 
-_TERMINAL: frozenset[TicketState] = frozenset({TicketState.used, TicketState.cancelled})
+_TERMINAL: frozenset[TicketState] = frozenset(
+    {TicketState.redeemed, TicketState.cancelled, TicketState.expired}
+)
 
 _LEGAL_TRANSITIONS: dict[TicketState, frozenset[TicketState]] = {
-    TicketState.reserved: frozenset({TicketState.issued, TicketState.cancelled}),
-    TicketState.issued: frozenset(
-        {TicketState.entry_pending, TicketState.cancelled, TicketState.frozen, TicketState.flagged}
+    TicketState.reserved: frozenset(
+        {TicketState.issued, TicketState.cancelled, TicketState.expired}
     ),
-    TicketState.frozen: frozenset({TicketState.issued, TicketState.cancelled, TicketState.flagged}),
-    TicketState.entry_pending: frozenset(
-        {TicketState.used, TicketState.issued, TicketState.cancelled}
+    TicketState.issued: frozenset(
+        {TicketState.scanning, TicketState.cancelled, TicketState.on_sale, TicketState.flagged}
+    ),
+    TicketState.on_sale: frozenset(
+        {TicketState.issued, TicketState.cancelled, TicketState.flagged}
+    ),
+    TicketState.scanning: frozenset(
+        {TicketState.redeemed, TicketState.issued, TicketState.cancelled}
     ),
     TicketState.flagged: frozenset({TicketState.cancelled, TicketState.issued}),
-    TicketState.used: frozenset(),
+    TicketState.redeemed: frozenset(),
     TicketState.cancelled: frozenset(),
+    TicketState.expired: frozenset(),
 }
 
 
@@ -83,7 +90,12 @@ async def transition_ticket(
         )
     previous_state = ticket.state
     ticket.state = to_state
-    ticket.state_updated_at = datetime.now(UTC)
+    now = datetime.now(UTC)
+    ticket.state_updated_at = now
+    if to_state == TicketState.issued:
+        ticket.issued_at = now
+    elif to_state == TicketState.expired:
+        ticket.expired_at = now
     await session.flush()
     writer = audit or AuditService()
     payload: dict[str, Any] = {

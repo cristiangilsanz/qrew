@@ -56,6 +56,14 @@ up:
 shutdown:
     docker compose down --volumes --rmi local --remove-orphans
 
+# Seed database with test users, events, tickets (truncates existing data)
+db-seed:
+    cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py
+
+# Wipe all application data rows (preserves schema/migrations)
+db-truncate:
+    cd {{IDENTITY}} && uv run python ../../../../scripts/clean_db.py
+
 # Apply pending migrations for all services
 db-upgrade:
     cd {{IDENTITY}}  && uv run alembic upgrade head
@@ -323,4 +331,4 @@ gateway-type-check:
 
 # Forward Stripe webhooks to local payments service (copy the whsec_ key to payments config/local.yaml)
 stripe-dev:
-    stripe listen --forward-to localhost:8004/v1/payments/webhook
+    stripe listen --forward-to localhost:8000/api/payments/v1/payments/webhook

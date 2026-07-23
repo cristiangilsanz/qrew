@@ -1,22 +1,31 @@
 import { Monitor, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 import { useRevokeAllSessions } from '../hooks/useRevokeAllSessions'
 import { useRevokeSession } from '../hooks/useRevokeSession'
 import { useSessions } from '../hooks/useSessions'
 
 export function SessionList() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { data, isLoading } = useSessions()
   const revokeSession = useRevokeSession()
   const revokeAll = useRevokeAllSessions()
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-4">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+      <div className="space-y-1">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3">
+            <Skeleton className="h-4 w-4 rounded" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <Skeleton className="h-4 w-4 rounded" />
+          </div>
+        ))}
       </div>
     )
   }
@@ -24,50 +33,48 @@ export function SessionList() {
   const sessions = data?.items ?? []
 
   return (
-    <div className="space-y-3">
-      {sessions.length > 1 && (
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            isLoading={revokeAll.isPending}
-            onClick={() => revokeAll.mutate()}
-          >
-            {t('profile.sessions.revokeAll')}
-          </Button>
-        </div>
-      )}
+    <div className="space-y-2">
       {sessions.length === 0 && <p className="text-muted-foreground py-4 text-center text-sm">—</p>}
-      <ul className="space-y-2">
+      <ul className="space-y-1">
         {sessions.map((session) => (
           <li
             key={session.jti}
-            className="bg-muted/40 flex items-center gap-3 rounded-lg p-3 text-sm"
+            className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3 text-sm"
           >
             <Monitor className="text-muted-foreground h-4 w-4 shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">
+              <p className="truncate text-sm font-medium text-white/80">
                 {session.user_agent ?? t('profile.sessions.unknownDevice')}
               </p>
               <p className="text-muted-foreground text-xs">
                 {session.ip_address ?? t('profile.sessions.unknownIp')} ·{' '}
                 {t('profile.sessions.lastUsed', {
-                  date: new Date(session.last_used_at).toLocaleDateString(),
+                  date: new Date(session.last_used_at).toLocaleDateString(i18n.language),
                 })}
               </p>
             </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-destructive hover:text-destructive h-7 w-7 shrink-0"
-              isLoading={revokeSession.isPending}
+            <button
               onClick={() => revokeSession.mutate(session.jti)}
+              disabled={revokeSession.isPending}
+              className="text-muted-foreground hover:text-destructive shrink-0 disabled:opacity-40"
             >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+              <Trash2 className="h-4 w-4" />
+            </button>
           </li>
         ))}
       </ul>
+      {sessions.length > 1 && (
+        <div className="flex justify-end pt-1">
+          <button
+            onClick={() => revokeAll.mutate()}
+            disabled={revokeAll.isPending}
+            className="bg-destructive flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {t('profile.sessions.revokeAll')}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

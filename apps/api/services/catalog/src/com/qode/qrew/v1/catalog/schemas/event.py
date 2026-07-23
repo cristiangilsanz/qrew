@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -12,16 +13,20 @@ class EventCreateRequest(BaseModel):
     venue_id: uuid.UUID
     name: str = Field(..., min_length=1, max_length=160)
     description: str | None = Field(default=None, max_length=10000)
+    image_url: str | None = Field(default=None, max_length=500)
     starts_at: datetime
     ends_at: datetime
     sale_starts_at: datetime
     sale_ends_at: datetime
     max_tickets_per_user: int = Field(default=4, ge=1, le=20)
+    queue_required: bool = False
+    queue_admit_rate_per_minute: int = Field(default=60, ge=1, le=600)
 
 
 class EventUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=160)
     description: str | None = Field(default=None, max_length=10000)
+    image_url: str | None = Field(default=None, max_length=500)
     starts_at: datetime | None = None
     ends_at: datetime | None = None
     sale_starts_at: datetime | None = None
@@ -37,6 +42,7 @@ class EventResponse(BaseModel):
     venue_id: uuid.UUID
     name: str
     description: str | None
+    image_url: str | None
     starts_at: datetime
     ends_at: datetime
     sale_starts_at: datetime
@@ -55,6 +61,8 @@ class EventResponse(BaseModel):
 class EventSearchResult(BaseModel):
     id: uuid.UUID
     name: str
+    description: str | None = None
+    image_url: str | None = None
     organiser_name: str | None = None
     venue_city: str | None = None
     starts_at: datetime | None = None
@@ -77,6 +85,7 @@ class PublicEventDetailResponse(BaseModel):
     id: uuid.UUID
     name: str
     description: str | None
+    image_url: str | None
     starts_at: datetime
     ends_at: datetime
     sale_starts_at: datetime
@@ -84,6 +93,7 @@ class PublicEventDetailResponse(BaseModel):
     max_tickets_per_user: int
     queue_required: bool
     published_at: datetime | None
+    availability_status: Literal["not_started", "open", "ended", "sold_out"]
     organisation: OrganisationPublicResponse
     venue: VenuePublicResponse
     ticket_types: list[PublicTicketTypeItem]

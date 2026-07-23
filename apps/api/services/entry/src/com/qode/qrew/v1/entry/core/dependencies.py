@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 from db import create_redis_dependency
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
 from slowapi import Limiter
@@ -29,7 +29,7 @@ limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enable
 
 get_redis = create_redis_dependency(settings.redis_url)
 
-_bearer = HTTPBearer()
+_bearer = HTTPBearer(auto_error=False)
 
 _CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -38,13 +38,25 @@ _CREDENTIALS_EXCEPTION = HTTPException(
 
 
 async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    request: Request,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(_bearer)
+    ] = None,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    try:
-        user_id = verify_access_token(credentials.credentials)
-    except (ExpiredSignatureError, InvalidTokenError, ValueError) as exc:
-        raise _CREDENTIALS_EXCEPTION from exc
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    if user_id_str:
+        try:
+            user_id = uuid.UUID(user_id_str)
+        except ValueError as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
+    else:
+        if credentials is None:
+            raise _CREDENTIALS_EXCEPTION
+        try:
+            user_id = verify_access_token(credentials.credentials)
+        except (ExpiredSignatureError, InvalidTokenError, ValueError) as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
     user = await UserRepository(db).get_by_id(user_id)
     if user is None or not user.is_active:
         raise _CREDENTIALS_EXCEPTION
@@ -63,22 +75,34 @@ async def get_admin_user(
 
 
 async def get_scanner(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    request: Request,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(_bearer)
+    ] = None,
     db: AsyncSession = Depends(get_db),
 ) -> Scanner:
-    try:
-        payload = decode_scanner_token(credentials.credentials)
-    except (ExpiredSignatureError, InvalidTokenError) as exc:
-        raise _CREDENTIALS_EXCEPTION from exc
-    if payload.get("type") != "scanner":
-        raise _CREDENTIALS_EXCEPTION
-    scanner_id_raw = payload.get("scanner_id")
-    if not isinstance(scanner_id_raw, str):
-        raise _CREDENTIALS_EXCEPTION
-    try:
-        scanner_id = uuid.UUID(scanner_id_raw)
-    except ValueError as exc:
-        raise _CREDENTIALS_EXCEPTION from exc
+    scanner_id_str = request.headers.get("x-authenticated-scanner-id")
+    if scanner_id_str:
+        try:
+            scanner_id = uuid.UUID(scanner_id_str)
+        except ValueError as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
+    else:
+        if credentials is None:
+            raise _CREDENTIALS_EXCEPTION
+        try:
+            payload = decode_scanner_token(credentials.credentials)
+        except (ExpiredSignatureError, InvalidTokenError) as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
+        if payload.get("type") != "scanner":
+            raise _CREDENTIALS_EXCEPTION
+        scanner_id_raw = payload.get("scanner_id")
+        if not isinstance(scanner_id_raw, str):
+            raise _CREDENTIALS_EXCEPTION
+        try:
+            scanner_id = uuid.UUID(scanner_id_raw)
+        except ValueError as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
     repo = ScannerRepository(db)
     scanner = await repo.get_by_id(scanner_id)
     if scanner is None or not scanner.is_active:

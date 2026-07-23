@@ -1,4 +1,4 @@
-import { Loader2, MapPin, ShieldX } from 'lucide-react'
+import { Loader2, QrCode, ShieldX } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import QRCode from 'react-qr-code'
@@ -18,10 +18,27 @@ type QrState =
   | { status: 'denied'; reason: string }
   | { status: 'error' }
 
+function useCountdown(targetIso: string | null): number {
+  const [secondsLeft, setSecondsLeft] = useState(0)
+  useEffect(() => {
+    if (!targetIso) return
+    const update = () => {
+      const diff = Math.max(0, Math.floor((new Date(targetIso).getTime() - Date.now()) / 1000))
+      setSecondsLeft(diff)
+    }
+    update()
+    const id = setInterval(update, 1000)
+    return () => clearInterval(id)
+  }, [targetIso])
+  return secondsLeft
+}
+
 export function QrDisplay({ ticketId }: Props) {
   const { t } = useTranslation()
   const [state, setState] = useState<QrState>({ status: 'idle' })
   const abortRef = useRef<AbortController | null>(null)
+  const expiresAt = state.status === 'streaming' ? state.expiresAt : null
+  const secondsLeft = useCountdown(expiresAt)
 
   const startStream = () => {
     setState({ status: 'locating' })
@@ -43,7 +60,7 @@ export function QrDisplay({ ticketId }: Props) {
     const token = useAuthStore.getState().accessToken
     setState({ status: 'locating' })
 
-    fetch(`${env.TICKETING_URL}/v1/tickets/${ticketId}/qr/stream`, {
+    fetch(`${env.API_URL}/api/ticketing/v1/tickets/${ticketId}/qr/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -95,17 +112,27 @@ export function QrDisplay({ ticketId }: Props) {
 
   if (state.status === 'idle') {
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <MapPin className="text-muted-foreground h-10 w-10" />
-        <p className="text-muted-foreground text-sm">{t('tickets.qr.description')}</p>
-        <Button onClick={startStream}>{t('tickets.qr.showButton')}</Button>
+      <div className="flex h-[300px] flex-col items-center justify-center gap-4">
+        <div className="relative">
+          <div className="opacity-40 blur-md">
+            <QRCode value="qrew-placeholder-blurred" size={200} />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Button onClick={startStream} className="rounded-full px-6 shadow-lg">
+              <QrCode className="h-4 w-4" />
+              {t('tickets.qr.showButton')}
+            </Button>
+          </div>
+        </div>
+        {/* spacer to match countdown text height */}
+        <div className="h-10" />
       </div>
     )
   }
 
   if (state.status === 'locating') {
     return (
-      <div className="flex flex-col items-center gap-3 py-8">
+      <div className="flex h-[300px] flex-col items-center justify-center gap-3">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />
         <p className="text-muted-foreground text-sm">{t('tickets.qr.locating')}</p>
       </div>
@@ -124,7 +151,7 @@ export function QrDisplay({ ticketId }: Props) {
               ? 'tickets.qr.deniedState'
               : 'tickets.qr.denied'
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
+      <div className="flex h-[300px] flex-col items-center justify-center gap-4 text-center">
         <ShieldX className="text-destructive h-10 w-10" />
         <p className="text-destructive text-sm font-medium">{t(key)}</p>
         <Button variant="outline" onClick={startStream}>
@@ -136,7 +163,7 @@ export function QrDisplay({ ticketId }: Props) {
 
   if (state.status === 'error') {
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
+      <div className="flex h-[300px] flex-col items-center justify-center gap-4 text-center">
         <ShieldX className="text-destructive h-10 w-10" />
         <p className="text-muted-foreground text-sm">{t('tickets.qr.error')}</p>
         <Button variant="outline" onClick={startStream}>
@@ -146,16 +173,28 @@ export function QrDisplay({ ticketId }: Props) {
     )
   }
 
+  const mins = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
+  const secs = String(secondsLeft % 60).padStart(2, '0')
+
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex h-[300px] flex-col items-center justify-center gap-4">
       <div className="rounded-2xl bg-white p-4 shadow-md">
-        <QRCode value={state.jwt} size={256} />
+        <QRCode value={state.jwt} size={200} />
       </div>
-      <p className="text-muted-foreground text-xs">
-        {t('tickets.qr.expiresAt', {
-          time: new Date(state.expiresAt).toLocaleTimeString(),
-        })}
-      </p>
+      {/* Countdown to next rotation */}
+      <div className="flex flex-col items-center gap-0.5">
+        <p className="font-mono text-2xl font-bold text-gray-900 tabular-nums">
+          {mins}:{secs}
+        </p>
+        <p className="text-xs text-gray-400">
+          Rotates at{' '}
+          {new Date(state.expiresAt).toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })}
+        </p>
+      </div>
     </div>
   )
 }

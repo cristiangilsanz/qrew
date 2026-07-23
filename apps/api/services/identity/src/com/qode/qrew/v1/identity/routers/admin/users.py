@@ -10,7 +10,7 @@ from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.models.user import KycStatus, User
 from com.qode.qrew.v1.identity.repositories.user import UserRepository
-from com.qode.qrew.v1.identity.schemas.admin import UserSummaryResponse
+from com.qode.qrew.v1.identity.schemas.admin import UserSearchResult, UserSummaryResponse
 from com.qode.qrew.v1.identity.services.application.authentication.login.guards.lockout import (
     LoginLockoutService,
 )
@@ -20,6 +20,24 @@ from ._deps import get_login_lockout_service, get_user_repository
 router = APIRouter(prefix="/users")
 
 _DEFAULT_LIMIT = 20
+
+
+@router.get(
+    "/search",
+    response_model=list[UserSearchResult],
+    status_code=status.HTTP_200_OK,
+    summary="Search users by partial email (admin only)",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def search_users(
+    request: Request,
+    q: str,
+    _admin: User = Depends(get_admin_user),
+    repo: UserRepository = Depends(get_user_repository),
+) -> list[UserSearchResult]:
+    del request
+    users = await repo.search_by_email_partial(q, limit=50)
+    return [UserSearchResult(id=u.id, email=u.email, full_name=u.full_name) for u in users]
 
 
 @router.get(

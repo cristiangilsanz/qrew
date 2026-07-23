@@ -14,15 +14,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function Root() {
   return (
-    <>
-      <Outlet />
-      <Toaster richColors position="top-center" />
+    <div className="bg-background text-foreground min-h-screen">
+      <div className="relative mx-auto min-h-screen max-w-[430px]">
+        <Outlet />
+      </div>
+      <Toaster
+        richColors
+        theme="dark"
+        position="top-center"
+        toastOptions={{ classNames: { title: 'text-center w-full' } }}
+      />
       {import.meta.env.DEV && (
         <>
           <TanStackRouterDevtools />
           <ReactQueryDevtools />
         </>
       )}
-    </>
+    </div>
   )
 }

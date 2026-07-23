@@ -66,7 +66,7 @@ def evaluate_gate(
     longitude: float,
     now: datetime,
 ) -> DenialReason | None:
-    if inputs.ticket.state not in {TicketState.issued, TicketState.entry_pending}:
+    if inputs.ticket.state not in {TicketState.issued, TicketState.scanning}:
         return DenialReason.state
     if last_asserted_at is None:
         return DenialReason.reassertion

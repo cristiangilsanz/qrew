@@ -54,7 +54,7 @@ async def _resolve_or_deny_bypass(
     ticket = await db.get(Ticket, ticket_id)
     if ticket is None or ticket.owner_user_id != current_user.id:
         raise _denied_exception(DenialReason.not_found)
-    if ticket.state not in {TicketState.issued, TicketState.entry_pending}:
+    if ticket.state not in {TicketState.issued, TicketState.scanning}:
         raise _denied_exception(DenialReason.state)
     event_ctx = await db.get(EventVenueContext, ticket.event_id)
     if event_ctx is None:

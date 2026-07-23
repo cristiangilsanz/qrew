@@ -19,7 +19,7 @@ vi.mock('@/store/auth', () => ({
 }))
 
 vi.mock('@/config/env', () => ({
-  env: { TICKETING_URL: 'http://localhost:8005' },
+  env: { API_URL: 'http://localhost:8000' },
 }))
 
 const makeClient = () => new QueryClient({ defaultOptions: { queries: { retry: false } } })

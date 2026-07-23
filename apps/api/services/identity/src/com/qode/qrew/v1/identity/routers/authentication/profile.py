@@ -12,10 +12,13 @@ from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.core.dependencies import get_profile_service
+from com.qode.qrew.v1.identity.repositories.user import UserRepository
 from com.qode.qrew.v1.identity.schemas.audit import UserAuditEventResponse
 from com.qode.qrew.v1.identity.schemas.authentication.auth import (
     OnboardingStatusResponse,
     UserProfileResponse,
+    UserPublicProfile,
+    UserPublicProfilesRequest,
 )
 from com.qode.qrew.v1.identity.services.application.authentication.profile import ProfileService
 
@@ -44,6 +47,7 @@ async def get_me(
         kyc_status=current_user.kyc_status,
         email_verified=current_user.email_verified,
         phone_verified=current_user.phone_number_verified,
+        is_admin=current_user.is_admin,
         created_at=current_user.created_at,
     )
 
@@ -95,3 +99,22 @@ async def list_user_audit(
         items=[UserAuditEventResponse.from_event(e) for e in events],
         next_cursor=next_cursor,
     )
+
+
+@router.post(
+    "/users/public",
+    response_model=list[UserPublicProfile],
+    status_code=status.HTTP_200_OK,
+    summary="Return public profiles (name only) for a list of user IDs",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def get_public_profiles(
+    request: Request,
+    body: UserPublicProfilesRequest,
+    _current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[UserPublicProfile]:
+    del request
+    repo = UserRepository(db)
+    users = await repo.get_by_ids(body.user_ids)
+    return [UserPublicProfile(id=u.id, full_name=u.full_name, email=u.email) for u in users]

@@ -7,6 +7,6 @@ export function useQueuePosition(eventId: string, enabled = true) {
     queryKey: ['queue-position', eventId],
     queryFn: () => ticketsApi.getQueuePosition(eventId),
     enabled: !!eventId && enabled,
-    refetchInterval: 3_000,
+    refetchInterval: 2_000,
   })
 }

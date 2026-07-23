@@ -20,6 +20,12 @@ class PaymentRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_assignment_id(self, assignment_id: uuid.UUID) -> Payment | None:
+        result = await self._session.execute(
+            select(Payment).where(Payment.market_assignment_id == assignment_id)
+        )
+        return result.scalar_one_or_none()
+
     async def get_by_intent_id(self, intent_id: str) -> Payment | None:
         result = await self._session.execute(
             select(Payment).where(Payment.provider_payment_intent_id == intent_id)

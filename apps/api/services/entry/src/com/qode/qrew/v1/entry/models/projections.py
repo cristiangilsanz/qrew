@@ -19,6 +19,7 @@ class Event(Base):
     organisation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False
     )
+    venue_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
 
 
 class OrganisationMember(Base):
@@ -48,8 +49,8 @@ class User(Base):
 class TicketState(enum.StrEnum):
     reserved = "reserved"
     issued = "issued"
-    entry_pending = "entry_pending"
-    used = "used"
+    scanning = "scanning"
+    redeemed = "redeemed"
     cancelled = "cancelled"
     frozen = "frozen"
     flagged = "flagged"

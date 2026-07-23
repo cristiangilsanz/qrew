@@ -1,12 +1,12 @@
 import hashlib
 import uuid
 from dataclasses import dataclass, field
-from typing import Annotated, Final
+from typing import Annotated, Final, Optional
 
 import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
 
@@ -16,7 +16,7 @@ ALGORITHM: Final = "ES256"
 ACCESS: Final = "access"
 _PURPOSES: Final = (ACCESS,)
 
-_bearer = HTTPBearer()
+_bearer = HTTPBearer(auto_error=False)
 
 _CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -109,8 +109,17 @@ def verify(purpose: str, token: str) -> dict[str, object]:
 
 
 async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    request: Request,
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
 ) -> AuthenticatedUser:
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    if user_id_str:
+        try:
+            return AuthenticatedUser(uuid.UUID(user_id_str))
+        except ValueError as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
+    if credentials is None:
+        raise _CREDENTIALS_EXCEPTION
     try:
         payload = verify(ACCESS, credentials.credentials)
     except (ExpiredSignatureError, InvalidTokenError) as exc:

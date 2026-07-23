@@ -1,11 +1,34 @@
 {
+  "nav": {
+    "home": "Home",
+    "discover": "Events",
+    "tickets": "Tickets",
+    "profile": "Profile",
+    "organiser": "Management",
+    "market": "Market"
+  },
+  "home": {
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "subtitle": "What's happening today?",
+    "slogan": "Your next\nexperience\nis waiting\nfor you.",
+    "upcomingEvents": "Upcoming Events",
+    "activeTickets": "Your Tickets",
+    "seeAll": "See all",
+    "noEvents": "No upcoming events."
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",
     "retry": "Try again",
     "save": "Save",
     "cancel": "Cancel",
-    "back": "Back"
+    "back": "Back",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "goBack": "Go back",
+    "waitSeconds": "Wait {{seconds}}s"
   },
   "auth": {
     "login": "Sign in",
@@ -64,6 +87,11 @@
       "title": "Ticket",
       "id": "Ticket #{{id}}",
       "idLabel": "Ticket ID",
+      "idShortLabel": "Ticket ID",
+      "typeLabel": "Ticket type",
+      "dateLabel": "Date",
+      "timeLabel": "Time",
+      "historyLabel": "History",
       "issuedLabel": "Issued",
       "notFound": "Ticket not found.",
       "frozenHint": "This ticket has been frozen. Contact support if you believe this is an error.",
@@ -71,11 +99,39 @@
       "states": {
         "reserved": "Reserved",
         "issued": "Issued",
-        "entry_pending": "Entry pending",
-        "used": "Used",
+        "scanning": "Scanning",
+        "redeemed": "Redeemed",
         "cancelled": "Cancelled",
-        "frozen": "Frozen",
+        "expired": "Expired",
+        "on_sale": "On sale",
         "flagged": "Flagged"
+      },
+      "timeline": {
+        "reserved": "Reserved",
+        "issued": "Issued",
+        "expired": "Expired",
+        "cancelled": "Cancelled",
+        "scanned": "Scanned",
+        "redeemed": "Redeemed",
+        "onSale": "On sale",
+        "flagged": "Flagged"
+      },
+      "status": {
+        "paymentPending": "Your ticket is waiting for payment.",
+        "paymentExpired": "Your ticket's payment window was closed.",
+        "redeemed": "Your ticket was used for entry.",
+        "scanning": "Your ticket is being processed.",
+        "cancelled": "Your ticket is no longer valid.",
+        "onSale": "Your ticket is on the market.",
+        "flagged": "Your ticket was quarantined for security reasons."
+      },
+      "sale": {
+        "button": "List for resale",
+        "closes": "Sale closes 24h before the event",
+        "title": "List for resale",
+        "description": "Your ticket will be frozen and listed at the original price.",
+        "note": "If unsold, returned automatically in 7 days.",
+        "confirm": "List ticket"
       }
     },
     "qr": {
@@ -94,11 +150,13 @@
     },
     "queue": {
       "title": "Waiting Room",
-      "description": "This is a high-demand event. Join the queue to get your tickets.",
+      "descriptionTitle": "This is a high-demand event",
+      "descriptionSub": "Join the queue to get your tickets",
       "joinButton": "Join Queue",
       "joinFailed": "Failed to join queue. Please try again.",
       "waiting": "Your position in the queue",
-      "positionHint": "Position updates every few seconds",
+      "updatingIn": "Updating in {{seconds}}s",
+      "doNotClose": "Do not close this page",
       "ready": "You're next!",
       "readyDescription": "Your slot is ready. Check back shortly for your redemption link.",
       "notInQueue": "You are not in the queue.",
@@ -110,7 +168,10 @@
       "ticketTypeLabel": "Ticket type",
       "quantityLabel": "Quantity",
       "total": "Total",
-      "reserveButton": "Reserve Tickets"
+      "reserveButton": "Reserve Tickets",
+      "selected": "selected",
+      "alreadyHeld": "already held",
+      "limitReached": "You already hold the maximum number of tickets for this event."
     },
     "reservation": {
       "title": "Your Reservation",
@@ -133,6 +194,53 @@
       "initFailed": "Could not start payment. Please try again.",
       "failed": "Payment failed. Please try again.",
       "success": "Payment successful! Your ticket is on its way."
+    },
+    "toast": {
+      "listSuccess": "Ticket is now on sale",
+      "listFailed": "Could not list ticket for resale"
+    }
+  },
+  "market": {
+    "title": "Market",
+    "myTicketsOnSale": "My tickets on sale",
+    "myTicketsToClaim": "My tickets to claim",
+    "myWaitlists": "My waitlists",
+    "searchByEvent": "Search by event…",
+    "noResults": "No results.",
+    "noTicketsOnSale": "No tickets on sale.",
+    "noPendingClaims": "No pending claims.",
+    "noWaitlists": "You're not on any waitlists.",
+    "resaleMarket": "Resale market",
+    "joinQueueButton": "Join resale queue",
+    "leaveQueueButton": "Leave resale queue",
+    "leaveQueue": {
+      "title": "Leave resale queue",
+      "description": "If someone lists a ticket, you won't be considered for it.",
+      "confirm": "Leave queue"
+    },
+    "assignment": {
+      "viewEventDetails": "View event details",
+      "total": "Total",
+      "decline": "Decline",
+      "acceptAndPay": "Accept & pay",
+      "declineTitle": "Decline",
+      "declineDesc": "You will lose this ticket offer and it may be reassigned to someone else.",
+      "generalAdmission": "General admission",
+      "notFound": "Assignment not found or already handled.",
+      "paymentConfirmed": "Payment confirmed",
+      "ticketTransferring": "Your ticket is being transferred.",
+      "expired": "This assignment has expired.",
+      "expiredDesc": "You've been removed from the queue. Rejoin if you want another chance.",
+      "declined": "Assignment declined."
+    },
+    "toast": {
+      "declined": "Assignment declined",
+      "declineFailed": "Failed to decline assignment",
+      "paymentSuccess": "Payment successful — ticket is being transferred!",
+      "leftWaitlist": "Left the waitlist",
+      "leaveFailed": "Failed to leave the resale queue",
+      "joinSuccess": "You're in the resale queue!",
+      "joinFailed": "Failed to join the resale queue"
     }
   },
   "profile": {
@@ -141,12 +249,74 @@
     "memberSince": "Member since",
     "backToProfile": "Back to profile",
     "managePasskeys": "Manage",
+    "myProfile": "My Profile",
+    "myAccount": "My Account",
+    "privacySecurity": "Privacy & Security",
+    "helpSupport": "Help & Support",
+    "logout": "Log Out",
+    "language": "Language",
+    "verified": "Verified",
+    "unverified": "Unverified",
     "kycStatus": {
       "label": "Identity",
+      "rowLabel": "KYC",
+      "subtitle": "Government-issued ID required",
+      "description": "Upload a clear photo of your national ID or passport.",
       "approved": "Verified",
-      "pending": "Under review",
+      "pending": "In Review",
       "rejected": "Rejected",
       "not_submitted": "Not submitted"
+    },
+    "account": {
+      "title": "My Account",
+      "fullName": "Full name",
+      "createdAt": "Created at",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone",
+      "stepper": {
+        "email": "Email",
+        "phone": "Phone",
+        "identity": "Identity",
+        "passkey": "Passkey"
+      }
+    },
+    "security": {
+      "title": "Privacy & Security",
+      "authSection": "Authentication",
+      "passwordLabel": "Password",
+      "passkeysLabel": "Passkeys",
+      "sessionsSection": "Sessions & Devices",
+      "activeSessionsLabel": "Active Sessions",
+      "trustedDevicesLabel": "Trusted Devices",
+      "activitySection": "Activity",
+      "recentActivityLabel": "Recent Activity",
+      "noDevices": "No trusted devices",
+      "noActivity": "No activity yet",
+      "showMore": "Show more",
+      "revokeAll": "Revoke all"
+    },
+    "help": {
+      "title": "Help & Support",
+      "faqSection": "FAQ",
+      "contactSection": "Contact",
+      "contactSupport": "Contact support",
+      "contactSupportDesc": "We'll get back to you shortly",
+      "reportBug": "Report a bug",
+      "reportBugDesc": "Open an issue on GitHub",
+      "faq": {
+        "q1": "How do I buy a ticket?",
+        "a1": "Head to the home screen, find an event you like, and tap on it. From there you can select your tickets and go through checkout.",
+        "q2": "What is a passkey?",
+        "a2": "A passkey lets you sign in using your face, fingerprint, or device PIN instead of a password. It is faster and much more secure.",
+        "q3": "How do I get a refund?",
+        "a3": "Refund policies are decided by the event organiser. You can contact them directly through the event page or get in touch with our support team."
+      }
+    },
+    "about": {
+      "title": "About",
+      "version": "Version",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
     },
     "sections": {
       "personal": "Personal info",
@@ -194,9 +364,10 @@
     "deleteAccount": {
       "title": "Delete account",
       "description": "This is permanent and cannot be undone.",
+      "irreversible": "This action is irreversible",
       "button": "Delete my account",
       "currentPassword": "Current password",
-      "confirm": "Permanently delete account",
+      "confirm": "Delete account",
       "cancel": "Cancel",
       "success": "Account deleted."
     },
@@ -231,11 +402,11 @@
     }
   },
   "organiser": {
-    "title": "My Organisations",
+    "title": "Organisations",
     "backToOrgs": "Back to organisations",
     "backToOrg": "Back to organisation",
     "org": {
-      "create": "New organisation",
+      "create": "Create organisation",
       "createTitle": "Create organisation",
       "createSuccess": "Organisation created.",
       "empty": "You have no organisations yet.",
@@ -243,7 +414,11 @@
       "slugLabel": "Slug",
       "slugPlaceholder": "my-org",
       "nameLabel": "Name",
-      "descriptionLabel": "Description (optional)"
+      "descriptionLabel": "Description (optional)",
+      "deleteButton": "Delete organisation",
+      "deleteTitle": "Delete organisation",
+      "deleteDesc": "This will permanently delete the organisation and all its events, ticket types and members.\n\nThis action cannot be undone.",
+      "deleteSuccess": "Organisation deleted."
     },
     "events": {
       "title": "Events",
@@ -253,11 +428,12 @@
       "publishSuccess": "Event published.",
       "cancelSuccess": "Event cancelled.",
       "empty": "No events yet.",
-      "edit": "Edit event",
+      "edit": "Edit event information",
+      "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
       "cancel": "Cancel event",
       "confirmPublish": "Confirm publish",
-      "confirmCancel": "Confirm cancellation",
+      "confirmCancel": "Cancel event",
       "nameLabel": "Name",
       "descriptionLabel": "Description",
       "venueLabel": "Venue",
@@ -266,33 +442,77 @@
       "endsAtLabel": "Ends at",
       "saleStartsAtLabel": "Sale starts at",
       "saleEndsAtLabel": "Sale ends at",
-      "maxTicketsLabel": "Max tickets per person",
-      "saleEndBeforeStart": "Sale must end before event starts"
+      "maxTicketsLabel": "Max tickets per user",
+      "saleEndBeforeStart": "Sale must end before event starts",
+      "searchPlaceholder": "Search events…",
+      "cancelDesc": "Issued tickets will be cancelled and reimbursed in the next 30 days.",
+      "updateEvent": "Update"
     },
     "ticketTypes": {
-      "title": "Ticket types",
+      "title": "Edit ticket type details",
+      "managePricing": "Manage pricing and capacity",
       "createSuccess": "Ticket type created.",
       "updateSuccess": "Ticket type updated.",
       "deleteSuccess": "Ticket type deleted.",
       "addButton": "Add ticket type",
+      "deleteTitle": "Delete ticket type",
+      "deleteDesc": "This ticket type will be permanently removed. Tickets already issued will not be affected.",
+      "deleteConfirm": "Delete",
       "nameLabel": "Name",
       "capacityLabel": "Capacity",
-      "priceLabel": "Price (cents)",
+      "priceLabel": "Price",
       "currencyLabel": "Currency (3-char ISO)",
-      "positionLabel": "Position"
+      "positionLabel": "Position",
+      "available": "{{available}}/{{capacity}} available",
+      "free": "Free"
     },
     "members": {
       "title": "Members",
-      "inviteSuccess": "Invitation sent.",
+      "inviteSuccess": "Member added.",
       "removeSuccess": "Member removed.",
-      "emailLabel": "Email",
+      "emailLabel": "User",
       "roleLabel": "Role",
-      "inviteButton": "Invite"
+      "inviteButton": "Add",
+      "joined": "Joined",
+      "invite": "Add member",
+      "addMember": "Add member",
+      "empty": "No members yet.",
+      "emailPlaceholder": "Search by name or email…",
+      "roleMemberDesc": "Can view events and members",
+      "roleManagerDesc": "Can manage events and add or remove members",
+      "selectUser": "Please select a user from the list",
+      "searchPlaceholder": "Search members…",
+      "removeTitle": "Remove member",
+      "removeConfirmDesc": "This person will lose access to the organisation and its events.",
+      "removeConfirm": "Remove",
+      "roleValidationNote": "Both managers and members can validate tickets at entry"
     },
     "venues": {
       "createSuccess": "Venue created.",
       "createTitle": "Create venue",
-      "newVenue": "New venue"
+      "newVenue": "Create venue",
+      "searchLabel": "Search on Google Maps",
+      "searchPlaceholder": "Search for a venue, address…",
+      "searchUnavailable": "Maps search unavailable",
+      "manualHint": "Pre-filled from the map. Edit below if needed.",
+      "nameLabel": "Venue name",
+      "addressLabel": "Street address",
+      "cityLabel": "City",
+      "countryLabel": "Country (2-char)",
+      "latLabel": "Latitude",
+      "lngLabel": "Longitude",
+      "timezoneLabel": "Timezone",
+      "geofenceLabel": "Geofence radius (m)"
+    },
+    "scanner": {
+      "title": "Ticket Scanner",
+      "scanTickets": "Scan tickets",
+      "prompt": "Point the camera at a ticket QR code.",
+      "start": "Start",
+      "notSupported": "QR scanning is not supported on this browser.\nPlease use Chrome or the Qrew app.",
+      "scanned": "scanned",
+      "admitted": "Admitted",
+      "rejected": "Rejected"
     },
     "errors": {
       "createOrgFailed": "Failed to create organisation.",
@@ -305,7 +525,13 @@
       "deleteTicketTypeFailed": "Failed to delete ticket type.",
       "inviteFailed": "Failed to invite member.",
       "removeFailed": "Failed to remove member.",
-      "createVenueFailed": "Failed to create venue."
+      "createVenueFailed": "Failed to create venue.",
+      "addMemberFailed": "Failed to add member.",
+      "deleteFailed": "Failed to delete organisation."
+    },
+    "search": {
+      "placeholder": "Search organisations…",
+      "empty": "No organisations found."
     }
   },
   "realtime": {
@@ -351,7 +577,7 @@
       "successToast": "Document uploaded successfully."
     },
     "pending": {
-      "title": "Under review",
+      "title": "In Review",
       "description": "Your identity documents have been submitted. We'll verify them within 24 hours.",
       "approved": "Identity verified!",
       "approvedDescription": "Your identity has been verified. You're ready to go.",

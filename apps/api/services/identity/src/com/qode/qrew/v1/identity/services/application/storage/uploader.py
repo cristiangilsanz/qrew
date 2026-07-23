@@ -70,6 +70,12 @@ class StorageService:
         await self._backend.put(key, body, content_type)
         return key
 
+    async def store_at(self, key: ObjectKey, content: bytes, content_type: str) -> None:
+        """Persist content at an existing signed key (used by the local PUT handler)."""
+        kind = kind_for(key)
+        body = _encrypt(content) if should_encrypt(kind) else content
+        await self._backend.put(key, body, content_type)
+
     async def get(self, key: ObjectKey) -> bytes:
         """Read and decrypt an object, transparent to the caller."""
         raw = await self._backend.get(key)

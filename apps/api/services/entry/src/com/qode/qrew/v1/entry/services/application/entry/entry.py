@@ -175,7 +175,7 @@ async def _evaluate(
         )
         return _denied(EntryReason.wrong_owner, ticket_id=ticket_id)
 
-    valid_states = {TicketState.issued.value, TicketState.entry_pending.value}
+    valid_states = {TicketState.issued.value, TicketState.scanning.value}
     if ticket_ctx.state not in valid_states:
         await _audit_reject(
             audit,

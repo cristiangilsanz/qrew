@@ -2,20 +2,20 @@ import hashlib
 import uuid
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, Optional
 
 import jwt
 import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, generate_private_key
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from com.qode.qrew.v1.sales.core.config import settings
 
 ALGORITHM = "ES256"
 
-_bearer = HTTPBearer()
+_bearer = HTTPBearer(auto_error=False)
 
 
 class Purpose(StrEnum):
@@ -90,8 +90,23 @@ def verify_any(purposes: tuple[Purpose, ...], token: str) -> tuple[Purpose, dict
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(_bearer),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
 ) -> AuthenticatedUser:
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    if user_id_str:
+        try:
+            return AuthenticatedUser(id=uuid.UUID(user_id_str))
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"message": "Invalid or expired token"},
+            ) from exc
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"message": "Invalid or expired token"},
+        )
     token = credentials.credentials
     try:
         payload = verify(ACCESS, token)

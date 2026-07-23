@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pagination import Page, clamp_limit
@@ -21,11 +21,14 @@ from com.qode.qrew.v1.catalog.models.organisation import (
 )
 from com.qode.qrew.v1.catalog.schemas.event import EventCreateRequest, EventResponse
 from com.qode.qrew.v1.catalog.schemas.organisation import (
+    OrgMemberListItem,
     OrganisationCreateRequest,
+    OrganisationMemberAddRequest,
     OrganisationMemberInviteRequest,
     OrganisationMemberResponse,
     OrganisationPublicResponse,
     OrganisationResponse,
+    OrganisationSearchResult,
 )
 from com.qode.qrew.v1.catalog.services.application.events.event import EventError, EventService
 from com.qode.qrew.v1.catalog.services.application.organisation import (
@@ -59,6 +62,7 @@ def _event_response(event: Event) -> EventResponse:
         venue_id=event.venue_id,
         name=event.name,
         description=event.description,
+        image_url=event.image_url,
         starts_at=event.starts_at,
         ends_at=event.ends_at,
         sale_starts_at=event.sale_starts_at,
@@ -144,6 +148,29 @@ async def list_my_organisations(
 
 
 @router.get(
+    "/search",
+    response_model=list[OrganisationSearchResult],
+    status_code=status.HTTP_200_OK,
+    summary="Search organisations by name or slug",
+)
+@limiter.limit("120/minute")  # type: ignore[misc]
+async def search_organisations(
+    request: Request,
+    q: str = Query(..., min_length=1, max_length=128),
+    limit: int = Query(default=20, ge=1, le=50),
+    svc: OrganisationService = Depends(get_organisation_service),
+) -> list[OrganisationSearchResult]:
+    del request
+    results = await svc.search(q, limit=limit)
+    return [
+        OrganisationSearchResult(
+            id=org.id, slug=org.slug, name=org.name, description=org.description
+        )
+        for org in results
+    ]
+
+
+@router.get(
     "/{organisation_id}",
     response_model=OrganisationPublicResponse,
     status_code=status.HTTP_200_OK,
@@ -167,6 +194,24 @@ async def get_public_organisation(
     )
 
 
+@router.get(
+    "/{organisation_id}/members",
+    response_model=list[OrgMemberListItem],
+    status_code=status.HTTP_200_OK,
+    summary="List members of an organisation",
+)
+@limiter.limit("120/minute")  # type: ignore[misc]
+async def list_members(
+    request: Request,
+    organisation_id: uuid.UUID,
+    _actor: OrganisationMember = Depends(get_org_member(OrganisationRole.member)),
+    svc: OrganisationService = Depends(get_organisation_service),
+) -> list[OrgMemberListItem]:
+    del request
+    rows = await svc.list_members(organisation_id)
+    return [OrgMemberListItem(user_id=r.user_id, role=r.role, joined_at=r.joined_at) for r in rows]
+
+
 @router.post(
     "/{organisation_id}/members",
     response_model=OrganisationMemberResponse,
@@ -188,6 +233,39 @@ async def invite_member(
             actor_id=actor.user_id,
             organisation_id=organisation_id,
             invitee_email=str(body.email),
+            role=body.role,
+        )
+    except OrganisationError as exc:
+        raise _bad_request(exc) from exc
+    return OrganisationMemberResponse(
+        organisation_id=member.organisation_id,
+        user_id=member.user_id,
+        role=member.role,
+        joined_at=member.joined_at,
+    )
+
+
+@router.post(
+    "/{organisation_id}/members/add",
+    response_model=OrganisationMemberResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add an existing user to an organisation by user ID",
+)
+@limiter.limit("30/hour")  # type: ignore[misc]
+@idempotent(scope="user", ttl_seconds=300)
+async def add_member(
+    request: Request,
+    organisation_id: uuid.UUID,
+    body: OrganisationMemberAddRequest,
+    actor: OrganisationMember = Depends(get_org_member(OrganisationRole.manager)),
+    svc: OrganisationService = Depends(get_organisation_service),
+) -> OrganisationMemberResponse:
+    del request
+    try:
+        member = await svc.add_member(
+            actor_id=actor.user_id,
+            organisation_id=organisation_id,
+            user_id=body.user_id,
             role=body.role,
         )
     except OrganisationError as exc:
@@ -225,6 +303,33 @@ async def remove_member(
 
 
 # ---------------------------------------------------------------------------
+# Delete organisation
+# ---------------------------------------------------------------------------
+
+
+@router.delete(
+    "/{organisation_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Soft-delete an organisation (owner only)",
+)
+@limiter.limit("10/hour")  # type: ignore[misc]
+async def delete_organisation(
+    request: Request,
+    organisation_id: uuid.UUID,
+    actor: OrganisationMember = Depends(get_org_member(OrganisationRole.owner)),
+    svc: OrganisationService = Depends(get_organisation_service),
+) -> None:
+    del request
+    try:
+        await svc.delete_organisation(
+            actor_id=actor.user_id,
+            organisation_id=organisation_id,
+        )
+    except OrganisationError as exc:
+        raise _bad_request(exc) from exc
+
+
+# ---------------------------------------------------------------------------
 # Events nested under organisations
 # ---------------------------------------------------------------------------
 
@@ -252,11 +357,14 @@ async def create_event(
             venue_id=body.venue_id,
             name=body.name,
             description=body.description,
+            image_url=body.image_url,
             starts_at=body.starts_at,
             ends_at=body.ends_at,
             sale_starts_at=body.sale_starts_at,
             sale_ends_at=body.sale_ends_at,
             max_tickets_per_user=body.max_tickets_per_user,
+            queue_required=body.queue_required,
+            queue_admit_rate_per_minute=body.queue_admit_rate_per_minute,
         )
     except EventError as exc:
         raise _event_error(exc) from exc

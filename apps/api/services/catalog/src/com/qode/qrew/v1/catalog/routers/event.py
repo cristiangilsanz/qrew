@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,6 +60,7 @@ def _event_response(event: Event) -> EventResponse:
         venue_id=event.venue_id,
         name=event.name,
         description=event.description,
+        image_url=event.image_url,
         starts_at=event.starts_at,
         ends_at=event.ends_at,
         sale_starts_at=event.sale_starts_at,
@@ -354,6 +355,7 @@ async def search_events(
     request: Request,
     q: str | None = Query(default=None, max_length=256),
     city: str | None = Query(default=None, max_length=128),
+    cities: list[str] = Query(default=[]),
     category: str | None = Query(default=None, max_length=64),
     from_: datetime | None = Query(default=None, alias="from"),
     to: datetime | None = Query(default=None, alias="to"),
@@ -368,6 +370,7 @@ async def search_events(
         db,
         q=q,
         city=city,
+        cities=cities or None,
         category=category,
         from_=from_,
         to=to,
@@ -398,10 +401,21 @@ async def get_public_event(
         )
     event, org, venue = result
     tiers = await svc.get_ticket_types(event_id)
+    now = datetime.now(UTC)
+    all_sold_out = all(tier.capacity - tier.reserved_count <= 0 for tier in tiers)
+    if now < event.sale_starts_at:
+        availability_status = "not_started"
+    elif now > event.sale_ends_at:
+        availability_status = "ended"
+    elif all_sold_out:
+        availability_status = "sold_out"
+    else:
+        availability_status = "open"
     return PublicEventDetailResponse(
         id=event.id,
         name=event.name,
         description=event.description,
+        image_url=event.image_url,
         starts_at=event.starts_at,
         ends_at=event.ends_at,
         sale_starts_at=event.sale_starts_at,
@@ -409,6 +423,7 @@ async def get_public_event(
         max_tickets_per_user=event.max_tickets_per_user,
         queue_required=event.queue_required,
         published_at=event.published_at,
+        availability_status=availability_status,
         organisation=OrganisationPublicResponse(
             id=org.id, slug=org.slug, name=org.name, description=org.description
         ),

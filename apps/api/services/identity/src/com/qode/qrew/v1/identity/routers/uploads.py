@@ -99,12 +99,7 @@ async def local_upload(
             detail={"message": str(exc), "field": "sig"},
         ) from exc
     body = await request.body()
-    await storage.put(
-        kind=storage_kind_for_key(key),
-        tenant=storage_tenant_for_key(key),
-        content=body,
-        content_type=content_type,
-    )
+    await storage.store_at(key, body, content_type)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -136,6 +131,41 @@ async def local_download(
             detail={"message": "not found", "field": "key"},
         ) from exc
     return Response(content=body, media_type="application/octet-stream")
+
+
+@router.get(
+    "/public/{key:path}",
+    summary="Serve a public event image (no auth required)",
+    include_in_schema=False,
+)
+async def public_image(key: str) -> Response:
+    """Serve event images without authentication — they are public content."""
+    if not is_valid_key(key):
+        raise _bad_request("invalid key", field="key")
+    if storage_kind_for_key(key) != "event_image":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not public")
+    try:
+        body = await storage.get(key)
+    except ObjectNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "not found", "field": "key"},
+        ) from exc
+    return Response(
+        content=body,
+        media_type=_detect_image_type(body),
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
+
+
+def _detect_image_type(data: bytes) -> str:
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return "application/octet-stream"
 
 
 def storage_kind_for_key(key: str) -> str:

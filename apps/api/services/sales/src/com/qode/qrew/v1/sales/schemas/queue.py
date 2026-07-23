@@ -7,6 +7,7 @@ class QueueJoinResponse(BaseModel):
 
 class QueuePositionResponse(BaseModel):
     position: int | None
+    redeem_token: str | None = None
 
 
 class QueueRedeemRequest(BaseModel):

@@ -66,7 +66,7 @@ describe('LoginForm', () => {
     })
   })
 
-  it('navigates to /events on successful login', async () => {
+  it('navigates to /home on successful login', async () => {
     renderLoginForm()
 
     await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com')
@@ -74,7 +74,7 @@ describe('LoginForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/events' })
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/home' })
     })
   })
 
@@ -121,14 +121,14 @@ describe('LoginForm', () => {
     })
   })
 
-  it('navigates to /events after passkey sign-in', async () => {
+  it('navigates to /home after passkey sign-in', async () => {
     renderLoginForm()
 
     await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com')
     await userEvent.click(screen.getByRole('button', { name: /sign in with passkey/i }))
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/events' })
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/home' })
     })
   })
 

@@ -9,6 +9,7 @@ from idempotency.middleware import IdempotencyMiddleware
 from middleware import RequestIDMiddleware, SecurityHeadersMiddleware
 
 from com.qode.qrew.v1.gateway.core.config import settings
+from com.qode.qrew.v1.gateway.middleware.auth import AuthMiddleware
 
 # Starlette wraps middleware in LIFO order
 
@@ -34,3 +35,6 @@ def register_middleware(app: FastAPI) -> None:
         allow_methods=["*"],
         allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-ID"],
     )
+    # AuthMiddleware runs after CORS (LIFO: added last → executes first)
+    # so OPTIONS preflights are already handled by CORSMiddleware before auth checks.
+    app.add_middleware(AuthMiddleware)

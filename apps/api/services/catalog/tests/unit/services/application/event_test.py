@@ -134,6 +134,7 @@ class TestEventServiceCreate:
                 sale_starts_at=now,
                 sale_ends_at=now + timedelta(minutes=30),
                 max_tickets_per_user=4,
+                image_url=None,
             )
 
     async def test_raises_when_max_tickets_out_of_range(
@@ -153,6 +154,7 @@ class TestEventServiceCreate:
                 sale_starts_at=now + timedelta(days=1),
                 sale_ends_at=now + timedelta(days=29),
                 max_tickets_per_user=25,
+                image_url=None,
             )
 
     async def test_raises_when_org_not_found(
@@ -172,6 +174,7 @@ class TestEventServiceCreate:
                 sale_starts_at=now + timedelta(days=1),
                 sale_ends_at=now + timedelta(days=29),
                 max_tickets_per_user=4,
+                image_url=None,
             )
 
     async def test_raises_when_venue_not_found(
@@ -191,6 +194,7 @@ class TestEventServiceCreate:
                 sale_starts_at=now + timedelta(days=1),
                 sale_ends_at=now + timedelta(days=29),
                 max_tickets_per_user=4,
+                image_url=None,
             )
 
     async def test_creates_event_with_draft_status(
@@ -211,6 +215,7 @@ class TestEventServiceCreate:
             sale_starts_at=now + timedelta(days=1),
             sale_ends_at=now + timedelta(days=29),
             max_tickets_per_user=4,
+            image_url=None,
         )
         assert result.status == EventStatus.draft
         assert result.name == "Concert"
@@ -223,10 +228,10 @@ class TestEventServiceUpdate:
         with pytest.raises(EventError, match="not found"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
-    async def test_raises_when_not_draft(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
-        event = make_event(event_id=event_id, status=EventStatus.published)
+    async def test_raises_when_cancelled(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
+        event = make_event(event_id=event_id, status=EventStatus.cancelled)
         svc, _ = _make_svc(event=event)
-        with pytest.raises(EventError, match="draft"):
+        with pytest.raises(EventError, match="Cancelled"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
     async def test_raises_when_unknown_fields(

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     debug: bool = False
     host: str = "0.0.0.0"  # noqa: S104
-    port: int = 8008
+    port: int = 8000
 
     nats_url: str = ""
 
@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     scanner_jwt_private_key: str = ""
     jwt_audience: str = ""
     jwt_issuer: str = ""
+
+    # Upstream service URLs (used by HTTP proxy)
+    identity_url: str = "http://identity:8001"
+    catalog_url: str = "http://catalog:8002"
+    sales_url: str = "http://sales:8003"
+    payments_url: str = "http://payments:8004"
+    ticketing_url: str = "http://ticketing:8005"
+    entry_url: str = "http://entry:8006"
 
     ws_heartbeat_seconds: int = 30
     ws_pong_timeout_seconds: int = 10
