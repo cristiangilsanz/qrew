@@ -1,21 +1,27 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import {
   Calendar,
   ChevronDown,
   Clock,
   CreditCard,
+  Info,
   MapPin,
   ShieldCheck,
   ShieldX,
+  ShoppingBag,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
+import { Dialog } from '@/components/ui/dialog'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { TicketDetailSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
-import type { TicketState } from '@/features/tickets/api'
+import { marketApi } from '@/features/market/api'
+import { useMarketListing } from '@/features/market/hooks/useMarketListing'
 import { QrDisplay } from '@/features/tickets/components/QrDisplay'
 import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
@@ -27,7 +33,6 @@ export const Route = createFileRoute('/_app/tickets/$ticketId')({
   component: TicketDetailPage,
 })
 
-const QR_ELIGIBLE: TicketState[] = ['issued', 'entry_pending']
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleString('en-GB', {
@@ -42,7 +47,18 @@ function fmt(iso: string) {
 function TicketDetailPage() {
   const { ticketId } = Route.useParams()
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [timelineOpen, setTimelineOpen] = useState(false)
+  const [saleConfirmOpen, setSaleConfirmOpen] = useState(false)
+  const [saleCountdown, setSaleCountdown] = useState(5)
+
+  useEffect(() => {
+    if (!saleConfirmOpen) { setSaleCountdown(5); return }
+    if (saleCountdown <= 0) return
+    const timer = setTimeout(() => setSaleCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [saleConfirmOpen, saleCountdown])
   const { data: ticket, isLoading, isError } = useTicket(ticketId)
   const { data: event } = useEvent(ticket?.event_id ?? '')
   const { data: reservation } = useReservation(
@@ -52,8 +68,26 @@ function TicketDetailPage() {
   const countdown = useCountdown(reservation?.expires_at)
   const isExpired =
     ticket?.state === 'expired' ||
-    reservation?.status === 'expired' ||
-    (!!reservation && countdown === 0)
+    reservation?.status === 'expired'
+
+  const saleEnded =
+    event?.availability_status === 'ended' || event?.availability_status === 'sold_out'
+  const eventStartsSoon =
+    event?.starts_at != null &&
+    new Date(event.starts_at).getTime() - Date.now() < 24 * 60 * 60 * 1000
+  const canListForResale = ticket?.state === 'issued' && saleEnded && !eventStartsSoon
+
+  const { data: existingListing } = useMarketListing(ticketId, canListForResale)
+
+  const listForResale = useMutation({
+    mutationFn: () => marketApi.listTicket(ticketId),
+    onSuccess: () => {
+      toast.success('Ticket listed on the resale market')
+      void queryClient.invalidateQueries({ queryKey: ['market', 'listing', ticketId] })
+      void queryClient.invalidateQueries({ queryKey: ['tickets'] })
+    },
+    onError: () => toast.error('Could not list ticket for resale'),
+  })
 
   if (isLoading) return <TicketDetailSkeleton />
 
@@ -277,9 +311,37 @@ function TicketDetailPage() {
             <div className="h-5 w-5 shrink-0 translate-x-1/2 rounded-full bg-neutral-800 shadow-inner" />
           </div>
 
-          {QR_ELIGIBLE.includes(ticket.state) ? (
+          {ticket.qr_eligible ? (
             <div className="px-5 py-5">
               <QrDisplay ticketId={ticket.id} />
+              {saleEnded && ticket?.state === 'issued' && !existingListing && (
+                <>
+                  <button
+                    onClick={() => !eventStartsSoon && setSaleConfirmOpen(true)}
+                    disabled={listForResale.isPending || eventStartsSoon}
+                    className={cn(
+                      'mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-500 transition-colors disabled:opacity-40',
+                      !eventStartsSoon && 'hover:border-gray-300 hover:text-gray-700',
+                    )}
+                  >
+                    {listForResale.isPending ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+                    ) : (
+                      <ShoppingBag className="h-4 w-4" />
+                    )}
+                    Sale
+                  </button>
+                  <p className="mt-1.5 flex items-center gap-1 text-xs text-gray-400">
+                    <Info className="h-3 w-3 shrink-0" />
+                    Listing closes 24h before the event
+                  </p>
+                </>
+              )}
+              {existingListing && existingListing.state === 'available' && (
+                <p className="mt-4 text-center text-xs text-gray-400">
+                  Listed · waiting for a buyer
+                </p>
+              )}
             </div>
           ) : ticket.state === 'reserved' ? (
             <div className="flex h-[300px] flex-col items-center justify-center gap-3 px-5 text-center">
@@ -299,6 +361,8 @@ function TicketDetailPage() {
             <div className="flex h-[300px] flex-col items-center justify-center gap-2 px-5 text-center">
               {ticket.state === 'used' ? (
                 <ShieldCheck className="h-10 w-10 text-gray-400" />
+              ) : ticket.state === 'frozen' ? (
+                <ShoppingBag className="h-10 w-10 text-gray-400" />
               ) : (
                 <ShieldX className="h-10 w-10 text-gray-400" />
               )}
@@ -306,19 +370,64 @@ function TicketDetailPage() {
                 {ticket.state === 'used' && 'Already scanned'}
                 {ticket.state === 'cancelled' && 'Ticket cancelled'}
                 {ticket.state === 'expired' && 'Reservation expired'}
-                {ticket.state === 'frozen' && 'Ticket frozen'}
+                {ticket.state === 'frozen' && 'Listed on Resale Market'}
                 {ticket.state === 'flagged' && 'Under review'}
               </p>
               <p className="text-xs text-gray-400">
                 {ticket.state === 'used' && 'This ticket has already been used for entry.'}
                 {ticket.state === 'cancelled' && 'This ticket is no longer valid.'}
-                {ticket.state === 'frozen' && t('tickets.ticket.frozenHint')}
-                {ticket.state === 'flagged' && t('tickets.ticket.flaggedHint')}
+                {ticket.state === 'frozen' && 'This ticket has been frozen.'}
+                {ticket.state === 'flagged' && 'This ticket has been flagged for review.'}
               </p>
+              {(ticket.state === 'frozen' || ticket.state === 'flagged') && (
+                <p className="text-xs text-gray-400">
+                  Contact support if you believe this is an error.
+                </p>
+              )}
+              {ticket.state === 'frozen' && (
+                <p className="mt-8 text-xs text-gray-400">
+                  If unsold, your ticket will be returned automatically.
+                </p>
+              )}
             </div>
           )}
         </div>
       </div>
+      <Dialog
+        open={saleConfirmOpen}
+        onClose={() => setSaleConfirmOpen(false)}
+        title="List ticket for sale"
+      >
+        <div className="space-y-3 text-sm text-gray-600">
+          <p>
+            Your ticket will be <strong>frozen</strong> and listed on the resale market at the
+            original price. No markup, no speculation.
+          </p>
+          <ul className="space-y-1 text-xs text-gray-500 list-disc pl-4">
+            <li>The QR code will be disabled until the ticket is sold or returned</li>
+            <li>If unsold before the event, it will be returned to you automatically</li>
+            <li>You cannot undo this action yourself once listed</li>
+          </ul>
+        </div>
+        <div className="mt-5 flex gap-3">
+          <button
+            onClick={() => setSaleConfirmOpen(false)}
+            className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              listForResale.mutate()
+              setSaleConfirmOpen(false)
+            }}
+            disabled={saleCountdown > 0 || listForResale.isPending}
+            className="flex-1 rounded-xl bg-gray-900 py-2.5 text-sm font-semibold text-white transition disabled:opacity-40"
+          >
+            {saleCountdown > 0 ? `Confirm (${saleCountdown})` : 'Confirm'}
+          </button>
+        </div>
+      </Dialog>
     </div>
   )
 }

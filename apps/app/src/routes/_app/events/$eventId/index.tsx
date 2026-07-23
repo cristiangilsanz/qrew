@@ -1,12 +1,16 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Calendar, MapPin, Ticket, Users } from 'lucide-react'
+import { ArrowLeftRight, Calendar, CheckCircle2, MapPin, Ticket, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { EventDetailSkeleton, Skeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
+import { marketApi } from '@/features/market/api'
+import { useMarketQueueStatus } from '@/features/market/hooks/useMarketQueueStatus'
 import { QueuePanel } from '@/features/tickets/components/QueuePanel'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
@@ -54,15 +58,37 @@ function EventDetailPage() {
   const { t } = useTranslation()
   const { eventId } = Route.useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data: event, isLoading, isError } = useEvent(eventId)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [showQueue, setShowQueue] = useState(false)
 
-  const now = new Date()
-  const saleStarts = event ? new Date(event.sale_starts_at) : null
-  const saleEnds = event ? new Date(event.sale_ends_at) : null
-  const saleNotStarted = saleStarts ? now < saleStarts : false
+  const saleNotStarted = event?.availability_status === 'not_started'
   const secondsUntilSale = useCountdown(saleNotStarted && event ? event.sale_starts_at : null)
+
+  const saleEnded = event?.availability_status === 'ended'
+  const allSoldOut = event?.availability_status === 'sold_out'
+  const showResaleQueue = saleEnded || allSoldOut
+
+  const { data: queueStatus } = useMarketQueueStatus(eventId, showResaleQueue)
+
+  const joinQueue = useMutation({
+    mutationFn: () => marketApi.joinQueue(eventId),
+    onSuccess: () => {
+      toast.success("You're in the resale queue!")
+      void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
+    },
+    onError: () => toast.error('Failed to join queue'),
+  })
+
+  const leaveQueue = useMutation({
+    mutationFn: () => marketApi.leaveQueue(eventId),
+    onSuccess: () => {
+      toast.success('Left the resale queue')
+      void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
+    },
+    onError: () => toast.error('Failed to leave queue'),
+  })
 
   if (isLoading) return <EventDetailSkeleton />
 
@@ -85,9 +111,8 @@ function EventDetailPage() {
   }
 
   const imageUrl = getEventImageUrl(event.image_url)
-  const allSoldOut = event.ticket_types.every((tt) => tt.available === 0)
-  const saleEnded = saleEnds ? now > saleEnds : false
   const mapsUrl = `https://maps.google.com/maps?q=${event.venue.latitude},${event.venue.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+  const inQueue = queueStatus?.in_queue ?? false
 
   return (
     <div className="pb-24">
@@ -168,24 +193,28 @@ function EventDetailPage() {
             </p>
           </div>
         </div>
-      ) : saleEnded ? (
-        <button
-          disabled
-          className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-white/20 px-5 text-white/50 shadow-lg"
-          style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-        >
-          <Ticket className="h-5 w-5 shrink-0" />
-          <span className="text-sm font-semibold">Sales ended</span>
-        </button>
-      ) : allSoldOut ? (
-        <button
-          disabled
-          className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-white/20 px-5 text-white/50 shadow-lg"
-          style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-        >
-          <Ticket className="h-5 w-5 shrink-0" />
-          <span className="text-sm font-semibold">{t('events.soldOut')}</span>
-        </button>
+      ) : showResaleQueue ? (
+        inQueue ? (
+          <button
+            onClick={() => leaveQueue.mutate()}
+            disabled={leaveQueue.isPending}
+            className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-yellow-400/20 px-5 text-yellow-400 shadow-lg transition-colors hover:bg-yellow-400/30 disabled:opacity-60"
+            style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
+          >
+            <CheckCircle2 className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">In resale queue</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => joinQueue.mutate()}
+            disabled={joinQueue.isPending}
+            className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-yellow-400 px-5 text-black shadow-lg transition-colors hover:bg-yellow-300 disabled:opacity-60"
+            style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
+          >
+            <ArrowLeftRight className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">Join resale queue</span>
+          </button>
+        )
       ) : event.queue_required ? (
         <button
           onClick={() => setShowQueue(true)}

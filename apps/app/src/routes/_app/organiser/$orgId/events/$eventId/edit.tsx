@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { FormPageSkeleton } from '@/components/ui/skeleton'
+import { CancelEventSection } from '@/features/organiser/components/CancelEventSection'
 import { EditEventForm } from '@/features/organiser/components/EditEventForm'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 
@@ -15,15 +17,9 @@ function EditEventPage() {
   const { data } = useOrgEvents(orgId)
   const event = data?.items.find((e) => e.id === eventId)
 
-  if (!event) {
-    return (
-      <div className="mx-auto max-w-2xl p-6">
-        <div className="flex justify-center py-8">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-        </div>
-      </div>
-    )
-  }
+  if (!event) return <FormPageSkeleton />
+
+  const showCancel = event.status === 'draft' || event.status === 'published'
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
@@ -33,6 +29,12 @@ function EditEventPage() {
       />
       <h1 className="text-2xl font-semibold">{t('organiser.events.edit')}</h1>
       <EditEventForm event={event} orgId={orgId} />
+
+      {showCancel && (
+        <div className="mt-4 overflow-hidden rounded-2xl border border-red-500/20 bg-red-500/5">
+          <CancelEventSection event={event} orgId={orgId} />
+        </div>
+      )}
     </div>
   )
 }

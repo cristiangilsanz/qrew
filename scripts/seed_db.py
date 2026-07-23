@@ -126,10 +126,23 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
     tk_alice_now2 = uuid.UUID("55555555-0003-0003-0003-000000000003")
     tk_bob_now = uuid.UUID("55555555-0004-0004-0004-000000000004")
 
+    # Market test data (event with sale ended + starts 30 days from now)
+    event_market = uuid.UUID("22222222-0004-0004-0004-000000000004")
+    tt_market_ga = uuid.UUID("33333333-0008-0008-0008-000000000008")
+    res_admin_market = uuid.UUID("44444444-0006-0006-0006-000000000006")
+    res_alice_market = uuid.UUID("44444444-0007-0007-0007-000000000007")
+    tk_admin_market = uuid.UUID("55555555-0007-0007-0007-000000000007")  # issued — test Sale btn
+    tk_alice_market = uuid.UUID("55555555-0008-0008-0008-000000000008")  # frozen — test My Listings
+    market_listing_id = uuid.UUID("66666666-0001-0001-0001-000000000001")
+    market_assignment_id = uuid.UUID("77777777-0001-0001-0001-000000000001")
+
     # ── Truncate all seed tables ──────────────────────────────────────────────
     print("  Truncating tables…")
     await conn.execute("""
         TRUNCATE
+            sales.market_assignments,
+            sales.market_listings,
+            sales.market_queue_entries,
             ticketing.tickets,
             ticketing.event_venue_context,
             ticketing.device_context,
@@ -144,6 +157,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             catalog.organisation_members,
             catalog.venues,
             catalog.organisations,
+            identity.passkey_credentials,
             identity.users
         CASCADE
     """)
@@ -292,6 +306,9 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
     # ── Events ────────────────────────────────────────────────────────────────
     print("  Creating events…")
 
+    market_starts_at = now + timedelta(days=30)
+    market_sale_ends_at = now - timedelta(days=1)
+
     event_rows = [
         (
             event_past,
@@ -329,6 +346,20 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             datetime(2026, 11, 1, 7, 0, tzinfo=UTC),
             datetime(2026, 9, 1, 10, 0, tzinfo=UTC),
             datetime(2026, 10, 30, 23, 59, tzinfo=UTC),
+            4,
+            "Madrid",
+        ),
+        # Market test event: sale already ended, starts 30 days from now
+        (
+            event_market,
+            org_id,
+            venue_mad,
+            "Neon Rave 2026",
+            "A sold-out underground rave. Secondary market only.",
+            market_starts_at,
+            market_starts_at + timedelta(hours=8),
+            now - timedelta(days=30),
+            market_sale_ends_at,
             4,
             "Madrid",
         ),
@@ -432,6 +463,8 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             "EUR",
             1,
         ),
+        # Market test
+        (tt_market_ga, event_market, "General Admission", "Standard entry", 200, 200, 4500, "EUR", 0),
     ]
 
     await conn.executemany(
@@ -451,12 +484,13 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
     print("  Creating sales projections…")
 
     # EventContext — mirrors catalog.events sale/capacity settings
+    # Requires migration 0005 (adds starts_at column)
     await conn.executemany(
         """
         INSERT INTO sales.event_context
-            (event_id, status, sale_starts_at, sale_ends_at,
+            (event_id, status, sale_starts_at, sale_ends_at, starts_at,
              max_tickets_per_user, queue_required, queue_admit_rate_per_minute, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
         """,
         [
             (
@@ -464,6 +498,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 "published",
                 datetime(2025, 11, 1, 10, 0, tzinfo=UTC),
                 datetime(2025, 12, 19, 23, 59, tzinfo=UTC),
+                datetime(2025, 12, 20, 22, 0, tzinfo=UTC),
                 4,
                 False,
                 60,
@@ -474,6 +509,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 "published",
                 datetime(2026, 7, 1, 10, 0, tzinfo=UTC),
                 datetime(2026, 8, 14, 23, 59, tzinfo=UTC),
+                datetime(2026, 8, 15, 20, 0, tzinfo=UTC),
                 4,
                 False,
                 60,
@@ -484,6 +520,18 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 "published",
                 datetime(2026, 9, 1, 10, 0, tzinfo=UTC),
                 datetime(2026, 10, 30, 23, 59, tzinfo=UTC),
+                datetime(2026, 10, 31, 23, 0, tzinfo=UTC),
+                4,
+                False,
+                60,
+                now,
+            ),
+            (
+                event_market,
+                "published",
+                now - timedelta(days=30),
+                market_sale_ends_at,
+                market_starts_at,
                 4,
                 False,
                 60,
@@ -508,6 +556,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             (tt_now_artist, event_now, 50, 0, 12000, "EUR", now),
             (tt_fut_early, event_future, 200, 0, 2000, "EUR", now),
             (tt_fut_ga, event_future, 800, 0, 3000, "EUR", now),
+            (tt_market_ga, event_market, 200, 200, 4500, "EUR", now),
         ],
     )
 
@@ -553,6 +602,16 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             ),
             (
                 event_future,
+                venue_mad,
+                "published",
+                40.437775,
+                -3.661543,
+                200,
+                "Europe/Madrid",
+                now,
+            ),
+            (
+                event_market,
                 venue_mad,
                 "published",
                 40.437775,
@@ -609,6 +668,30 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 tt_now_ga,
                 1,
                 "reserved",
+                far_future,
+                now,
+                now,
+            ),
+            # admin — 1 GA at Neon Rave (paid, issued — for testing Sale button)
+            (
+                res_admin_market,
+                user_admin,
+                event_market,
+                tt_market_ga,
+                1,
+                "paid",
+                far_future,
+                now,
+                now,
+            ),
+            # alice — 1 GA at Neon Rave (paid, will be frozen for resale listing)
+            (
+                res_alice_market,
+                user_alice,
+                event_market,
+                tt_market_ga,
+                1,
+                "paid",
                 far_future,
                 now,
                 now,
@@ -691,6 +774,110 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 now,
                 now,
             ),
+            # admin's market ticket — issued (to test Sale button)
+            (
+                tk_admin_market,
+                res_admin_market,
+                event_market,
+                tt_market_ga,
+                user_admin,
+                "issued",
+                now,
+                now,
+                None,
+                "Admin User",
+                None,
+                now,
+                now,
+            ),
+            # alice's market ticket — frozen (listed on resale)
+            (
+                tk_alice_market,
+                res_alice_market,
+                event_market,
+                tt_market_ga,
+                user_alice,
+                "frozen",
+                now,
+                now,
+                None,
+                "Alice Dev",
+                None,
+                now,
+                now,
+            ),
+        ],
+    )
+
+    # ── Market test data ──────────────────────────────────────────────────────
+    print("  Creating market test data…")
+
+    # Alice's frozen ticket listed on the market
+    await conn.execute(
+        """
+        INSERT INTO sales.market_listings
+            (id, ticket_id, event_id, seller_user_id, ticket_type_id,
+             price_cents, currency, state, listed_at, expires_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        """,
+        market_listing_id,
+        tk_alice_market,
+        event_market,
+        user_alice,
+        tt_market_ga,
+        4500,
+        "EUR",
+        "assigned",  # already assigned to admin
+        now,
+        now + timedelta(days=30),
+    )
+
+    # Pending assignment for admin (buyer)
+    await conn.execute(
+        """
+        INSERT INTO sales.market_assignments
+            (id, listing_id, event_id, buyer_user_id, assigned_at, expires_at, state)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        """,
+        market_assignment_id,
+        market_listing_id,
+        event_market,
+        user_admin,
+        now,
+        now + timedelta(minutes=30),
+        "pending",
+    )
+
+    # ── Passkeys (dummy dev credentials so login skips the setup flow) ────────
+    print("  Creating dummy passkeys…")
+
+    await conn.executemany(
+        """
+        INSERT INTO identity.passkey_credentials
+            (id, user_id, credential_id, public_key, sign_count, aaguid, name, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        """,
+        [
+            (
+                uuid.uuid4(),
+                user_alice,
+                b"dev-credential-alice",
+                b"dev-public-key-alice",
+                0,
+                "00000000-0000-0000-0000-000000000000",
+                "Dev Passkey",
+                now,
+            ),
+            (
+                uuid.uuid4(),
+                user_admin,
+                b"dev-credential-admin",
+                b"dev-public-key-admin",
+                0,
+                "00000000-0000-0000-0000-000000000000",
+                "Dev Passkey",
+                now,
+            ),
         ],
     )
 
@@ -711,6 +898,10 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         "  Summer Beats 2026        — upcoming, sale open now       (alice: 2 issued, bob: 1 reserved)"
     )
     print("  Techno Underground 2026  — upcoming, sale opens Sep 2026")
+    print("  Neon Rave 2026           — sold-out, sale ended, starts in 30 days")
+    print("                             admin: 1 issued ticket (test Sale button)")
+    print("                             alice: 1 frozen ticket listed on market")
+    print("                             admin: 1 pending market assignment")
 
 
 if __name__ == "__main__":
