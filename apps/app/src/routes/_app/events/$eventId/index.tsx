@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Calendar, Info, LogOut, MapPin, Shuffle, Ticket, Users } from 'lucide-react'
+import { Calendar, LogOut, MapPin, Shuffle, Ticket, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
-import { EventDetailSkeleton, Skeleton } from '@/components/ui/skeleton'
+import { EventDetailSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketQueueStatus } from '@/features/market/hooks/useMarketQueueStatus'
@@ -61,7 +61,6 @@ function EventDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: event, isLoading, isError } = useEvent(eventId)
-  const [mapLoaded, setMapLoaded] = useState(false)
   const [showQueue, setShowQueue] = useState(false)
   const [leaveOpen, setLeaveOpen] = useState(false)
 
@@ -97,7 +96,7 @@ function EventDetailPage() {
     onError: () => toast.error(t('market.toast.leaveFailed')),
   })
 
-  if (isLoading) return <EventDetailSkeleton />
+  if (isLoading || (showResaleQueue && queueLoading)) return <EventDetailSkeleton />
 
   if (showQueue && event) {
     return (
@@ -176,32 +175,24 @@ function EventDetailPage() {
             <MapPin className="h-4 w-4 shrink-0" />
             {event.venue.name}, {event.venue.city}, {event.venue.country}
           </span>
-          <div className="relative mt-2 h-48 w-full overflow-hidden rounded-xl">
-            {!mapLoaded && <Skeleton className="absolute inset-0 rounded-xl" />}
+          <div className="mt-2 h-48 w-full overflow-hidden rounded-xl bg-white/5">
             <iframe
               src={mapsUrl}
               className="h-full w-full border-0"
-              loading="lazy"
+              loading="eager"
               referrerPolicy="no-referrer-when-downgrade"
               title="Event location map"
-              onLoad={() => setMapLoaded(true)}
             />
           </div>
         </div>
 
         {/* Resale queue info */}
         {showResaleQueue && (
-          <div className="mt-4 flex flex-col items-center space-y-1.5">
+          <div className="mt-8 flex flex-col items-center space-y-2">
             <Ticket className="h-7 w-7 text-white/20" />
             <p className="text-muted-foreground text-center text-base font-semibold">
               {t('events.soldOut')}
             </p>
-            <div className="mx-auto flex w-fit max-w-[85%] items-start gap-1.5">
-              <Info className="h-3.5 w-3.5 shrink-0 text-white/30" />
-              <p className="text-muted-foreground text-xs">
-                Join the resale queue for a chance to get a ticket at the original price.
-              </p>
-            </div>
           </div>
         )}
       </div>
@@ -217,7 +208,7 @@ function EventDetailPage() {
           </div>
         </div>
       ) : showResaleQueue ? (
-        queueLoading ? null : inQueue ? (
+        inQueue ? (
           <button
             onClick={() => setLeaveOpen(true)}
             className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-red-500 px-5 text-white shadow-lg transition-colors hover:bg-red-600"

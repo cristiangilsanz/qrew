@@ -67,11 +67,16 @@ function OrgDashboardPage() {
       <BackButton to="/organiser" />
       <div>
         {allLoading ? (
-          <Skeleton className="h-8 w-40" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-24" />
+          </div>
         ) : (
-          <h1 className="text-2xl font-semibold">{org?.name}</h1>
+          <>
+            <h1 className="text-2xl font-semibold">{org?.name}</h1>
+            {org?.slug && <p className="text-muted-foreground text-sm">@{org.slug}</p>}
+          </>
         )}
-        {org?.slug && <p className="text-muted-foreground text-sm">@{org.slug}</p>}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
