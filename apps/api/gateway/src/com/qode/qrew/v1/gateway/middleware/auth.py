@@ -10,16 +10,18 @@ without requiring a token.
 
 import json
 import re
-from collections.abc import Awaitable, Callable
 
-import jwt
 import structlog
 from starlette.datastructures import MutableHeaders
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from com.qode.qrew.v1.gateway.core.auth import _access_public_keys, _scanner_public_keys, _try_verify
+from com.qode.qrew.v1.gateway.core.auth import (
+    _access_public_keys,
+    _scanner_public_keys,
+    _try_verify,
+)
 
 logger = structlog.get_logger(__name__)
 

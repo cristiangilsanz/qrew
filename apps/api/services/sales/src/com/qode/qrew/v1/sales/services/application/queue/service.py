@@ -78,7 +78,9 @@ class QueueService:
         return result.position
 
     @traced("queue.service.position")
-    async def position(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> tuple[int | None, str | None]:
+    async def position(
+        self, *, user_id: uuid.UUID, event_id: uuid.UUID
+    ) -> tuple[int | None, str | None]:
         pos = await queue_position(event_id, user_id)
         redeem = await get_redeem_token(event_id, user_id) if pos is None else None
         return pos, redeem

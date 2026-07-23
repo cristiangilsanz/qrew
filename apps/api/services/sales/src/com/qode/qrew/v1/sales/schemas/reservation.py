@@ -27,7 +27,9 @@ def validate_spanish_id(value: str) -> str:
         if not _valid_dni_letter(digits, v[8]):
             raise ValueError("Invalid NIE check letter")
         return v
-    raise ValueError("Must be a valid Spanish DNI (8 digits + letter) or NIE (X/Y/Z + 7 digits + letter)")
+    raise ValueError(
+        "Must be a valid Spanish DNI (8 digits + letter) or NIE (X/Y/Z + 7 digits + letter)"
+    )
 
 
 class ReservationCreateRequest(BaseModel):

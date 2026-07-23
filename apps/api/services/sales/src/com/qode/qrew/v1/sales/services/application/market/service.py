@@ -14,7 +14,10 @@ from com.qode.qrew.v1.sales.models.market import (
     MarketQueueEntry,
 )
 from com.qode.qrew.v1.sales.repositories.market import MarketRepository
-from com.qode.qrew.v1.sales.repositories.projections import EventContextRepository, TicketTypeInventoryRepository
+from com.qode.qrew.v1.sales.repositories.projections import (
+    EventContextRepository,
+    TicketTypeInventoryRepository,
+)
 from com.qode.qrew.v1.sales.services.application.audit import AuditService
 from observability import traced
 
@@ -58,9 +61,7 @@ class MarketService:
     # ------------------------------------------------------------------ queue
 
     @traced("market.service.join_queue")
-    async def join_queue(
-        self, *, user_id: uuid.UUID, event_id: uuid.UUID
-    ) -> MarketQueueEntry:
+    async def join_queue(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> MarketQueueEntry:
         event_ctx = await self._event_ctx.get_by_event_id(event_id)
         if event_ctx is None or event_ctx.status != "published":
             raise MarketError("Event not found", field="event_id")
@@ -106,9 +107,7 @@ class MarketService:
         return True
 
     @traced("market.service.queue_status")
-    async def queue_status(
-        self, *, user_id: uuid.UUID, event_id: uuid.UUID
-    ) -> dict[str, Any]:
+    async def queue_status(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> dict[str, Any]:
         entry = await self._repo.get_queue_entry(event_id=event_id, user_id=user_id)
         pending = await self._repo.get_pending_assignment_for_user(
             buyer_user_id=user_id, event_id=event_id
@@ -129,9 +128,7 @@ class MarketService:
     # ----------------------------------------------------------------- listing
 
     @traced("market.service.list_ticket")
-    async def list_ticket(
-        self, *, user_id: uuid.UUID, ticket_id: uuid.UUID
-    ) -> MarketListing:
+    async def list_ticket(self, *, user_id: uuid.UUID, ticket_id: uuid.UUID) -> MarketListing:
         # Verify the ticket belongs to the caller and is in `issued` state
         ticket_row = await self._get_ticket_for_listing(user_id, ticket_id)
         event_id: uuid.UUID = ticket_row["event_id"]
@@ -258,9 +255,7 @@ class MarketService:
         await self._repo.flush()
 
     @traced("market.service.decline_assignment")
-    async def decline_assignment(
-        self, *, user_id: uuid.UUID, assignment_id: uuid.UUID
-    ) -> None:
+    async def decline_assignment(self, *, user_id: uuid.UUID, assignment_id: uuid.UUID) -> None:
         assignment = await self._repo.get_assignment_by_id(assignment_id)
         if assignment is None or assignment.buyer_user_id != user_id:
             raise MarketError("Assignment not found", field="assignment_id")
@@ -271,9 +266,7 @@ class MarketService:
         await self._repo.flush()
 
         # Remove user from queue so they won't be re-assigned on this event
-        entry = await self._repo.get_queue_entry(
-            event_id=assignment.event_id, user_id=user_id
-        )
+        entry = await self._repo.get_queue_entry(event_id=assignment.event_id, user_id=user_id)
         if entry is not None:
             entry.left_at = _now()
             await self._repo.flush()
@@ -333,15 +326,11 @@ class MarketService:
     async def _get_ticket_for_listing(
         self, user_id: uuid.UUID, ticket_id: uuid.UUID
     ) -> dict[str, Any]:
-        row = await self._repo.get_ticket_for_listing(
-            ticket_id=ticket_id, owner_user_id=user_id
-        )
+        row = await self._repo.get_ticket_for_listing(ticket_id=ticket_id, owner_user_id=user_id)
         if row is None:
             raise MarketError("Ticket not found", field="ticket_id")
         if row["state"] != "issued":
-            raise MarketError(
-                "Only issued tickets can be listed for resale", field="ticket_id"
-            )
+            raise MarketError("Only issued tickets can be listed for resale", field="ticket_id")
         return {"event_id": row["event_id"], "ticket_type_id": row["ticket_type_id"]}
 
     async def _record(self, action: str, *, actor_id: uuid.UUID, entity_id: str) -> None:
@@ -402,6 +391,4 @@ async def _publish_transfer(
         )
         await nats_publish("market.transfer.v1", envelope)
     except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed", subject="market.transfer.v1", error=repr(exc)
-        )
+        await logger.awarning("nats_publish_failed", subject="market.transfer.v1", error=repr(exc))

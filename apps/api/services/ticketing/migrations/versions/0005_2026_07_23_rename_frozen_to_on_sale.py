@@ -5,6 +5,7 @@ Revises: 0004_add_holder_to_tickets
 Create Date: 2026-07-23
 
 """
+
 from typing import Union
 
 from alembic import op

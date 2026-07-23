@@ -10,7 +10,10 @@ from com.qode.qrew.v1.sales.services.application.market.service import MarketSer
 from com.qode.qrew.v1.sales.services.application.settlement import SettlementService
 from com.qode.qrew.v1.sales.worker._parser import parse
 from com.qode.qrew.v1.sales.core.config import settings
-from com.qode.qrew.v1.sales.repositories.projections import EventContextRepository, TicketTypeInventoryRepository
+from com.qode.qrew.v1.sales.repositories.projections import (
+    EventContextRepository,
+    TicketTypeInventoryRepository,
+)
 from com.qode.qrew.v1.sales.services.application.audit import AuditService
 
 logger = structlog.get_logger(__name__)

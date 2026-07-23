@@ -39,7 +39,9 @@ _LEGAL_TRANSITIONS: dict[TicketState, frozenset[TicketState]] = {
     TicketState.issued: frozenset(
         {TicketState.scanning, TicketState.cancelled, TicketState.on_sale, TicketState.flagged}
     ),
-    TicketState.on_sale: frozenset({TicketState.issued, TicketState.cancelled, TicketState.flagged}),
+    TicketState.on_sale: frozenset(
+        {TicketState.issued, TicketState.cancelled, TicketState.flagged}
+    ),
     TicketState.scanning: frozenset(
         {TicketState.redeemed, TicketState.issued, TicketState.cancelled}
     ),

@@ -7,7 +7,11 @@ from sqlalchemy import text
 
 from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
-from com.qode.qrew.v1.sales.models.market import MarketAssignment, MarketAssignmentState, MarketListingState
+from com.qode.qrew.v1.sales.models.market import (
+    MarketAssignment,
+    MarketAssignmentState,
+    MarketListingState,
+)
 from com.qode.qrew.v1.sales.repositories.market import MarketRepository
 from locking import LockUnavailableError, redlock
 
@@ -78,7 +82,9 @@ async def assign_pending() -> int:
                     fresh.state = MarketListingState.assigned
                     await session.commit()
 
-                    await _publish_assigned(assignment_id=assignment.id, buyer_user_id=member.user_id)
+                    await _publish_assigned(
+                        assignment_id=assignment.id, buyer_user_id=member.user_id
+                    )
                     assigned += 1
                     await logger.ainfo(
                         "market.assigner.assigned",

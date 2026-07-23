@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,9 +56,7 @@ class MarketRepository:
         )
         return int(result.scalar_one() or 0)
 
-    async def active_ticket_count_for_user(
-        self, *, user_id: uuid.UUID, event_id: uuid.UUID
-    ) -> int:
+    async def active_ticket_count_for_user(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> int:
         """Counts issued/frozen/reserved tickets + pending assignments for a user on an event."""
         ticket_count_sql = text(
             """
@@ -192,9 +189,7 @@ class MarketRepository:
             return None
         return await self._session.get(MarketQueueEntry, row[0])
 
-    async def expired_active_listings(
-        self, batch: int = 50
-    ) -> list[MarketListing]:
+    async def expired_active_listings(self, batch: int = 50) -> list[MarketListing]:
         """Listings past their expires_at that are still active (available or assigned)."""
         result = await self._session.execute(
             text(
@@ -263,9 +258,7 @@ class MarketRepository:
         )
         return list(result.scalars().all())
 
-    async def expired_pending_assignments(
-        self, batch: int = 100
-    ) -> list[MarketAssignment]:
+    async def expired_pending_assignments(self, batch: int = 100) -> list[MarketAssignment]:
         result = await self._session.execute(
             text(
                 """
@@ -295,9 +288,7 @@ class MarketRepository:
         self, payment_intent_id: str
     ) -> MarketAssignment | None:
         result = await self._session.execute(
-            select(MarketAssignment).where(
-                MarketAssignment.payment_intent_id == payment_intent_id
-            )
+            select(MarketAssignment).where(MarketAssignment.payment_intent_id == payment_intent_id)
         )
         return result.scalar_one_or_none()
 

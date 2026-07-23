@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from db import create_redis_dependency
 from fastapi import Depends, HTTPException, Request, status
@@ -39,7 +39,9 @@ _CREDENTIALS_EXCEPTION = HTTPException(
 
 async def get_current_user(
     request: Request,
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(_bearer)
+    ] = None,
     db: AsyncSession = Depends(get_db),
 ) -> User:
     user_id_str = request.headers.get("x-authenticated-user-id")
@@ -74,7 +76,9 @@ async def get_admin_user(
 
 async def get_scanner(
     request: Request,
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(_bearer)
+    ] = None,
     db: AsyncSession = Depends(get_db),
 ) -> Scanner:
     scanner_id_str = request.headers.get("x-authenticated-scanner-id")

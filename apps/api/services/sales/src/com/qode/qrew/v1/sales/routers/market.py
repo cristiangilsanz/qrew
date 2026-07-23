@@ -74,6 +74,7 @@ def _market_error(exc: MarketError) -> HTTPException:
 
 # ------------------------------------------------------------------ queue
 
+
 @events_router.post(
     "/{event_id}/market/queue/join",
     response_model=MarketQueueJoinResponse,
@@ -141,6 +142,7 @@ async def market_queue_status(
 
 # ------------------------------------------------------------------ listings
 
+
 @tickets_router.post(
     "/{ticket_id}/market/list",
     response_model=MarketListingResponse,
@@ -179,9 +181,7 @@ async def get_ticket_listing(
     service: MarketService = Depends(get_market_service),
 ) -> MarketListingResponse:
     del request, db
-    listing = await service.get_listing_for_seller(
-        user_id=current_user.id, ticket_id=ticket_id
-    )
+    listing = await service.get_listing_for_seller(user_id=current_user.id, ticket_id=ticket_id)
     if listing is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -191,6 +191,7 @@ async def get_ticket_listing(
 
 
 # ---------------------------------------------------------------- my queues
+
 
 @market_router.get(
     "/queues",
@@ -211,6 +212,7 @@ async def get_my_queues(
 
 
 # ---------------------------------------------------------------- assignments
+
 
 @market_router.get(
     "/assignments/pending",
@@ -303,9 +305,7 @@ async def decline_assignment(
 ) -> None:
     del request
     try:
-        await service.decline_assignment(
-            user_id=current_user.id, assignment_id=assignment_id
-        )
+        await service.decline_assignment(user_id=current_user.id, assignment_id=assignment_id)
     except MarketError as exc:
         raise _market_error(exc) from exc
     await db.commit()

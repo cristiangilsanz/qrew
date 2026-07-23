@@ -65,6 +65,7 @@ class OrganisationRepository:
 
     async def soft_delete(self, organisation_id: uuid.UUID) -> bool:
         from datetime import datetime, timezone
+
         org = await self.get_by_id(organisation_id)
         if org is None:
             return False

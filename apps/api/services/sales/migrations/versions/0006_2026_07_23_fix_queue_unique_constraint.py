@@ -7,7 +7,6 @@ Create Date: 2026-07-23 00:00:00.000000
 
 from typing import Union
 
-import sqlalchemy as sa
 from alembic import op
 
 revision: str = "0006_sales_fix_queue_rejoin"
@@ -35,9 +34,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute(
-        "DROP INDEX IF EXISTS sales.uq_market_queue_entries_active_event_user"
-    )
+    op.execute("DROP INDEX IF EXISTS sales.uq_market_queue_entries_active_event_user")
     op.create_unique_constraint(
         "uq_market_queue_entries_event_user",
         "market_queue_entries",

@@ -90,7 +90,8 @@ class UserRepository:
         if not pattern:
             return list(result.scalars())[:limit]
         return [
-            u for u in result.scalars()
+            u
+            for u in result.scalars()
             if pattern in u.email.lower() or pattern in u.full_name.lower()
         ][:limit]
 

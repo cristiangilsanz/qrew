@@ -228,10 +228,10 @@ class TestEventServiceUpdate:
         with pytest.raises(EventError, match="not found"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
-    async def test_raises_when_not_draft(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
-        event = make_event(event_id=event_id, status=EventStatus.published)
+    async def test_raises_when_cancelled(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
+        event = make_event(event_id=event_id, status=EventStatus.cancelled)
         svc, _ = _make_svc(event=event)
-        with pytest.raises(EventError, match="draft"):
+        with pytest.raises(EventError, match="Cancelled"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
     async def test_raises_when_unknown_fields(

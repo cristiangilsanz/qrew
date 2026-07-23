@@ -20,7 +20,13 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Make reservation_id nullable (was NOT NULL UNIQUE)
-    op.alter_column("payments", "reservation_id", existing_type=postgresql.UUID(as_uuid=True), nullable=True, schema="payments")
+    op.alter_column(
+        "payments",
+        "reservation_id",
+        existing_type=postgresql.UUID(as_uuid=True),
+        nullable=True,
+        schema="payments",
+    )
 
     # Add market_assignment_id
     op.add_column(
@@ -55,4 +61,10 @@ def downgrade() -> None:
     op.drop_index("ix_payments_market_assignment_id", table_name="payments", schema="payments")
     op.drop_constraint("uq_payments_market_assignment_id", "payments", schema="payments")
     op.drop_column("payments", "market_assignment_id", schema="payments")
-    op.alter_column("payments", "reservation_id", existing_type=postgresql.UUID(as_uuid=True), nullable=False, schema="payments")
+    op.alter_column(
+        "payments",
+        "reservation_id",
+        existing_type=postgresql.UUID(as_uuid=True),
+        nullable=False,
+        schema="payments",
+    )

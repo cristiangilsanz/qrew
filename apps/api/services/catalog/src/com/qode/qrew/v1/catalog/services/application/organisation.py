@@ -121,7 +121,9 @@ class OrganisationService:
             raise OrganisationError("Owners are promoted, not added", field="role")
         existing = await self._members.get(organisation_id, user_id)
         if existing is not None:
-            raise OrganisationError("User is already a member of this organisation", field="user_id")
+            raise OrganisationError(
+                "User is already a member of this organisation", field="user_id"
+            )
         member = await self._members.insert(
             organisation_id=organisation_id, user_id=user_id, role=role
         )

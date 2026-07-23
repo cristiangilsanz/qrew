@@ -186,7 +186,6 @@ _HANDLERS = {
 }
 
 
-
 _MARKET_STREAM = "MARKET"
 _MARKET_DURABLE = "ticketing-market-handler"
 
@@ -209,7 +208,9 @@ async def handle_ticket_freeze(raw: bytes) -> None:
         ):
             ticket = await TicketRepository(session).get_by_id(ticket_id)
             if ticket is None:
-                await logger.awarning("market_events.freeze.ticket_not_found", ticket_id=str(ticket_id))
+                await logger.awarning(
+                    "market_events.freeze.ticket_not_found", ticket_id=str(ticket_id)
+                )
                 return
             if ticket.state == TicketState.on_sale:
                 return
@@ -253,7 +254,9 @@ async def handle_transfer(raw: bytes) -> None:
         ):
             ticket = await TicketRepository(session).get_by_id(ticket_id)
             if ticket is None:
-                await logger.awarning("market_events.transfer.ticket_not_found", ticket_id=str(ticket_id))
+                await logger.awarning(
+                    "market_events.transfer.ticket_not_found", ticket_id=str(ticket_id)
+                )
                 return
             if ticket.state != TicketState.on_sale:
                 await logger.awarning(
@@ -311,9 +314,7 @@ async def handle_listing_expired(raw: bytes) -> None:
                 audit=AuditService(),
             )
             await session.commit()
-    await logger.ainfo(
-        "market_events.listing_expired_ticket_returned", ticket_id=str(ticket_id)
-    )
+    await logger.ainfo("market_events.listing_expired_ticket_returned", ticket_id=str(ticket_id))
 
 
 _MARKET_HANDLERS = {

@@ -55,9 +55,7 @@ def _get_client(request: Request) -> AsyncClient:
 
 def _build_upstream_headers(request: Request) -> dict[str, str]:
     headers: dict[str, str] = {
-        k: v
-        for k, v in request.headers.items()
-        if k.lower() not in _HOP_BY_HOP
+        k: v for k, v in request.headers.items() if k.lower() not in _HOP_BY_HOP
     }
     # Add forwarding headers for observability and rate-limiting downstream
     client_host = request.client.host if request.client else "unknown"
@@ -107,9 +105,7 @@ async def proxy(service: str, path: str, request: Request) -> Response:
         )
 
     response_headers = {
-        k: v
-        for k, v in upstream_resp.headers.items()
-        if k.lower() not in _HOP_BY_HOP
+        k: v for k, v in upstream_resp.headers.items() if k.lower() not in _HOP_BY_HOP
     }
 
     return StreamingResponse(

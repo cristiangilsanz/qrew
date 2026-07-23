@@ -77,9 +77,7 @@ async def create_market_assignment_charge(
 ) -> _PaymentContextResponse:
     """Returns the billable amount and currency for a market assignment."""
     try:
-        ctx = await service.get_payment_context(
-            user_id=body.user_id, assignment_id=assignment_id
-        )
+        ctx = await service.get_payment_context(user_id=body.user_id, assignment_id=assignment_id)
     except MarketError as exc:
         code = (
             status.HTTP_404_NOT_FOUND

@@ -146,7 +146,8 @@ async def _cancel_expired_listings() -> int:
 
                     fresh = await repo.get_listing_by_id(listing.id)
                     if fresh is None or fresh.state not in (
-                        MarketListingState.available, MarketListingState.assigned
+                        MarketListingState.available,
+                        MarketListingState.assigned,
                     ):
                         continue
 
@@ -189,7 +190,9 @@ async def _publish_assigned(*, assignment_id: object, buyer_user_id: object) -> 
         )
         await nats_publish("market.assignment.created.v1", envelope)
     except Exception as exc:
-        await logger.awarning("nats_publish_failed", subject="market.assignment.created.v1", error=repr(exc))
+        await logger.awarning(
+            "nats_publish_failed", subject="market.assignment.created.v1", error=repr(exc)
+        )
 
 
 async def _publish_listing_expired(*, ticket_id: object, seller_user_id: object) -> None:
@@ -209,4 +212,6 @@ async def _publish_listing_expired(*, ticket_id: object, seller_user_id: object)
         )
         await nats_publish("market.listing.expired.v1", envelope)
     except Exception as exc:
-        await logger.awarning("nats_publish_failed", subject="market.listing.expired.v1", error=repr(exc))
+        await logger.awarning(
+            "nats_publish_failed", subject="market.listing.expired.v1", error=repr(exc)
+        )

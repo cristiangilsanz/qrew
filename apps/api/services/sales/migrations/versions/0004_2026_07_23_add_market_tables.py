@@ -171,16 +171,28 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_market_assignments_pending_expires", table_name="market_assignments", schema="sales")
-    op.drop_index("ix_market_assignments_buyer_user_id", table_name="market_assignments", schema="sales")
-    op.drop_index("ix_market_assignments_listing_id", table_name="market_assignments", schema="sales")
+    op.drop_index(
+        "ix_market_assignments_pending_expires", table_name="market_assignments", schema="sales"
+    )
+    op.drop_index(
+        "ix_market_assignments_buyer_user_id", table_name="market_assignments", schema="sales"
+    )
+    op.drop_index(
+        "ix_market_assignments_listing_id", table_name="market_assignments", schema="sales"
+    )
     op.drop_table("market_assignments", schema="sales")
 
-    op.drop_index("ix_market_listings_expires_at_state", table_name="market_listings", schema="sales")
+    op.drop_index(
+        "ix_market_listings_expires_at_state", table_name="market_listings", schema="sales"
+    )
     op.drop_index("ix_market_listings_seller_user_id", table_name="market_listings", schema="sales")
     op.drop_index("ix_market_listings_event_id_state", table_name="market_listings", schema="sales")
     op.drop_table("market_listings", schema="sales")
 
-    op.drop_index("ix_market_queue_entries_user_id", table_name="market_queue_entries", schema="sales")
-    op.drop_index("ix_market_queue_entries_event_id_active", table_name="market_queue_entries", schema="sales")
+    op.drop_index(
+        "ix_market_queue_entries_user_id", table_name="market_queue_entries", schema="sales"
+    )
+    op.drop_index(
+        "ix_market_queue_entries_event_id_active", table_name="market_queue_entries", schema="sales"
+    )
     op.drop_table("market_queue_entries", schema="sales")

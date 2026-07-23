@@ -163,7 +163,9 @@ async def search_organisations(
     del request
     results = await svc.search(q, limit=limit)
     return [
-        OrganisationSearchResult(id=org.id, slug=org.slug, name=org.name, description=org.description)
+        OrganisationSearchResult(
+            id=org.id, slug=org.slug, name=org.name, description=org.description
+        )
         for org in results
     ]
 
@@ -207,10 +209,7 @@ async def list_members(
 ) -> list[OrgMemberListItem]:
     del request
     rows = await svc.list_members(organisation_id)
-    return [
-        OrgMemberListItem(user_id=r.user_id, role=r.role, joined_at=r.joined_at)
-        for r in rows
-    ]
+    return [OrgMemberListItem(user_id=r.user_id, role=r.role, joined_at=r.joined_at) for r in rows]
 
 
 @router.post(

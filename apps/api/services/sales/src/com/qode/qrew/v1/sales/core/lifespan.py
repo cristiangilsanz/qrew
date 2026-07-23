@@ -67,7 +67,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     market_expire_task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
         await asyncio.gather(
-            sweep_task, admit_task, market_assign_task, market_expire_task,
+            sweep_task,
+            admit_task,
+            market_assign_task,
+            market_expire_task,
             return_exceptions=True,
         )
     await engine.dispose()
