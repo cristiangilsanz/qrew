@@ -18,6 +18,7 @@ class EventContext(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False, server_default="draft")
     sale_starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     sale_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     max_tickets_per_user: Mapped[int] = mapped_column(Integer, nullable=False, server_default="10")
     queue_required: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     queue_admit_rate_per_minute: Mapped[int] = mapped_column(

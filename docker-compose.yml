@@ -48,8 +48,6 @@ services:
     build:
       context: .
       dockerfile: apps/api/services/identity/Dockerfile
-    ports:
-      - "8001:8001"
     volumes:
       - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
     environment:
@@ -109,8 +107,6 @@ services:
     build:
       context: .
       dockerfile: apps/api/services/entry/Dockerfile
-    ports:
-      - "8006:8006"
     volumes:
       - ./apps/api/services/entry/config/local.yaml:/app/config/local.yaml:ro
     environment:
@@ -156,8 +152,6 @@ services:
     build:
       context: .
       dockerfile: apps/api/services/payments/Dockerfile
-    ports:
-      - "8004:8004"
     volumes:
       - ./apps/api/services/payments/config/local.yaml:/app/config/local.yaml:ro
     environment:
@@ -185,8 +179,6 @@ services:
     build:
       context: .
       dockerfile: apps/api/services/catalog/Dockerfile
-    ports:
-      - "8002:8002"
     volumes:
       - ./apps/api/services/catalog/config/local.yaml:/app/config/local.yaml:ro
     environment:
@@ -232,8 +224,6 @@ services:
     build:
       context: .
       dockerfile: apps/api/services/ticketing/Dockerfile
-    ports:
-      - "8005:8005"
     volumes:
       - ./apps/api/services/ticketing/config/local.yaml:/app/config/local.yaml:ro
     environment:
@@ -276,8 +266,6 @@ services:
     build:
       context: .
       dockerfile: apps/api/services/sales/Dockerfile
-    ports:
-      - "8003:8003"
     volumes:
       - ./apps/api/services/sales/config/local.yaml:/app/config/local.yaml:ro
     environment:
@@ -320,8 +308,6 @@ services:
     build:
       context: .
       dockerfile: apps/api/services/audit/Dockerfile
-    ports:
-      - "8007:8007"
     volumes:
       - ./apps/api/services/audit/config/local.yaml:/app/config/local.yaml:ro
     environment:
@@ -362,22 +348,42 @@ services:
       context: .
       dockerfile: apps/api/gateway/Dockerfile
     ports:
-      - "8008:8008"
+      - "8000:8000"
     volumes:
       - ./apps/api/gateway/config/local.yaml:/app/config/local.yaml:ro
     environment:
       NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379/0
       HOST: 0.0.0.0
+      PORT: 8000
       DEBUG: "false"
+      IDENTITY_URL: http://identity:8001
+      CATALOG_URL: http://catalog:8002
+      SALES_URL: http://sales:8003
+      PAYMENTS_URL: http://payments:8004
+      TICKETING_URL: http://ticketing:8005
+      ENTRY_URL: http://entry:8006
     depends_on:
       nats:
         condition: service_healthy
+      identity:
+        condition: service_healthy
+      catalog:
+        condition: service_healthy
+      ticketing:
+        condition: service_healthy
+      sales:
+        condition: service_healthy
+      payments:
+        condition: service_healthy
+      entry:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8008/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 20s
+      start_period: 30s
 
   jaeger:
     image: jaegertracing/all-in-one:1.62

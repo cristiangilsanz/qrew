@@ -1,13 +1,13 @@
 import hashlib
 import uuid
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, Optional
 
 import jwt
 import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 
@@ -18,7 +18,7 @@ ACCESS: Final = "access"
 TICKET_QR: Final = "ticket_qr"  # noqa: S105
 _PURPOSES: Final = (ACCESS, TICKET_QR)
 
-_bearer = HTTPBearer()
+_bearer = HTTPBearer(auto_error=False)
 
 
 @dataclass(frozen=True)
@@ -117,10 +117,25 @@ def verify(purpose: str, token: str) -> dict[str, object]:
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(_bearer),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
 ) -> AuthenticatedUser:
     from datetime import UTC, datetime
 
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    if user_id_str:
+        try:
+            return AuthenticatedUser(id=uuid.UUID(user_id_str))
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"message": "Invalid or expired token"},
+            ) from exc
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"message": "Invalid or expired token"},
+        )
     token = credentials.credentials
     try:
         payload = verify(ACCESS, token)

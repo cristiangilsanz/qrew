@@ -12,22 +12,29 @@ from com.qode.qrew.v1.ticketing.schemas.tickets.ticket import TicketResponse
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
 
+_QR_ELIGIBLE_STATES = {"issued", "scanning"}
+_LIMIT_COUNTING_STATES = {"reserved", "issued", "scanning", "on_sale", "flagged"}
+
+
 def _to_response(ticket: object) -> TicketResponse:
     from com.qode.qrew.v1.ticketing.models.ticket import Ticket
 
     t: Ticket = ticket  # type: ignore[assignment]
+    state_val = t.state.value
     return TicketResponse(
         id=t.id,
         reservation_id=t.reservation_id,
         event_id=t.event_id,
         ticket_type_id=t.ticket_type_id,
-        state=t.state.value,
+        state=state_val,
         state_updated_at=t.state_updated_at,
         issued_at=t.issued_at,
         expired_at=t.expired_at,
         holder_name=t.holder_name,
         holder_dni=t.holder_dni,
         created_at=t.created_at,
+        qr_eligible=state_val in _QR_ELIGIBLE_STATES,
+        counts_toward_limit=state_val in _LIMIT_COUNTING_STATES,
     )
 
 

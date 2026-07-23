@@ -1,10 +1,10 @@
 import uuid
 from collections.abc import AsyncGenerator
-from typing import Annotated
+from typing import Annotated, Optional
 
 import redis.asyncio as aioredis
 import structlog
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
 from slowapi import Limiter
@@ -115,7 +115,7 @@ logger = structlog.get_logger(__name__)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
-_bearer = HTTPBearer()
+_bearer = HTTPBearer(auto_error=False)
 
 _CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -147,11 +147,21 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[t
 
 
 async def _resolve_user(
-    credentials: HTTPAuthorizationCredentials,
+    credentials: Optional[HTTPAuthorizationCredentials],
     db: AsyncSession,
     *,
     allow_setup: bool,
+    trusted_user_id: Optional[uuid.UUID] = None,
 ) -> User:
+    if trusted_user_id is not None:
+        user = await UserRepository(db).get_by_id(trusted_user_id)
+        if user is None or not user.is_active:
+            raise _CREDENTIALS_EXCEPTION
+        return user
+
+    if credentials is None:
+        raise _CREDENTIALS_EXCEPTION
+
     try:
         matched, payload = jwt_keys.verify_any(
             (jwt_keys.ACCESS, jwt_keys.SETUP), credentials.credentials
@@ -182,17 +192,33 @@ async def _resolve_user(
 
 
 async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    request: Request,
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    return await _resolve_user(credentials, db, allow_setup=False)
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    trusted_id: Optional[uuid.UUID] = None
+    if user_id_str:
+        try:
+            trusted_id = uuid.UUID(user_id_str)
+        except ValueError as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
+    return await _resolve_user(credentials, db, allow_setup=False, trusted_user_id=trusted_id)
 
 
 async def get_setup_or_full_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    request: Request,
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    return await _resolve_user(credentials, db, allow_setup=True)
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    trusted_id: Optional[uuid.UUID] = None
+    if user_id_str:
+        try:
+            trusted_id = uuid.UUID(user_id_str)
+        except ValueError as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
+    return await _resolve_user(credentials, db, allow_setup=True, trusted_user_id=trusted_id)
 
 
 async def get_recovery_user(

@@ -34,6 +34,7 @@ class MarketAssignmentResponse(BaseModel):
     id: uuid.UUID
     listing_id: uuid.UUID
     event_id: uuid.UUID
+    ticket_type_id: uuid.UUID | None = None
     price_cents: int
     currency: str
     state: str
@@ -43,6 +44,11 @@ class MarketAssignmentResponse(BaseModel):
     holder_dni: str | None = None
     event_name: str | None = None
     ticket_type_name: str | None = None
+
+
+class MarketQueueEntryResponse(BaseModel):
+    event_id: uuid.UUID
+    joined_at: datetime
 
 
 class MarketSetHoldersRequest(BaseModel):

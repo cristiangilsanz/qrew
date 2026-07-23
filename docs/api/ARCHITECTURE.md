@@ -15,27 +15,28 @@ Stripe is the only external third-party dependency and is integrated exclusively
 
 The following diagram shows how the system is organised across all four layers and how each component relates to the others.
 
+<div align="center">
+
 ```mermaid
 flowchart TB
     subgraph CL["Client Layer"]
         direction LR
         mobile(["User"])
-        scanner(["Scanner Device"])
     end
 
     subgraph EL["Edge Layer"]
-        gw["Gateway\n:8008"]
+        gw["Gateway\n:8000"]
     end
 
     subgraph DL["Domain Layer"]
         direction LR
-        id["Identity\n:8001"]
-        cat["Catalog\n:8002"]
-        sal["Sales\n:8003"]
-        pay["Payments\n:8004"]
-        tkt["Ticketing\n:8005"]
-        ent["Entry\n:8006"]
-        aud["Audit\n:8007"]
+        id["Identity\n(internal)"]
+        cat["Catalog\n(internal)"]
+        sal["Sales\n(internal)"]
+        pay["Payments\n(internal)"]
+        tkt["Ticketing\n(internal)"]
+        ent["Entry\n(internal)"]
+        aud["Audit\n(internal)"]
     end
 
     subgraph IL["Infrastructure Layer"]
@@ -47,11 +48,9 @@ flowchart TB
 
     stripe(["Stripe"])
 
-    mobile      -->|"HTTP"| DL
-    mobile      -->|"WebSocket"| gw
-    scanner     -->|"WebSocket"| gw
-    scanner     -->|"HTTP"| ent
+    mobile      -->|"HTTP + WebSocket"| gw
 
+    gw          -->|"HTTP (proxy)"| DL
     gw          -->|"Subscribe"| nats
 
     DL          <-->|"Events"| nats
@@ -66,13 +65,15 @@ flowchart TB
     style IL padding:20px
 ```
 
+</div>
+
 ## Communication
 
 The platform operates through three communication channels, each serving a distinct purpose.
 
-* **HTTP flow.** Used by clients for all data operations such as authentication, browsing the catalog, purchasing tickets, and scanning at the gate. Each service exposes its own REST API and verifies the JWT locally without calling any other service at request time.
-* **Event flow.** Used by services to propagate state changes across the platform. When a service commits a write it publishes a domain event to NATS JetStream, which other services consume asynchronously through dedicated worker processes to update their own local projections.
-* **Real time flow.** Used by clients to receive live push updates without polling. The Gateway authenticates the WebSocket connection, subscribes to the relevant NATS subjects on behalf of the client, and forwards incoming messages directly over the socket for ticket status updates and gate scanning feedback.
+* **HTTP flow.** Used by clients for all data operations such as authentication, browsing the catalog, purchasing tickets, and scanning at the gate.
+* **Event flow.** Used by services to propagate state changes across the platform.
+* **Real time flow.** Used by clients to receive live push updates without polling.
 
 The following diagram shows how clients, services, and infrastructure interact across these three flows.
 
@@ -86,10 +87,12 @@ sequenceDiagram
     participant W as Service Worker
 
     Note over C,S: HTTP flow
-    C->>S: HTTP request + JWT
-    S->>S: Verify JWT locally
+    C->>GW: HTTP request + JWT
+    GW->>GW: Verify JWT once
+    GW->>S: Proxy request + X-Authenticated-User-Id
     S->>DB: Read or Write
-    S-->>C: Response
+    S-->>GW: Response
+    GW-->>C: Response
 
     Note over S,W: Event flow
     S->>NATS: Publish domain event

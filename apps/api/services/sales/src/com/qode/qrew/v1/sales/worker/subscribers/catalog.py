@@ -42,6 +42,7 @@ async def _upsert_event_ctx(
     d = data["data"]
     sale_starts_at = _parse_dt(d.get("sale_starts_at"))
     sale_ends_at = _parse_dt(d.get("sale_ends_at"))
+    starts_at = _parse_dt(d.get("starts_at"))
     max_tickets_per_user = int(d.get("max_tickets_per_user", 10))
     queue_required = bool(d.get("queue_required", False))
     queue_admit_rate = int(d.get("queue_admit_rate_per_minute", 50))
@@ -52,6 +53,7 @@ async def _upsert_event_ctx(
                 status=status,
                 sale_starts_at=sale_starts_at,
                 sale_ends_at=sale_ends_at,
+                starts_at=starts_at,
                 max_tickets_per_user=max_tickets_per_user,
                 queue_required=queue_required,
                 queue_admit_rate_per_minute=queue_admit_rate,

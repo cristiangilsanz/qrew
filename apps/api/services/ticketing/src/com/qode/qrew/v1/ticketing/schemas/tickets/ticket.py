@@ -16,3 +16,5 @@ class TicketResponse(BaseModel):
     holder_name: str | None
     holder_dni: str | None
     created_at: datetime
+    qr_eligible: bool
+    counts_toward_limit: bool

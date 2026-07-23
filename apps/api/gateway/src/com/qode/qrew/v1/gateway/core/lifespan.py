@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
+import httpx
 import structlog
 from fastapi import FastAPI
 
@@ -30,6 +31,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     await start_hub()
 
+    # Shared httpx client for HTTP reverse-proxy (keep-alive pool)
+    app.state.proxy_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(30.0),
+        limits=httpx.Limits(max_connections=200, max_keepalive_connections=50),
+        follow_redirects=False,
+    )
+
     nats_stop: Callable[[], Awaitable[None]] | None = None
 
     if settings.nats_url:
@@ -43,6 +51,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     if nats_stop is not None:
         await nats_stop()
 
+    await app.state.proxy_client.aclose()
     await close_idempotency_store()
     await stop_hub()
     shutdown_tracing()

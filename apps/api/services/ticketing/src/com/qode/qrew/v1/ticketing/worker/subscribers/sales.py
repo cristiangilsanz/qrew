@@ -186,6 +186,196 @@ _HANDLERS = {
 }
 
 
+
+_MARKET_STREAM = "MARKET"
+_MARKET_DURABLE = "ticketing-market-handler"
+
+
+async def handle_ticket_freeze(raw: bytes) -> None:
+    """Puts a ticket on sale when the seller lists it on the market (issued → on_sale)."""
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        ticket_id = uuid.UUID(str(data["data"]["ticket_id"]))
+        actor_id = uuid.UUID(str(data["data"]["actor_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("market_events.freeze.bad_payload")
+        return
+
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"ticket:{ticket_id}:state", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            ticket = await TicketRepository(session).get_by_id(ticket_id)
+            if ticket is None:
+                await logger.awarning("market_events.freeze.ticket_not_found", ticket_id=str(ticket_id))
+                return
+            if ticket.state == TicketState.on_sale:
+                return
+            if ticket.state != TicketState.issued:
+                await logger.awarning(
+                    "market_events.freeze.wrong_state",
+                    state=ticket.state,
+                    ticket_id=str(ticket_id),
+                )
+                return
+            await transition_ticket(
+                session,
+                ticket_id=ticket_id,
+                to_state=TicketState.on_sale,
+                reason="market_listed",
+                actor_id=actor_id,
+                audit=AuditService(),
+            )
+            await session.commit()
+    await logger.ainfo("market_events.ticket_on_sale", ticket_id=str(ticket_id))
+
+
+async def handle_transfer(raw: bytes) -> None:
+    """Transfers ticket ownership to the buyer after a successful market payment (on_sale → issued)."""
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        ticket_id = uuid.UUID(str(data["data"]["ticket_id"]))
+        new_owner_user_id = uuid.UUID(str(data["data"]["new_owner_user_id"]))
+        holder_name: str = str(data["data"]["holder_name"])
+        holder_dni: str = str(data["data"]["holder_dni"])
+        actor_id = new_owner_user_id
+    except (KeyError, ValueError):
+        await logger.awarning("market_events.transfer.bad_payload")
+        return
+
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"ticket:{ticket_id}:state", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            ticket = await TicketRepository(session).get_by_id(ticket_id)
+            if ticket is None:
+                await logger.awarning("market_events.transfer.ticket_not_found", ticket_id=str(ticket_id))
+                return
+            if ticket.state != TicketState.on_sale:
+                await logger.awarning(
+                    "market_events.transfer.wrong_state",
+                    state=ticket.state,
+                    ticket_id=str(ticket_id),
+                )
+                return
+            ticket.owner_user_id = new_owner_user_id
+            ticket.holder_name = holder_name
+            ticket.holder_dni = holder_dni
+            await transition_ticket(
+                session,
+                ticket_id=ticket_id,
+                to_state=TicketState.issued,
+                reason="market_transfer",
+                actor_id=actor_id,
+                audit=AuditService(),
+            )
+            await session.commit()
+    await logger.ainfo(
+        "market_events.ticket_transferred",
+        ticket_id=str(ticket_id),
+        new_owner=str(new_owner_user_id),
+    )
+
+
+async def handle_listing_expired(raw: bytes) -> None:
+    """Returns an on_sale ticket to the seller when the listing expires (on_sale → issued, original owner)."""
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        ticket_id = uuid.UUID(str(data["data"]["ticket_id"]))
+        seller_user_id = uuid.UUID(str(data["data"]["seller_user_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("market_events.listing_expired.bad_payload")
+        return
+
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"ticket:{ticket_id}:state", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            ticket = await TicketRepository(session).get_by_id(ticket_id)
+            if ticket is None:
+                return
+            if ticket.state != TicketState.on_sale:
+                return
+            await transition_ticket(
+                session,
+                ticket_id=ticket_id,
+                to_state=TicketState.issued,
+                reason="market_listing_expired",
+                actor_id=seller_user_id,
+                audit=AuditService(),
+            )
+            await session.commit()
+    await logger.ainfo(
+        "market_events.listing_expired_ticket_returned", ticket_id=str(ticket_id)
+    )
+
+
+_MARKET_HANDLERS = {
+    "market.ticket.freeze.v1": handle_ticket_freeze,
+    "market.transfer.v1": handle_transfer,
+    "market.listing.expired.v1": handle_listing_expired,
+}
+
+
+async def run_market_event_subscriber(nats_url: str) -> None:
+    import nats
+    from nats.js.api import ConsumerConfig, DeliverPolicy
+
+    _tasks: list[asyncio.Task[None]] = []
+    nc = await nats.connect(nats_url)  # type: ignore[reportUnknownMemberType]
+    js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
+
+    try:
+        await js.find_stream_name_by_subject("market.>")
+    except Exception:
+        await js.add_stream(name=_MARKET_STREAM, subjects=["market.>"])  # type: ignore[misc]
+
+    for subject, handler in _MARKET_HANDLERS.items():
+        durable = f"{_MARKET_DURABLE}-{subject.replace('.', '-')}"
+        config = ConsumerConfig(
+            durable_name=durable,
+            deliver_policy=DeliverPolicy.ALL,
+            filter_subject=subject,
+        )
+        psub = await js.subscribe(subject, durable=durable, config=config, stream=_MARKET_STREAM)  # type: ignore[misc]
+        await logger.ainfo("market_events.subscribed", subject=subject)
+
+        async def _consume(psub: Any = psub, h: Any = handler) -> None:
+            try:
+                async for msg in psub.messages:  # type: ignore[attr-defined]
+                    try:
+                        await h(msg.data)  # type: ignore[attr-defined]
+                        await msg.ack()  # type: ignore[attr-defined]
+                    except Exception as exc:
+                        await logger.awarning("market_events.handler_error", error=repr(exc))
+                        await msg.nak()  # type: ignore[attr-defined]
+            except asyncio.CancelledError:
+                raise
+
+        _tasks.append(asyncio.create_task(_consume()))
+
+    await logger.ainfo("market_events.all_subscribed")
+    try:
+        while True:
+            await asyncio.sleep(3600)
+    except asyncio.CancelledError:
+        pass
+    finally:
+        for t in _tasks:
+            t.cancel()
+        await asyncio.gather(*_tasks, return_exceptions=True)
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("market_events.drain_failed", error=repr(exc))
+
+
 async def run_sales_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy

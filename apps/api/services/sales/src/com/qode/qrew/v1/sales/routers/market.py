@@ -11,6 +11,7 @@ from com.qode.qrew.v1.sales.models.market import MarketAssignment, MarketListing
 from com.qode.qrew.v1.sales.schemas.market import (
     MarketAssignmentResponse,
     MarketListingResponse,
+    MarketQueueEntryResponse,
     MarketQueueJoinResponse,
     MarketQueueStatusResponse,
     MarketSetHoldersRequest,
@@ -47,6 +48,7 @@ def _assignment_response(
         id=assignment.id,
         listing_id=assignment.listing_id,
         event_id=assignment.event_id,
+        ticket_type_id=listing.ticket_type_id if listing else None,
         price_cents=listing.price_cents if listing else 0,
         currency=listing.currency if listing else "EUR",
         state=assignment.state,
@@ -186,6 +188,26 @@ async def get_ticket_listing(
             detail={"message": "No active listing found for this ticket", "field": "ticket_id"},
         )
     return _listing_response(listing)
+
+
+# ---------------------------------------------------------------- my queues
+
+@market_router.get(
+    "/queues",
+    response_model=list[MarketQueueEntryResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get all active resale queue entries for the caller",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def get_my_queues(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    service: MarketService = Depends(get_market_service),
+) -> list[MarketQueueEntryResponse]:
+    del request, db
+    entries = await service.my_queues(user_id=current_user.id)
+    return [MarketQueueEntryResponse(**e) for e in entries]
 
 
 # ---------------------------------------------------------------- assignments

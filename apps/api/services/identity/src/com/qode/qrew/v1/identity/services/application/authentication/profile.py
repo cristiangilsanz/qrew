@@ -31,12 +31,23 @@ class ProfileService:
         email_verified = user.email_verified
         phone_verified = user.phone_number_verified
         is_complete = email_verified and phone_verified and kyc_submitted and has_passkey
+        if not email_verified:
+            current_step = "email"
+        elif not phone_verified:
+            current_step = "phone"
+        elif not kyc_submitted:
+            current_step = "kyc"
+        elif not has_passkey:
+            current_step = "passkey"
+        else:
+            current_step = "pending"
         return OnboardingStatusResponse(
             email_verified=email_verified,
             phone_verified=phone_verified,
             kyc_submitted=kyc_submitted,
             passkey_registered=has_passkey,
             is_complete=is_complete,
+            current_step=current_step,
         )
 
     async def paginate_audit(

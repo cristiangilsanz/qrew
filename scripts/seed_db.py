@@ -133,6 +133,36 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
     res_alice_market = uuid.UUID("44444444-0007-0007-0007-000000000007")
     tk_admin_market = uuid.UUID("55555555-0007-0007-0007-000000000007")  # issued — test Sale btn
     tk_alice_market = uuid.UUID("55555555-0008-0008-0008-000000000008")  # frozen — test My Listings
+    # State showcase tickets for alice
+    res_alice_expired = uuid.UUID("44444444-0009-0009-0009-000000000009")
+    res_alice_cancelled = uuid.UUID("44444444-0010-0010-0010-000000000010")
+    res_alice_entry = uuid.UUID("44444444-0011-0011-0011-000000000011")
+    res_alice_flagged = uuid.UUID("44444444-0012-0012-0012-000000000012")
+    res_alice_reserved = uuid.UUID("44444444-0013-0013-0013-000000000013")
+    tk_alice_expired = uuid.UUID("55555555-0009-0009-0009-000000000009")
+    tk_alice_cancelled = uuid.UUID("55555555-0010-0010-0010-000000000010")
+    tk_alice_entry = uuid.UUID("55555555-0011-0011-0011-000000000011")
+    tk_alice_flagged = uuid.UUID("55555555-0012-0012-0012-000000000012")
+    tk_alice_reserved = uuid.UUID("55555555-0013-0013-0013-000000000013")
+    # State showcase tickets for admin
+    res_admin_used = uuid.UUID("44444444-0014-0014-0014-000000000014")
+    res_admin_frozen = uuid.UUID("44444444-0015-0015-0015-000000000015")
+    res_admin_reserved = uuid.UUID("44444444-0016-0016-0016-000000000016")
+    res_admin_expired = uuid.UUID("44444444-0017-0017-0017-000000000017")
+    res_admin_cancelled = uuid.UUID("44444444-0018-0018-0018-000000000018")
+    res_admin_entry = uuid.UUID("44444444-0019-0019-0019-000000000019")
+    res_admin_flagged = uuid.UUID("44444444-0020-0020-0020-000000000020")
+    res_alice_reserved_expired = uuid.UUID("44444444-0021-0021-0021-000000000021")
+    res_admin_reserved_expired = uuid.UUID("44444444-0022-0022-0022-000000000022")
+    tk_alice_reserved_expired = uuid.UUID("55555555-0021-0021-0021-000000000021")
+    tk_admin_reserved_expired = uuid.UUID("55555555-0022-0022-0022-000000000022")
+    tk_admin_used = uuid.UUID("55555555-0014-0014-0014-000000000014")
+    tk_admin_frozen = uuid.UUID("55555555-0015-0015-0015-000000000015")
+    tk_admin_reserved = uuid.UUID("55555555-0016-0016-0016-000000000016")
+    tk_admin_expired = uuid.UUID("55555555-0017-0017-0017-000000000017")
+    tk_admin_cancelled = uuid.UUID("55555555-0018-0018-0018-000000000018")
+    tk_admin_entry = uuid.UUID("55555555-0019-0019-0019-000000000019")
+    tk_admin_flagged = uuid.UUID("55555555-0020-0020-0020-000000000020")
     market_listing_id = uuid.UUID("66666666-0001-0001-0001-000000000001")
     market_assignment_id = uuid.UUID("77777777-0001-0001-0001-000000000001")
 
@@ -464,7 +494,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             1,
         ),
         # Market test
-        (tt_market_ga, event_market, "General Admission", "Standard entry", 200, 200, 4500, "EUR", 0),
+        (tt_market_ga, event_market, "General Admission", "Access to all areas, standing floor. Valid for one person.", 200, 200, 4500, "EUR", 0),
     ]
 
     await conn.executemany(
@@ -696,6 +726,77 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 now,
                 now,
             ),
+            # alice — state showcase: reserved (awaiting payment)
+            (
+                res_alice_reserved,
+                user_alice,
+                event_now,
+                tt_now_ga,
+                1,
+                "reserved",
+                now + timedelta(minutes=30),
+                now,
+                now,
+            ),
+            # alice — state showcase: expired reservation
+            (
+                res_alice_expired,
+                user_alice,
+                event_now,
+                tt_now_ga,
+                1,
+                "expired",
+                now - timedelta(hours=1),
+                now,
+                now,
+            ),
+            # alice — state showcase: cancelled ticket
+            (
+                res_alice_cancelled,
+                user_alice,
+                event_now,
+                tt_now_ga,
+                1,
+                "paid",
+                far_future,
+                now,
+                now,
+            ),
+            # alice — state showcase: entry_pending
+            (
+                res_alice_entry,
+                user_alice,
+                event_now,
+                tt_now_ga,
+                1,
+                "paid",
+                far_future,
+                now,
+                now,
+            ),
+            # alice — state showcase: flagged
+            (
+                res_alice_flagged,
+                user_alice,
+                event_now,
+                tt_now_ga,
+                1,
+                "paid",
+                far_future,
+                now,
+                now,
+            ),
+            # admin — state showcase reservations
+            (res_admin_used, user_admin, event_past, tt_past_ga, 1, "paid", far_future, now, now),
+            (res_admin_frozen, user_admin, event_market, tt_market_ga, 1, "paid", far_future, now, now),
+            (res_admin_reserved, user_admin, event_now, tt_now_ga, 1, "reserved", now + timedelta(minutes=30), now, now),
+            (res_admin_expired, user_admin, event_now, tt_now_ga, 1, "expired", now - timedelta(hours=1), now, now),
+            (res_admin_cancelled, user_admin, event_now, tt_now_ga, 1, "paid", far_future, now, now),
+            (res_admin_entry, user_admin, event_now, tt_now_ga, 1, "paid", far_future, now, now),
+            (res_admin_flagged, user_admin, event_now, tt_now_ga, 1, "paid", far_future, now, now),
+            # reserved tickets with expired reservations (shows "Payment window closed")
+            (res_alice_reserved_expired, user_alice, event_now, tt_now_ga, 1, "expired", now - timedelta(hours=2), now, now),
+            (res_admin_reserved_expired, user_admin, event_now, tt_now_ga, 1, "expired", now - timedelta(hours=2), now, now),
         ],
     )
 
@@ -718,12 +819,12 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 event_past,
                 tt_past_ga,
                 user_alice,
-                "used",
+                "redeemed",
                 now,
                 now,
                 None,
                 "Alice Dev",
-                None,
+                "12345678A",
                 now,
                 now,
             ),
@@ -739,7 +840,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 now,
                 None,
                 "Alice Dev",
-                None,
+                "12345678A",
                 now,
                 now,
             ),
@@ -754,7 +855,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 now,
                 None,
                 "Alice Dev",
-                None,
+                "12345678A",
                 now,
                 now,
             ),
@@ -786,7 +887,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 now,
                 None,
                 "Admin User",
-                None,
+                "87654321B",
                 now,
                 now,
             ),
@@ -797,15 +898,106 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 event_market,
                 tt_market_ga,
                 user_alice,
-                "frozen",
+                "on_sale",
                 now,
                 now,
                 None,
                 "Alice Dev",
+                "12345678A",
+                now,
+                now,
+            ),
+            # alice — expired ticket
+            (
+                tk_alice_expired,
+                res_alice_expired,
+                event_now,
+                tt_now_ga,
+                user_alice,
+                "expired",
+                now,
+                None,
+                now - timedelta(minutes=30),
+                None,
                 None,
                 now,
                 now,
             ),
+            # alice — cancelled ticket
+            (
+                tk_alice_cancelled,
+                res_alice_cancelled,
+                event_now,
+                tt_now_ga,
+                user_alice,
+                "cancelled",
+                now,
+                now,
+                None,
+                "Alice Dev",
+                "12345678A",
+                now,
+                now,
+            ),
+            # alice — entry_pending ticket
+            (
+                tk_alice_entry,
+                res_alice_entry,
+                event_now,
+                tt_now_ga,
+                user_alice,
+                "scanning",
+                now,
+                now,
+                None,
+                "Alice Dev",
+                "12345678A",
+                now,
+                now,
+            ),
+            # alice — flagged ticket
+            (
+                tk_alice_flagged,
+                res_alice_flagged,
+                event_now,
+                tt_now_ga,
+                user_alice,
+                "flagged",
+                now,
+                now,
+                None,
+                "Alice Dev",
+                "12345678A",
+                now,
+                now,
+            ),
+            # alice — reserved ticket (awaiting payment)
+            (
+                tk_alice_reserved,
+                res_alice_reserved,
+                event_now,
+                tt_now_ga,
+                user_alice,
+                "reserved",
+                now,
+                None,
+                None,
+                None,
+                None,
+                now,
+                now,
+            ),
+            # admin — all states showcase
+            (tk_admin_used, res_admin_used, event_past, tt_past_ga, user_admin, "redeemed", now, now, None, "Admin User", "87654321B", now, now),
+            (tk_admin_frozen, res_admin_frozen, event_market, tt_market_ga, user_admin, "on_sale", now, now, None, "Admin User", "87654321B", now, now),
+            (tk_admin_reserved, res_admin_reserved, event_now, tt_now_ga, user_admin, "reserved", now, None, None, None, None, now, now),
+            (tk_admin_expired, res_admin_expired, event_now, tt_now_ga, user_admin, "expired", now, None, now - timedelta(minutes=30), None, None, now, now),
+            (tk_admin_cancelled, res_admin_cancelled, event_now, tt_now_ga, user_admin, "cancelled", now, now, None, "Admin User", "87654321B", now, now),
+            (tk_admin_entry, res_admin_entry, event_now, tt_now_ga, user_admin, "scanning", now, now, None, "Admin User", "87654321B", now, now),
+            (tk_admin_flagged, res_admin_flagged, event_now, tt_now_ga, user_admin, "flagged", now, now, None, "Admin User", "87654321B", now, now),
+            # reserved tickets whose reservation expired (shows "Payment window closed")
+            (tk_alice_reserved_expired, res_alice_reserved_expired, event_now, tt_now_ga, user_alice, "expired", now, None, now - timedelta(hours=2), None, None, now, now),
+            (tk_admin_reserved_expired, res_admin_reserved_expired, event_now, tt_now_ga, user_admin, "expired", now, None, now - timedelta(hours=2), None, None, now, now),
         ],
     )
 
@@ -844,7 +1036,7 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         event_market,
         user_admin,
         now,
-        now + timedelta(minutes=30),
+        now + timedelta(days=1),
         "pending",
     )
 

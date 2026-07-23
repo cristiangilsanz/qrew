@@ -31,6 +31,17 @@ class MarketRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_active_queue_entries_for_user(
+        self, *, user_id: uuid.UUID
+    ) -> list[MarketQueueEntry]:
+        result = await self._session.execute(
+            select(MarketQueueEntry).where(
+                MarketQueueEntry.user_id == user_id,
+                MarketQueueEntry.left_at.is_(None),
+            )
+        )
+        return list(result.scalars().all())
+
     async def insert_queue_entry(self, entry: MarketQueueEntry) -> MarketQueueEntry:
         self._session.add(entry)
         await self._session.flush()
@@ -55,7 +66,7 @@ class MarketRepository:
             SELECT COUNT(*) FROM ticketing.tickets
             WHERE owner_user_id = :user_id
               AND event_id = :event_id
-              AND state IN ('reserved', 'issued', 'frozen', 'entry_pending', 'flagged')
+              AND state IN ('reserved', 'issued', 'on_sale', 'scanning', 'flagged')
             """
         )
         result = await self._session.execute(
@@ -162,7 +173,7 @@ class MarketRepository:
                       SELECT COUNT(*) FROM ticketing.tickets t
                       WHERE t.owner_user_id = mq.user_id
                         AND t.event_id = :event_id
-                        AND t.state IN ('reserved','issued','frozen','entry_pending','flagged')
+                        AND t.state IN ('reserved','issued','on_sale','scanning','flagged')
                   ) + (
                       SELECT COUNT(*) FROM sales.market_assignments ma
                       WHERE ma.buyer_user_id = mq.user_id

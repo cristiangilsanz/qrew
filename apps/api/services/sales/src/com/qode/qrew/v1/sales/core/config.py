@@ -61,6 +61,11 @@ class Settings(BaseSettings):
 
     trusted_proxy_ip: str = ""
 
+    market_assignment_ttl_hours: int = 24
+    market_listing_ttl_days: int = 7
+    market_assigner_interval_seconds: int = 30
+    market_expirer_interval_seconds: int = 300
+
     ratelimit_enabled: bool = True
 
     idempotency_enabled: bool = True

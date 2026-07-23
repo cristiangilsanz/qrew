@@ -73,7 +73,7 @@ This service has no background workers. All processing is driven by incoming HTT
 | `REDIS_URL` | Redis connection URL. |
 | `NATS_URL` | NATS server address. |
 | `INTERNAL_API_KEY` | Shared secret for internal service-to-service calls. |
-| `SALES_URL` | Base URL of the sales service. Defaults to `http://localhost:8005`. |
+| `SALES_URL` | Base URL of the sales service. Defaults to `http://localhost:8003`. |
 | `ACCESS_JWT_PRIVATE_KEY` | EC private key for JWT verification. |
 | `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma-separated previous public keys for key rotation. |
 | `PII_ENCRYPTION_KEY` | AES key for PII field encryption at rest. |

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -401,6 +401,16 @@ async def get_public_event(
         )
     event, org, venue = result
     tiers = await svc.get_ticket_types(event_id)
+    now = datetime.now(UTC)
+    all_sold_out = all(tier.capacity - tier.reserved_count <= 0 for tier in tiers)
+    if now < event.sale_starts_at:
+        availability_status = "not_started"
+    elif now > event.sale_ends_at:
+        availability_status = "ended"
+    elif all_sold_out:
+        availability_status = "sold_out"
+    else:
+        availability_status = "open"
     return PublicEventDetailResponse(
         id=event.id,
         name=event.name,
@@ -413,6 +423,7 @@ async def get_public_event(
         max_tickets_per_user=event.max_tickets_per_user,
         queue_required=event.queue_required,
         published_at=event.published_at,
+        availability_status=availability_status,
         organisation=OrganisationPublicResponse(
             id=org.id, slug=org.slug, name=org.name, description=org.description
         ),

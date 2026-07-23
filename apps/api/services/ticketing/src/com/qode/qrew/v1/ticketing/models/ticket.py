@@ -12,11 +12,11 @@ from com.qode.qrew.v1.ticketing.core.database import Base
 class TicketState(enum.StrEnum):
     reserved = "reserved"
     issued = "issued"
-    entry_pending = "entry_pending"
-    used = "used"
+    scanning = "scanning"
+    redeemed = "redeemed"
     cancelled = "cancelled"
     expired = "expired"
-    frozen = "frozen"
+    on_sale = "on_sale"
     flagged = "flagged"
 
 

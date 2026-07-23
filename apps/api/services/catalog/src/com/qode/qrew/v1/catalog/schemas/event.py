@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -92,6 +93,7 @@ class PublicEventDetailResponse(BaseModel):
     max_tickets_per_user: int
     queue_required: bool
     published_at: datetime | None
+    availability_status: Literal["not_started", "open", "ended", "sold_out"]
     organisation: OrganisationPublicResponse
     venue: VenuePublicResponse
     ticket_types: list[PublicTicketTypeItem]

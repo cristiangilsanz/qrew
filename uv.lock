@@ -1231,6 +1231,7 @@ dependencies = [
     { name = "cryptography" },
     { name = "exceptions" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "idempotency" },
     { name = "middleware" },
     { name = "nats-py" },
@@ -1248,7 +1249,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "anyio" },
-    { name = "httpx" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -1261,6 +1261,7 @@ requires-dist = [
     { name = "cryptography", specifier = ">=42" },
     { name = "exceptions", editable = "packages/shared-python/exceptions" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/shared-python/idempotency" },
     { name = "middleware", editable = "packages/shared-python/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
@@ -1278,7 +1279,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "anyio", specifier = ">=4.0" },
-    { name = "httpx", specifier = ">=0.27" },
     { name = "pyright", specifier = ">=1.1" },
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-asyncio", specifier = ">=0.24" },

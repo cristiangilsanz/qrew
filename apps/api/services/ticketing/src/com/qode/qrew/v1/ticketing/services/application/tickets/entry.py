@@ -32,12 +32,12 @@ async def use_ticket(
             await transition_ticket(
                 session,
                 ticket_id=ticket_id,
-                to_state=TicketState.used,
+                to_state=TicketState.redeemed,
                 reason="entry_validated",
                 actor_id=actor_id,
             )
         except TicketTransitionError as exc:
-            if "terminal" in exc.message.lower() or "used" in exc.message.lower():
+            if "terminal" in exc.message.lower() or "redeemed" in exc.message.lower():
                 return
             raise
         await session.commit()

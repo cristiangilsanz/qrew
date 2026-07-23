@@ -90,7 +90,7 @@ class TestRestoreFrozenTicket:
         audit: AuditService,
         now: datetime,
     ) -> None:
-        ticket = make_ticket(owner_user_id=uuid.uuid4(), state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=uuid.uuid4(), state=TicketState.on_sale)
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="not found"):
             await restore_frozen_ticket(
@@ -129,7 +129,7 @@ class TestRestoreFrozenTicket:
         audit: AuditService,
         now: datetime,
     ) -> None:
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="device session"):
             await restore_frozen_ticket(
@@ -150,7 +150,7 @@ class TestRestoreFrozenTicket:
         now: datetime,
     ) -> None:
         ticket = make_ticket(
-            owner_user_id=user_id, state=TicketState.frozen, bound_device_id=device_id
+            owner_user_id=user_id, state=TicketState.on_sale, bound_device_id=device_id
         )
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="new device"):
@@ -170,7 +170,7 @@ class TestRestoreFrozenTicket:
         device_id: uuid.UUID,
         audit: AuditService,
     ) -> None:
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="reassertion"):
             await restore_frozen_ticket(
@@ -191,7 +191,7 @@ class TestRestoreFrozenTicket:
         now: datetime,
     ) -> None:
         stale = now - timedelta(seconds=60)
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="reassertion"):
             await restore_frozen_ticket(
@@ -211,7 +211,7 @@ class TestRestoreFrozenTicket:
         audit: AuditService,
         fresh_asserted_at: datetime,
     ) -> None:
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket, device=None)
         with pytest.raises(TicketRestoreError, match="Device not found"):
             await restore_frozen_ticket(
@@ -231,7 +231,7 @@ class TestRestoreFrozenTicket:
         audit: AuditService,
         fresh_asserted_at: datetime,
     ) -> None:
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         device = make_device(user_id=uuid.uuid4(), device_id=device_id)
         db = _make_db(ticket=ticket, device=device)
         with pytest.raises(TicketRestoreError, match="Device not found"):
@@ -252,7 +252,7 @@ class TestRestoreFrozenTicket:
         audit: AuditService,
         fresh_asserted_at: datetime,
     ) -> None:
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         device = make_device(user_id=user_id, device_id=device_id, revoked_at=fresh_asserted_at)
         db = _make_db(ticket=ticket, device=device)
         with pytest.raises(TicketRestoreError, match="revoked"):
@@ -273,7 +273,7 @@ class TestRestoreFrozenTicket:
         audit: AuditService,
         fresh_asserted_at: datetime,
     ) -> None:
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         device = make_device(user_id=user_id, device_id=device_id, attested_at=None)
         db = _make_db(ticket=ticket, device=device)
         with pytest.raises(TicketRestoreError, match="attestation"):
@@ -297,7 +297,7 @@ class TestRestoreFrozenTicket:
         from datetime import datetime
 
         stale_attested = datetime.now(UTC) - timedelta(hours=25)
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         device = make_device(user_id=user_id, device_id=device_id, attested_at=stale_attested)
         db = _make_db(ticket=ticket, device=device)
         with pytest.raises(TicketRestoreError, match="stale"):
@@ -318,7 +318,7 @@ class TestRestoreFrozenTicket:
         audit: AuditService,
         fresh_asserted_at: datetime,
     ) -> None:
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         device = make_device(user_id=user_id, device_id=device_id)
         db = _make_db(ticket=ticket, device=device)
 
@@ -344,7 +344,7 @@ class TestRestoreFrozenTicket:
     ) -> None:
         broken_audit = AsyncMock(spec=AuditService)
         broken_audit.record = AsyncMock(side_effect=RuntimeError("audit down"))
-        ticket = make_ticket(owner_user_id=user_id, state=TicketState.frozen)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         device = make_device(user_id=user_id, device_id=device_id)
         db = _make_db(ticket=ticket, device=device)
 

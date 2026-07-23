@@ -69,7 +69,7 @@ class MarketService:
         sale_closed = event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at
         if not sale_closed:
             raise MarketError(
-                "Market queue is only available when the sale window has closed",
+                "Resale queue is only available once the sale window has closed",
                 field="event_id",
             )
 
@@ -78,7 +78,7 @@ class MarketService:
         )
         if active_count >= event_ctx.max_tickets_per_user:
             raise MarketError(
-                "You have reached the ticket limit for this event",
+                "You already have the maximum number of tickets for this event",
                 field="user_id",
             )
 
@@ -120,6 +120,11 @@ class MarketService:
             "pending_assignment_id": str(pending.id) if pending else None,
             "queue_count": active_count,
         }
+
+    @traced("market.service.my_queues")
+    async def my_queues(self, *, user_id: uuid.UUID) -> list[dict[str, Any]]:
+        entries = await self._repo.get_active_queue_entries_for_user(user_id=user_id)
+        return [{"event_id": e.event_id, "joined_at": e.joined_at} for e in entries]
 
     # ----------------------------------------------------------------- listing
 

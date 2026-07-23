@@ -29,7 +29,7 @@ class TicketTransitionError(DomainError):
 
 
 _TERMINAL: frozenset[TicketState] = frozenset(
-    {TicketState.used, TicketState.cancelled, TicketState.expired}
+    {TicketState.redeemed, TicketState.cancelled, TicketState.expired}
 )
 
 _LEGAL_TRANSITIONS: dict[TicketState, frozenset[TicketState]] = {
@@ -37,14 +37,14 @@ _LEGAL_TRANSITIONS: dict[TicketState, frozenset[TicketState]] = {
         {TicketState.issued, TicketState.cancelled, TicketState.expired}
     ),
     TicketState.issued: frozenset(
-        {TicketState.entry_pending, TicketState.cancelled, TicketState.frozen, TicketState.flagged}
+        {TicketState.scanning, TicketState.cancelled, TicketState.on_sale, TicketState.flagged}
     ),
-    TicketState.frozen: frozenset({TicketState.issued, TicketState.cancelled, TicketState.flagged}),
-    TicketState.entry_pending: frozenset(
-        {TicketState.used, TicketState.issued, TicketState.cancelled}
+    TicketState.on_sale: frozenset({TicketState.issued, TicketState.cancelled, TicketState.flagged}),
+    TicketState.scanning: frozenset(
+        {TicketState.redeemed, TicketState.issued, TicketState.cancelled}
     ),
     TicketState.flagged: frozenset({TicketState.cancelled, TicketState.issued}),
-    TicketState.used: frozenset(),
+    TicketState.redeemed: frozenset(),
     TicketState.cancelled: frozenset(),
     TicketState.expired: frozenset(),
 }
