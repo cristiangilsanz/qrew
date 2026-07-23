@@ -18,9 +18,9 @@ from starlette.responses import Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from com.qode.qrew.v1.gateway.core.auth import (
-    _access_public_keys,
-    _scanner_public_keys,
-    _try_verify,
+    access_public_keys,
+    scanner_public_keys,
+    try_verify,
 )
 
 logger = structlog.get_logger(__name__)
@@ -98,7 +98,7 @@ class AuthMiddleware:
             return
 
         # Try access token first
-        claims = _try_verify(token, _access_public_keys())
+        claims = try_verify(token, access_public_keys())
         if claims is not None:
             token_type = str(claims.get("type", ""))
             if token_type not in ("access", "setup"):
@@ -115,9 +115,9 @@ class AuthMiddleware:
             return
 
         # Try scanner token (for entry service endpoints)
-        scanner_keys = _scanner_public_keys()
+        scanner_keys = scanner_public_keys()
         if scanner_keys:
-            claims = _try_verify(token, scanner_keys)
+            claims = try_verify(token, scanner_keys)
             if claims is not None and claims.get("type") == "scanner":
                 scanner_id = str(claims.get("scanner_id", ""))
                 headers = MutableHeaders(scope=scope)
