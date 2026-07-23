@@ -10,7 +10,7 @@ import { type ApiErrorDetail, authApi, extractErrorMessage } from '../api'
 
 export function usePasskeyLogin() {
   const { t } = useTranslation()
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
+  const setTokens = useAuthStore((s) => s.setTokens)
   const setSetupToken = useAuthStore((s) => s.setSetupToken)
 
   return useMutation({
@@ -23,7 +23,7 @@ export function usePasskeyLogin() {
       if (data.setup_required) {
         setSetupToken(data.access_token)
       } else {
-        setAccessToken(data.access_token)
+        setTokens(data.access_token, data.refresh_token ?? '')
       }
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {

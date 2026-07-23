@@ -151,16 +151,15 @@ export function ReservationRow({ tickets }: Props) {
       {awaitingPayment && (
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 shrink-0 text-yellow-400" />
+            <Clock className={cn('h-3.5 w-3.5 shrink-0', countdown < 60 ? 'text-red-400' : 'text-yellow-400')} />
             <span
               className={cn(
                 'font-mono text-sm font-semibold',
-                countdown < 60 ? 'text-destructive' : 'text-yellow-400',
+                countdown < 60 ? 'text-red-400' : 'text-yellow-400',
               )}
             >
               {formatSeconds(countdown)}
             </span>
-            <span className="text-muted-foreground text-xs">remaining</span>
           </div>
           <button
             onClick={() =>
@@ -169,10 +168,10 @@ export function ReservationRow({ tickets }: Props) {
                 params: { reservationId: first.reservation_id },
               })
             }
-            className="flex h-8 items-center gap-1.5 rounded-full bg-yellow-500 px-4 text-xs font-semibold text-black"
+            className="bg-primary hover:bg-primary/90 flex h-8 items-center gap-1.5 rounded-full px-4 text-xs font-semibold text-white"
           >
             <CreditCard className="h-3.5 w-3.5 shrink-0" />
-            Complete Payment
+            Complete payment
           </button>
         </div>
       )}

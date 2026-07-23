@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { OnboardingStepSkeleton } from '@/components/ui/skeleton'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
 
 import { type KycUploadResponse } from '../api'
@@ -13,19 +14,6 @@ import { PhoneVerificationStep } from './PhoneVerificationStep'
 
 const STEPS = ['email', 'phone', 'kyc', 'passkey'] as const
 type Step = (typeof STEPS)[number]
-
-function stepFromStatus(
-  emailVerified: boolean,
-  phoneVerified: boolean,
-  kycSubmitted: boolean,
-  passkeyRegistered: boolean,
-): Step | 'pending' {
-  if (!emailVerified) return 'email'
-  if (!phoneVerified) return 'phone'
-  if (!kycSubmitted) return 'kyc'
-  if (!passkeyRegistered) return 'passkey'
-  return 'pending'
-}
 
 function StepIndicator({ current }: { current: Step | 'pending' }) {
   const { t } = useTranslation()
@@ -76,24 +64,7 @@ export function OnboardingWizard() {
   const { data: status, isLoading, refetch } = useOnboardingStatus()
   const [kycRetry, setKycRetry] = useState(false)
 
-  const currentStep =
-    status && !kycRetry
-      ? stepFromStatus(
-          status.email_verified,
-          status.phone_verified,
-          status.kyc_submitted,
-          status.passkey_registered,
-        )
-      : status
-        ? kycRetry
-          ? 'kyc'
-          : stepFromStatus(
-              status.email_verified,
-              status.phone_verified,
-              status.kyc_submitted,
-              status.passkey_registered,
-            )
-        : 'email'
+  const currentStep: Step | 'pending' = kycRetry ? 'kyc' : (status?.current_step ?? 'email')
 
   const handleStepSuccess = () => {
     setKycRetry(false)
@@ -110,9 +81,7 @@ export function OnboardingWizard() {
   if (isLoading) {
     return (
       <AuthLayout title={t('onboarding.title')} subtitle={t('onboarding.subtitle')}>
-        <div className="flex justify-center py-8">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-        </div>
+        <OnboardingStepSkeleton />
       </AuthLayout>
     )
   }

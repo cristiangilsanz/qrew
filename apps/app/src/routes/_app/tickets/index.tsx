@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { Search } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import noTicketsImg from '@/assets/images/no-tickets.png'
-import { TicketCardSkeleton } from '@/components/ui/skeleton'
+import { ReservationRowSkeleton } from '@/components/ui/skeleton'
 import type { Ticket } from '@/features/tickets/api'
 import { ReservationRow } from '@/features/tickets/components/ReservationRow'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
@@ -44,9 +45,9 @@ function TicketsPage() {
       <h1 className="text-2xl font-bold">{t('tickets.title')}</h1>
 
       {isLoading && (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8">
           {[0, 1, 2].map((i) => (
-            <TicketCardSkeleton key={i} />
+            <ReservationRowSkeleton key={i} />
           ))}
         </div>
       )}
@@ -62,6 +63,7 @@ function TicketsPage() {
             to="/events"
             className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-11 items-center rounded-full px-6 text-sm font-semibold transition-colors"
           >
+            <Search className="mr-2 h-4 w-4" />
             {t('tickets.browseEvents')}
           </Link>
         </div>

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 
 import { useProfile } from '../hooks/useProfile'
@@ -12,8 +13,16 @@ export function ProfileCard() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex justify-center py-8">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+        <CardHeader>
+          <Skeleton className="h-5 w-32" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex justify-between">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          ))}
         </CardContent>
       </Card>
     )

@@ -1,5 +1,5 @@
-import { CheckCircle, ScanLine } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { CheckCircle, ScanLine } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import type { OrgEvent } from '../api'

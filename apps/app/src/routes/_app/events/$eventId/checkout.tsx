@@ -9,11 +9,9 @@ import { z } from 'zod'
 import { BackButton } from '@/components/ui/back-button'
 import { CheckoutSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
-import { type TicketState, ticketsApi } from '@/features/tickets/api'
+import { ticketsApi } from '@/features/tickets/api'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
 import { cn } from '@/lib/utils'
-
-const ACTIVE_STATES: TicketState[] = ['reserved', 'issued', 'entry_pending', 'frozen', 'flagged']
 
 const searchSchema = z.object({
   reservation_window_token: z.string().optional(),
@@ -36,12 +34,13 @@ function CheckoutPage() {
   const { reservation_window_token, admitted } = useSearch({ from: '/_app/events/$eventId/checkout' })
   const navigate = useNavigate()
 
-  const { data: event, isLoading, isError } = useEvent(eventId)
-  const { data: myTickets } = useTickets()
+  const { data: event, isLoading: eventLoading, isError } = useEvent(eventId)
+  const { data: myTickets, isLoading: ticketsLoading } = useTickets()
 
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [isPending, setIsPending] = useState(false)
 
+  const isLoading = eventLoading || ticketsLoading
   if (isLoading) return <CheckoutSkeleton />
 
   if (isError || !event) {
@@ -59,7 +58,7 @@ function CheckoutPage() {
         <BackButton
           onClick={() => void navigate({ to: '/events/$eventId', params: { eventId } })}
         />
-        <div className="fixed inset-x-0 bottom-16 z-40">
+        <div className="fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto max-w-[430px] bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-3 pb-6">
             <button
               className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 w-full rounded-full text-sm font-semibold"
@@ -76,7 +75,7 @@ function CheckoutPage() {
   const ticketTypes = event.ticket_types.slice().sort((a, b) => a.position - b.position)
   const totalSelected = Object.values(quantities).reduce((sum, q) => sum + q, 0)
   const alreadyHeld = myTickets?.filter(
-    (t) => t.event_id === eventId && ACTIVE_STATES.includes(t.state),
+    (t) => t.event_id === eventId && t.counts_toward_limit,
   ).length ?? 0
   const maxTotal = Math.max(0, event.max_tickets_per_user - alreadyHeld)
 
@@ -255,8 +254,8 @@ function CheckoutPage() {
       </div>
 
       {/* Bottom bar */}
-      <div className="fixed inset-x-0 bottom-16 z-40">
-        <div className="mx-auto max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-5">
+      <div className="fixed inset-x-0 bottom-24 z-40">
+        <div className="mx-auto max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
           {totalSelected > 0 && (
             <div className="border-border flex items-center justify-between border-t pt-3 pb-1">
               <span className="text-muted-foreground text-sm">{t('tickets.checkout.total')}</span>
@@ -268,7 +267,7 @@ function CheckoutPage() {
           <button
             disabled={!canReserve}
             onClick={() => void handleReserve()}
-            className="bg-primary hover:bg-primary/90 ml-auto flex h-12 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-40"
+            className="bg-primary hover:bg-primary/90 ml-auto flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-40"
           >
             {isPending ? (
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />

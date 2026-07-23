@@ -1,6 +1,8 @@
 import { Monitor, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { Skeleton } from '@/components/ui/skeleton'
+
 import { useRevokeAllSessions } from '../hooks/useRevokeAllSessions'
 import { useRevokeSession } from '../hooks/useRevokeSession'
 import { useSessions } from '../hooks/useSessions'
@@ -13,8 +15,17 @@ export function SessionList() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-4">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+      <div className="space-y-1">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3">
+            <Skeleton className="h-4 w-4 rounded" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <Skeleton className="h-4 w-4 rounded" />
+          </div>
+        ))}
       </div>
     )
   }

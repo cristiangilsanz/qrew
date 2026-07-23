@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeftRight, Calendar, CheckCircle2, MapPin, Ticket, Users } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Calendar, Info, LogOut, MapPin, Shuffle, Ticket, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -62,6 +63,7 @@ function EventDetailPage() {
   const { data: event, isLoading, isError } = useEvent(eventId)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [showQueue, setShowQueue] = useState(false)
+  const [leaveOpen, setLeaveOpen] = useState(false)
 
   const saleNotStarted = event?.availability_status === 'not_started'
   const secondsUntilSale = useCountdown(saleNotStarted && event ? event.sale_starts_at : null)
@@ -70,24 +72,26 @@ function EventDetailPage() {
   const allSoldOut = event?.availability_status === 'sold_out'
   const showResaleQueue = saleEnded || allSoldOut
 
-  const { data: queueStatus } = useMarketQueueStatus(eventId, showResaleQueue)
+  const { data: queueStatus, isLoading: queueLoading } = useMarketQueueStatus(eventId, showResaleQueue)
 
   const joinQueue = useMutation({
     mutationFn: () => marketApi.joinQueue(eventId),
     onSuccess: () => {
-      toast.success("You're in the resale queue!")
+      toast.success(t('market.toast.joinSuccess'))
       void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
     },
-    onError: () => toast.error('Failed to join queue'),
+    onError: () => toast.error(t('market.toast.joinFailed')),
   })
 
   const leaveQueue = useMutation({
     mutationFn: () => marketApi.leaveQueue(eventId),
     onSuccess: () => {
-      toast.success('Left the resale queue')
+      toast.success(t('market.toast.leftWaitlist'))
+      setLeaveOpen(false)
       void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
+      void queryClient.invalidateQueries({ queryKey: ['market', 'queues'] })
     },
-    onError: () => toast.error('Failed to leave queue'),
+    onError: () => toast.error(t('market.toast.leaveFailed')),
   })
 
   if (isLoading) return <EventDetailSkeleton />
@@ -181,6 +185,20 @@ function EventDetailPage() {
             />
           </div>
         </div>
+
+        {/* Resale queue info */}
+        {showResaleQueue && (
+          <div className="mt-4 flex flex-col items-center space-y-1.5">
+            <Ticket className="h-7 w-7 text-white/20" />
+            <p className="text-muted-foreground text-center text-base font-semibold">{t('events.soldOut')}</p>
+            <div className="mx-auto flex w-fit max-w-[85%] items-start gap-1.5">
+              <Info className="h-3.5 w-3.5 shrink-0 text-white/30" />
+              <p className="text-muted-foreground text-xs">
+                Join the resale queue for a chance to get a ticket at the original price.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sticky FAB — bottom right, above dock */}
@@ -194,25 +212,24 @@ function EventDetailPage() {
           </div>
         </div>
       ) : showResaleQueue ? (
-        inQueue ? (
+        queueLoading ? null : inQueue ? (
           <button
-            onClick={() => leaveQueue.mutate()}
-            disabled={leaveQueue.isPending}
-            className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-yellow-400/20 px-5 text-yellow-400 shadow-lg transition-colors hover:bg-yellow-400/30 disabled:opacity-60"
+            onClick={() => setLeaveOpen(true)}
+            className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-red-500 px-5 text-white shadow-lg transition-colors hover:bg-red-600"
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
-            <CheckCircle2 className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">In resale queue</span>
+            <LogOut className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('market.leaveQueueButton')}</span>
           </button>
         ) : (
           <button
             onClick={() => joinQueue.mutate()}
             disabled={joinQueue.isPending}
-            className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-yellow-400 px-5 text-black shadow-lg transition-colors hover:bg-yellow-300 disabled:opacity-60"
+            className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
-            <ArrowLeftRight className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">Join resale queue</span>
+            <Shuffle className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('market.joinQueueButton')}</span>
           </button>
         )
       ) : event.queue_required ? (
@@ -234,6 +251,61 @@ function EventDetailPage() {
           <span className="text-sm font-semibold">{t('tickets.checkout.buyButton')}</span>
         </button>
       )}
+
+      {/* Leave queue confirmation modal */}
+      <AnimatePresence>
+        {leaveOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
+            onClick={(e) => e.target === e.currentTarget && setLeaveOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 32, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 32, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-[#111] p-6"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
+                  <LogOut className="h-5 w-5 text-red-400" />
+                </div>
+                <h3 className="text-base font-semibold text-red-400">{t('market.leaveQueue.title')}</h3>
+              </div>
+              <p className="text-muted-foreground mb-6 text-sm">
+                {t('market.leaveQueue.description')}
+              </p>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setLeaveOpen(false)}
+                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
+                >
+                  {t('common.goBack')}
+                </button>
+                <button
+                  onClick={() => leaveQueue.mutate()}
+                  disabled={leaveQueue.isPending}
+                  className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {leaveQueue.isPending ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <>
+                      <LogOut className="h-3.5 w-3.5" />
+                      {t('market.leaveQueue.confirm')}
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

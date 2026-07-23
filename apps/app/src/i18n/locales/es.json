@@ -4,7 +4,8 @@
     "discover": "Descubrir",
     "tickets": "Entradas",
     "profile": "Perfil",
-    "organiser": "Organizador"
+    "organiser": "Organizador",
+    "market": "Mercado"
   },
   "home": {
     "greetingMorning": "Buenos días",
@@ -12,8 +13,8 @@
     "greetingEvening": "Buenas noches",
     "subtitle": "¿Qué pasa hoy?",
     "slogan": "Tu próxima\nexperiencia\nte está\nesperando.",
-    "upcomingEvents": "Próximos eventos",
-    "activeTickets": "Tus entradas",
+    "upcomingEvents": "Próximos Eventos",
+    "activeTickets": "Tus Entradas",
     "seeAll": "Ver todo",
     "noEvents": "No hay eventos próximos."
   },
@@ -24,7 +25,10 @@
     "save": "Guardar",
     "cancel": "Cancelar",
     "back": "Volver",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "goBack": "Volver",
+    "waitSeconds": "Esperar {{seconds}}s"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -71,7 +75,7 @@
     "free": "Gratis"
   },
   "tickets": {
-    "title": "Mis entradas",
+    "title": "Mis Entradas",
     "empty": "Todavía no tienes entradas",
     "browseEvents": "Ver eventos",
     "backToTickets": "Volver a mis entradas",
@@ -83,6 +87,11 @@
       "title": "Entrada",
       "id": "Entrada #{{id}}",
       "idLabel": "ID de entrada",
+      "idShortLabel": "ID de entrada",
+      "typeLabel": "Tipo de entrada",
+      "dateLabel": "Fecha",
+      "timeLabel": "Hora",
+      "historyLabel": "Historial",
       "issuedLabel": "Emitida",
       "notFound": "Entrada no encontrada.",
       "frozenHint": "Esta entrada ha sido congelada. Contacta con soporte si crees que es un error.",
@@ -90,12 +99,39 @@
       "states": {
         "reserved": "Reservada",
         "issued": "Emitida",
-        "entry_pending": "Entrada pendiente",
-        "used": "Usada",
+        "scanning": "Escaneando",
+        "redeemed": "Canjeada",
         "cancelled": "Cancelada",
         "expired": "Expirada",
-        "frozen": "Congelada",
+        "on_sale": "En venta",
         "flagged": "Marcada"
+      },
+      "timeline": {
+        "reserved": "Reservada",
+        "issued": "Emitida",
+        "expired": "Expirada",
+        "cancelled": "Cancelada",
+        "scanned": "Escaneada",
+        "redeemed": "Canjeada",
+        "onSale": "En venta",
+        "flagged": "Marcada"
+      },
+      "status": {
+        "paymentPending": "Tu entrada está esperando el pago.",
+        "paymentExpired": "El plazo de pago de tu entrada se ha cerrado.",
+        "redeemed": "Tu entrada fue usada para entrar.",
+        "scanning": "Tu entrada está siendo procesada.",
+        "cancelled": "Tu entrada ya no es válida.",
+        "onSale": "Tu entrada está en el mercado.",
+        "flagged": "Tu entrada fue puesta en cuarentena por razones de seguridad."
+      },
+      "sale": {
+        "button": "Poner en reventa",
+        "closes": "La venta cierra 24h antes del evento",
+        "title": "Poner en reventa",
+        "description": "Tu entrada se congelará y se publicará al precio original.",
+        "note": "Si no se vende, se devuelve automáticamente en 7 días.",
+        "confirm": "Publicar entrada"
       }
     },
     "qr": {
@@ -130,7 +166,10 @@
       "ticketTypeLabel": "Tipo de entrada",
       "quantityLabel": "Cantidad",
       "total": "Total",
-      "reserveButton": "Reservar entradas"
+      "reserveButton": "Reservar entradas",
+      "selected": "seleccionada",
+      "alreadyHeld": "ya tienes",
+      "limitReached": "Ya tienes el número máximo de entradas para este evento."
     },
     "reservation": {
       "title": "Tu reserva",
@@ -153,6 +192,53 @@
       "initFailed": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo.",
       "failed": "Pago fallido. Por favor, inténtalo de nuevo.",
       "success": "¡Pago realizado! Tu entrada está en camino."
+    },
+    "toast": {
+      "listSuccess": "Entrada publicada en reventa",
+      "listFailed": "No se pudo publicar la entrada en reventa"
+    }
+  },
+  "market": {
+    "title": "Mercado",
+    "myTicketsOnSale": "Mis entradas en venta",
+    "myTicketsToClaim": "Mis entradas por reclamar",
+    "myWaitlists": "Mis listas de espera",
+    "searchByEvent": "Buscar por evento…",
+    "noResults": "Sin resultados.",
+    "noTicketsOnSale": "No hay entradas en venta.",
+    "noPendingClaims": "No hay reclamaciones pendientes.",
+    "noWaitlists": "No estás en ninguna lista de espera.",
+    "resaleMarket": "Mercado de reventa",
+    "joinQueueButton": "Unirse a la cola de reventa",
+    "leaveQueueButton": "Abandonar cola de reventa",
+    "leaveQueue": {
+      "title": "Abandonar cola de reventa",
+      "description": "Si alguien publica una entrada, no serás considerado para ella.",
+      "confirm": "Abandonar cola"
+    },
+    "assignment": {
+      "viewEventDetails": "Ver detalles del evento",
+      "total": "Total",
+      "decline": "Rechazar",
+      "acceptAndPay": "Aceptar y pagar",
+      "declineTitle": "Rechazar",
+      "declineDesc": "Perderás esta oferta de entrada y podrá ser reasignada a otra persona.",
+      "generalAdmission": "Acceso general",
+      "notFound": "Oferta no encontrada o ya gestionada.",
+      "paymentConfirmed": "Pago confirmado",
+      "ticketTransferring": "Tu entrada está siendo transferida.",
+      "expired": "Esta oferta ha caducado.",
+      "expiredDesc": "Has sido eliminado de la cola. Vuelve a unirte si quieres otra oportunidad.",
+      "declined": "Oferta rechazada."
+    },
+    "toast": {
+      "declined": "Oferta rechazada",
+      "declineFailed": "No se pudo rechazar la oferta",
+      "paymentSuccess": "¡Pago realizado — tu entrada está siendo transferida!",
+      "leftWaitlist": "Has abandonado la lista de espera",
+      "leaveFailed": "No se pudo abandonar la cola de reventa",
+      "joinSuccess": "¡Estás en la cola de reventa!",
+      "joinFailed": "No se pudo unir a la cola de reventa"
     }
   },
   "profile": {
@@ -161,11 +247,11 @@
     "memberSince": "Miembro desde",
     "backToProfile": "Volver al perfil",
     "managePasskeys": "Gestionar",
-    "myProfile": "Mi perfil",
-    "myAccount": "Mi cuenta",
-    "privacySecurity": "Privacidad y seguridad",
-    "helpSupport": "Ayuda y soporte",
-    "logout": "Cerrar sesión",
+    "myProfile": "Mi Perfil",
+    "myAccount": "Mi Cuenta",
+    "privacySecurity": "Privacidad y Seguridad",
+    "helpSupport": "Ayuda y Soporte",
+    "logout": "Cerrar Sesión",
     "language": "Idioma",
     "verified": "Verificado",
     "unverified": "No verificado",
@@ -180,7 +266,7 @@
       "not_submitted": "No enviado"
     },
     "account": {
-      "title": "Mi cuenta",
+      "title": "Mi Cuenta",
       "fullName": "Nombre completo",
       "createdAt": "Fecha de registro",
       "emailLabel": "Correo",
@@ -193,23 +279,23 @@
       }
     },
     "security": {
-      "title": "Privacidad y seguridad",
+      "title": "Privacidad y Seguridad",
       "authSection": "Autenticación",
       "passwordLabel": "Contraseña",
       "passkeysLabel": "Passkeys",
-      "sessionsSection": "Sesiones y dispositivos",
-      "activeSessionsLabel": "Sesiones activas",
-      "trustedDevicesLabel": "Dispositivos de confianza",
+      "sessionsSection": "Sesiones y Dispositivos",
+      "activeSessionsLabel": "Sesiones Activas",
+      "trustedDevicesLabel": "Dispositivos de Confianza",
       "activitySection": "Actividad",
-      "recentActivityLabel": "Actividad reciente",
+      "recentActivityLabel": "Actividad Reciente",
       "noDevices": "Sin dispositivos de confianza",
       "noActivity": "Sin actividad todavía",
       "showMore": "Ver más",
       "revokeAll": "Revocar todas"
     },
     "help": {
-      "title": "Ayuda y soporte",
-      "faqSection": "Preguntas frecuentes",
+      "title": "Ayuda y Soporte",
+      "faqSection": "Preguntas Frecuentes",
       "contactSection": "Contacto",
       "contactSupport": "Contactar con soporte",
       "contactSupportDesc": "Te responderemos lo antes posible",
@@ -227,8 +313,8 @@
     "about": {
       "title": "Acerca de",
       "version": "Versión",
-      "terms": "Términos de servicio",
-      "privacy": "Política de privacidad"
+      "terms": "Términos de Servicio",
+      "privacy": "Política de Privacidad"
     },
     "sections": {
       "personal": "Información personal",
@@ -326,7 +412,11 @@
       "slugLabel": "Slug",
       "slugPlaceholder": "mi-org",
       "nameLabel": "Nombre",
-      "descriptionLabel": "Descripción (opcional)"
+      "descriptionLabel": "Descripción (opcional)",
+      "deleteButton": "Eliminar organización",
+      "deleteTitle": "Eliminar organización",
+      "deleteDesc": "Esto eliminará permanentemente la organización y todos sus eventos, tipos de entrada y miembros.\n\nEsta acción no se puede deshacer.",
+      "deleteSuccess": "Organización eliminada."
     },
     "events": {
       "title": "Eventos",
@@ -337,6 +427,7 @@
       "cancelSuccess": "Evento cancelado.",
       "empty": "Todavía no hay eventos.",
       "edit": "Editar evento",
+      "editDesc": "Gestiona fecha, lugar, imagen, descripción y máximo de entradas por usuario",
       "publish": "Publicar",
       "cancel": "Cancelar evento",
       "confirmPublish": "Confirmar publicación",
@@ -351,19 +442,27 @@
       "saleEndsAtLabel": "Venta hasta",
       "maxTicketsLabel": "Máx. entradas por usuario",
       "saleEndBeforeStart": "La venta debe terminar antes de que comience el evento",
-      "searchPlaceholder": "Buscar eventos…"
+      "searchPlaceholder": "Buscar eventos…",
+      "cancelDesc": "Las entradas emitidas serán canceladas y reembolsadas en los próximos 30 días.",
+      "updateEvent": "Actualizar"
     },
     "ticketTypes": {
       "title": "Tipos de entrada",
+      "managePricing": "Gestiona precios y aforo",
       "createSuccess": "Tipo de entrada creado.",
       "updateSuccess": "Tipo de entrada actualizado.",
       "deleteSuccess": "Tipo de entrada eliminado.",
       "addButton": "Añadir tipo de entrada",
+      "deleteTitle": "Eliminar tipo de entrada",
+      "deleteDesc": "Este tipo de entrada se eliminará permanentemente. Las entradas ya emitidas no se verán afectadas.",
+      "deleteConfirm": "Eliminar",
       "nameLabel": "Nombre",
       "capacityLabel": "Aforo",
       "priceLabel": "Precio (céntimos)",
       "currencyLabel": "Moneda (ISO 3 caracteres)",
-      "positionLabel": "Posición"
+      "positionLabel": "Posición",
+      "available": "{{available}}/{{capacity}} disponibles",
+      "free": "Gratis"
     },
     "members": {
       "title": "Miembros",
@@ -380,12 +479,17 @@
       "roleMemberDesc": "Puede ver eventos y miembros, y escanear entradas",
       "roleManagerDesc": "Puede gestionar eventos y añadir o eliminar miembros",
       "selectUser": "Selecciona un usuario de la lista",
-      "searchPlaceholder": "Buscar miembros…"
+      "searchPlaceholder": "Buscar miembros…",
+      "removeTitle": "Eliminar miembro",
+      "removeConfirmDesc": "Esta persona perderá el acceso a la organización y sus eventos.",
+      "removeConfirm": "Eliminar",
+      "roleValidationNote": "Tanto gestores como miembros pueden validar entradas en el acceso"
     },
     "venues": {
       "createSuccess": "Lugar creado.",
       "createTitle": "Crear lugar",
-      "newVenue": "Nuevo lugar"
+      "newVenue": "Nuevo lugar",
+      "manualHint": "Pre-rellenado desde el mapa. Edita si es necesario."
     },
     "errors": {
       "createOrgFailed": "No se pudo crear la organización.",
@@ -399,7 +503,8 @@
       "inviteFailed": "No se pudo enviar la invitación.",
       "removeFailed": "No se pudo eliminar al miembro.",
       "createVenueFailed": "No se pudo crear el lugar.",
-      "addMemberFailed": "Error al añadir miembro."
+      "addMemberFailed": "Error al añadir miembro.",
+      "deleteFailed": "No se pudo eliminar la organización."
     },
     "search": {
       "placeholder": "Buscar organizaciones…",

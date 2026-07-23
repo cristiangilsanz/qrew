@@ -1,9 +1,10 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { createFileRoute,Link } from '@tanstack/react-router'
 import { ChevronRight, FileEdit, Ticket } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
+import { EventManageSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { EventActions } from '@/features/organiser/components/EventActions'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
@@ -20,15 +21,7 @@ function EventManagePage() {
   const { data } = useOrgEvents(orgId)
   const event = data?.items.find((e) => e.id === eventId)
 
-  if (!event) {
-    return (
-      <div className="mx-auto max-w-2xl p-6">
-        <div className="flex justify-center py-8">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-        </div>
-      </div>
-    )
-  }
+  if (!event) return <EventManageSkeleton />
 
   const imageUrl = getEventImageUrl(event.image_url)
 
@@ -58,7 +51,7 @@ function EventManagePage() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-2xl space-y-6 px-4 pt-4">
+      <div className="mx-auto max-w-2xl space-y-6 px-4 pt-4 pb-36">
         {/* Title + status chip */}
         <div className="flex items-center gap-3">
           <h1 className="flex-1 text-2xl font-semibold">{event.name}</h1>
@@ -78,7 +71,7 @@ function EventManagePage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{t('organiser.events.edit')}</p>
-                  <p className="text-muted-foreground text-xs">Manage date, venue, image, description and max tickets per user</p>
+                  <p className="text-muted-foreground text-xs">{t('organiser.events.editDesc')}</p>
                 </div>
                 <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
               </Link>
@@ -95,7 +88,7 @@ function EventManagePage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{t('organiser.ticketTypes.title')}</p>
-              <p className="text-muted-foreground text-xs">Manage pricing and capacity</p>
+              <p className="text-muted-foreground text-xs">{t('organiser.ticketTypes.managePricing')}</p>
             </div>
             <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
           </Link>

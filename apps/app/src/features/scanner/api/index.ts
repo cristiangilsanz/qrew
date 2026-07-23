@@ -4,7 +4,7 @@ import { env } from '@/config/env'
 import { useAuthStore } from '@/store/auth'
 
 export const entryClient = axios.create({
-  baseURL: env.ENTRY_URL,
+  baseURL: `${env.API_URL}/api/entry`,
   timeout: 10_000,
   headers: { 'Content-Type': 'application/json' },
 })
@@ -39,7 +39,7 @@ export const scannerApi = {
   validateEntry: (scannerToken: string, ticketJwt: string) =>
     axios
       .post<EntryResult>(
-        `${env.ENTRY_URL}/v1/entry/validate`,
+        `${env.API_URL}/api/entry/v1/entry/validate`,
         { ticket_jwt: ticketJwt },
         { headers: { Authorization: `Bearer ${scannerToken}` } },
       )

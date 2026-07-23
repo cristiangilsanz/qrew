@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ChevronRight, Building2 } from 'lucide-react'
+import { Building2,ChevronRight } from 'lucide-react'
 
 interface OrgCardItem {
   id: string

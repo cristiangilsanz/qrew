@@ -6,6 +6,7 @@ import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { AccountSkeleton, Skeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { KycUploadStep } from '@/features/onboarding/components/KycUploadStep'
 import { useOnboardingStatus } from '@/features/onboarding/hooks/useOnboardingStatus'
@@ -60,6 +61,7 @@ function ExpandableRow({
   label,
   value,
   verified,
+  chipLoading,
   isOpen,
   onToggle,
   children,
@@ -68,6 +70,7 @@ function ExpandableRow({
   label: string
   value: string
   verified?: boolean
+  chipLoading?: boolean
   isOpen: boolean
   onToggle: () => void
   children: ReactNode
@@ -80,7 +83,11 @@ function ExpandableRow({
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <span className="text-muted-foreground w-10 shrink-0 text-sm">{label}</span>
-          {verified !== undefined && <VerifiedChip verified={verified} />}
+          {chipLoading ? (
+            <Skeleton className="h-5 w-18 rounded-full" />
+          ) : verified !== undefined && (
+            <VerifiedChip verified={verified} />
+          )}
         </div>
         <div className="flex flex-1 items-center justify-end gap-2 overflow-hidden">
           <span className={cn('truncate text-sm font-medium', isOpen && 'text-primary')}>
@@ -116,27 +123,13 @@ function ExpandableRow({
 function AccountPage() {
   const { t, i18n } = useTranslation()
   const { data: profile, isLoading } = useProfile()
-  const { data: onboarding } = useOnboardingStatus()
+  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingStatus()
   const [expanded, setExpanded] = useState<ExpandedRow>(null)
   const queryClient = useQueryClient()
 
   const toggle = (row: ExpandedRow) => setExpanded((prev) => (prev === row ? null : row))
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
-    )
-  }
-
-  if (!profile) return null
-
-  const memberSince = new Date(profile.created_at).toLocaleDateString(i18n.language, {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  const allLoading = isLoading || onboardingLoading
 
   const iconClass = 'h-4 w-4 text-muted-foreground'
 
@@ -145,6 +138,9 @@ function AccountPage() {
       <BackButton to="/profile" className="mb-6" />
       <h1 className="mb-6 text-xl font-bold">{t('profile.account.title')}</h1>
 
+      {allLoading && <AccountSkeleton />}
+
+      {!allLoading && profile && (
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <Row icon={<User className={iconClass} />} label={t('profile.account.fullName')}>
           <span className="text-sm font-medium">{profile.full_name}</span>
@@ -153,7 +149,11 @@ function AccountPage() {
         <div className="mx-4 border-t border-white/10" />
 
         <Row icon={<Calendar className={iconClass} />} label={t('profile.account.createdAt')}>
-          <span className="text-sm font-medium">{memberSince}</span>
+          <span className="text-sm font-medium">
+            {new Date(profile.created_at).toLocaleDateString(i18n.language, {
+              day: 'numeric', month: 'long', year: 'numeric',
+            })}
+          </span>
         </Row>
 
         <div className="mx-4 border-t border-white/10" />
@@ -225,6 +225,7 @@ function AccountPage() {
           label={t('profile.account.emailLabel')}
           value={profile.email}
           verified={onboarding?.email_verified}
+          chipLoading={onboardingLoading}
           isOpen={expanded === 'email'}
           onToggle={() => toggle('email')}
         >
@@ -238,12 +239,14 @@ function AccountPage() {
           label={t('profile.account.phoneLabel')}
           value={profile.phone_number}
           verified={onboarding?.phone_verified}
+          chipLoading={onboardingLoading}
           isOpen={expanded === 'phone'}
           onToggle={() => toggle('phone')}
         >
           <ChangePhoneForm hideTitle />
         </ExpandableRow>
       </div>
+      )}
     </div>
   )
 }

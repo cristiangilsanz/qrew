@@ -4,11 +4,13 @@ import { immer } from 'zustand/middleware/immer'
 
 interface AuthState {
   accessToken: string | null
+  refreshToken: string | null
   setupToken: string | null
   phoneNumber: string | null
   isAuthenticated: boolean
   isSetupPending: boolean
   setAccessToken: (token: string) => void
+  setTokens: (accessToken: string, refreshToken: string) => void
   setSetupToken: (token: string) => void
   setPhoneNumber: (phone: string) => void
   completeSetup: (token: string) => void
@@ -19,6 +21,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     immer((set) => ({
       accessToken: null,
+      refreshToken: null,
       setupToken: null,
       phoneNumber: null,
       isAuthenticated: false,
@@ -26,6 +29,12 @@ export const useAuthStore = create<AuthState>()(
       setAccessToken: (token) =>
         set((state) => {
           state.accessToken = token
+          state.isAuthenticated = true
+        }),
+      setTokens: (accessToken, refreshToken) =>
+        set((state) => {
+          state.accessToken = accessToken
+          state.refreshToken = refreshToken
           state.isAuthenticated = true
         }),
       setSetupToken: (token) =>
@@ -47,6 +56,7 @@ export const useAuthStore = create<AuthState>()(
       clearSession: () =>
         set((state) => {
           state.accessToken = null
+          state.refreshToken = null
           state.setupToken = null
           state.phoneNumber = null
           state.isAuthenticated = false
@@ -58,6 +68,7 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         setupToken: state.setupToken,
         phoneNumber: state.phoneNumber,
         isSetupPending: state.isSetupPending,

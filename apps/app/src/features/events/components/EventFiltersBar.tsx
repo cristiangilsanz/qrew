@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Calendar, ChevronDown, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
+import { Skeleton } from '@/components/ui/skeleton'
+
 import { type EventFilters, eventsApi } from '../api'
 
 interface Props {
@@ -16,7 +18,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
   const [cityOpen, setCityOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const { data: allEvents } = useQuery({
+  const { data: allEvents, isLoading: citiesLoading } = useQuery({
     queryKey: ['events', {}],
     queryFn: () => eventsApi.list({ limit: 100 }),
     staleTime: 5 * 60 * 1000,
@@ -91,7 +93,9 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
       {/* City dropdown + Date picker row */}
       <div className="flex gap-2">
         {/* Multi-select city dropdown */}
-        {availableCities.length > 0 && (
+        {citiesLoading ? (
+          <Skeleton className="h-10 flex-1 rounded-xl" />
+        ) : availableCities.length > 0 ? (
           <div ref={dropdownRef} className="relative flex-1">
             <button
               type="button"
@@ -165,7 +169,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* Date picker */}
         <div className="relative">

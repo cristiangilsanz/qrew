@@ -6,6 +6,7 @@ export interface OnboardingStatus {
   kyc_submitted: boolean
   passkey_registered: boolean
   is_complete: boolean
+  current_step: 'email' | 'phone' | 'kyc' | 'passkey' | 'pending'
 }
 
 export interface KycUploadResponse {

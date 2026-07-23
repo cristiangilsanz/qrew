@@ -40,7 +40,7 @@ export interface Payment {
 }
 
 export type TicketState =
-  'reserved' | 'issued' | 'entry_pending' | 'used' | 'cancelled' | 'expired' | 'frozen' | 'flagged'
+  'reserved' | 'issued' | 'scanning' | 'redeemed' | 'cancelled' | 'expired' | 'on_sale' | 'flagged'
 
 export interface Ticket {
   id: string
@@ -54,6 +54,8 @@ export interface Ticket {
   holder_name: string | null
   holder_dni: string | null
   created_at: string
+  qr_eligible: boolean
+  counts_toward_limit: boolean
 }
 
 export interface HolderInput {

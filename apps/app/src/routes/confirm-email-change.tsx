@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Skeleton } from '@/components/ui/skeleton'
 import { profileApi } from '@/features/profile/api'
 
 export const Route = createFileRoute('/confirm-email-change')({
@@ -31,7 +32,12 @@ function ConfirmEmailChangePage() {
   return (
     <div className="text-foreground flex min-h-screen items-center justify-center p-6">
       <div className="max-w-sm space-y-4 text-center">
-        {status === 'loading' && <p>{t('common.loading')}</p>}
+        {status === 'loading' && (
+          <div className="space-y-3">
+            <Skeleton className="mx-auto h-5 w-48" />
+            <Skeleton className="mx-auto h-4 w-64" />
+          </div>
+        )}
         {status === 'success' && (
           <>
             <p className="text-lg font-semibold">{t('profile.changeEmail.confirmTitle')}</p>

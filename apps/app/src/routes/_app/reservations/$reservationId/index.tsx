@@ -1,5 +1,6 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import axios from 'axios'
 import { CheckCircle2, Clock, CreditCard, Save } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,12 +34,13 @@ function ReservationPage() {
   const { t } = useTranslation()
   const { reservationId } = Route.useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [holders, setHolders] = useState<Array<{ holder_name: string; holder_dni: string }>>([])
   const [holdersSaved, setHoldersSaved] = useState(false)
 
-  const { data: reservation, isLoading, isError } = useReservation(reservationId, !!clientSecret)
-  const { data: event } = useEvent(reservation?.event_id ?? '')
+  const { data: reservation, isLoading: reservationLoading, isError } = useReservation(reservationId, !!clientSecret)
+  const { data: event, isLoading: eventLoading } = useEvent(reservation?.event_id ?? '')
 
   const initiatePayment = useInitiatePayment((payment) => {
     setClientSecret(payment.client_secret)
@@ -55,16 +57,27 @@ function ReservationPage() {
         })),
       ),
     onSuccess: () => setHoldersSaved(true),
-    onError: () => toast.error('Failed to save holder info'),
+    onError: (err) => {
+      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
+      const message =
+        typeof detail === 'object' && detail?.message
+          ? detail.message
+          : typeof detail === 'string'
+            ? detail
+            : 'Failed to save holder info'
+      toast.error(message)
+    },
   })
 
   const countdown = useCountdown(reservation?.expires_at)
 
   const handlePaySuccess = () => {
     toast.success(t('tickets.payment.success'))
+    void queryClient.invalidateQueries({ queryKey: ['tickets'] })
     void navigate({ to: '/tickets' })
   }
 
+  const isLoading = reservationLoading || (!!reservation && eventLoading)
   if (isLoading) return <ReservationSkeleton />
 
   if (isError || !reservation) {
@@ -114,9 +127,10 @@ function ReservationPage() {
   const totalPrice = unitPrice * quantity
 
   const isPaid = reservation.status === 'paid'
-  const isExpired = reservation.status === 'expired' || countdown === 0
+  const isExpired = reservation.status === 'expired'
+  const countdownExpired = countdown === 0
   const isCancelled = reservation.status === 'cancelled'
-  const canPay = !isPaid && !isExpired && !isCancelled && !clientSecret && holdersSaved
+  const canPay = !isPaid && !isExpired && !countdownExpired && !isCancelled && !clientSecret && holdersSaved
 
   return (
     <div className="mx-auto min-h-screen max-w-[430px] px-4 pt-5 pb-28">
@@ -127,7 +141,7 @@ function ReservationPage() {
         {!isPaid && !isCancelled && (
           <div className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 shrink-0 text-yellow-400" />
-            {isExpired ? (
+            {isExpired || countdownExpired ? (
               <span className="text-destructive text-sm font-semibold">Expired</span>
             ) : (
               <>
@@ -265,7 +279,7 @@ function ReservationPage() {
 
       {/* Pay Now — fixed bottom right, only enabled after holders are saved */}
       {canPay && (
-        <div className="fixed inset-x-0 bottom-16 z-40">
+        <div className="fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto flex max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-5">
             <button
               onClick={() => initiatePayment.mutate(reservationId)}

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-const PAYMENTS_URL = 'http://localhost:8004'
+const PAYMENTS_URL = 'http://localhost:8000/api/payments'
 
 export const paymentsHandlers = [
   http.post(`${PAYMENTS_URL}/v1/reservations/:reservationId/payment`, () =>

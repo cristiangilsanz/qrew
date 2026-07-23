@@ -4,7 +4,8 @@
     "discover": "Events",
     "tickets": "Tickets",
     "profile": "Profile",
-    "organiser": "Management"
+    "organiser": "Management",
+    "market": "Market"
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -26,7 +27,8 @@
     "back": "Back",
     "confirm": "Confirm",
     "delete": "Delete",
-    "goBack": "Go back"
+    "goBack": "Go back",
+    "waitSeconds": "Wait {{seconds}}s"
   },
   "auth": {
     "login": "Sign in",
@@ -85,6 +87,11 @@
       "title": "Ticket",
       "id": "Ticket #{{id}}",
       "idLabel": "Ticket ID",
+      "idShortLabel": "Ticket ID",
+      "typeLabel": "Ticket type",
+      "dateLabel": "Date",
+      "timeLabel": "Time",
+      "historyLabel": "History",
       "issuedLabel": "Issued",
       "notFound": "Ticket not found.",
       "frozenHint": "This ticket has been frozen. Contact support if you believe this is an error.",
@@ -92,12 +99,39 @@
       "states": {
         "reserved": "Reserved",
         "issued": "Issued",
-        "entry_pending": "Entry pending",
-        "used": "Used",
+        "scanning": "Scanning",
+        "redeemed": "Redeemed",
         "cancelled": "Cancelled",
         "expired": "Expired",
-        "frozen": "Frozen",
+        "on_sale": "On sale",
         "flagged": "Flagged"
+      },
+      "timeline": {
+        "reserved": "Reserved",
+        "issued": "Issued",
+        "expired": "Expired",
+        "cancelled": "Cancelled",
+        "scanned": "Scanned",
+        "redeemed": "Redeemed",
+        "onSale": "On sale",
+        "flagged": "Flagged"
+      },
+      "status": {
+        "paymentPending": "Your ticket is waiting for payment.",
+        "paymentExpired": "Your ticket's payment window was closed.",
+        "redeemed": "Your ticket was used for entry.",
+        "scanning": "Your ticket is being processed.",
+        "cancelled": "Your ticket is no longer valid.",
+        "onSale": "Your ticket is on the market.",
+        "flagged": "Your ticket was quarantined for security reasons."
+      },
+      "sale": {
+        "button": "List for resale",
+        "closes": "Sale closes 24h before the event",
+        "title": "List for resale",
+        "description": "Your ticket will be frozen and listed at the original price.",
+        "note": "If unsold, returned automatically in 7 days.",
+        "confirm": "List ticket"
       }
     },
     "qr": {
@@ -160,6 +194,53 @@
       "initFailed": "Could not start payment. Please try again.",
       "failed": "Payment failed. Please try again.",
       "success": "Payment successful! Your ticket is on its way."
+    },
+    "toast": {
+      "listSuccess": "Ticket is now on sale",
+      "listFailed": "Could not list ticket for resale"
+    }
+  },
+  "market": {
+    "title": "Market",
+    "myTicketsOnSale": "My tickets on sale",
+    "myTicketsToClaim": "My tickets to claim",
+    "myWaitlists": "My waitlists",
+    "searchByEvent": "Search by event…",
+    "noResults": "No results.",
+    "noTicketsOnSale": "No tickets on sale.",
+    "noPendingClaims": "No pending claims.",
+    "noWaitlists": "You're not on any waitlists.",
+    "resaleMarket": "Resale market",
+    "joinQueueButton": "Join resale queue",
+    "leaveQueueButton": "Leave resale queue",
+    "leaveQueue": {
+      "title": "Leave resale queue",
+      "description": "If someone lists a ticket, you won't be considered for it.",
+      "confirm": "Leave queue"
+    },
+    "assignment": {
+      "viewEventDetails": "View event details",
+      "total": "Total",
+      "decline": "Decline",
+      "acceptAndPay": "Accept & pay",
+      "declineTitle": "Decline",
+      "declineDesc": "You will lose this ticket offer and it may be reassigned to someone else.",
+      "generalAdmission": "General admission",
+      "notFound": "Assignment not found or already handled.",
+      "paymentConfirmed": "Payment confirmed",
+      "ticketTransferring": "Your ticket is being transferred.",
+      "expired": "This assignment has expired.",
+      "expiredDesc": "You've been removed from the queue. Rejoin if you want another chance.",
+      "declined": "Assignment declined."
+    },
+    "toast": {
+      "declined": "Assignment declined",
+      "declineFailed": "Failed to decline assignment",
+      "paymentSuccess": "Payment successful — ticket is being transferred!",
+      "leftWaitlist": "Left the waitlist",
+      "leaveFailed": "Failed to leave the resale queue",
+      "joinSuccess": "You're in the resale queue!",
+      "joinFailed": "Failed to join the resale queue"
     }
   },
   "profile": {
@@ -172,7 +253,7 @@
     "myAccount": "My Account",
     "privacySecurity": "Privacy & Security",
     "helpSupport": "Help & Support",
-    "logout": "Log out",
+    "logout": "Log Out",
     "language": "Language",
     "verified": "Verified",
     "unverified": "Unverified",
@@ -348,6 +429,7 @@
       "cancelSuccess": "Event cancelled.",
       "empty": "No events yet.",
       "edit": "Edit event information",
+      "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
       "cancel": "Cancel event",
       "confirmPublish": "Confirm publish",
@@ -368,6 +450,7 @@
     },
     "ticketTypes": {
       "title": "Edit ticket type details",
+      "managePricing": "Manage pricing and capacity",
       "createSuccess": "Ticket type created.",
       "updateSuccess": "Ticket type updated.",
       "deleteSuccess": "Ticket type deleted.",
@@ -379,7 +462,9 @@
       "capacityLabel": "Capacity",
       "priceLabel": "Price",
       "currencyLabel": "Currency (3-char ISO)",
-      "positionLabel": "Position"
+      "positionLabel": "Position",
+      "available": "{{available}}/{{capacity}} available",
+      "free": "Free"
     },
     "members": {
       "title": "Members",
@@ -409,7 +494,7 @@
       "searchLabel": "Search on Google Maps",
       "searchPlaceholder": "Search for a venue, address…",
       "searchUnavailable": "Maps search unavailable",
-      "manualHint": "Fields are pre-filled from the map.\nYou can edit them below if needed.",
+      "manualHint": "Pre-filled from the map. Edit below if needed.",
       "nameLabel": "Venue name",
       "addressLabel": "Street address",
       "cityLabel": "City",

@@ -1,12 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
+  ArrowLeftRight,
   Calendar,
   ChevronDown,
   Clock,
   CreditCard,
+  Flag,
   Info,
   MapPin,
+  ScanLine,
   ShieldCheck,
   ShieldX,
   ShoppingBag,
@@ -16,14 +20,13 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
-import { Dialog } from '@/components/ui/dialog'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { TicketDetailSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketListing } from '@/features/market/hooks/useMarketListing'
+import { useProfile } from '@/features/profile/hooks/useProfile'
 import { QrDisplay } from '@/features/tickets/components/QrDisplay'
-import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
 import { useTicket } from '@/features/tickets/hooks/useTicket'
 import { getEventImageUrl } from '@/lib/imageUrl'
@@ -47,7 +50,6 @@ function fmt(iso: string) {
 function TicketDetailPage() {
   const { ticketId } = Route.useParams()
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [timelineOpen, setTimelineOpen] = useState(false)
   const [saleConfirmOpen, setSaleConfirmOpen] = useState(false)
@@ -59,13 +61,13 @@ function TicketDetailPage() {
     const timer = setTimeout(() => setSaleCountdown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
   }, [saleConfirmOpen, saleCountdown])
-  const { data: ticket, isLoading, isError } = useTicket(ticketId)
-  const { data: event } = useEvent(ticket?.event_id ?? '')
+  const { data: profile } = useProfile()
+  const { data: ticket, isLoading: ticketLoading, isError } = useTicket(ticketId)
+  const { data: event, isLoading: eventLoading } = useEvent(ticket?.event_id ?? '')
   const { data: reservation } = useReservation(
     ticket?.reservation_id ?? '',
     ticket?.state === 'reserved',
   )
-  const countdown = useCountdown(reservation?.expires_at)
   const isExpired =
     ticket?.state === 'expired' ||
     reservation?.status === 'expired'
@@ -82,13 +84,15 @@ function TicketDetailPage() {
   const listForResale = useMutation({
     mutationFn: () => marketApi.listTicket(ticketId),
     onSuccess: () => {
-      toast.success('Ticket listed on the resale market')
+      toast.success(t('tickets.toast.listSuccess'))
       void queryClient.invalidateQueries({ queryKey: ['market', 'listing', ticketId] })
       void queryClient.invalidateQueries({ queryKey: ['tickets'] })
+      setTimeout(() => window.location.reload(), 300)
     },
-    onError: () => toast.error('Could not list ticket for resale'),
+    onError: () => toast.error(t('tickets.toast.listFailed')),
   })
 
+  const isLoading = ticketLoading || (!!ticket && eventLoading)
   if (isLoading) return <TicketDetailSkeleton />
 
   if (isError || !ticket) {
@@ -115,49 +119,49 @@ function TicketDetailPage() {
   }
   const timeline: TLItem[] = []
 
-  timeline.push({ label: 'Reserved', date: fmt(ticket.created_at), status: 'done' })
+  timeline.push({ label: t('tickets.ticket.timeline.reserved'), date: fmt(ticket.created_at), status: 'done' })
 
   if (ticket.state === 'expired') {
     timeline.push({
-      label: 'Expired',
+      label: t('tickets.ticket.timeline.expired'),
       date: ticket.expired_at ? fmt(ticket.expired_at) : null,
       status: 'error',
     })
   } else if (ticket.state === 'cancelled') {
     if (ticket.issued_at) {
-      timeline.push({ label: 'Issued', date: fmt(ticket.issued_at), status: 'done' })
+      timeline.push({ label: t('tickets.ticket.timeline.issued'), date: fmt(ticket.issued_at), status: 'done' })
     }
     timeline.push({
-      label: 'Cancelled',
+      label: t('tickets.ticket.timeline.cancelled'),
       date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
       status: 'error',
     })
   } else if (ticket.state === 'reserved') {
     // still pending issuance — no placeholder shown
   } else {
-    // issued, entry_pending, used, frozen, flagged
+    // issued, scanning, redeemed, on_sale, flagged
     timeline.push({
-      label: 'Issued',
+      label: t('tickets.ticket.timeline.issued'),
       date: ticket.issued_at ? fmt(ticket.issued_at) : null,
       status: 'done',
     })
-    if (ticket.state === 'entry_pending') {
-      timeline.push({ label: 'Scanned', date: null, status: 'pending' })
-    } else if (ticket.state === 'used') {
+    if (ticket.state === 'scanning') {
+      timeline.push({ label: t('tickets.ticket.timeline.scanned'), date: null, status: 'pending' })
+    } else if (ticket.state === 'redeemed') {
       timeline.push({
-        label: 'Used',
+        label: t('tickets.ticket.timeline.redeemed'),
         date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
         status: 'done',
       })
-    } else if (ticket.state === 'frozen') {
+    } else if (ticket.state === 'on_sale') {
       timeline.push({
-        label: 'Frozen',
+        label: t('tickets.ticket.timeline.onSale'),
         date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
         status: 'error',
       })
     } else if (ticket.state === 'flagged') {
       timeline.push({
-        label: 'Flagged',
+        label: t('tickets.ticket.timeline.flagged'),
         date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
         status: 'error',
       })
@@ -194,11 +198,11 @@ function TicketDetailPage() {
           </div>
 
           {/* Holder strip */}
-          {(ticket.holder_name || ticket.holder_dni) && (
+          {(ticket.holder_name || ticket.holder_dni || ticket.state === 'expired') && (
             <div className="px-5 pt-4 pb-3 text-center">
-              {ticket.holder_name && (
-                <p className="text-base font-bold text-gray-800">{ticket.holder_name}</p>
-              )}
+              <p className="text-base font-bold text-gray-800">
+                {ticket.holder_name ?? profile?.full_name ?? ''}
+              </p>
               {ticket.holder_dni && (
                 <p className="mt-0.5 font-mono text-xs text-gray-400">{ticket.holder_dni}</p>
               )}
@@ -206,15 +210,15 @@ function TicketDetailPage() {
           )}
 
           {/* ID strip */}
-          <div className="bg-gray-50 px-5 py-3">
+          <div className="bg-white px-5 pt-3 pb-5">
             {ticketType && (
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs tracking-wide text-gray-400 uppercase">Ticket type</p>
+                <p className="text-xs tracking-wide text-gray-400 uppercase">{t('tickets.ticket.typeLabel')}</p>
                 <p className="text-sm font-semibold text-gray-700">{ticketType.name}</p>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <p className="text-xs tracking-wide text-gray-400 uppercase">Ticket ID</p>
+              <p className="text-xs tracking-wide text-gray-400 uppercase">{t('tickets.ticket.idShortLabel')}</p>
               <p className="font-mono text-sm font-semibold tracking-widest text-gray-700">
                 {ticket.id.slice(0, 8).toUpperCase()}
               </p>
@@ -222,10 +226,10 @@ function TicketDetailPage() {
           </div>
 
           {/* Info grid — Date + Time */}
-          <div className="grid grid-cols-2 gap-px border-t border-gray-100">
+          <div className="grid grid-cols-2 gap-px">
             <div className="flex flex-col items-center gap-1 px-4 py-4">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <p className="text-xs tracking-wide text-gray-400 uppercase">Date</p>
+              <p className="text-xs tracking-wide text-gray-400 uppercase">{t('tickets.ticket.dateLabel')}</p>
               <p className="text-center text-sm font-semibold text-gray-900">
                 {startDate
                   ? startDate.toLocaleDateString('en-GB', {
@@ -237,9 +241,9 @@ function TicketDetailPage() {
                   : '—'}
               </p>
             </div>
-            <div className="flex flex-col items-center gap-1 border-l border-gray-100 px-4 py-4">
+            <div className="flex flex-col items-center gap-1 px-4 py-4">
               <Clock className="h-4 w-4 text-gray-400" />
-              <p className="text-xs tracking-wide text-gray-400 uppercase">Time</p>
+              <p className="text-xs tracking-wide text-gray-400 uppercase">{t('tickets.ticket.timeLabel')}</p>
               <p className="text-center text-sm font-semibold text-gray-900">
                 {startDate
                   ? startDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
@@ -248,70 +252,70 @@ function TicketDetailPage() {
             </div>
           </div>
 
-          {/* Timeline toggle */}
-          <button
-            onClick={() => setTimelineOpen((o) => !o)}
-            className="flex w-full items-center justify-between border-t border-gray-100 bg-gray-50 px-5 py-3"
-          >
-            <p className="text-xs font-semibold tracking-wide text-gray-400 uppercase">History</p>
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 text-gray-400 transition-transform',
-                timelineOpen && 'rotate-180',
-              )}
-            />
-          </button>
+          {/* History — separate rounded expandable */}
+          <div className="mx-4 mt-4 mb-5 overflow-hidden rounded-2xl border border-gray-100">
+            <button
+              onClick={() => setTimelineOpen((o) => !o)}
+              className="flex w-full items-center justify-between bg-gray-50 px-4 py-3"
+            >
+              <p className="text-xs font-semibold tracking-wide text-gray-400 uppercase">{t('tickets.ticket.historyLabel')}</p>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-gray-400 transition-transform',
+                  timelineOpen && 'rotate-180',
+                )}
+              />
+            </button>
 
-          {timelineOpen && (
-            <div className="bg-gray-50 px-6 pt-1 pb-4">
-              <ol className="space-y-0">
-                {timeline.map((item, i) => (
-                  <li key={i} className="flex gap-3">
-                    {/* Dot + line */}
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={cn(
-                          'mt-1 h-2.5 w-2.5 shrink-0 rounded-full',
-                          item.status === 'done' && 'bg-green-500',
-                          item.status === 'pending' && 'border-2 border-gray-300 bg-white',
-                          item.status === 'error' && 'bg-red-400',
-                        )}
-                      />
-                      {i < timeline.length - 1 && (
+            {timelineOpen && (
+              <div className="bg-white px-5 pt-3 pb-4">
+                <ol className="space-y-0">
+                  {timeline.map((item, i) => (
+                    <li key={i} className="flex gap-3">
+                      <div className="flex flex-col items-center">
                         <div
-                          className="my-0.5 w-px flex-1 bg-gray-200"
-                          style={{ minHeight: '20px' }}
+                          className={cn(
+                            'mt-1 h-2.5 w-2.5 shrink-0 rounded-full',
+                            item.status === 'done' && 'bg-green-500',
+                            item.status === 'pending' && 'border-2 border-gray-300 bg-white',
+                            item.status === 'error' && 'bg-red-400',
+                          )}
                         />
-                      )}
-                    </div>
-                    {/* Text */}
-                    <div className="pb-3">
-                      <p
-                        className={cn(
-                          'text-sm leading-none font-semibold',
-                          item.status === 'done' && 'text-gray-800',
-                          item.status === 'pending' && 'text-gray-400',
-                          item.status === 'error' && 'text-red-500',
+                        {i < timeline.length - 1 && (
+                          <div
+                            className="my-0.5 w-px flex-1 bg-gray-200"
+                            style={{ minHeight: '20px' }}
+                          />
                         )}
-                      >
-                        {item.label}
-                      </p>
-                      {item.date && <p className="mt-0.5 text-xs text-gray-400">{item.date}</p>}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
+                      </div>
+                      <div className="pb-3">
+                        <p
+                          className={cn(
+                            'text-sm leading-none font-semibold',
+                            item.status === 'done' && 'text-gray-800',
+                            item.status === 'pending' && 'text-gray-400',
+                            item.status === 'error' && 'text-red-500',
+                          )}
+                        >
+                          {item.label}
+                        </p>
+                        {item.date && <p className="mt-0.5 text-xs text-gray-400">{item.date}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
 
           {/* Perforation */}
-          <div className="relative flex items-center border-t border-gray-100">
+          <div className="relative mt-4 flex items-center">
             <div className="h-5 w-5 shrink-0 -translate-x-1/2 rounded-full bg-neutral-800 shadow-inner" />
             <div className="flex-1 border-t-2 border-dashed border-gray-200" />
             <div className="h-5 w-5 shrink-0 translate-x-1/2 rounded-full bg-neutral-800 shadow-inner" />
           </div>
 
-          {ticket.qr_eligible ? (
+          {ticket.qr_eligible && ticket.state !== 'scanning' ? (
             <div className="px-5 py-5">
               <QrDisplay ticketId={ticket.id} />
               {saleEnded && ticket?.state === 'issued' && !existingListing && (
@@ -329,105 +333,145 @@ function TicketDetailPage() {
                     ) : (
                       <ShoppingBag className="h-4 w-4" />
                     )}
-                    Sale
+                    {t('tickets.ticket.sale.button')}
                   </button>
                   <p className="mt-1.5 flex items-center gap-1 text-xs text-gray-400">
                     <Info className="h-3 w-3 shrink-0" />
-                    Listing closes 24h before the event
+                    {t('tickets.ticket.sale.closes')}
                   </p>
                 </>
-              )}
-              {existingListing && existingListing.state === 'available' && (
-                <p className="mt-4 text-center text-xs text-gray-400">
-                  Listed · waiting for a buyer
-                </p>
               )}
             </div>
           ) : ticket.state === 'reserved' ? (
             <div className="flex h-[300px] flex-col items-center justify-center gap-3 px-5 text-center">
               {isExpired ? (
                 <>
-                  <ShieldX className="h-10 w-10 text-gray-400" />
-                  <p className="text-sm font-semibold text-gray-600">Reservation expired</p>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <Clock className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.paymentExpired')}</p>
                 </>
               ) : (
                 <>
-                  <CreditCard className="h-10 w-10 text-yellow-500" />
-                  <p className="text-sm font-semibold text-gray-600">Awaiting payment</p>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <CreditCard className="h-6 w-6 text-yellow-500" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.paymentPending')}</p>
                 </>
               )}
             </div>
           ) : (
-            <div className="flex h-[300px] flex-col items-center justify-center gap-2 px-5 text-center">
-              {ticket.state === 'used' ? (
-                <ShieldCheck className="h-10 w-10 text-gray-400" />
-              ) : ticket.state === 'frozen' ? (
-                <ShoppingBag className="h-10 w-10 text-gray-400" />
-              ) : (
-                <ShieldX className="h-10 w-10 text-gray-400" />
+            <div className="flex h-[300px] flex-col items-center justify-center gap-3 px-5 text-center">
+              {ticket.state === 'redeemed' && (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <ShieldCheck className="h-6 w-6 text-green-500" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.redeemed')}</p>
+                </>
               )}
-              <p className="text-sm font-semibold text-gray-600">
-                {ticket.state === 'used' && 'Already scanned'}
-                {ticket.state === 'cancelled' && 'Ticket cancelled'}
-                {ticket.state === 'expired' && 'Reservation expired'}
-                {ticket.state === 'frozen' && 'Listed on Resale Market'}
-                {ticket.state === 'flagged' && 'Under review'}
-              </p>
-              <p className="text-xs text-gray-400">
-                {ticket.state === 'used' && 'This ticket has already been used for entry.'}
-                {ticket.state === 'cancelled' && 'This ticket is no longer valid.'}
-                {ticket.state === 'frozen' && 'This ticket has been frozen.'}
-                {ticket.state === 'flagged' && 'This ticket has been flagged for review.'}
-              </p>
-              {(ticket.state === 'frozen' || ticket.state === 'flagged') && (
-                <p className="text-xs text-gray-400">
-                  Contact support if you believe this is an error.
-                </p>
+              {ticket.state === 'scanning' && (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <ScanLine className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.scanning')}</p>
+                </>
               )}
-              {ticket.state === 'frozen' && (
-                <p className="mt-8 text-xs text-gray-400">
-                  If unsold, your ticket will be returned automatically.
-                </p>
+              {ticket.state === 'cancelled' && (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <ShieldX className="h-6 w-6 text-red-400" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.cancelled')}</p>
+                </>
+              )}
+              {ticket.state === 'expired' && (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <Clock className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.paymentExpired')}</p>
+                </>
+              )}
+              {ticket.state === 'on_sale' && (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <ShoppingBag className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.onSale')}</p>
+                </>
+              )}
+              {ticket.state === 'flagged' && (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <Flag className="h-6 w-6 text-amber-900" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.flagged')}</p>
+                </>
               )}
             </div>
           )}
         </div>
       </div>
-      <Dialog
-        open={saleConfirmOpen}
-        onClose={() => setSaleConfirmOpen(false)}
-        title="List ticket for sale"
-      >
-        <div className="space-y-3 text-sm text-gray-600">
-          <p>
-            Your ticket will be <strong>frozen</strong> and listed on the resale market at the
-            original price. No markup, no speculation.
-          </p>
-          <ul className="space-y-1 text-xs text-gray-500 list-disc pl-4">
-            <li>The QR code will be disabled until the ticket is sold or returned</li>
-            <li>If unsold before the event, it will be returned to you automatically</li>
-            <li>You cannot undo this action yourself once listed</li>
-          </ul>
-        </div>
-        <div className="mt-5 flex gap-3">
-          <button
-            onClick={() => setSaleConfirmOpen(false)}
-            className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50"
+      <AnimatePresence>
+        {saleConfirmOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
+            onClick={(e) => e.target === e.currentTarget && setSaleConfirmOpen(false)}
           >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              listForResale.mutate()
-              setSaleConfirmOpen(false)
-            }}
-            disabled={saleCountdown > 0 || listForResale.isPending}
-            className="flex-1 rounded-xl bg-gray-900 py-2.5 text-sm font-semibold text-white transition disabled:opacity-40"
-          >
-            {saleCountdown > 0 ? `Confirm (${saleCountdown})` : 'Confirm'}
-          </button>
-        </div>
-      </Dialog>
+            <motion.div
+              initial={{ y: 32, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 32, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="w-full max-w-sm rounded-2xl border border-orange-500/20 bg-[#111] p-6"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
+                  <ArrowLeftRight className="h-5 w-5 text-orange-400" />
+                </div>
+                <h3 className="text-base font-semibold text-orange-400">{t('tickets.ticket.sale.title')}</h3>
+              </div>
+
+              <p className="text-muted-foreground mb-4 text-sm">
+                {t('tickets.ticket.sale.description')}
+              </p>
+
+              <div className="text-muted-foreground mb-6 flex gap-1.5 text-xs">
+                <Info className="mt-0.5 h-3 w-3 shrink-0" />
+                <p>{t('tickets.ticket.sale.note')}</p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setSaleConfirmOpen(false)}
+                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={() => {
+                    listForResale.mutate()
+                    setSaleConfirmOpen(false)
+                  }}
+                  disabled={saleCountdown > 0 || listForResale.isPending}
+                  className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full bg-yellow-400 px-5 text-sm font-semibold text-black disabled:opacity-40"
+                >
+                  <ArrowLeftRight className="h-3.5 w-3.5" />
+                  {saleCountdown > 0 ? t('common.waitSeconds', { seconds: saleCountdown }) : t('tickets.ticket.sale.confirm')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

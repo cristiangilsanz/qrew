@@ -1,8 +1,9 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import type { LucideIcon } from 'lucide-react'
-import { Building2, Compass, Home, Ticket, User } from 'lucide-react'
+import { ArrowLeftRight, Building2, Compass, Home, Ticket, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { usePendingMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useReservedTicketsCount } from '@/features/tickets/hooks/useReservedTicketsCount'
@@ -12,6 +13,7 @@ const baseTabs = [
   { to: '/home' as const, icon: Home, labelKey: 'nav.home' },
   { to: '/events' as const, icon: Compass, labelKey: 'nav.discover' },
   { to: '/tickets' as const, icon: Ticket, labelKey: 'nav.tickets' },
+  { to: '/market' as const, icon: ArrowLeftRight, labelKey: 'nav.market' },
   { to: '/profile' as const, icon: User, labelKey: 'nav.profile' },
 ]
 
@@ -60,11 +62,13 @@ function DockTab({
 }
 
 export function BottomDock() {
-  const { data: profile } = useProfile()
-  const { data: orgsData } = useMyOrganisations()
+  const { data: profile, isLoading: profileLoading } = useProfile()
+  const { data: orgsData, isLoading: orgsLoading } = useMyOrganisations()
   const reservedCount = useReservedTicketsCount()
+  const { data: pendingAssignment } = usePendingMarketAssignment()
 
-  const showOrganiser = profile?.is_admin || (orgsData?.items.length ?? 0) > 0
+  const stillLoading = profileLoading || orgsLoading
+  const showOrganiser = stillLoading || profile?.is_admin || (orgsData?.items.length ?? 0) > 0
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/25 bg-black/95 backdrop-blur-md">
@@ -73,7 +77,11 @@ export function BottomDock() {
           <DockTab
             key={tab.to}
             {...tab}
-            badge={tab.to === '/tickets' ? reservedCount : undefined}
+            badge={
+              tab.to === '/tickets' ? reservedCount
+              : tab.to === '/market' && pendingAssignment ? 1
+              : undefined
+            }
           />
         ))}
         {showOrganiser && <DockTab {...organiserTab} />}

@@ -15,6 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { TicketTypeListSkeleton } from '@/components/ui/skeleton'
 
 import { useCreateTicketType } from '../hooks/useCreateTicketType'
 import { useDeleteTicketType } from '../hooks/useDeleteTicketType'
@@ -321,11 +322,7 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
   const canAdd = eventStatus === 'draft' || eventStatus === 'published'
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-4">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
-    )
+    return <TicketTypeListSkeleton />
   }
 
   return (
@@ -374,7 +371,7 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold capitalize">{tt.name}</p>
                 <p className="mt-0.5 text-xs text-gray-500">
-                  {tt.available}/{tt.capacity} available
+                  {t('organiser.ticketTypes.available', { available: tt.available, capacity: tt.capacity })}
                 </p>
               </div>
               {(canEdit || canEditCapacity) && (
@@ -403,7 +400,7 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
             {/* Price stub — fixed w-20 so notch circles align */}
             <div className="flex w-20 shrink-0 flex-col items-center justify-center px-2 py-6">
               {tt.price_cents === 0 ? (
-                <p className="text-xs font-semibold text-green-600">Free</p>
+                <p className="text-xs font-semibold text-green-600">{t('organiser.ticketTypes.free')}</p>
               ) : (
                 <>
                   <p className="text-sm font-bold tabular-nums">

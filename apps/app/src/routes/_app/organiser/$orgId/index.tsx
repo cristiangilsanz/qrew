@@ -1,10 +1,11 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { createFileRoute,Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CalendarDays, ChevronRight, Trash2, Users } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useDeleteOrganisation } from '@/features/organiser/hooks/useDeleteOrganisation'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
@@ -20,12 +21,13 @@ function OrgDashboardPage() {
   const { t } = useTranslation()
   const { orgId } = Route.useParams()
 
-  const { data: orgsData } = useMyOrganisations()
+  const { data: orgsData, isLoading: orgLoading } = useMyOrganisations()
   const org = orgsData?.items.find((o) => o.id === orgId)
 
-  const { data: membersData } = useOrgMembers(orgId)
-  const { data: eventsData } = useOrgEvents(orgId)
+  const { data: membersData, isLoading: membersLoading } = useOrgMembers(orgId)
+  const { data: eventsData, isLoading: eventsLoading } = useOrgEvents(orgId)
 
+  const allLoading = orgLoading || eventsLoading || membersLoading
   const memberCount = membersData?.length ?? 0
   const eventCount = eventsData?.items.length ?? 0
 
@@ -64,7 +66,11 @@ function OrgDashboardPage() {
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
       <BackButton to="/organiser" />
       <div>
-        <h1 className="text-2xl font-semibold">{org?.name ?? t('organiser.org.loading')}</h1>
+        {allLoading ? (
+          <Skeleton className="h-8 w-40" />
+        ) : (
+          <h1 className="text-2xl font-semibold">{org?.name}</h1>
+        )}
         {org?.slug && <p className="text-muted-foreground text-sm">@{org.slug}</p>}
       </div>
 
@@ -78,7 +84,9 @@ function OrgDashboardPage() {
             <CalendarDays className="h-4 w-4" />
           </div>
           <span className="flex-1 text-sm font-medium">{t('organiser.events.title')}</span>
-          {eventCount > 0 && (
+          {allLoading ? (
+            <Skeleton className="h-5 w-6 rounded-full" />
+          ) : eventCount > 0 && (
             <span className="bg-white/10 text-white/60 rounded-full px-2 py-0.5 text-xs">
               {eventCount}
             </span>
@@ -97,7 +105,9 @@ function OrgDashboardPage() {
             <Users className="h-4 w-4" />
           </div>
           <span className="flex-1 text-sm font-medium">{t('organiser.members.title')}</span>
-          {memberCount > 0 && (
+          {allLoading ? (
+            <Skeleton className="h-5 w-6 rounded-full" />
+          ) : memberCount > 0 && (
             <span className="bg-white/10 text-white/60 rounded-full px-2 py-0.5 text-xs">
               {memberCount}
             </span>

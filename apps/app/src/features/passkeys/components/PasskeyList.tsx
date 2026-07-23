@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useRegisterPasskey } from '@/features/onboarding/hooks/useRegisterPasskey'
 
 import { useDeletePasskey } from '../hooks/useDeletePasskey'
@@ -26,8 +27,18 @@ export function PasskeyList() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+      <div className="space-y-2">
+        {[0, 1].map((i) => (
+          <div key={i} className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3">
+            <Skeleton className="h-5 w-5 rounded" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-7 w-7 rounded" />
+            <Skeleton className="h-7 w-7 rounded" />
+          </div>
+        ))}
       </div>
     )
   }

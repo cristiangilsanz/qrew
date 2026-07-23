@@ -1,14 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import axios from 'axios'
-import { Calendar, CheckCircle2, Clock, CreditCard, MapPin, ShieldX } from 'lucide-react'
-import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Calendar, CheckCircle2, ChevronRight, Clock, CreditCard, ShieldX, XCircle } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
-import { StatusChip } from '@/components/ui/status-chip'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
@@ -35,94 +37,92 @@ function formatPrice(cents: number, currency: string): string {
   return `${currency === 'EUR' ? '€' : currency}${(cents / 100).toFixed(2)}`
 }
 
-const validateDni = (dni: string): boolean => {
-  const v = dni.trim().toUpperCase()
-  const letters = 'TRWAGMYFPDXBNJZSQVHLCKE'
-  const dniRe = /^\d{8}[A-Z]$/
-  const nieRe = /^[XYZ]\d{7}[A-Z]$/
-  if (dniRe.test(v)) return letters[parseInt(v.slice(0, 8)) % 23] === v[8]
-  if (nieRe.test(v)) {
-    const prefix: Record<string, string> = { X: '0', Y: '1', Z: '2' }
-    const digits = prefix[v[0]] + v.slice(1, 8)
-    return letters[parseInt(digits) % 23] === v[8]
+function extractMessage(err: unknown, fallback: string): string {
+  if (!axios.isAxiosError(err)) return fallback
+  const detail = err.response?.data?.detail
+  if (typeof detail === 'string') return detail
+  if (detail && typeof detail === 'object' && 'message' in detail) return String(detail.message)
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0] as Record<string, unknown>
+    return String(first.msg ?? first.message ?? fallback)
   }
-  return false
+  return fallback
 }
 
+
 function AssignmentPage() {
+  const { t } = useTranslation()
   const { assignmentId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data: assignment, isLoading, isError } = useMarketAssignment(assignmentId)
-  const { data: event } = useEvent(assignment?.event_id ?? '')
+  const { data: assignment, isLoading: assignmentLoading, isError } = useMarketAssignment(assignmentId)
+  const { data: event, isLoading: eventLoading } = useEvent(assignment?.event_id ?? '')
   const countdown = useCountdown(assignment?.state === 'pending' ? assignment.expires_at : null)
 
-  const [holderName, setHolderName] = useState('')
-  const [holderDni, setHolderDni] = useState('')
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [declineOpen, setDeclineOpen] = useState(false)
+  const [declineSeconds, setDeclineSeconds] = useState(5)
+  const declineTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const saveHolders = useMutation({
-    mutationFn: () => marketApi.setHolders(assignmentId, holderName, holderDni),
-    onError: (err) => {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
-      toast.error(
-        typeof detail === 'object' && detail?.message
-          ? detail.message
-          : typeof detail === 'string'
-            ? detail
-            : 'Failed to save holder info',
-      )
-    },
-  })
+  useEffect(() => {
+    if (!declineOpen) { setDeclineSeconds(5); return }
+    declineTimerRef.current = setInterval(() => {
+      setDeclineSeconds((s) => {
+        if (s <= 1) { clearInterval(declineTimerRef.current!); return 0 }
+        return s - 1
+      })
+    }, 1000)
+    return () => { if (declineTimerRef.current) clearInterval(declineTimerRef.current) }
+  }, [declineOpen])
 
   const initiatePayment = useMutation({
     mutationFn: () => marketApi.initiateAssignmentPayment(assignmentId),
     onSuccess: (payment) => setClientSecret(payment.client_secret),
     onError: (err) => {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
-      toast.error(
-        typeof detail === 'object' && detail?.message ? detail.message : 'Failed to initiate payment',
-      )
+      toast.error(extractMessage(err, t('market.toast.declineFailed')))
     },
   })
 
   const declineAssignment = useMutation({
     mutationFn: () => marketApi.declineAssignment(assignmentId),
     onSuccess: () => {
-      toast.success('Assignment declined')
+      toast.success(t('market.toast.declined'))
       void queryClient.invalidateQueries({ queryKey: ['market'] })
       void navigate({ to: '/market' })
     },
-    onError: () => toast.error('Failed to decline assignment'),
+    onError: () => toast.error(t('market.toast.declineFailed')),
   })
 
-  const handleAccept = async () => {
-    await saveHolders.mutateAsync()
-    initiatePayment.mutate()
-  }
-
   const handlePaySuccess = () => {
-    toast.success('Payment successful — ticket is being transferred!')
+    toast.success(t('market.toast.paymentSuccess'))
     void queryClient.invalidateQueries({ queryKey: ['tickets'] })
     void queryClient.invalidateQueries({ queryKey: ['market'] })
     void navigate({ to: '/tickets' })
   }
 
+  const isLoading = assignmentLoading || (!!assignment && eventLoading)
+
   if (isLoading) {
     return (
       <div className="min-h-screen pb-32">
         <Skeleton className="h-64 w-full rounded-none" />
-        <div className="mx-auto max-w-[430px] space-y-2 px-4 pt-4 pb-2">
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="h-7 w-56" />
-          <Skeleton className="h-3 w-40" />
-        </div>
-        <div className="mx-auto mt-5 max-w-[430px] space-y-3 rounded-2xl border border-white/10 bg-white/5 p-5">
-          <Skeleton className="h-4 w-36" />
-          <Skeleton className="h-10 w-full rounded-xl" />
-          <Skeleton className="h-10 w-full rounded-xl" />
-          <Skeleton className="h-10 w-full rounded-full" />
+        <div className="mx-auto max-w-[430px] space-y-4 px-4 pt-4">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-7 w-3/4" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <div className="rounded-xl border border-white/10 p-4 space-y-1.5">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-4 w-16" />
+          </div>
         </div>
       </div>
     )
@@ -132,7 +132,7 @@ function AssignmentPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center">
         <ShieldX className="h-10 w-10 text-white/30" />
-        <p className="text-muted-foreground text-sm">Assignment not found or already handled.</p>
+        <p className="text-muted-foreground text-sm">{t('market.assignment.notFound')}</p>
       </div>
     )
   }
@@ -142,19 +142,15 @@ function AssignmentPage() {
   const isDeclined = assignment.state === 'declined'
   const countdownExpired = countdown === 0 && assignment.state === 'pending'
   const isPending = assignment.state === 'pending' && !countdownExpired
-
-  const nameOk = holderName.trim().length > 0
-  const dniOk = validateDni(holderDni)
-  const holdersComplete = nameOk && dniOk
-  const accepting = saveHolders.isPending || initiatePayment.isPending
+  const accepting = initiatePayment.isPending
 
   const imageUrl = getEventImageUrl(event?.image_url)
-  const eventName = event?.name ?? assignment.event_name ?? 'Event ticket'
+  const eventName = event?.name ?? assignment.event_name ?? t('market.resaleMarket')
   const startDate = event?.starts_at ? new Date(event.starts_at) : null
 
   return (
-    <div className="min-h-screen pb-32">
-      {/* Hero image — same treatment as event detail page */}
+    <div className="min-h-screen flex flex-col pb-24">
+      {/* Hero image */}
       <div className="relative h-64 overflow-hidden bg-[#111]">
         <ImageWithSkeleton
           src={imageUrl}
@@ -167,131 +163,87 @@ function AssignmentPage() {
         {event?.image_url && (
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent" />
         )}
-        {/* bottom fade into page background */}
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent" />
 
         <BackButton to="/market" className="absolute top-4 left-4" />
-
-        <div className="absolute top-4 right-4 flex items-center gap-2">
-          <StatusChip label="Resale" variant="reserved" />
-          {isPending && (
-            <div className="flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-sm">
-              <Clock className="h-3 w-3 text-yellow-400" />
-              <span className="font-mono text-xs font-semibold text-yellow-400">
-                {formatSeconds(countdown)}
-              </span>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Event info */}
-      <div className="mx-auto max-w-[430px] space-y-1 px-4 pb-4">
-        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          {event?.organisation?.name ?? event?.organiser_name ?? 'Resale Market'}
-        </p>
-        <h1 className="text-2xl font-bold">{eventName}</h1>
-        <div className="text-muted-foreground flex flex-wrap gap-3 pt-1 text-sm">
-          {event?.venue_city && (
-            <span className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 shrink-0" />
-              {event.venue_city}
-            </span>
-          )}
-          {startDate && (
-            <span className="flex items-center gap-1.5">
+      <div className="mx-auto w-full max-w-[430px] space-y-5 px-4 py-4">
+        {/* Org + timer + title */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              {event?.organisation?.name ?? event?.organiser_name ?? t('market.resaleMarket')}
+            </p>
+            {assignment.state === 'pending' && countdown > 0 && (
+              <div className={cn('flex shrink-0 items-center gap-1', countdown < 60 ? 'text-red-400' : 'text-yellow-400')}>
+                <Clock className="h-3 w-3" />
+                <span className="font-mono text-xs font-semibold">{formatSeconds(countdown)}</span>
+              </div>
+            )}
+          </div>
+          <h1 className="text-2xl font-bold">{eventName}</h1>
+        </div>
+
+        {/* Description */}
+        {event?.description && (
+          <p className="text-muted-foreground text-sm leading-relaxed">{event.description}</p>
+        )}
+
+        {/* Date */}
+        {startDate && (
+          <div className="text-muted-foreground text-sm">
+            <span className="flex items-center gap-2">
               <Calendar className="h-4 w-4 shrink-0" />
               {startDate.toLocaleDateString('en-GB', {
                 weekday: 'short',
                 day: 'numeric',
-                month: 'short',
+                month: 'long',
+                year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
               })}
             </span>
-          )}
-        </div>
-
-        {/* Ticket details card */}
-        <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-          <div className="space-y-0.5">
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">Ticket type</p>
-            <p className="text-sm font-semibold">{assignment.ticket_type_name ?? 'General Admission'}</p>
           </div>
-          <div className="text-right space-y-0.5">
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">Price</p>
-            <p className="text-lg font-bold text-yellow-400">
-              {formatPrice(assignment.price_cents, assignment.currency)}
-            </p>
-          </div>
-        </div>
-      </div>
+        )}
 
-      {/* Pending — holder form + actions */}
-      {isPending && !clientSecret && (
-        <div className="mx-auto mt-5 max-w-[430px] space-y-4 px-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
-            <div>
-              <p className="text-sm font-semibold">Who&apos;s attending?</p>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                You&apos;ve been assigned a resale ticket. Fill in the details to accept.
+        {/* Link to event detail */}
+        {assignment.event_id && (
+          <Link
+            to="/events/$eventId"
+            params={{ eventId: assignment.event_id }}
+            className="flex items-center justify-between rounded-xl border border-white/10 px-4 py-3 transition-colors hover:bg-white/5"
+          >
+            <span className="text-sm font-medium">{t('market.assignment.viewEventDetails')}</span>
+            <ChevronRight className="h-4 w-4 text-white/40" />
+          </Link>
+        )}
+
+        {/* Ticket type card */}
+        {(() => {
+          const ticketType = event?.ticket_types?.find(
+            (tt) => tt.id === assignment.ticket_type_id || tt.name === assignment.ticket_type_name,
+          )
+          return (
+            <div className="rounded-xl border border-white/10 p-4">
+              <p className="font-semibold leading-tight">
+                {assignment.ticket_type_name ?? ticketType?.name ?? t('market.assignment.generalAdmission')}
+              </p>
+              {ticketType?.description && (
+                <p className="text-muted-foreground mt-0.5 text-xs">{ticketType.description}</p>
+              )}
+              <p className="text-primary mt-1 text-sm font-bold">
+                {formatPrice(assignment.price_cents, assignment.currency)}
               </p>
             </div>
-
-            <div className="space-y-2">
-              <input
-                type="text"
-                placeholder="Full name"
-                value={holderName}
-                onChange={(e) => setHolderName(e.target.value)}
-                className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
-              />
-              <div>
-                <input
-                  type="text"
-                  placeholder="DNI / NIE"
-                  value={holderDni}
-                  onChange={(e) => setHolderDni(e.target.value)}
-                  className={cn(
-                    'placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none',
-                    holderDni && !validateDni(holderDni)
-                      ? 'border-red-500/60 focus:border-red-500/80'
-                      : 'border-white/10 focus:border-white/30',
-                  )}
-                />
-                {holderDni && !validateDni(holderDni) && (
-                  <p className="mt-1 px-1 text-xs text-red-400">Invalid DNI / NIE</p>
-                )}
-              </div>
-            </div>
-
-            <button
-              onClick={() => void handleAccept()}
-              disabled={!holdersComplete || accepting}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-yellow-400 py-3 text-sm font-semibold text-black disabled:opacity-40"
-            >
-              {accepting ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
-              ) : (
-                <CreditCard className="h-4 w-4" />
-              )}
-              Accept &amp; Pay
-            </button>
-          </div>
-
-          <button
-            onClick={() => declineAssignment.mutate()}
-            disabled={declineAssignment.isPending}
-            className="w-full rounded-full border border-red-500/30 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10 disabled:opacity-40"
-          >
-            Decline
-          </button>
-        </div>
-      )}
+          )
+        })()}
+      </div>
 
       {/* Stripe checkout */}
       {clientSecret && (
-        <div className="mx-auto mt-5 max-w-[430px] px-4">
+        <div className="mx-auto mt-5 max-w-[430px] px-4 pb-32">
           <StripeCheckout clientSecret={clientSecret} onSuccess={handlePaySuccess} />
         </div>
       )}
@@ -301,28 +253,118 @@ function AssignmentPage() {
         <div className="mx-auto mt-5 max-w-[430px] px-4">
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-green-400/20 bg-green-400/5 p-6 text-center">
             <CheckCircle2 className="h-8 w-8 text-green-400" />
-            <p className="text-sm font-semibold text-green-400">Payment confirmed</p>
-            <p className="text-muted-foreground text-xs">Your ticket is being transferred.</p>
+            <p className="text-sm font-semibold text-green-400">{t('market.assignment.paymentConfirmed')}</p>
+            <p className="text-muted-foreground text-xs">{t('market.assignment.ticketTransferring')}</p>
           </div>
         </div>
       )}
       {(isExpired || countdownExpired) && (
         <div className="mx-auto mt-5 max-w-[430px] px-4">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-            <p className="text-sm font-semibold text-white/60">This assignment has expired.</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              You&apos;ve been removed from the queue. Rejoin if you want another chance.
-            </p>
+            <p className="text-sm font-semibold text-white/60">{t('market.assignment.expired')}</p>
+            <p className="text-muted-foreground mt-1 text-xs">{t('market.assignment.expiredDesc')}</p>
           </div>
         </div>
       )}
       {isDeclined && (
         <div className="mx-auto mt-5 max-w-[430px] px-4">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-            <p className="text-muted-foreground text-sm">Assignment declined.</p>
+            <p className="text-muted-foreground text-sm">{t('market.assignment.declined')}</p>
           </div>
         </div>
       )}
+
+      {/* Bottom: total + action buttons */}
+      {isPending && !clientSecret && (
+        <div className="fixed inset-x-0 bottom-24 z-40">
+          <div className="mx-auto w-full max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
+            <div className="flex items-center justify-between border-t border-white/10 pt-3 pb-1">
+              <span className="text-muted-foreground text-sm">{t('market.assignment.total')}</span>
+              <span className="text-lg font-bold">
+                {formatPrice(assignment.price_cents, assignment.currency)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={() => setDeclineOpen(true)}
+                className="flex h-14 items-center gap-2 rounded-full bg-red-500 pl-5 pr-6 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-red-600"
+              >
+                <XCircle className="h-4 w-4 shrink-0" />
+                {t('market.assignment.decline')}
+              </button>
+              <button
+                onClick={() => initiatePayment.mutate()}
+                disabled={accepting || countdownExpired}
+                className="bg-primary hover:bg-primary/90 flex h-14 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-lg transition disabled:opacity-40"
+              >
+                {accepting ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <CreditCard className="h-4 w-4" />
+                )}
+                {t('market.assignment.acceptAndPay')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Decline confirmation modal */}
+      <AnimatePresence>
+        {declineOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
+            onClick={(e) => e.target === e.currentTarget && setDeclineOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 32, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 32, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-[#111] p-6"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
+                  <XCircle className="h-5 w-5 text-red-400" />
+                </div>
+                <h3 className="text-base font-semibold text-red-400">{t('market.assignment.declineTitle')}</h3>
+              </div>
+              <p className="text-muted-foreground mb-6 text-sm">
+                {t('market.assignment.declineDesc')}
+              </p>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setDeclineOpen(false)}
+                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
+                >
+                  {t('common.goBack')}
+                </button>
+                <button
+                  onClick={() => { setDeclineOpen(false); declineAssignment.mutate() }}
+                  disabled={declineSeconds > 0 || declineAssignment.isPending}
+                  className="flex h-10 min-w-[112px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {declineAssignment.isPending ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : declineSeconds > 0 ? (
+                    t('common.waitSeconds', { seconds: declineSeconds })
+                  ) : (
+                    <>
+                      <XCircle className="h-3.5 w-3.5" />
+                      {t('market.assignment.decline')}
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

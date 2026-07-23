@@ -20,7 +20,7 @@ const SUPPORTED_LANGS = [
 
 function ProfilePage() {
   const { t } = useTranslation()
-  const { data: profile, isLoading } = useProfile()
+  useProfile()
   const clearSession = useAuthStore((s) => s.clearSession)
   const navigate = useNavigate()
   const [currentLang, setCurrentLang] = useState(i18n.language.split('-')[0])
@@ -35,16 +35,6 @@ function ProfilePage() {
     clearSession()
     void navigate({ to: '/login' })
   }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
-    )
-  }
-
-  if (!profile) return null
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-28">

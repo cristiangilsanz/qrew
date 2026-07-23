@@ -23,6 +23,8 @@ export interface TicketType {
   position: number
 }
 
+export type AvailabilityStatus = 'not_started' | 'open' | 'ended' | 'sold_out'
+
 export interface EventDetail {
   id: string
   name: string
@@ -35,6 +37,7 @@ export interface EventDetail {
   max_tickets_per_user: number
   queue_required: boolean
   published_at: string | null
+  availability_status: AvailabilityStatus
   organisation: {
     id: string
     slug: string

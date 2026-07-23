@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { OrgCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 
 import { useOrgEvents } from '../hooks/useOrgEvents'
@@ -16,8 +17,8 @@ export function OrgEventList({ orgId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-4">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+      <div className="space-y-2">
+        {[0, 1].map((i) => <OrgCardSkeleton key={i} />)}
       </div>
     )
   }

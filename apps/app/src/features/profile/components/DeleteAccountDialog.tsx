@@ -102,14 +102,9 @@ export function DeleteAccountDialog() {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
                   <Trash2 className="h-5 w-5 text-red-400" />
                 </div>
-                <div>
-                  <h3 className="text-base font-semibold text-red-400">
-                    {t('profile.deleteAccount.button')}
-                  </h3>
-                  <p className="text-muted-foreground text-xs">
-                    {t('profile.deleteAccount.irreversible')}
-                  </p>
-                </div>
+                <h3 className="text-base font-semibold text-red-400">
+                  {t('profile.deleteAccount.button')}
+                </h3>
               </div>
 
               <p className="text-muted-foreground mb-5 text-sm">

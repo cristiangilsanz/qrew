@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Ban } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { OrgEvent } from '../api'
@@ -14,7 +14,15 @@ interface Props {
 export function CancelEventSection({ event, orgId }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const [countdown, setCountdown] = useState(5)
   const cancelEvent = useCancelEvent(orgId, event.id)
+
+  useEffect(() => {
+    if (!open) { setCountdown(5); return }
+    if (countdown <= 0) return
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [open, countdown])
 
   return (
     <>
@@ -52,12 +60,9 @@ export function CancelEventSection({ event, orgId }: Props) {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
                   <Ban className="h-5 w-5 text-red-400" />
                 </div>
-                <div>
-                  <h3 className="text-base font-semibold text-red-400">
-                    {t('organiser.events.cancel')}
-                  </h3>
-                  <p className="text-muted-foreground text-xs">{event.name}</p>
-                </div>
+                <h3 className="text-base font-semibold text-red-400">
+                  {t('organiser.events.cancel')}
+                </h3>
               </div>
               <p className="text-muted-foreground mb-6 text-sm">
                 {t('organiser.events.cancelDesc')}
@@ -75,15 +80,19 @@ export function CancelEventSection({ event, orgId }: Props) {
                     cancelEvent.mutate()
                     setOpen(false)
                   }}
-                  disabled={cancelEvent.isPending}
-                  className="flex h-10 items-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
+                  disabled={countdown > 0 || cancelEvent.isPending}
+                  className="flex h-10 min-w-[112px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {cancelEvent.isPending ? (
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : countdown > 0 ? (
+                    t('common.waitSeconds', { seconds: countdown })
                   ) : (
-                    <Ban className="h-3.5 w-3.5" />
+                    <>
+                      <Ban className="h-3.5 w-3.5" />
+                      {t('organiser.events.confirmCancel')}
+                    </>
                   )}
-                  {t('organiser.events.confirmCancel')}
                 </button>
               </div>
             </motion.div>

@@ -1,3 +1,4 @@
+/* global google */
 import { Loader } from '@googlemaps/js-api-loader'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MapPin, Plus } from 'lucide-react'
@@ -137,7 +138,7 @@ export function CreateVenueForm({ onSuccess }: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((v) => createVenue.mutate(v))} className="space-y-4">
+      <form onSubmit={form.handleSubmit((v) => createVenue.mutate(v))} className="space-y-4 px-1">
 
         {/* Places search */}
         <div className="space-y-1.5">

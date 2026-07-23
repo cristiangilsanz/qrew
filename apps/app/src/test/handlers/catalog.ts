@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-const CATALOG_URL = 'http://localhost:8002'
+const CATALOG_URL = 'http://localhost:8000/api/catalog'
 
 export const catalogHandlers = [
   http.get(`${CATALOG_URL}/v1/events`, () =>

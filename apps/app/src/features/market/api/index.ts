@@ -29,6 +29,7 @@ export interface MarketAssignmentResponse {
   id: string
   listing_id: string
   event_id: string
+  ticket_type_id: string | null
   assigned_at: string
   expires_at: string
   paid_at: string | null
@@ -39,6 +40,11 @@ export interface MarketAssignmentResponse {
   currency: string
   event_name: string | null
   ticket_type_name: string | null
+}
+
+export interface MarketQueueEntry {
+  event_id: string
+  joined_at: string
 }
 
 export interface MarketAssignmentPayment {
@@ -74,6 +80,10 @@ export const marketApi = {
     salesClient
       .get<MarketListingResponse>(`/v1/tickets/${ticketId}/market/listing`)
       .then((r) => r.data),
+
+  // My queues
+  getMyQueues: () =>
+    salesClient.get<MarketQueueEntry[]>('/v1/market/queues').then((r) => r.data),
 
   // Assignments
   getPendingAssignment: () =>

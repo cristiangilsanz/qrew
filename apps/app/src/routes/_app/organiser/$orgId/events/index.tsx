@@ -1,10 +1,11 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { createFileRoute,Link } from '@tanstack/react-router'
 import { Calendar, MapPin, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { BackButton } from '@/components/ui/back-button'
+import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
+import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 import { getEventImageUrl } from '@/lib/imageUrl'
@@ -46,8 +47,8 @@ function OrgEventsPage() {
       </div>
 
       {isLoading && (
-        <div className="flex justify-center py-8">
-          <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => <EventCardSkeleton key={i} />)}
         </div>
       )}
 

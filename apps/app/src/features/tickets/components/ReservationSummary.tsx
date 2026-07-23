@@ -48,10 +48,10 @@ export function ReservationSummary({ reservation, onCancel, onPay, payLoading }:
   const remaining = useCountdown(reservation.expires_at)
   const cancel = useCancelReservation(reservation.id, onCancel)
 
-  const isExpired = remaining === 0 || reservation.status === 'expired'
+  const isExpired = reservation.status === 'expired'
   const isCancelled = reservation.status === 'cancelled'
   const isPaid = reservation.status === 'paid'
-  const canAct = !isExpired && !isCancelled && !isPaid
+  const canAct = !isExpired && !isCancelled && !isPaid && remaining > 0
 
   return (
     <Card>
@@ -79,7 +79,7 @@ export function ReservationSummary({ reservation, onCancel, onPay, payLoading }:
           </div>
         )}
 
-        {isExpired && !isPaid && (
+        {(isExpired || remaining === 0) && !isPaid && (
           <p className="text-destructive text-sm">{t('tickets.reservation.expired')}</p>
         )}
         {isCancelled && (

@@ -60,7 +60,7 @@ export function QrDisplay({ ticketId }: Props) {
     const token = useAuthStore.getState().accessToken
     setState({ status: 'locating' })
 
-    fetch(`${env.TICKETING_URL}/v1/tickets/${ticketId}/qr/stream`, {
+    fetch(`${env.API_URL}/api/ticketing/v1/tickets/${ticketId}/qr/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -14,6 +14,7 @@ import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { PasskeyList } from '@/features/passkeys/components/PasskeyList'
 import { ChangePasswordForm } from '@/features/profile/components/ChangePasswordForm'
 import { SessionList } from '@/features/profile/components/SessionList'
@@ -98,8 +99,17 @@ function DeviceList() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-4">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+      <div className="space-y-1">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3">
+            <Skeleton className="h-4 w-4 rounded" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-4 w-4 rounded" />
+          </div>
+        ))}
       </div>
     )
   }
@@ -163,8 +173,16 @@ function AuditLog() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-4">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+      <div className="space-y-5">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="flex items-start gap-3">
+            <Skeleton className="mt-1 h-[11px] w-[11px] rounded-full" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   }

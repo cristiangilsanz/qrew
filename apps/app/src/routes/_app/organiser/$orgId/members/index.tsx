@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { createFileRoute,Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Trash2, UserMinus, UserPlus } from 'lucide-react'
 import { useState } from 'react'
@@ -23,10 +23,11 @@ function OrgMembersPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [query, setQuery] = useState('')
 
-  const { data: members, isLoading } = useOrgMembers(orgId)
+  const { data: members, isLoading: membersLoading } = useOrgMembers(orgId)
   const memberIds = (members ?? []).map((m) => m.user_id)
   const { data: profiles, isLoading: profilesLoading } = useUserPublicProfiles(memberIds)
   const profileById = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]))
+  const isLoading = membersLoading || profilesLoading
 
   const visibleMembers = query.trim()
     ? (members ?? []).filter((m) => {
@@ -56,12 +57,24 @@ function OrgMembersPage() {
         </div>
 
       {isLoading && (
-        <div className="flex justify-center py-8">
-          <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+          {[0, 1, 2].map((i) => (
+            <div key={i}>
+              {i > 0 && <div className="mx-4 border-t border-white/10" />}
+              <div className="flex items-center gap-3 px-4 py-4">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-44" />
+                </div>
+                <Skeleton className="h-5 w-18 rounded-full" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {!isLoading && (
+      {!isLoading && members && (
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
           {visibleMembers.length === 0 && (
             <p className="text-muted-foreground py-8 text-center text-sm">
@@ -73,24 +86,15 @@ function OrgMembersPage() {
               {i > 0 && <div className="border-t border-white/10" />}
               <div className="flex items-center gap-3 px-4 py-4">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold uppercase">
-                  {profilesLoading ? '·' : (profileById[m.user_id]?.full_name ?? '?').slice(0, 2)}
+                  {(profileById[m.user_id]?.full_name ?? '?').slice(0, 2)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  {profilesLoading ? (
-                    <>
-                      <Skeleton className="mb-1 h-4 w-32" />
-                      <Skeleton className="h-3 w-44" />
-                    </>
-                  ) : (
-                    <>
-                      <p className="truncate text-sm font-medium">
-                        {profileById[m.user_id]?.full_name ?? '—'}
-                      </p>
-                      <p className="text-muted-foreground truncate text-xs">
-                        {profileById[m.user_id]?.email ?? ''}
-                      </p>
-                    </>
-                  )}
+                  <p className="truncate text-sm font-medium">
+                    {profileById[m.user_id]?.full_name ?? ''}
+                  </p>
+                  <p className="text-muted-foreground truncate text-xs">
+                    {profileById[m.user_id]?.email ?? ''}
+                  </p>
                   <p className="text-muted-foreground mt-0.5 text-xs">
                     {t('organiser.members.joined')}{' '}
                     {new Date(m.joined_at).toLocaleDateString(i18n.language, {

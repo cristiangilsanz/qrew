@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
-import { scannerApi } from '@/features/scanner/api'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
+import { scannerApi } from '@/features/scanner/api'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/organiser/$orgId/events/$eventId/scan')({
@@ -19,6 +19,7 @@ type Phase = 'init' | 'scanning' | 'result' | 'error'
 interface BarcodeDetector {
   detect(image: ImageBitmapSource): Promise<Array<{ rawValue: string }>>
 }
+// eslint-disable-next-line no-redeclare
 declare const BarcodeDetector: {
   new (options: { formats: string[] }): BarcodeDetector
   getSupportedFormats(): Promise<string[]>

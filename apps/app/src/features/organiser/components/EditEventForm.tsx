@@ -63,7 +63,7 @@ const frostedInput =
 
 export function EditEventForm({ event, orgId }: Props) {
   const { t } = useTranslation()
-  const { data: venuesData } = useVenues()
+  const { data: venuesData, isLoading: venuesLoading } = useVenues()
   const venues = venuesData?.items ?? []
   const [venueModalOpen, setVenueModalOpen] = useState(false)
 
@@ -165,16 +165,27 @@ export function EditEventForm({ event, orgId }: Props) {
                   </button>
                 </div>
                 <FormControl>
-                  <select className={`${frostedInput} [&>option]:bg-[hsl(0,0%,12%)]`} {...field}>
-                    <option value="">
-                      {venues.length === 0 ? 'No venues yet — create one' : 'Select a venue…'}
-                    </option>
-                    {venues.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.name} — {v.city}
+                  <div className="relative">
+                    <select
+                      className={`${frostedInput} [&>option]:bg-[hsl(0,0%,12%)] ${venuesLoading ? 'opacity-50' : ''}`}
+                      disabled={venuesLoading}
+                      {...field}
+                    >
+                      <option value="">
+                        {venuesLoading ? 'Loading venues…' : venues.length === 0 ? 'No venues yet — create one' : 'Select a venue…'}
                       </option>
-                    ))}
-                  </select>
+                      {venues.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} — {v.city}
+                        </option>
+                      ))}
+                    </select>
+                    {venuesLoading && (
+                      <span className="pointer-events-none absolute right-7 top-1/2 -translate-y-1/2">
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/20 border-t-white/60 block" />
+                      </span>
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

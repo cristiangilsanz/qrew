@@ -8,11 +8,11 @@ const variants: Record<string, string> = {
   // ticket states
   reserved: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',
   issued: 'bg-primary/15 text-primary border border-primary/30',
-  entry_pending: 'bg-blue-500/15 text-blue-400 border border-blue-500/20',
-  used: 'bg-white/8 text-white/40 border border-white/10',
-  expired: 'bg-orange-500/15 text-orange-400 border border-orange-500/20',
-  frozen: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/20',
-  flagged: 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
+  scanning: 'bg-purple-500/15 text-purple-400 border border-purple-500/20',
+  redeemed: 'bg-green-500/15 text-green-400 border border-green-500/20',
+  expired: 'bg-white/8 text-white/40 border border-white/10',
+  on_sale: 'bg-blue-500/15 text-blue-400 border border-blue-500/20',
+  flagged: 'bg-amber-900/20 text-amber-900 border border-amber-900/30',
   // kyc status
   approved: 'bg-primary/15 text-primary border border-primary/30',
   pending: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',
