@@ -196,6 +196,9 @@ class MarketService:
     async def get_pending_assignment(self, *, user_id: uuid.UUID) -> MarketAssignment | None:
         return await self._repo.get_pending_assignment_for_user_any_event(user_id)
 
+    async def get_listing(self, *, listing_id: uuid.UUID) -> MarketListing | None:
+        return await self._repo.get_listing_by_id(listing_id)
+
     @traced("market.service.set_holders")
     async def set_holders(
         self,

@@ -231,7 +231,7 @@ async def get_pending_assignment(
     assignment = await service.get_pending_assignment(user_id=current_user.id)
     if assignment is None:
         return None
-    listing = await service._repo.get_listing_by_id(assignment.listing_id)  # noqa: SLF001
+    listing = await service.get_listing(listing_id=assignment.listing_id)
     return _assignment_response(assignment, listing)
 
 
@@ -256,7 +256,7 @@ async def get_assignment(
         )
     except MarketError as exc:
         raise _market_error(exc) from exc
-    listing = await service._repo.get_listing_by_id(assignment.listing_id)  # noqa: SLF001
+    listing = await service.get_listing(listing_id=assignment.listing_id)
     return _assignment_response(assignment, listing)
 
 
@@ -286,7 +286,7 @@ async def set_assignment_holders(
     except MarketError as exc:
         raise _market_error(exc) from exc
     await db.commit()
-    listing = await service._repo.get_listing_by_id(assignment.listing_id)  # noqa: SLF001
+    listing = await service.get_listing(listing_id=assignment.listing_id)
     return _assignment_response(assignment, listing)
 
 

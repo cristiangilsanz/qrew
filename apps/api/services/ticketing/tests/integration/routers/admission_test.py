@@ -32,7 +32,7 @@ async def _seed_ticket(
 
 
 async def test_use_ticket_success(client, test_session_factory):
-    ticket_id = await _seed_ticket(test_session_factory, state="entry_pending")
+    ticket_id = await _seed_ticket(test_session_factory, state="scanning")
 
     response = await client.post(
         f"/v1/admission/{ticket_id}/use",
@@ -44,7 +44,7 @@ async def test_use_ticket_success(client, test_session_factory):
 
 
 async def test_use_ticket_idempotent_already_used(client, test_session_factory):
-    ticket_id = await _seed_ticket(test_session_factory, state="used")
+    ticket_id = await _seed_ticket(test_session_factory, state="redeemed")
 
     response = await client.post(
         f"/v1/admission/{ticket_id}/use",

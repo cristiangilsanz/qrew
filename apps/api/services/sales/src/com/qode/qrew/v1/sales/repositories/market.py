@@ -154,7 +154,7 @@ class MarketRepository:
     ) -> MarketQueueEntry | None:
         """Picks a random active queue member that has not exceeded the ticket limit."""
         exclude_clause = ""
-        params: dict = {"event_id": event_id, "max_tickets": max_tickets}
+        params: dict[str, object] = {"event_id": event_id, "max_tickets": max_tickets}
         if exclude_user_ids:
             exclude_clause = "AND mq.user_id != ALL(:exclude_ids)"
             params["exclude_ids"] = exclude_user_ids
@@ -294,7 +294,7 @@ class MarketRepository:
 
     async def get_ticket_for_listing(
         self, *, ticket_id: uuid.UUID, owner_user_id: uuid.UUID
-    ) -> dict | None:
+    ) -> dict[str, object] | None:
         result = await self._session.execute(
             text(
                 """
