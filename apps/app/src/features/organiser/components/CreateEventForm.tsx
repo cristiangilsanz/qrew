@@ -126,11 +126,7 @@ export function CreateEventForm({ orgId, onSuccess }: Props) {
               <FormItem>
                 <FormLabel>{t('organiser.events.descriptionLabel')}</FormLabel>
                 <FormControl>
-                  <textarea
-                    rows={3}
-                    className={`${frostedInput} resize-none`}
-                    {...field}
-                  />
+                  <textarea rows={3} className={`${frostedInput} resize-none`} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -166,10 +162,7 @@ export function CreateEventForm({ orgId, onSuccess }: Props) {
                   </button>
                 </div>
                 <FormControl>
-                  <select
-                    className={`${frostedInput} [&>option]:bg-[hsl(0,0%,12%)]`}
-                    {...field}
-                  >
+                  <select className={`${frostedInput} [&>option]:bg-[hsl(0,0%,12%)]`} {...field}>
                     <option value="">
                       {venues.length === 0 ? 'No venues yet — create one' : 'Select a venue…'}
                     </option>

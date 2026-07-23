@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils'
 import type { Ticket, TicketState } from '../api'
 import { useReservation } from '../hooks/useReservation'
 
-
 interface Props {
   ticket: Ticket
 }
@@ -102,9 +101,7 @@ export function TicketCard({ ticket }: Props) {
                       variant={displayState}
                     />
                   )}
-                  <span className="font-mono text-xs">
-                    #{ticket.id.slice(0, 8).toUpperCase()}
-                  </span>
+                  <span className="font-mono text-xs">#{ticket.id.slice(0, 8).toUpperCase()}</span>
                 </span>
               </div>
             </>

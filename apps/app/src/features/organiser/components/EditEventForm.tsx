@@ -57,7 +57,6 @@ interface Props {
   orgId: string
 }
 
-
 const frostedInput =
   'w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5 text-sm text-white/50 outline-none transition-all duration-150 placeholder:text-white/20 focus:border-primary/50 focus:bg-white/8 focus:text-white'
 
@@ -172,7 +171,11 @@ export function EditEventForm({ event, orgId }: Props) {
                       {...field}
                     >
                       <option value="">
-                        {venuesLoading ? 'Loading venues…' : venues.length === 0 ? 'No venues yet — create one' : 'Select a venue…'}
+                        {venuesLoading
+                          ? 'Loading venues…'
+                          : venues.length === 0
+                            ? 'No venues yet — create one'
+                            : 'Select a venue…'}
                       </option>
                       {venues.map((v) => (
                         <option key={v.id} value={v.id}>
@@ -181,8 +184,8 @@ export function EditEventForm({ event, orgId }: Props) {
                       ))}
                     </select>
                     {venuesLoading && (
-                      <span className="pointer-events-none absolute right-7 top-1/2 -translate-y-1/2">
-                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/20 border-t-white/60 block" />
+                      <span className="pointer-events-none absolute top-1/2 right-7 -translate-y-1/2">
+                        <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
                       </span>
                     )}
                   </div>

@@ -18,13 +18,10 @@ function EditTicketsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
-      <BackButton
-        to="/organiser/$orgId/events/$eventId/"
-        params={{ orgId, eventId }}
-      />
+      <BackButton to="/organiser/$orgId/events/$eventId/" params={{ orgId, eventId }} />
       <h1 className="text-2xl font-semibold">{t('organiser.ticketTypes.title')}</h1>
 
-      {(isLoading || !event) ? (
+      {isLoading || !event ? (
         <TicketTypeListSkeleton />
       ) : (
         <TicketTypeList eventId={eventId} eventStatus={event.status} />

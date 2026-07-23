@@ -32,7 +32,9 @@ function EventsPage() {
               <EventCard
                 key={event.id}
                 event={event}
-                onClick={() => void navigate({ to: '/events/$eventId', params: { eventId: event.id } })}
+                onClick={() =>
+                  void navigate({ to: '/events/$eventId', params: { eventId: event.id } })
+                }
               />
             ))}
       </div>

@@ -1,4 +1,4 @@
-import { createFileRoute,Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { Plus, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -76,7 +76,10 @@ function OrganiserPage() {
 
       <div className="space-y-3">
         {displayOrgs.map((org) => (
-          <div key={org.id} className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+          <div
+            key={org.id}
+            className="overflow-hidden rounded-2xl border border-white/10 bg-white/5"
+          >
             <OrgCard org={org} />
           </div>
         ))}

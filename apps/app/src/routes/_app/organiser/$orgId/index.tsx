@@ -1,4 +1,4 @@
-import { createFileRoute,Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CalendarDays, ChevronRight, Trash2, Users } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -78,7 +78,7 @@ function OrgDashboardPage() {
         <Link
           to="/organiser/$orgId/events"
           params={{ orgId }}
-          className="hover:bg-white/[0.04] flex w-full items-center gap-3 px-4 py-4 transition-colors"
+          className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
             <CalendarDays className="h-4 w-4" />
@@ -86,10 +86,12 @@ function OrgDashboardPage() {
           <span className="flex-1 text-sm font-medium">{t('organiser.events.title')}</span>
           {allLoading ? (
             <Skeleton className="h-5 w-6 rounded-full" />
-          ) : eventCount > 0 && (
-            <span className="bg-white/10 text-white/60 rounded-full px-2 py-0.5 text-xs">
-              {eventCount}
-            </span>
+          ) : (
+            eventCount > 0 && (
+              <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/60">
+                {eventCount}
+              </span>
+            )
           )}
           <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
         </Link>
@@ -99,7 +101,7 @@ function OrgDashboardPage() {
         <Link
           to="/organiser/$orgId/members"
           params={{ orgId }}
-          className="hover:bg-white/[0.04] flex w-full items-center gap-3 px-4 py-4 transition-colors"
+          className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
             <Users className="h-4 w-4" />
@@ -107,10 +109,12 @@ function OrgDashboardPage() {
           <span className="flex-1 text-sm font-medium">{t('organiser.members.title')}</span>
           {allLoading ? (
             <Skeleton className="h-5 w-6 rounded-full" />
-          ) : memberCount > 0 && (
-            <span className="bg-white/10 text-white/60 rounded-full px-2 py-0.5 text-xs">
-              {memberCount}
-            </span>
+          ) : (
+            memberCount > 0 && (
+              <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/60">
+                {memberCount}
+              </span>
+            )
           )}
           <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
         </Link>
@@ -120,7 +124,7 @@ function OrgDashboardPage() {
       <div className="overflow-hidden rounded-2xl border border-red-500/15 bg-white/5">
         <button
           onClick={openDelete}
-          className="hover:bg-white/[0.04] flex w-full items-center gap-3 px-4 py-4 text-left transition-colors"
+          className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-white/[0.04]"
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500/10">
             <Trash2 className="h-4 w-4 text-red-400" />
@@ -158,12 +162,10 @@ function OrgDashboardPage() {
                   <h3 className="text-base font-semibold text-red-400">
                     {t('organiser.org.deleteTitle')}
                   </h3>
-                  <p className="text-muted-foreground text-xs capitalize">
-                    {org?.name ?? ''}
-                  </p>
+                  <p className="text-muted-foreground text-xs capitalize">{org?.name ?? ''}</p>
                 </div>
               </div>
-              <p className="text-muted-foreground mb-6 whitespace-pre-line text-sm">
+              <p className="text-muted-foreground mb-6 text-sm whitespace-pre-line">
                 {t('organiser.org.deleteDesc')}
               </p>
               <div className="flex items-center justify-between">

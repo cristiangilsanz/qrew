@@ -1,4 +1,4 @@
-import { createFileRoute,Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Trash2, UserMinus, UserPlus } from 'lucide-react'
 import { useState } from 'react'
@@ -14,8 +14,6 @@ import { useUserPublicProfiles } from '@/features/profile/hooks/useUserPublicPro
 export const Route = createFileRoute('/_app/organiser/$orgId/members/')({
   component: OrgMembersPage,
 })
-
-
 
 function OrgMembersPage() {
   const { t, i18n } = useTranslation()
@@ -45,16 +43,16 @@ function OrgMembersPage() {
       <BackButton to="/organiser/$orgId" params={{ orgId }} />
       <h1 className="text-2xl font-semibold">{t('organiser.members.title')}</h1>
 
-        <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('organiser.members.searchPlaceholder')}
-            className="border-white/15 bg-white/5 placeholder:text-muted-foreground focus:border-primary/60 w-full rounded-2xl border py-3 pr-4 pl-9 text-sm outline-none transition-colors"
-          />
-        </div>
+      <div className="relative">
+        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('organiser.members.searchPlaceholder')}
+          className="placeholder:text-muted-foreground focus:border-primary/60 w-full rounded-2xl border border-white/15 bg-white/5 py-3 pr-4 pl-9 text-sm transition-colors outline-none"
+        />
+      </div>
 
       {isLoading && (
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">

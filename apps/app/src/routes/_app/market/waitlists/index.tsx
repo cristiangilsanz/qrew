@@ -47,7 +47,10 @@ function WaitlistRow({ eventId }: { eventId: string }) {
           <ImageWithSkeleton
             src={imageUrl}
             alt={eventName}
-            className={cn('h-full w-full', event?.image_url ? 'object-cover opacity-70' : 'object-contain p-3 opacity-50')}
+            className={cn(
+              'h-full w-full',
+              event?.image_url ? 'object-cover opacity-70' : 'object-contain p-3 opacity-50',
+            )}
           />
           {event?.image_url && (
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -55,7 +58,7 @@ function WaitlistRow({ eventId }: { eventId: string }) {
         </div>
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {event?.organisation?.name ?? t('market.resaleMarket')}
             </p>
             <p className="truncate text-sm font-semibold">{eventName}</p>
@@ -63,7 +66,9 @@ function WaitlistRow({ eventId }: { eventId: string }) {
               <p className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
                 <Calendar className="h-3 w-3 shrink-0" />
                 {new Date(event.starts_at).toLocaleDateString('en-GB', {
-                  day: 'numeric', month: 'short', year: 'numeric',
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
                 })}
               </p>
             )}
@@ -99,7 +104,9 @@ function WaitlistRow({ eventId }: { eventId: string }) {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
                   <LogOut className="h-5 w-5 text-red-400" />
                 </div>
-                <h3 className="text-base font-semibold text-red-400">{t('market.leaveQueue.title')}</h3>
+                <h3 className="text-base font-semibold text-red-400">
+                  {t('market.leaveQueue.title')}
+                </h3>
               </div>
               <p className="text-muted-foreground mb-6 text-sm">
                 {t('market.leaveQueue.description')}
@@ -139,12 +146,12 @@ function WaitlistsPage() {
   const [query, setQuery] = useState('')
   const { data: queues, isLoading } = useMyQueues()
 
-  const filtered = (queues ?? []).filter((entry) =>
-    !query || entry.event_id.toLowerCase().includes(query.toLowerCase())
+  const filtered = (queues ?? []).filter(
+    (entry) => !query || entry.event_id.toLowerCase().includes(query.toLowerCase()),
   )
 
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] px-4 pt-5 pb-28 space-y-4">
+    <div className="mx-auto min-h-screen max-w-[430px] space-y-4 px-4 pt-5 pb-28">
       <div>
         <BackButton to="/market" />
         <h1 className="mt-3 text-2xl font-bold">{t('market.myWaitlists')}</h1>
@@ -152,13 +159,13 @@ function WaitlistsPage() {
 
       {!isLoading && (queues ?? []).length > 0 && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-white/30" />
           <input
             type="text"
             placeholder={t('market.searchByEvent')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-9 pr-4 text-sm text-white placeholder:text-white/30 focus:border-white/20 focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pr-4 pl-9 text-sm text-white placeholder:text-white/30 focus:border-white/20 focus:outline-none"
           />
         </div>
       )}

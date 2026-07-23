@@ -44,7 +44,7 @@ function MarketPage() {
   ]
 
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] px-4 pt-5 pb-28 space-y-6">
+    <div className="mx-auto min-h-screen max-w-[430px] space-y-6 px-4 pt-5 pb-28">
       <h1 className="text-2xl font-bold">{t('market.title')}</h1>
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
@@ -63,7 +63,7 @@ function MarketPage() {
               {badgesLoading ? (
                 <Skeleton className="h-5 w-6 rounded-full" />
               ) : s.count > 0 ? (
-                <span className="bg-white/10 text-white/60 rounded-full px-2 py-0.5 text-xs">
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/60">
                   {s.count}
                 </span>
               ) : null}
@@ -72,7 +72,6 @@ function MarketPage() {
           )
         })}
       </div>
-
     </div>
   )
 }

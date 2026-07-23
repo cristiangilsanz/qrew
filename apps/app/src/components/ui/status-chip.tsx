@@ -35,8 +35,8 @@ export function StatusChip({ label, variant, className }: Props) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
-        variants[key] ?? 'bg-white/8 text-white/50 border border-white/10',
+        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase',
+        variants[key] ?? 'border border-white/10 bg-white/8 text-white/50',
         className,
       )}
     >

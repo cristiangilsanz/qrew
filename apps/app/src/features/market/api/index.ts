@@ -82,8 +82,7 @@ export const marketApi = {
       .then((r) => r.data),
 
   // My queues
-  getMyQueues: () =>
-    salesClient.get<MarketQueueEntry[]>('/v1/market/queues').then((r) => r.data),
+  getMyQueues: () => salesClient.get<MarketQueueEntry[]>('/v1/market/queues').then((r) => r.data),
 
   // Assignments
   getPendingAssignment: () =>
@@ -105,9 +104,7 @@ export const marketApi = {
       .then((r) => r.data),
 
   declineAssignment: (assignmentId: string) =>
-    salesClient
-      .post(`/v1/market/assignments/${assignmentId}/decline`)
-      .then((r) => r.data),
+    salesClient.post(`/v1/market/assignments/${assignmentId}/decline`).then((r) => r.data),
 
   // Payments
   initiateAssignmentPayment: (assignmentId: string) =>

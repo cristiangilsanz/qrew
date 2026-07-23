@@ -12,7 +12,14 @@ interface DialogProps {
   size?: 'default' | 'lg'
 }
 
-export function Dialog({ open, onClose, title, children, className, size = 'default' }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  children,
+  className,
+  size = 'default',
+}: DialogProps) {
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => {
@@ -51,7 +58,11 @@ export function Dialog({ open, onClose, title, children, className, size = 'defa
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className={cn('pb-safe overflow-y-auto', size === 'lg' ? 'max-h-[85vh]' : 'max-h-[80vh]')}>{children}</div>
+        <div
+          className={cn('pb-safe overflow-y-auto', size === 'lg' ? 'max-h-[85vh]' : 'max-h-[80vh]')}
+        >
+          {children}
+        </div>
       </div>
     </div>
   )

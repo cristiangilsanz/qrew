@@ -59,7 +59,11 @@ function ScanPage() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       try {
         const result = await scannerApi.validateEntry(scannerTokenRef.current, raw)
-        setScanResult({ allowed: result.allowed, reason: result.reason, ticketId: result.ticket_id })
+        setScanResult({
+          allowed: result.allowed,
+          reason: result.reason,
+          ticketId: result.ticket_id,
+        })
         setScanCount((c) => c + 1)
         setPhase('result')
         // Resume scanning after 2s
@@ -109,10 +113,7 @@ function ScanPage() {
   async function startScanning() {
     try {
       // Get scanner token
-      const tok = await scannerApi.createForEvent(
-        eventId,
-        `${event?.name ?? 'Event'} scanner`,
-      )
+      const tok = await scannerApi.createForEvent(eventId, `${event?.name ?? 'Event'} scanner`)
       scannerTokenRef.current = tok.token
 
       // Check BarcodeDetector support
@@ -163,22 +164,14 @@ function ScanPage() {
 
       {/* Camera viewfinder */}
       <div className="relative flex-1 overflow-hidden">
-        <video
-          ref={videoRef}
-          className="h-full w-full object-cover"
-          playsInline
-          muted
-          autoPlay
-        />
+        <video ref={videoRef} className="h-full w-full object-cover" playsInline muted autoPlay />
 
         {/* Overlay when not scanning */}
         {phase !== 'scanning' && phase !== 'result' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-black/70 px-8">
             {phase === 'init' && (
               <>
-                <p className="text-center text-sm text-white/70">
-                  {t('organiser.scanner.prompt')}
-                </p>
+                <p className="text-center text-sm text-white/70">{t('organiser.scanner.prompt')}</p>
                 <button
                   onClick={() => void startScanning()}
                   className="bg-primary flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold text-white"
@@ -191,9 +184,14 @@ function ScanPage() {
             {phase === 'error' && (
               <>
                 <XCircle className="h-12 w-12 text-red-400" />
-                <p className="whitespace-pre-line text-center text-sm text-white/70">{errorMsg}</p>
+                <p className="text-center text-sm whitespace-pre-line text-white/70">{errorMsg}</p>
                 <button
-                  onClick={() => void navigate({ to: '/organiser/$orgId/events/$eventId/', params: { orgId, eventId } })}
+                  onClick={() =>
+                    void navigate({
+                      to: '/organiser/$orgId/events/$eventId/',
+                      params: { orgId, eventId },
+                    })
+                  }
                   className="rounded-full bg-white/10 px-8 py-3 text-sm font-semibold text-white"
                 >
                   {t('common.back')}
@@ -210,7 +208,7 @@ function ScanPage() {
               <span className="absolute top-0 left-0 h-8 w-8 rounded-tl-lg border-t-2 border-l-2 border-white" />
               <span className="absolute top-0 right-0 h-8 w-8 rounded-tr-lg border-t-2 border-r-2 border-white" />
               <span className="absolute bottom-0 left-0 h-8 w-8 rounded-bl-lg border-b-2 border-l-2 border-white" />
-              <span className="absolute bottom-0 right-0 h-8 w-8 rounded-br-lg border-b-2 border-r-2 border-white" />
+              <span className="absolute right-0 bottom-0 h-8 w-8 rounded-br-lg border-r-2 border-b-2 border-white" />
             </div>
           </div>
         )}

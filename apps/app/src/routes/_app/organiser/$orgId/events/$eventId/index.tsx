@@ -1,4 +1,4 @@
-import { createFileRoute,Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight, FileEdit, Ticket } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -64,7 +64,7 @@ function EventManagePage() {
               <Link
                 to="/organiser/$orgId/events/$eventId/edit"
                 params={{ orgId, eventId }}
-                className="hover:bg-white/[0.04] flex w-full items-center gap-3 px-4 py-4 transition-colors"
+                className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
                   <FileEdit className="h-4 w-4" />
@@ -81,14 +81,16 @@ function EventManagePage() {
           <Link
             to="/organiser/$orgId/events/$eventId/tickets"
             params={{ orgId, eventId }}
-            className="hover:bg-white/[0.04] flex w-full items-center gap-3 px-4 py-4 transition-colors"
+            className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
               <Ticket className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{t('organiser.ticketTypes.title')}</p>
-              <p className="text-muted-foreground text-xs">{t('organiser.ticketTypes.managePricing')}</p>
+              <p className="text-muted-foreground text-xs">
+                {t('organiser.ticketTypes.managePricing')}
+              </p>
             </div>
             <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
           </Link>

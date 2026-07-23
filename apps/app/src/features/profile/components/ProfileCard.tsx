@@ -50,7 +50,10 @@ export function ProfileCard() {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">{t('profile.kycStatus.label')}</span>
-          <StatusChip label={t(`profile.kycStatus.${profile.kyc_status}`)} variant={profile.kyc_status} />
+          <StatusChip
+            label={t(`profile.kycStatus.${profile.kyc_status}`)}
+            variant={profile.kyc_status}
+          />
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">

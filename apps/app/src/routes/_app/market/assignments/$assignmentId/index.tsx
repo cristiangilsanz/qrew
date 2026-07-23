@@ -3,7 +3,15 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
 import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Calendar, CheckCircle2, ChevronRight, Clock, CreditCard, ShieldX, XCircle } from 'lucide-react'
+import {
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  CreditCard,
+  ShieldX,
+  XCircle,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -49,14 +57,17 @@ function extractMessage(err: unknown, fallback: string): string {
   return fallback
 }
 
-
 function AssignmentPage() {
   const { t } = useTranslation()
   const { assignmentId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data: assignment, isLoading: assignmentLoading, isError } = useMarketAssignment(assignmentId)
+  const {
+    data: assignment,
+    isLoading: assignmentLoading,
+    isError,
+  } = useMarketAssignment(assignmentId)
   const { data: event, isLoading: eventLoading } = useEvent(assignment?.event_id ?? '')
   const countdown = useCountdown(assignment?.state === 'pending' ? assignment.expires_at : null)
 
@@ -66,14 +77,22 @@ function AssignmentPage() {
   const declineTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    if (!declineOpen) { setDeclineSeconds(5); return }
+    if (!declineOpen) {
+      setDeclineSeconds(5)
+      return
+    }
     declineTimerRef.current = setInterval(() => {
       setDeclineSeconds((s) => {
-        if (s <= 1) { clearInterval(declineTimerRef.current!); return 0 }
+        if (s <= 1) {
+          clearInterval(declineTimerRef.current!)
+          return 0
+        }
         return s - 1
       })
     }, 1000)
-    return () => { if (declineTimerRef.current) clearInterval(declineTimerRef.current) }
+    return () => {
+      if (declineTimerRef.current) clearInterval(declineTimerRef.current)
+    }
   }, [declineOpen])
 
   const initiatePayment = useMutation({
@@ -118,7 +137,7 @@ function AssignmentPage() {
             <Skeleton className="h-4 w-48" />
           </div>
           <Skeleton className="h-12 w-full rounded-xl" />
-          <div className="rounded-xl border border-white/10 p-4 space-y-1.5">
+          <div className="space-y-1.5 rounded-xl border border-white/10 p-4">
             <Skeleton className="h-4 w-40" />
             <Skeleton className="h-3 w-full" />
             <Skeleton className="h-4 w-16" />
@@ -149,7 +168,7 @@ function AssignmentPage() {
   const startDate = event?.starts_at ? new Date(event.starts_at) : null
 
   return (
-    <div className="min-h-screen flex flex-col pb-24">
+    <div className="flex min-h-screen flex-col pb-24">
       {/* Hero image */}
       <div className="relative h-64 overflow-hidden bg-[#111]">
         <ImageWithSkeleton
@@ -172,12 +191,17 @@ function AssignmentPage() {
       <div className="mx-auto w-full max-w-[430px] space-y-5 px-4 py-4">
         {/* Org + timer + title */}
         <div>
-          <div className="flex items-center justify-between mb-1">
+          <div className="mb-1 flex items-center justify-between">
             <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {event?.organisation?.name ?? event?.organiser_name ?? t('market.resaleMarket')}
             </p>
             {assignment.state === 'pending' && countdown > 0 && (
-              <div className={cn('flex shrink-0 items-center gap-1', countdown < 60 ? 'text-red-400' : 'text-yellow-400')}>
+              <div
+                className={cn(
+                  'flex shrink-0 items-center gap-1',
+                  countdown < 60 ? 'text-red-400' : 'text-yellow-400',
+                )}
+              >
                 <Clock className="h-3 w-3" />
                 <span className="font-mono text-xs font-semibold">{formatSeconds(countdown)}</span>
               </div>
@@ -227,8 +251,10 @@ function AssignmentPage() {
           )
           return (
             <div className="rounded-xl border border-white/10 p-4">
-              <p className="font-semibold leading-tight">
-                {assignment.ticket_type_name ?? ticketType?.name ?? t('market.assignment.generalAdmission')}
+              <p className="leading-tight font-semibold">
+                {assignment.ticket_type_name ??
+                  ticketType?.name ??
+                  t('market.assignment.generalAdmission')}
               </p>
               {ticketType?.description && (
                 <p className="text-muted-foreground mt-0.5 text-xs">{ticketType.description}</p>
@@ -253,8 +279,12 @@ function AssignmentPage() {
         <div className="mx-auto mt-5 max-w-[430px] px-4">
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-green-400/20 bg-green-400/5 p-6 text-center">
             <CheckCircle2 className="h-8 w-8 text-green-400" />
-            <p className="text-sm font-semibold text-green-400">{t('market.assignment.paymentConfirmed')}</p>
-            <p className="text-muted-foreground text-xs">{t('market.assignment.ticketTransferring')}</p>
+            <p className="text-sm font-semibold text-green-400">
+              {t('market.assignment.paymentConfirmed')}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              {t('market.assignment.ticketTransferring')}
+            </p>
           </div>
         </div>
       )}
@@ -262,7 +292,9 @@ function AssignmentPage() {
         <div className="mx-auto mt-5 max-w-[430px] px-4">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
             <p className="text-sm font-semibold text-white/60">{t('market.assignment.expired')}</p>
-            <p className="text-muted-foreground mt-1 text-xs">{t('market.assignment.expiredDesc')}</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {t('market.assignment.expiredDesc')}
+            </p>
           </div>
         </div>
       )}
@@ -287,7 +319,7 @@ function AssignmentPage() {
             <div className="flex items-center justify-between gap-3">
               <button
                 onClick={() => setDeclineOpen(true)}
-                className="flex h-14 items-center gap-2 rounded-full bg-red-500 pl-5 pr-6 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-red-600"
+                className="flex h-14 items-center gap-2 rounded-full bg-red-500 pr-6 pl-5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-red-600"
               >
                 <XCircle className="h-4 w-4 shrink-0" />
                 {t('market.assignment.decline')}
@@ -332,7 +364,9 @@ function AssignmentPage() {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
                   <XCircle className="h-5 w-5 text-red-400" />
                 </div>
-                <h3 className="text-base font-semibold text-red-400">{t('market.assignment.declineTitle')}</h3>
+                <h3 className="text-base font-semibold text-red-400">
+                  {t('market.assignment.declineTitle')}
+                </h3>
               </div>
               <p className="text-muted-foreground mb-6 text-sm">
                 {t('market.assignment.declineDesc')}
@@ -345,7 +379,10 @@ function AssignmentPage() {
                   {t('common.goBack')}
                 </button>
                 <button
-                  onClick={() => { setDeclineOpen(false); declineAssignment.mutate() }}
+                  onClick={() => {
+                    setDeclineOpen(false)
+                    declineAssignment.mutate()
+                  }}
                   disabled={declineSeconds > 0 || declineAssignment.isPending}
                   className="flex h-10 min-w-[112px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
                 >

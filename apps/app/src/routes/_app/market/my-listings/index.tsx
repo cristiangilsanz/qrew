@@ -29,7 +29,10 @@ function ListingCard({ ticket }: { ticket: Ticket }) {
           <ImageWithSkeleton
             src={imageUrl}
             alt={eventName}
-            className={cn('h-full w-full', event?.image_url ? 'object-cover' : 'object-contain p-4')}
+            className={cn(
+              'h-full w-full',
+              event?.image_url ? 'object-cover' : 'object-contain p-4',
+            )}
           />
           {event?.image_url && (
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -39,7 +42,7 @@ function ListingCard({ ticket }: { ticket: Ticket }) {
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             {event?.organisation?.name ?? t('market.resaleMarket')}
           </p>
-          <h2 className="text-base font-semibold leading-snug">{eventName}</h2>
+          <h2 className="text-base leading-snug font-semibold">{eventName}</h2>
           <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
             {event?.venue_city && (
               <span className="flex items-center gap-1">
@@ -51,8 +54,11 @@ function ListingCard({ ticket }: { ticket: Ticket }) {
               <span className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5 shrink-0" />
                 {new Date(event.starts_at).toLocaleDateString('en-GB', {
-                  weekday: 'short', day: 'numeric', month: 'short',
-                  hour: '2-digit', minute: '2-digit',
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
                 })}
               </span>
             )}
@@ -74,7 +80,7 @@ function MyListingsPage() {
     : listedTickets
 
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] px-4 pt-5 pb-28 space-y-4">
+    <div className="mx-auto min-h-screen max-w-[430px] space-y-4 px-4 pt-5 pb-28">
       <div>
         <BackButton to="/market" />
         <h1 className="mt-3 text-2xl font-bold">{t('market.myTicketsOnSale')}</h1>
@@ -82,13 +88,13 @@ function MyListingsPage() {
 
       {!isLoading && listedTickets.length > 0 && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-white/30" />
           <input
             type="text"
             placeholder={t('market.searchByEvent')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-9 pr-4 text-sm text-white placeholder:text-white/30 focus:border-white/20 focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pr-4 pl-9 text-sm text-white placeholder:text-white/30 focus:border-white/20 focus:outline-none"
           />
         </div>
       )}

@@ -1,4 +1,4 @@
-import { createFileRoute,Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { Calendar, MapPin, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils'
 export const Route = createFileRoute('/_app/organiser/$orgId/events/')({
   component: OrgEventsPage,
 })
-
 
 function OrgEventsPage() {
   const { t, i18n } = useTranslation()
@@ -41,14 +40,16 @@ function OrgEventsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('organiser.events.searchPlaceholder')}
-            className="border-white/15 bg-white/5 placeholder:text-muted-foreground focus:border-primary/60 w-full rounded-2xl border py-3 pr-4 pl-9 text-sm outline-none transition-colors"
+            className="placeholder:text-muted-foreground focus:border-primary/60 w-full rounded-2xl border border-white/15 bg-white/5 py-3 pr-4 pl-9 text-sm transition-colors outline-none"
           />
         </div>
       </div>
 
       {isLoading && (
         <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => <EventCardSkeleton key={i} />)}
+          {Array.from({ length: 3 }).map((_, i) => (
+            <EventCardSkeleton key={i} />
+          ))}
         </div>
       )}
 

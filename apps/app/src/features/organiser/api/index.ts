@@ -148,7 +148,9 @@ export const organiserApi = {
       .then((r) => r.data),
 
   addMember: (orgId: string, data: { user_id: string; role: 'member' | 'manager' }) =>
-    catalogClient.post<OrgMember>(`/v1/organisations/${orgId}/members/add`, data).then((r) => r.data),
+    catalogClient
+      .post<OrgMember>(`/v1/organisations/${orgId}/members/add`, data)
+      .then((r) => r.data),
 
   inviteMember: (orgId: string, data: { email: string; role: 'member' | 'manager' | 'owner' }) =>
     catalogClient.post<OrgMember>(`/v1/organisations/${orgId}/members`, data).then((r) => r.data),
@@ -156,8 +158,7 @@ export const organiserApi = {
   removeMember: (orgId: string, userId: string) =>
     catalogClient.delete(`/v1/organisations/${orgId}/members/${userId}`),
 
-  deleteOrganisation: (orgId: string) =>
-    catalogClient.delete(`/v1/organisations/${orgId}`),
+  deleteOrganisation: (orgId: string) => catalogClient.delete(`/v1/organisations/${orgId}`),
 
   listOrgEvents: (orgId: string) =>
     catalogClient

@@ -78,7 +78,12 @@ export function CreateVenueForm({ onSuccess }: Props) {
       apiKey: env.GOOGLE_MAPS_API_KEY,
       libraries: ['places'],
     })
-    loader.load().then(() => setMapsReady(true)).catch(() => {/* silent — fallback to manual */})
+    loader
+      .load()
+      .then(() => setMapsReady(true))
+      .catch(() => {
+        /* silent — fallback to manual */
+      })
   }, [])
 
   // Attach Autocomplete once maps is ready and input is mounted
@@ -104,11 +109,10 @@ export function CreateVenueForm({ onSuccess }: Props) {
 
       const streetNum = get('street_number')
       const route = get('route')
-      const addressLine = [streetNum, route].filter(Boolean).join(' ') || place.formatted_address || ''
+      const addressLine =
+        [streetNum, route].filter(Boolean).join(' ') || place.formatted_address || ''
       const city =
-        get('locality') ||
-        get('administrative_area_level_2') ||
-        get('administrative_area_level_1')
+        get('locality') || get('administrative_area_level_2') || get('administrative_area_level_1')
       const country = get('country', true) // 2-char ISO
 
       form.setValue('name', place.name ?? '', { shouldValidate: true })
@@ -131,7 +135,9 @@ export function CreateVenueForm({ onSuccess }: Props) {
               form.setValue('timezone', data.timeZoneId, { shouldValidate: true })
             }
           })
-          .catch(() => {/* ignore */})
+          .catch(() => {
+            /* ignore */
+          })
       }
     })
   }, [mapsReady, form])
@@ -139,7 +145,6 @@ export function CreateVenueForm({ onSuccess }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit((v) => createVenue.mutate(v))} className="space-y-4 px-1">
-
         {/* Places search */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium">{t('organiser.venues.searchLabel')}</label>
@@ -167,7 +172,7 @@ export function CreateVenueForm({ onSuccess }: Props) {
         </div>
 
         <div className="border-t border-white/10 pt-4">
-          <p className="text-muted-foreground mb-3 whitespace-pre-line text-xs">
+          <p className="text-muted-foreground mb-3 text-xs whitespace-pre-line">
             {t('organiser.venues.manualHint')}
           </p>
 
@@ -192,7 +197,11 @@ export function CreateVenueForm({ onSuccess }: Props) {
                 <FormItem>
                   <FormLabel>{t('organiser.venues.addressLabel')}</FormLabel>
                   <FormControl>
-                    <Input className={inputClass} placeholder="Carrer dels Almogàvers 122" {...field} />
+                    <Input
+                      className={inputClass}
+                      placeholder="Carrer dels Almogàvers 122"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

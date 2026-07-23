@@ -18,7 +18,10 @@ export function CancelEventSection({ event, orgId }: Props) {
   const cancelEvent = useCancelEvent(orgId, event.id)
 
   useEffect(() => {
-    if (!open) { setCountdown(5); return }
+    if (!open) {
+      setCountdown(5)
+      return
+    }
     if (countdown <= 0) return
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
     return () => clearTimeout(timer)

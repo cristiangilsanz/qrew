@@ -36,7 +36,6 @@ export const Route = createFileRoute('/_app/tickets/$ticketId')({
   component: TicketDetailPage,
 })
 
-
 function fmt(iso: string) {
   return new Date(iso).toLocaleString('en-GB', {
     day: 'numeric',
@@ -56,7 +55,10 @@ function TicketDetailPage() {
   const [saleCountdown, setSaleCountdown] = useState(5)
 
   useEffect(() => {
-    if (!saleConfirmOpen) { setSaleCountdown(5); return }
+    if (!saleConfirmOpen) {
+      setSaleCountdown(5)
+      return
+    }
     if (saleCountdown <= 0) return
     const timer = setTimeout(() => setSaleCountdown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
@@ -68,9 +70,7 @@ function TicketDetailPage() {
     ticket?.reservation_id ?? '',
     ticket?.state === 'reserved',
   )
-  const isExpired =
-    ticket?.state === 'expired' ||
-    reservation?.status === 'expired'
+  const isExpired = ticket?.state === 'expired' || reservation?.status === 'expired'
 
   const saleEnded =
     event?.availability_status === 'ended' || event?.availability_status === 'sold_out'
@@ -119,7 +119,11 @@ function TicketDetailPage() {
   }
   const timeline: TLItem[] = []
 
-  timeline.push({ label: t('tickets.ticket.timeline.reserved'), date: fmt(ticket.created_at), status: 'done' })
+  timeline.push({
+    label: t('tickets.ticket.timeline.reserved'),
+    date: fmt(ticket.created_at),
+    status: 'done',
+  })
 
   if (ticket.state === 'expired') {
     timeline.push({
@@ -129,7 +133,11 @@ function TicketDetailPage() {
     })
   } else if (ticket.state === 'cancelled') {
     if (ticket.issued_at) {
-      timeline.push({ label: t('tickets.ticket.timeline.issued'), date: fmt(ticket.issued_at), status: 'done' })
+      timeline.push({
+        label: t('tickets.ticket.timeline.issued'),
+        date: fmt(ticket.issued_at),
+        status: 'done',
+      })
     }
     timeline.push({
       label: t('tickets.ticket.timeline.cancelled'),
@@ -213,12 +221,16 @@ function TicketDetailPage() {
           <div className="bg-white px-5 pt-3 pb-5">
             {ticketType && (
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs tracking-wide text-gray-400 uppercase">{t('tickets.ticket.typeLabel')}</p>
+                <p className="text-xs tracking-wide text-gray-400 uppercase">
+                  {t('tickets.ticket.typeLabel')}
+                </p>
                 <p className="text-sm font-semibold text-gray-700">{ticketType.name}</p>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <p className="text-xs tracking-wide text-gray-400 uppercase">{t('tickets.ticket.idShortLabel')}</p>
+              <p className="text-xs tracking-wide text-gray-400 uppercase">
+                {t('tickets.ticket.idShortLabel')}
+              </p>
               <p className="font-mono text-sm font-semibold tracking-widest text-gray-700">
                 {ticket.id.slice(0, 8).toUpperCase()}
               </p>
@@ -229,7 +241,9 @@ function TicketDetailPage() {
           <div className="grid grid-cols-2 gap-px">
             <div className="flex flex-col items-center gap-1 px-4 py-4">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <p className="text-xs tracking-wide text-gray-400 uppercase">{t('tickets.ticket.dateLabel')}</p>
+              <p className="text-xs tracking-wide text-gray-400 uppercase">
+                {t('tickets.ticket.dateLabel')}
+              </p>
               <p className="text-center text-sm font-semibold text-gray-900">
                 {startDate
                   ? startDate.toLocaleDateString('en-GB', {
@@ -243,7 +257,9 @@ function TicketDetailPage() {
             </div>
             <div className="flex flex-col items-center gap-1 px-4 py-4">
               <Clock className="h-4 w-4 text-gray-400" />
-              <p className="text-xs tracking-wide text-gray-400 uppercase">{t('tickets.ticket.timeLabel')}</p>
+              <p className="text-xs tracking-wide text-gray-400 uppercase">
+                {t('tickets.ticket.timeLabel')}
+              </p>
               <p className="text-center text-sm font-semibold text-gray-900">
                 {startDate
                   ? startDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
@@ -258,7 +274,9 @@ function TicketDetailPage() {
               onClick={() => setTimelineOpen((o) => !o)}
               className="flex w-full items-center justify-between bg-gray-50 px-4 py-3"
             >
-              <p className="text-xs font-semibold tracking-wide text-gray-400 uppercase">{t('tickets.ticket.historyLabel')}</p>
+              <p className="text-xs font-semibold tracking-wide text-gray-400 uppercase">
+                {t('tickets.ticket.historyLabel')}
+              </p>
               <ChevronDown
                 className={cn(
                   'h-4 w-4 text-gray-400 transition-transform',
@@ -349,14 +367,18 @@ function TicketDetailPage() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <Clock className="h-6 w-6 text-gray-400" />
                   </div>
-                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.paymentExpired')}</p>
+                  <p className="text-xs text-gray-400">
+                    {t('tickets.ticket.status.paymentExpired')}
+                  </p>
                 </>
               ) : (
                 <>
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <CreditCard className="h-6 w-6 text-yellow-500" />
                   </div>
-                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.paymentPending')}</p>
+                  <p className="text-xs text-gray-400">
+                    {t('tickets.ticket.status.paymentPending')}
+                  </p>
                 </>
               )}
             </div>
@@ -391,7 +413,9 @@ function TicketDetailPage() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <Clock className="h-6 w-6 text-gray-400" />
                   </div>
-                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.paymentExpired')}</p>
+                  <p className="text-xs text-gray-400">
+                    {t('tickets.ticket.status.paymentExpired')}
+                  </p>
                 </>
               )}
               {ticket.state === 'on_sale' && (
@@ -436,7 +460,9 @@ function TicketDetailPage() {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
                   <ArrowLeftRight className="h-5 w-5 text-orange-400" />
                 </div>
-                <h3 className="text-base font-semibold text-orange-400">{t('tickets.ticket.sale.title')}</h3>
+                <h3 className="text-base font-semibold text-orange-400">
+                  {t('tickets.ticket.sale.title')}
+                </h3>
               </div>
 
               <p className="text-muted-foreground mb-4 text-sm">
@@ -465,7 +491,9 @@ function TicketDetailPage() {
                   className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full bg-yellow-400 px-5 text-sm font-semibold text-black disabled:opacity-40"
                 >
                   <ArrowLeftRight className="h-3.5 w-3.5" />
-                  {saleCountdown > 0 ? t('common.waitSeconds', { seconds: saleCountdown }) : t('tickets.ticket.sale.confirm')}
+                  {saleCountdown > 0
+                    ? t('common.waitSeconds', { seconds: saleCountdown })
+                    : t('tickets.ticket.sale.confirm')}
                 </button>
               </div>
             </motion.div>

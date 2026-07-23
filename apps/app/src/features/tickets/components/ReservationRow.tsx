@@ -19,7 +19,6 @@ function formatSeconds(s: number): string {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
-
 interface StubProps {
   ticket: Ticket
   index: number
@@ -151,7 +150,12 @@ export function ReservationRow({ tickets }: Props) {
       {awaitingPayment && (
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
-            <Clock className={cn('h-3.5 w-3.5 shrink-0', countdown < 60 ? 'text-red-400' : 'text-yellow-400')} />
+            <Clock
+              className={cn(
+                'h-3.5 w-3.5 shrink-0',
+                countdown < 60 ? 'text-red-400' : 'text-yellow-400',
+              )}
+            />
             <span
               className={cn(
                 'font-mono text-sm font-semibold',

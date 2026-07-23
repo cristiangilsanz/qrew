@@ -34,7 +34,10 @@ export function ReservationRowSkeleton() {
       </div>
       <div className="flex gap-3 overflow-hidden">
         {[0, 1].map((i) => (
-          <div key={i} className="bg-card border-border w-44 shrink-0 overflow-hidden rounded-xl border">
+          <div
+            key={i}
+            className="bg-card border-border w-44 shrink-0 overflow-hidden rounded-xl border"
+          >
             <Skeleton className="h-28 w-full rounded-none" />
             <div className="px-3 py-2.5">
               <div className="flex items-center justify-between gap-1">
@@ -57,18 +60,17 @@ export function TicketDetailSkeleton() {
 
       <div className="mx-auto max-w-sm rounded-[2.5rem] bg-neutral-800 p-5">
         <div className="overflow-hidden rounded-3xl bg-white shadow-2xl">
-
           {/* Event image */}
           <Skeleton className="h-64 w-full rounded-none rounded-t-3xl bg-neutral-700" />
 
           {/* Holder name + DNI */}
-          <div className="px-5 pt-4 pb-3 text-center space-y-1.5">
+          <div className="space-y-1.5 px-5 pt-4 pb-3 text-center">
             <Skeleton className="mx-auto h-5 w-36 bg-neutral-200" />
             <Skeleton className="mx-auto h-3 w-20 bg-neutral-200" />
           </div>
 
           {/* ID strip */}
-          <div className="bg-white px-5 pt-3 pb-5 space-y-2">
+          <div className="space-y-2 bg-white px-5 pt-3 pb-5">
             <div className="flex items-center justify-between">
               <Skeleton className="h-3 w-20 bg-neutral-200" />
               <Skeleton className="h-4 w-24 bg-neutral-200" />
@@ -106,7 +108,6 @@ export function TicketDetailSkeleton() {
             <Skeleton className="h-14 w-14 rounded-full bg-neutral-200" />
             <Skeleton className="h-3 w-40 bg-neutral-200" />
           </div>
-
         </div>
       </div>
     </div>
@@ -250,9 +251,9 @@ export function AccountSkeleton() {
   const rows = [
     { chip: false, value: true },
     { chip: false, value: true },
-    { chip: true,  value: false },
-    { chip: true,  value: true },
-    { chip: true,  value: true },
+    { chip: true, value: false },
+    { chip: true, value: true },
+    { chip: true, value: true },
   ]
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
@@ -328,7 +329,7 @@ export function TicketTypeListSkeleton() {
     <div className="space-y-4">
       {[0, 1].map((i) => (
         <div key={i} className="flex overflow-hidden rounded-2xl bg-white/10">
-          <div className="flex min-w-0 flex-1 items-center gap-2 py-6 pl-5 pr-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 py-6 pr-3 pl-5">
             <div className="flex-1 space-y-1.5">
               <Skeleton className="h-4 w-32 bg-white/20" />
               <Skeleton className="h-3 w-24 bg-white/20" />

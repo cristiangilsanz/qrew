@@ -31,7 +31,9 @@ function formatPrice(cents: number, currency: string): string {
 function CheckoutPage() {
   const { t } = useTranslation()
   const { eventId } = Route.useParams()
-  const { reservation_window_token, admitted } = useSearch({ from: '/_app/events/$eventId/checkout' })
+  const { reservation_window_token, admitted } = useSearch({
+    from: '/_app/events/$eventId/checkout',
+  })
   const navigate = useNavigate()
 
   const { data: event, isLoading: eventLoading, isError } = useEvent(eventId)
@@ -74,9 +76,8 @@ function CheckoutPage() {
 
   const ticketTypes = event.ticket_types.slice().sort((a, b) => a.position - b.position)
   const totalSelected = Object.values(quantities).reduce((sum, q) => sum + q, 0)
-  const alreadyHeld = myTickets?.filter(
-    (t) => t.event_id === eventId && t.counts_toward_limit,
-  ).length ?? 0
+  const alreadyHeld =
+    myTickets?.filter((t) => t.event_id === eventId && t.counts_toward_limit).length ?? 0
   const maxTotal = Math.max(0, event.max_tickets_per_user - alreadyHeld)
 
   const handleIncrement = (id: string, available: number) => {
@@ -171,9 +172,7 @@ function CheckoutPage() {
           </span>
         </div>
         {maxTotal === 0 && (
-          <p className="text-muted-foreground text-sm">
-            {t('tickets.checkout.limitReached')}
-          </p>
+          <p className="text-muted-foreground text-sm">{t('tickets.checkout.limitReached')}</p>
         )}
 
         {ticketTypes.map((tt) => {

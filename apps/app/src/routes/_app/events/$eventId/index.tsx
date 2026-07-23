@@ -72,7 +72,10 @@ function EventDetailPage() {
   const allSoldOut = event?.availability_status === 'sold_out'
   const showResaleQueue = saleEnded || allSoldOut
 
-  const { data: queueStatus, isLoading: queueLoading } = useMarketQueueStatus(eventId, showResaleQueue)
+  const { data: queueStatus, isLoading: queueLoading } = useMarketQueueStatus(
+    eventId,
+    showResaleQueue,
+  )
 
   const joinQueue = useMutation({
     mutationFn: () => marketApi.joinQueue(eventId),
@@ -190,7 +193,9 @@ function EventDetailPage() {
         {showResaleQueue && (
           <div className="mt-4 flex flex-col items-center space-y-1.5">
             <Ticket className="h-7 w-7 text-white/20" />
-            <p className="text-muted-foreground text-center text-base font-semibold">{t('events.soldOut')}</p>
+            <p className="text-muted-foreground text-center text-base font-semibold">
+              {t('events.soldOut')}
+            </p>
             <div className="mx-auto flex w-fit max-w-[85%] items-start gap-1.5">
               <Info className="h-3.5 w-3.5 shrink-0 text-white/30" />
               <p className="text-muted-foreground text-xs">
@@ -275,7 +280,9 @@ function EventDetailPage() {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
                   <LogOut className="h-5 w-5 text-red-400" />
                 </div>
-                <h3 className="text-base font-semibold text-red-400">{t('market.leaveQueue.title')}</h3>
+                <h3 className="text-base font-semibold text-red-400">
+                  {t('market.leaveQueue.title')}
+                </h3>
               </div>
               <p className="text-muted-foreground mb-6 text-sm">
                 {t('market.leaveQueue.description')}

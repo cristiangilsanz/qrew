@@ -7,7 +7,14 @@ import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { profileApi } from '@/features/profile/api'
 import { cn } from '@/lib/utils'
@@ -105,12 +112,12 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
               onFocus={() => setDropdownOpen(true)}
             />
             {dropdownOpen && filtered.length > 0 && (
-              <ul className="border-white/15 absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border bg-black/95 shadow-xl backdrop-blur-md">
+              <ul className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-white/15 bg-black/95 shadow-xl backdrop-blur-md">
                 {filtered.map((u) => (
                   <li key={u.id}>
                     <button
                       type="button"
-                      className="hover:bg-white/[0.06] flex w-full items-center gap-3 px-4 py-3 text-left transition-colors"
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.06]"
                       onMouseDown={(e) => {
                         e.preventDefault()
                         selectUser(u.id, u.email)
@@ -155,7 +162,9 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
                     >
                       <p className="text-sm font-semibold capitalize">{role}</p>
                       <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-                        {t(`organiser.members.role${role.charAt(0).toUpperCase() + role.slice(1)}Desc`)}
+                        {t(
+                          `organiser.members.role${role.charAt(0).toUpperCase() + role.slice(1)}Desc`,
+                        )}
                       </p>
                     </button>
                   ))}

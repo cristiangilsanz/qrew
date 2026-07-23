@@ -19,9 +19,7 @@ function NewOrganisationPage() {
 
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
         <CreateOrganisationForm
-          onSuccess={(id) =>
-            void navigate({ to: '/organiser/$orgId', params: { orgId: id } })
-          }
+          onSuccess={(id) => void navigate({ to: '/organiser/$orgId', params: { orgId: id } })}
         />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Building2,ChevronRight } from 'lucide-react'
+import { Building2, ChevronRight } from 'lucide-react'
 
 interface OrgCardItem {
   id: string
@@ -16,7 +16,7 @@ export function OrgCard({ org }: Props) {
     <Link
       to="/organiser/$orgId"
       params={{ orgId: org.id }}
-      className="hover:bg-white/[0.04] flex w-full items-center gap-3 px-4 py-4 transition-colors"
+      className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
     >
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
         <Building2 className="h-4 w-4" />

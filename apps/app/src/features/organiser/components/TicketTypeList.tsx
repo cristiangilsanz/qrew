@@ -35,7 +35,11 @@ const createSchema = z.object({
     ),
   description: z.string().optional(),
   capacity: z.coerce.number().int().min(1).max(100000),
-  price_cents: z.coerce.number().min(0).max(100000).transform((v) => Math.round(v * 100)),
+  price_cents: z.coerce
+    .number()
+    .min(0)
+    .max(100000)
+    .transform((v) => Math.round(v * 100)),
   currency: z.literal('EUR').default('EUR'),
   position: z.coerce.number().int().optional(),
 })
@@ -53,7 +57,11 @@ const editSchema = z.object({
     ),
   description: z.string().optional(),
   capacity: z.coerce.number().int().min(1).max(100000),
-  price_cents: z.coerce.number().min(0).max(100000).transform((v) => Math.round(v * 100)),
+  price_cents: z.coerce
+    .number()
+    .min(0)
+    .max(100000)
+    .transform((v) => Math.round(v * 100)),
   position: z.coerce.number().int().optional(),
 })
 
@@ -119,7 +127,14 @@ function EditRow({ ttId, eventId, defaultValues, onClose }: EditRowProps) {
               <FormItem>
                 <FormLabel>{t('organiser.ticketTypes.priceLabel')} (€)</FormLabel>
                 <FormControl>
-                  <input type="number" step="0.01" min="0" placeholder="0.00" className={darkInput} {...field} />
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className={darkInput}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -278,7 +293,14 @@ function AddForm({ eventId, onClose }: AddFormProps) {
               <FormItem>
                 <FormLabel>{t('organiser.ticketTypes.priceLabel')} (€)</FormLabel>
                 <FormControl>
-                  <input type="number" step="0.01" min="0" className={darkInput} placeholder="0.00" {...field} />
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className={darkInput}
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -367,11 +389,14 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
             />
 
             {/* Left section: info + action buttons */}
-            <div className="flex min-w-0 flex-1 items-center gap-2 py-6 pl-5 pr-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 py-6 pr-3 pl-5">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold capitalize">{tt.name}</p>
                 <p className="mt-0.5 text-xs text-gray-500">
-                  {t('organiser.ticketTypes.available', { available: tt.available, capacity: tt.capacity })}
+                  {t('organiser.ticketTypes.available', {
+                    available: tt.available,
+                    capacity: tt.capacity,
+                  })}
                 </p>
               </div>
               {(canEdit || canEditCapacity) && (
@@ -400,13 +425,15 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
             {/* Price stub — fixed w-20 so notch circles align */}
             <div className="flex w-20 shrink-0 flex-col items-center justify-center px-2 py-6">
               {tt.price_cents === 0 ? (
-                <p className="text-xs font-semibold text-green-600">{t('organiser.ticketTypes.free')}</p>
+                <p className="text-xs font-semibold text-green-600">
+                  {t('organiser.ticketTypes.free')}
+                </p>
               ) : (
                 <>
                   <p className="text-sm font-bold tabular-nums">
                     {(tt.price_cents / 100).toFixed(2)}
                   </p>
-                  <p className="text-[10px] uppercase tracking-wide text-gray-500">{tt.currency}</p>
+                  <p className="text-[10px] tracking-wide text-gray-500 uppercase">{tt.currency}</p>
                 </>
               )}
             </div>

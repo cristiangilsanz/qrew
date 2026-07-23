@@ -78,9 +78,11 @@ export function BottomDock() {
             key={tab.to}
             {...tab}
             badge={
-              tab.to === '/tickets' ? reservedCount
-              : tab.to === '/market' && pendingAssignment ? 1
-              : undefined
+              tab.to === '/tickets'
+                ? reservedCount
+                : tab.to === '/market' && pendingAssignment
+                  ? 1
+                  : undefined
             }
           />
         ))}

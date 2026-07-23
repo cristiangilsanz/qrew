@@ -18,7 +18,9 @@ export function OrgEventList({ orgId }: Props) {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[0, 1].map((i) => <OrgCardSkeleton key={i} />)}
+        {[0, 1].map((i) => (
+          <OrgCardSkeleton key={i} />
+        ))}
       </div>
     )
   }

@@ -39,7 +39,11 @@ function ReservationPage() {
   const [holders, setHolders] = useState<Array<{ holder_name: string; holder_dni: string }>>([])
   const [holdersSaved, setHoldersSaved] = useState(false)
 
-  const { data: reservation, isLoading: reservationLoading, isError } = useReservation(reservationId, !!clientSecret)
+  const {
+    data: reservation,
+    isLoading: reservationLoading,
+    isError,
+  } = useReservation(reservationId, !!clientSecret)
   const { data: event, isLoading: eventLoading } = useEvent(reservation?.event_id ?? '')
 
   const initiatePayment = useInitiatePayment((payment) => {
@@ -130,7 +134,8 @@ function ReservationPage() {
   const isExpired = reservation.status === 'expired'
   const countdownExpired = countdown === 0
   const isCancelled = reservation.status === 'cancelled'
-  const canPay = !isPaid && !isExpired && !countdownExpired && !isCancelled && !clientSecret && holdersSaved
+  const canPay =
+    !isPaid && !isExpired && !countdownExpired && !isCancelled && !clientSecret && holdersSaved
 
   return (
     <div className="mx-auto min-h-screen max-w-[430px] px-4 pt-5 pb-28">

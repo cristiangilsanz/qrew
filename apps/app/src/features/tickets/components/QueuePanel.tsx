@@ -55,11 +55,13 @@ export function QueuePanel({ eventId, onAdmitted }: Props) {
     if (!joinQueue.isSuccess && !joinQueue.isPending) {
       joinQueue.mutate()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const position = joinQueue.isSuccess
-    ? (positionData !== undefined ? positionData.position : joinQueue.data.position)
+    ? positionData !== undefined
+      ? positionData.position
+      : joinQueue.data.position
     : null
   const redeemToken = positionData?.redeem_token ?? null
 
@@ -70,7 +72,8 @@ export function QueuePanel({ eventId, onAdmitted }: Props) {
     if (wasInQueueRef.current && position === null && joinQueue.isSuccess && !admittedRef.current) {
       admittedRef.current = true
       if (redeemToken) {
-        ticketsApi.redeemQueue(eventId, redeemToken)
+        ticketsApi
+          .redeemQueue(eventId, redeemToken)
           .then((res) => onAdmitted?.(res.reservation_window_token))
           .catch(() => onAdmitted?.(null))
       } else {
