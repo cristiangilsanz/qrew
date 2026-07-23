@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueries, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { useEffect } from 'react'
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import noTicketsImg from '@/assets/images/no-tickets.png'
 import { ReservationRowSkeleton } from '@/components/ui/skeleton'
+import { eventsApi } from '@/features/events/api'
 import type { Ticket } from '@/features/tickets/api'
 import { ReservationRow } from '@/features/tickets/components/ReservationRow'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
@@ -27,7 +28,7 @@ function groupByReservation(tickets: Ticket[]): Map<string, Ticket[]> {
 function TicketsPage() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const { data: tickets, isLoading } = useTickets()
+  const { data: tickets, isLoading: ticketsLoading } = useTickets()
 
   useEffect(() => {
     void queryClient.invalidateQueries({ queryKey: ['tickets'] })
@@ -39,6 +40,25 @@ function TicketsPage() {
 
   const groups = groupByReservation(sorted)
   const reservationIds = [...new Set(sorted.map((t) => t.reservation_id))]
+  const eventIds = [...new Set(sorted.map((t) => t.event_id))]
+
+  const eventQueries = useQueries({
+    queries: eventIds.map((id) => ({
+      queryKey: ['events', id],
+      queryFn: () => eventsApi.getById(id),
+      enabled: !ticketsLoading && !!id,
+    })),
+  })
+
+  const eventsLoading = eventQueries.some((q) => q.isLoading)
+  const isLoading = ticketsLoading || (eventIds.length > 0 && eventsLoading)
+
+  const eventMap = new Map(
+    eventQueries
+      .map((q) => q.data)
+      .filter(Boolean)
+      .map((e) => [e!.id, e!]),
+  )
 
   return (
     <div className="space-y-6 p-4 pb-24">
@@ -69,10 +89,14 @@ function TicketsPage() {
         </div>
       )}
 
-      {reservationIds.length > 0 && (
+      {!isLoading && reservationIds.length > 0 && (
         <div className="flex flex-col gap-8">
           {reservationIds.map((reservationId) => (
-            <ReservationRow key={reservationId} tickets={groups.get(reservationId)!} />
+            <ReservationRow
+              key={reservationId}
+              tickets={groups.get(reservationId)!}
+              event={eventMap.get(groups.get(reservationId)![0]!.event_id)}
+            />
           ))}
         </div>
       )}

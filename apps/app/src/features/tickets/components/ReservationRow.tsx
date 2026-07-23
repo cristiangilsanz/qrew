@@ -3,9 +3,8 @@ import { Calendar, Clock, CreditCard, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
-import { Skeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
-import { useEvent } from '@/features/events/hooks/useEvent'
+import type { EventDetail } from '@/features/events/api'
 import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
 import { getEventImageUrl } from '@/lib/imageUrl'
@@ -86,15 +85,15 @@ function TicketStub({ ticket, index, total, imageUrl, hasRealImage }: StubProps)
 
 interface Props {
   tickets: Ticket[]
+  event: EventDetail | undefined
 }
 
-export function ReservationRow({ tickets }: Props) {
+export function ReservationRow({ tickets, event }: Props) {
   const navigate = useNavigate()
   const sorted = tickets
     .slice()
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
   const first = sorted[0]!
-  const { data: event } = useEvent(first.event_id)
   const { data: reservation } = useReservation(first.reservation_id)
   const countdown = useCountdown(reservation?.expires_at)
   const imageUrl = getEventImageUrl(event?.image_url)
@@ -109,41 +108,31 @@ export function ReservationRow({ tickets }: Props) {
     <div className="space-y-3">
       {/* Event header */}
       <div>
-        {!event ? (
-          <div className="space-y-1.5">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-3 w-32" />
-          </div>
-        ) : (
-          <>
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              {event.organisation?.name ?? 'Qrew'}
-            </p>
-            <h2 className="mt-1 text-base leading-snug font-semibold">{event.name}</h2>
-            <div className="text-muted-foreground mt-1 flex flex-wrap gap-3 text-xs">
-              {event.venue && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3 shrink-0" />
-                  {[event.venue.name, event.venue.city].filter(Boolean).join(', ')}
-                </span>
-              )}
-              {startDate && (
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3 shrink-0" />
-                  {startDate.toLocaleDateString('en-GB', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-              )}
-            </div>
-          </>
-        )}
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          {event?.organisation?.name ?? 'Qrew'}
+        </p>
+        <h2 className="mt-1 text-base leading-snug font-semibold">{event?.name}</h2>
+        <div className="text-muted-foreground mt-1 flex flex-wrap gap-3 text-xs">
+          {event?.venue && (
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3 w-3 shrink-0" />
+              {[event.venue.name, event.venue.city].filter(Boolean).join(', ')}
+            </span>
+          )}
+          {startDate && (
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3 shrink-0" />
+              {startDate.toLocaleDateString('en-GB', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Payment banner for reserved rows */}
