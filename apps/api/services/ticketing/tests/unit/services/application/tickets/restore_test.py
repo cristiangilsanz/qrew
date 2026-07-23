@@ -9,7 +9,7 @@ from com.qode.qrew.v1.ticketing.models.ticket import TicketState
 from com.qode.qrew.v1.ticketing.services.application.audit import AuditService
 from com.qode.qrew.v1.ticketing.services.application.tickets.restore import (
     TicketRestoreError,
-    restore_frozen_ticket,
+    restore_on_sale_ticket,
 )
 from conftest import make_device, make_ticket
 
@@ -73,7 +73,7 @@ class TestRestoreFrozenTicket:
     ) -> None:
         db = _make_db(ticket=None, device=None)
         with pytest.raises(TicketRestoreError, match="not found"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=uuid.uuid4(),
@@ -93,7 +93,7 @@ class TestRestoreFrozenTicket:
         ticket = make_ticket(owner_user_id=uuid.uuid4(), state=TicketState.on_sale)
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="not found"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -112,8 +112,8 @@ class TestRestoreFrozenTicket:
     ) -> None:
         ticket = make_ticket(owner_user_id=user_id, state=TicketState.issued)
         db = _make_db(ticket=ticket)
-        with pytest.raises(TicketRestoreError, match="not frozen"):
-            await restore_frozen_ticket(
+        with pytest.raises(TicketRestoreError, match="not on sale"):
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -132,7 +132,7 @@ class TestRestoreFrozenTicket:
         ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="device session"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -154,7 +154,7 @@ class TestRestoreFrozenTicket:
         )
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="new device"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -173,7 +173,7 @@ class TestRestoreFrozenTicket:
         ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="reassertion"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -194,7 +194,7 @@ class TestRestoreFrozenTicket:
         ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket)
         with pytest.raises(TicketRestoreError, match="reassertion"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -214,7 +214,7 @@ class TestRestoreFrozenTicket:
         ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket, device=None)
         with pytest.raises(TicketRestoreError, match="Device not found"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -235,7 +235,7 @@ class TestRestoreFrozenTicket:
         device = make_device(user_id=uuid.uuid4(), device_id=device_id)
         db = _make_db(ticket=ticket, device=device)
         with pytest.raises(TicketRestoreError, match="Device not found"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -256,7 +256,7 @@ class TestRestoreFrozenTicket:
         device = make_device(user_id=user_id, device_id=device_id, revoked_at=fresh_asserted_at)
         db = _make_db(ticket=ticket, device=device)
         with pytest.raises(TicketRestoreError, match="revoked"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -277,7 +277,7 @@ class TestRestoreFrozenTicket:
         device = make_device(user_id=user_id, device_id=device_id, attested_at=None)
         db = _make_db(ticket=ticket, device=device)
         with pytest.raises(TicketRestoreError, match="attestation"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -301,7 +301,7 @@ class TestRestoreFrozenTicket:
         device = make_device(user_id=user_id, device_id=device_id, attested_at=stale_attested)
         db = _make_db(ticket=ticket, device=device)
         with pytest.raises(TicketRestoreError, match="stale"):
-            await restore_frozen_ticket(
+            await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -323,7 +323,7 @@ class TestRestoreFrozenTicket:
         db = _make_db(ticket=ticket, device=device)
 
         with patch(_PATCH_TRANSITION, new=AsyncMock(return_value=ticket)):
-            result = await restore_frozen_ticket(
+            result = await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,
@@ -349,7 +349,7 @@ class TestRestoreFrozenTicket:
         db = _make_db(ticket=ticket, device=device)
 
         with patch(_PATCH_TRANSITION, new=AsyncMock(return_value=ticket)):
-            result = await restore_frozen_ticket(
+            result = await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
                 ticket_id=ticket.id,

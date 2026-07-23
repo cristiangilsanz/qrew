@@ -140,8 +140,8 @@ class TestComputeEntryStats:
         db = _make_db(
             state_rows=[
                 (TicketState.issued.value, 80),
-                (TicketState.used.value, 30),
-                (TicketState.entry_pending.value, 5),
+                (TicketState.redeemed.value, 30),
+                (TicketState.scanning.value, 5),
             ],
             rejection_rows=[("signature", 4), ("replay", 2)],
             last_scan=datetime(2026, 6, 2, tzinfo=UTC),
@@ -174,7 +174,7 @@ class TestComputeEntryStats:
         redis = _make_redis(cached=None)
         # More entered than issued (data anomaly)
         db = _make_db(
-            state_rows=[(TicketState.used.value, 100)],
+            state_rows=[(TicketState.redeemed.value, 100)],
         )
         with patch(_PATCH_SETTINGS, _fake_settings()):
             result = await compute_entry_stats(
