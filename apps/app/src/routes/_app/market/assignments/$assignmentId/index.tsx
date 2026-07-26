@@ -12,7 +12,7 @@ import {
   ShieldX,
   XCircle,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -22,7 +22,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
-import { StripeCheckout } from '@/features/tickets/components/StripeCheckout'
+const StripeCheckout = lazy(() =>
+  import('@/features/tickets/components/StripeCheckout').then((m) => ({
+    default: m.StripeCheckout,
+  })),
+)
 import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
@@ -267,10 +271,12 @@ function AssignmentPage() {
         })()}
       </div>
 
-      {/* Stripe checkout */}
+      {/* Stripe checkout — lazy loaded to defer @stripe/stripe-js from initial bundle */}
       {clientSecret && (
         <div className="mx-auto mt-5 max-w-[430px] px-4 pb-32">
-          <StripeCheckout clientSecret={clientSecret} onSuccess={handlePaySuccess} />
+          <Suspense fallback={null}>
+            <StripeCheckout clientSecret={clientSecret} onSuccess={handlePaySuccess} />
+          </Suspense>
         </div>
       )}
 

@@ -16,12 +16,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthSetupRouteImport } from './routes/_auth/setup'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
-import { Route as AppOrganiserRouteImport } from './routes/_app/organiser'
+import { Route as AppManagementRouteImport } from './routes/_app/management'
 import { Route as AppSplatRouteImport } from './routes/_app/$'
 import { Route as AppTicketsIndexRouteImport } from './routes/_app/tickets/index'
 import { Route as AppProfileIndexRouteImport } from './routes/_app/profile/index'
-import { Route as AppOrganiserIndexRouteImport } from './routes/_app/organiser/index'
 import { Route as AppMarketIndexRouteImport } from './routes/_app/market/index'
+import { Route as AppManagementIndexRouteImport } from './routes/_app/management/index'
 import { Route as AppHomeIndexRouteImport } from './routes/_app/home/index'
 import { Route as AppEventsIndexRouteImport } from './routes/_app/events/index'
 import { Route as AppTicketsTicketIdRouteImport } from './routes/_app/tickets/$ticketId'
@@ -32,25 +32,25 @@ import { Route as AppProfilePasskeysRouteImport } from './routes/_app/profile/pa
 import { Route as AppProfileHelpRouteImport } from './routes/_app/profile/help'
 import { Route as AppProfileAccountRouteImport } from './routes/_app/profile/account'
 import { Route as AppProfileAboutRouteImport } from './routes/_app/profile/about'
-import { Route as AppOrganiserNewRouteImport } from './routes/_app/organiser/new'
+import { Route as AppManagementNewRouteImport } from './routes/_app/management/new'
 import { Route as AppReservationsReservationIdIndexRouteImport } from './routes/_app/reservations/$reservationId/index'
-import { Route as AppOrganiserOrgIdIndexRouteImport } from './routes/_app/organiser/$orgId/index'
 import { Route as AppMarketWaitlistsIndexRouteImport } from './routes/_app/market/waitlists/index'
 import { Route as AppMarketMyListingsIndexRouteImport } from './routes/_app/market/my-listings/index'
 import { Route as AppMarketClaimsIndexRouteImport } from './routes/_app/market/claims/index'
+import { Route as AppManagementOrgIdIndexRouteImport } from './routes/_app/management/$orgId/index'
 import { Route as AppEventsEventIdIndexRouteImport } from './routes/_app/events/$eventId/index'
 import { Route as AppEventsEventIdQueueRouteImport } from './routes/_app/events/$eventId/queue'
 import { Route as AppEventsEventIdCheckoutRouteImport } from './routes/_app/events/$eventId/checkout'
-import { Route as AppOrganiserOrgIdMembersIndexRouteImport } from './routes/_app/organiser/$orgId/members/index'
-import { Route as AppOrganiserOrgIdEventsIndexRouteImport } from './routes/_app/organiser/$orgId/events/index'
 import { Route as AppMarketAssignmentsAssignmentIdIndexRouteImport } from './routes/_app/market/assignments/$assignmentId/index'
-import { Route as AppOrganiserOrgIdVenuesNewRouteImport } from './routes/_app/organiser/$orgId/venues/new'
-import { Route as AppOrganiserOrgIdMembersNewRouteImport } from './routes/_app/organiser/$orgId/members/new'
-import { Route as AppOrganiserOrgIdEventsNewRouteImport } from './routes/_app/organiser/$orgId/events/new'
-import { Route as AppOrganiserOrgIdEventsEventIdIndexRouteImport } from './routes/_app/organiser/$orgId/events/$eventId/index'
-import { Route as AppOrganiserOrgIdEventsEventIdTicketsRouteImport } from './routes/_app/organiser/$orgId/events/$eventId/tickets'
-import { Route as AppOrganiserOrgIdEventsEventIdScanRouteImport } from './routes/_app/organiser/$orgId/events/$eventId/scan'
-import { Route as AppOrganiserOrgIdEventsEventIdEditRouteImport } from './routes/_app/organiser/$orgId/events/$eventId/edit'
+import { Route as AppManagementOrgIdMembersIndexRouteImport } from './routes/_app/management/$orgId/members/index'
+import { Route as AppManagementOrgIdEventsIndexRouteImport } from './routes/_app/management/$orgId/events/index'
+import { Route as AppManagementOrgIdVenuesNewRouteImport } from './routes/_app/management/$orgId/venues/new'
+import { Route as AppManagementOrgIdMembersNewRouteImport } from './routes/_app/management/$orgId/members/new'
+import { Route as AppManagementOrgIdEventsNewRouteImport } from './routes/_app/management/$orgId/events/new'
+import { Route as AppManagementOrgIdEventsEventIdIndexRouteImport } from './routes/_app/management/$orgId/events/$eventId/index'
+import { Route as AppManagementOrgIdEventsEventIdTicketsRouteImport } from './routes/_app/management/$orgId/events/$eventId/tickets'
+import { Route as AppManagementOrgIdEventsEventIdScanRouteImport } from './routes/_app/management/$orgId/events/$eventId/scan'
+import { Route as AppManagementOrgIdEventsEventIdEditRouteImport } from './routes/_app/management/$orgId/events/$eventId/edit'
 
 const ConfirmEmailChangeRoute = ConfirmEmailChangeRouteImport.update({
   id: '/confirm-email-change',
@@ -85,9 +85,9 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AuthRoute,
 } as any)
-const AppOrganiserRoute = AppOrganiserRouteImport.update({
-  id: '/organiser',
-  path: '/organiser',
+const AppManagementRoute = AppManagementRouteImport.update({
+  id: '/management',
+  path: '/management',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSplatRoute = AppSplatRouteImport.update({
@@ -105,15 +105,15 @@ const AppProfileIndexRoute = AppProfileIndexRouteImport.update({
   path: '/profile/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOrganiserIndexRoute = AppOrganiserIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppOrganiserRoute,
-} as any)
 const AppMarketIndexRoute = AppMarketIndexRouteImport.update({
   id: '/market/',
   path: '/market/',
   getParentRoute: () => AppRoute,
+} as any)
+const AppManagementIndexRoute = AppManagementIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppManagementRoute,
 } as any)
 const AppHomeIndexRoute = AppHomeIndexRouteImport.update({
   id: '/home/',
@@ -165,10 +165,10 @@ const AppProfileAboutRoute = AppProfileAboutRouteImport.update({
   path: '/profile/about',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOrganiserNewRoute = AppOrganiserNewRouteImport.update({
+const AppManagementNewRoute = AppManagementNewRouteImport.update({
   id: '/new',
   path: '/new',
-  getParentRoute: () => AppOrganiserRoute,
+  getParentRoute: () => AppManagementRoute,
 } as any)
 const AppReservationsReservationIdIndexRoute =
   AppReservationsReservationIdIndexRouteImport.update({
@@ -176,11 +176,6 @@ const AppReservationsReservationIdIndexRoute =
     path: '/reservations/$reservationId/',
     getParentRoute: () => AppRoute,
   } as any)
-const AppOrganiserOrgIdIndexRoute = AppOrganiserOrgIdIndexRouteImport.update({
-  id: '/$orgId/',
-  path: '/$orgId/',
-  getParentRoute: () => AppOrganiserRoute,
-} as any)
 const AppMarketWaitlistsIndexRoute = AppMarketWaitlistsIndexRouteImport.update({
   id: '/market/waitlists/',
   path: '/market/waitlists/',
@@ -196,6 +191,11 @@ const AppMarketClaimsIndexRoute = AppMarketClaimsIndexRouteImport.update({
   id: '/market/claims/',
   path: '/market/claims/',
   getParentRoute: () => AppRoute,
+} as any)
+const AppManagementOrgIdIndexRoute = AppManagementOrgIdIndexRouteImport.update({
+  id: '/$orgId/',
+  path: '/$orgId/',
+  getParentRoute: () => AppManagementRoute,
 } as any)
 const AppEventsEventIdIndexRoute = AppEventsEventIdIndexRouteImport.update({
   id: '/events/$eventId/',
@@ -213,76 +213,76 @@ const AppEventsEventIdCheckoutRoute =
     path: '/events/$eventId/checkout',
     getParentRoute: () => AppRoute,
   } as any)
-const AppOrganiserOrgIdMembersIndexRoute =
-  AppOrganiserOrgIdMembersIndexRouteImport.update({
-    id: '/$orgId/members/',
-    path: '/$orgId/members/',
-    getParentRoute: () => AppOrganiserRoute,
-  } as any)
-const AppOrganiserOrgIdEventsIndexRoute =
-  AppOrganiserOrgIdEventsIndexRouteImport.update({
-    id: '/$orgId/events/',
-    path: '/$orgId/events/',
-    getParentRoute: () => AppOrganiserRoute,
-  } as any)
 const AppMarketAssignmentsAssignmentIdIndexRoute =
   AppMarketAssignmentsAssignmentIdIndexRouteImport.update({
     id: '/market/assignments/$assignmentId/',
     path: '/market/assignments/$assignmentId/',
     getParentRoute: () => AppRoute,
   } as any)
-const AppOrganiserOrgIdVenuesNewRoute =
-  AppOrganiserOrgIdVenuesNewRouteImport.update({
+const AppManagementOrgIdMembersIndexRoute =
+  AppManagementOrgIdMembersIndexRouteImport.update({
+    id: '/$orgId/members/',
+    path: '/$orgId/members/',
+    getParentRoute: () => AppManagementRoute,
+  } as any)
+const AppManagementOrgIdEventsIndexRoute =
+  AppManagementOrgIdEventsIndexRouteImport.update({
+    id: '/$orgId/events/',
+    path: '/$orgId/events/',
+    getParentRoute: () => AppManagementRoute,
+  } as any)
+const AppManagementOrgIdVenuesNewRoute =
+  AppManagementOrgIdVenuesNewRouteImport.update({
     id: '/$orgId/venues/new',
     path: '/$orgId/venues/new',
-    getParentRoute: () => AppOrganiserRoute,
+    getParentRoute: () => AppManagementRoute,
   } as any)
-const AppOrganiserOrgIdMembersNewRoute =
-  AppOrganiserOrgIdMembersNewRouteImport.update({
+const AppManagementOrgIdMembersNewRoute =
+  AppManagementOrgIdMembersNewRouteImport.update({
     id: '/$orgId/members/new',
     path: '/$orgId/members/new',
-    getParentRoute: () => AppOrganiserRoute,
+    getParentRoute: () => AppManagementRoute,
   } as any)
-const AppOrganiserOrgIdEventsNewRoute =
-  AppOrganiserOrgIdEventsNewRouteImport.update({
+const AppManagementOrgIdEventsNewRoute =
+  AppManagementOrgIdEventsNewRouteImport.update({
     id: '/$orgId/events/new',
     path: '/$orgId/events/new',
-    getParentRoute: () => AppOrganiserRoute,
+    getParentRoute: () => AppManagementRoute,
   } as any)
-const AppOrganiserOrgIdEventsEventIdIndexRoute =
-  AppOrganiserOrgIdEventsEventIdIndexRouteImport.update({
+const AppManagementOrgIdEventsEventIdIndexRoute =
+  AppManagementOrgIdEventsEventIdIndexRouteImport.update({
     id: '/$orgId/events/$eventId/',
     path: '/$orgId/events/$eventId/',
-    getParentRoute: () => AppOrganiserRoute,
+    getParentRoute: () => AppManagementRoute,
   } as any)
-const AppOrganiserOrgIdEventsEventIdTicketsRoute =
-  AppOrganiserOrgIdEventsEventIdTicketsRouteImport.update({
+const AppManagementOrgIdEventsEventIdTicketsRoute =
+  AppManagementOrgIdEventsEventIdTicketsRouteImport.update({
     id: '/$orgId/events/$eventId/tickets',
     path: '/$orgId/events/$eventId/tickets',
-    getParentRoute: () => AppOrganiserRoute,
+    getParentRoute: () => AppManagementRoute,
   } as any)
-const AppOrganiserOrgIdEventsEventIdScanRoute =
-  AppOrganiserOrgIdEventsEventIdScanRouteImport.update({
+const AppManagementOrgIdEventsEventIdScanRoute =
+  AppManagementOrgIdEventsEventIdScanRouteImport.update({
     id: '/$orgId/events/$eventId/scan',
     path: '/$orgId/events/$eventId/scan',
-    getParentRoute: () => AppOrganiserRoute,
+    getParentRoute: () => AppManagementRoute,
   } as any)
-const AppOrganiserOrgIdEventsEventIdEditRoute =
-  AppOrganiserOrgIdEventsEventIdEditRouteImport.update({
+const AppManagementOrgIdEventsEventIdEditRoute =
+  AppManagementOrgIdEventsEventIdEditRouteImport.update({
     id: '/$orgId/events/$eventId/edit',
     path: '/$orgId/events/$eventId/edit',
-    getParentRoute: () => AppOrganiserRoute,
+    getParentRoute: () => AppManagementRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/$': typeof AppSplatRoute
-  '/organiser': typeof AppOrganiserRouteWithChildren
+  '/management': typeof AppManagementRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/setup': typeof AuthSetupRoute
-  '/organiser/new': typeof AppOrganiserNewRoute
+  '/management/new': typeof AppManagementNewRoute
   '/profile/about': typeof AppProfileAboutRoute
   '/profile/account': typeof AppProfileAccountRoute
   '/profile/help': typeof AppProfileHelpRoute
@@ -293,28 +293,28 @@ export interface FileRoutesByFullPath {
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/events/': typeof AppEventsIndexRoute
   '/home/': typeof AppHomeIndexRoute
+  '/management/': typeof AppManagementIndexRoute
   '/market/': typeof AppMarketIndexRoute
-  '/organiser/': typeof AppOrganiserIndexRoute
   '/profile/': typeof AppProfileIndexRoute
   '/tickets/': typeof AppTicketsIndexRoute
   '/events/$eventId/checkout': typeof AppEventsEventIdCheckoutRoute
   '/events/$eventId/queue': typeof AppEventsEventIdQueueRoute
   '/events/$eventId/': typeof AppEventsEventIdIndexRoute
+  '/management/$orgId/': typeof AppManagementOrgIdIndexRoute
   '/market/claims/': typeof AppMarketClaimsIndexRoute
   '/market/my-listings/': typeof AppMarketMyListingsIndexRoute
   '/market/waitlists/': typeof AppMarketWaitlistsIndexRoute
-  '/organiser/$orgId/': typeof AppOrganiserOrgIdIndexRoute
   '/reservations/$reservationId/': typeof AppReservationsReservationIdIndexRoute
-  '/organiser/$orgId/events/new': typeof AppOrganiserOrgIdEventsNewRoute
-  '/organiser/$orgId/members/new': typeof AppOrganiserOrgIdMembersNewRoute
-  '/organiser/$orgId/venues/new': typeof AppOrganiserOrgIdVenuesNewRoute
+  '/management/$orgId/events/new': typeof AppManagementOrgIdEventsNewRoute
+  '/management/$orgId/members/new': typeof AppManagementOrgIdMembersNewRoute
+  '/management/$orgId/venues/new': typeof AppManagementOrgIdVenuesNewRoute
+  '/management/$orgId/events/': typeof AppManagementOrgIdEventsIndexRoute
+  '/management/$orgId/members/': typeof AppManagementOrgIdMembersIndexRoute
   '/market/assignments/$assignmentId/': typeof AppMarketAssignmentsAssignmentIdIndexRoute
-  '/organiser/$orgId/events/': typeof AppOrganiserOrgIdEventsIndexRoute
-  '/organiser/$orgId/members/': typeof AppOrganiserOrgIdMembersIndexRoute
-  '/organiser/$orgId/events/$eventId/edit': typeof AppOrganiserOrgIdEventsEventIdEditRoute
-  '/organiser/$orgId/events/$eventId/scan': typeof AppOrganiserOrgIdEventsEventIdScanRoute
-  '/organiser/$orgId/events/$eventId/tickets': typeof AppOrganiserOrgIdEventsEventIdTicketsRoute
-  '/organiser/$orgId/events/$eventId/': typeof AppOrganiserOrgIdEventsEventIdIndexRoute
+  '/management/$orgId/events/$eventId/edit': typeof AppManagementOrgIdEventsEventIdEditRoute
+  '/management/$orgId/events/$eventId/scan': typeof AppManagementOrgIdEventsEventIdScanRoute
+  '/management/$orgId/events/$eventId/tickets': typeof AppManagementOrgIdEventsEventIdTicketsRoute
+  '/management/$orgId/events/$eventId/': typeof AppManagementOrgIdEventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -323,7 +323,7 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/setup': typeof AuthSetupRoute
-  '/organiser/new': typeof AppOrganiserNewRoute
+  '/management/new': typeof AppManagementNewRoute
   '/profile/about': typeof AppProfileAboutRoute
   '/profile/account': typeof AppProfileAccountRoute
   '/profile/help': typeof AppProfileHelpRoute
@@ -334,28 +334,28 @@ export interface FileRoutesByTo {
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/events': typeof AppEventsIndexRoute
   '/home': typeof AppHomeIndexRoute
+  '/management': typeof AppManagementIndexRoute
   '/market': typeof AppMarketIndexRoute
-  '/organiser': typeof AppOrganiserIndexRoute
   '/profile': typeof AppProfileIndexRoute
   '/tickets': typeof AppTicketsIndexRoute
   '/events/$eventId/checkout': typeof AppEventsEventIdCheckoutRoute
   '/events/$eventId/queue': typeof AppEventsEventIdQueueRoute
   '/events/$eventId': typeof AppEventsEventIdIndexRoute
+  '/management/$orgId': typeof AppManagementOrgIdIndexRoute
   '/market/claims': typeof AppMarketClaimsIndexRoute
   '/market/my-listings': typeof AppMarketMyListingsIndexRoute
   '/market/waitlists': typeof AppMarketWaitlistsIndexRoute
-  '/organiser/$orgId': typeof AppOrganiserOrgIdIndexRoute
   '/reservations/$reservationId': typeof AppReservationsReservationIdIndexRoute
-  '/organiser/$orgId/events/new': typeof AppOrganiserOrgIdEventsNewRoute
-  '/organiser/$orgId/members/new': typeof AppOrganiserOrgIdMembersNewRoute
-  '/organiser/$orgId/venues/new': typeof AppOrganiserOrgIdVenuesNewRoute
+  '/management/$orgId/events/new': typeof AppManagementOrgIdEventsNewRoute
+  '/management/$orgId/members/new': typeof AppManagementOrgIdMembersNewRoute
+  '/management/$orgId/venues/new': typeof AppManagementOrgIdVenuesNewRoute
+  '/management/$orgId/events': typeof AppManagementOrgIdEventsIndexRoute
+  '/management/$orgId/members': typeof AppManagementOrgIdMembersIndexRoute
   '/market/assignments/$assignmentId': typeof AppMarketAssignmentsAssignmentIdIndexRoute
-  '/organiser/$orgId/events': typeof AppOrganiserOrgIdEventsIndexRoute
-  '/organiser/$orgId/members': typeof AppOrganiserOrgIdMembersIndexRoute
-  '/organiser/$orgId/events/$eventId/edit': typeof AppOrganiserOrgIdEventsEventIdEditRoute
-  '/organiser/$orgId/events/$eventId/scan': typeof AppOrganiserOrgIdEventsEventIdScanRoute
-  '/organiser/$orgId/events/$eventId/tickets': typeof AppOrganiserOrgIdEventsEventIdTicketsRoute
-  '/organiser/$orgId/events/$eventId': typeof AppOrganiserOrgIdEventsEventIdIndexRoute
+  '/management/$orgId/events/$eventId/edit': typeof AppManagementOrgIdEventsEventIdEditRoute
+  '/management/$orgId/events/$eventId/scan': typeof AppManagementOrgIdEventsEventIdScanRoute
+  '/management/$orgId/events/$eventId/tickets': typeof AppManagementOrgIdEventsEventIdTicketsRoute
+  '/management/$orgId/events/$eventId': typeof AppManagementOrgIdEventsEventIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -364,11 +364,11 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/_app/$': typeof AppSplatRoute
-  '/_app/organiser': typeof AppOrganiserRouteWithChildren
+  '/_app/management': typeof AppManagementRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/setup': typeof AuthSetupRoute
-  '/_app/organiser/new': typeof AppOrganiserNewRoute
+  '/_app/management/new': typeof AppManagementNewRoute
   '/_app/profile/about': typeof AppProfileAboutRoute
   '/_app/profile/account': typeof AppProfileAccountRoute
   '/_app/profile/help': typeof AppProfileHelpRoute
@@ -379,28 +379,28 @@ export interface FileRoutesById {
   '/_app/tickets/$ticketId': typeof AppTicketsTicketIdRoute
   '/_app/events/': typeof AppEventsIndexRoute
   '/_app/home/': typeof AppHomeIndexRoute
+  '/_app/management/': typeof AppManagementIndexRoute
   '/_app/market/': typeof AppMarketIndexRoute
-  '/_app/organiser/': typeof AppOrganiserIndexRoute
   '/_app/profile/': typeof AppProfileIndexRoute
   '/_app/tickets/': typeof AppTicketsIndexRoute
   '/_app/events/$eventId/checkout': typeof AppEventsEventIdCheckoutRoute
   '/_app/events/$eventId/queue': typeof AppEventsEventIdQueueRoute
   '/_app/events/$eventId/': typeof AppEventsEventIdIndexRoute
+  '/_app/management/$orgId/': typeof AppManagementOrgIdIndexRoute
   '/_app/market/claims/': typeof AppMarketClaimsIndexRoute
   '/_app/market/my-listings/': typeof AppMarketMyListingsIndexRoute
   '/_app/market/waitlists/': typeof AppMarketWaitlistsIndexRoute
-  '/_app/organiser/$orgId/': typeof AppOrganiserOrgIdIndexRoute
   '/_app/reservations/$reservationId/': typeof AppReservationsReservationIdIndexRoute
-  '/_app/organiser/$orgId/events/new': typeof AppOrganiserOrgIdEventsNewRoute
-  '/_app/organiser/$orgId/members/new': typeof AppOrganiserOrgIdMembersNewRoute
-  '/_app/organiser/$orgId/venues/new': typeof AppOrganiserOrgIdVenuesNewRoute
+  '/_app/management/$orgId/events/new': typeof AppManagementOrgIdEventsNewRoute
+  '/_app/management/$orgId/members/new': typeof AppManagementOrgIdMembersNewRoute
+  '/_app/management/$orgId/venues/new': typeof AppManagementOrgIdVenuesNewRoute
+  '/_app/management/$orgId/events/': typeof AppManagementOrgIdEventsIndexRoute
+  '/_app/management/$orgId/members/': typeof AppManagementOrgIdMembersIndexRoute
   '/_app/market/assignments/$assignmentId/': typeof AppMarketAssignmentsAssignmentIdIndexRoute
-  '/_app/organiser/$orgId/events/': typeof AppOrganiserOrgIdEventsIndexRoute
-  '/_app/organiser/$orgId/members/': typeof AppOrganiserOrgIdMembersIndexRoute
-  '/_app/organiser/$orgId/events/$eventId/edit': typeof AppOrganiserOrgIdEventsEventIdEditRoute
-  '/_app/organiser/$orgId/events/$eventId/scan': typeof AppOrganiserOrgIdEventsEventIdScanRoute
-  '/_app/organiser/$orgId/events/$eventId/tickets': typeof AppOrganiserOrgIdEventsEventIdTicketsRoute
-  '/_app/organiser/$orgId/events/$eventId/': typeof AppOrganiserOrgIdEventsEventIdIndexRoute
+  '/_app/management/$orgId/events/$eventId/edit': typeof AppManagementOrgIdEventsEventIdEditRoute
+  '/_app/management/$orgId/events/$eventId/scan': typeof AppManagementOrgIdEventsEventIdScanRoute
+  '/_app/management/$orgId/events/$eventId/tickets': typeof AppManagementOrgIdEventsEventIdTicketsRoute
+  '/_app/management/$orgId/events/$eventId/': typeof AppManagementOrgIdEventsEventIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -408,11 +408,11 @@ export interface FileRouteTypes {
     | '/'
     | '/confirm-email-change'
     | '/$'
-    | '/organiser'
+    | '/management'
     | '/login'
     | '/register'
     | '/setup'
-    | '/organiser/new'
+    | '/management/new'
     | '/profile/about'
     | '/profile/account'
     | '/profile/help'
@@ -423,28 +423,28 @@ export interface FileRouteTypes {
     | '/tickets/$ticketId'
     | '/events/'
     | '/home/'
+    | '/management/'
     | '/market/'
-    | '/organiser/'
     | '/profile/'
     | '/tickets/'
     | '/events/$eventId/checkout'
     | '/events/$eventId/queue'
     | '/events/$eventId/'
+    | '/management/$orgId/'
     | '/market/claims/'
     | '/market/my-listings/'
     | '/market/waitlists/'
-    | '/organiser/$orgId/'
     | '/reservations/$reservationId/'
-    | '/organiser/$orgId/events/new'
-    | '/organiser/$orgId/members/new'
-    | '/organiser/$orgId/venues/new'
+    | '/management/$orgId/events/new'
+    | '/management/$orgId/members/new'
+    | '/management/$orgId/venues/new'
+    | '/management/$orgId/events/'
+    | '/management/$orgId/members/'
     | '/market/assignments/$assignmentId/'
-    | '/organiser/$orgId/events/'
-    | '/organiser/$orgId/members/'
-    | '/organiser/$orgId/events/$eventId/edit'
-    | '/organiser/$orgId/events/$eventId/scan'
-    | '/organiser/$orgId/events/$eventId/tickets'
-    | '/organiser/$orgId/events/$eventId/'
+    | '/management/$orgId/events/$eventId/edit'
+    | '/management/$orgId/events/$eventId/scan'
+    | '/management/$orgId/events/$eventId/tickets'
+    | '/management/$orgId/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -453,7 +453,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/setup'
-    | '/organiser/new'
+    | '/management/new'
     | '/profile/about'
     | '/profile/account'
     | '/profile/help'
@@ -464,28 +464,28 @@ export interface FileRouteTypes {
     | '/tickets/$ticketId'
     | '/events'
     | '/home'
+    | '/management'
     | '/market'
-    | '/organiser'
     | '/profile'
     | '/tickets'
     | '/events/$eventId/checkout'
     | '/events/$eventId/queue'
     | '/events/$eventId'
+    | '/management/$orgId'
     | '/market/claims'
     | '/market/my-listings'
     | '/market/waitlists'
-    | '/organiser/$orgId'
     | '/reservations/$reservationId'
-    | '/organiser/$orgId/events/new'
-    | '/organiser/$orgId/members/new'
-    | '/organiser/$orgId/venues/new'
+    | '/management/$orgId/events/new'
+    | '/management/$orgId/members/new'
+    | '/management/$orgId/venues/new'
+    | '/management/$orgId/events'
+    | '/management/$orgId/members'
     | '/market/assignments/$assignmentId'
-    | '/organiser/$orgId/events'
-    | '/organiser/$orgId/members'
-    | '/organiser/$orgId/events/$eventId/edit'
-    | '/organiser/$orgId/events/$eventId/scan'
-    | '/organiser/$orgId/events/$eventId/tickets'
-    | '/organiser/$orgId/events/$eventId'
+    | '/management/$orgId/events/$eventId/edit'
+    | '/management/$orgId/events/$eventId/scan'
+    | '/management/$orgId/events/$eventId/tickets'
+    | '/management/$orgId/events/$eventId'
   id:
     | '__root__'
     | '/'
@@ -493,11 +493,11 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/confirm-email-change'
     | '/_app/$'
-    | '/_app/organiser'
+    | '/_app/management'
     | '/_auth/login'
     | '/_auth/register'
     | '/_auth/setup'
-    | '/_app/organiser/new'
+    | '/_app/management/new'
     | '/_app/profile/about'
     | '/_app/profile/account'
     | '/_app/profile/help'
@@ -508,28 +508,28 @@ export interface FileRouteTypes {
     | '/_app/tickets/$ticketId'
     | '/_app/events/'
     | '/_app/home/'
+    | '/_app/management/'
     | '/_app/market/'
-    | '/_app/organiser/'
     | '/_app/profile/'
     | '/_app/tickets/'
     | '/_app/events/$eventId/checkout'
     | '/_app/events/$eventId/queue'
     | '/_app/events/$eventId/'
+    | '/_app/management/$orgId/'
     | '/_app/market/claims/'
     | '/_app/market/my-listings/'
     | '/_app/market/waitlists/'
-    | '/_app/organiser/$orgId/'
     | '/_app/reservations/$reservationId/'
-    | '/_app/organiser/$orgId/events/new'
-    | '/_app/organiser/$orgId/members/new'
-    | '/_app/organiser/$orgId/venues/new'
+    | '/_app/management/$orgId/events/new'
+    | '/_app/management/$orgId/members/new'
+    | '/_app/management/$orgId/venues/new'
+    | '/_app/management/$orgId/events/'
+    | '/_app/management/$orgId/members/'
     | '/_app/market/assignments/$assignmentId/'
-    | '/_app/organiser/$orgId/events/'
-    | '/_app/organiser/$orgId/members/'
-    | '/_app/organiser/$orgId/events/$eventId/edit'
-    | '/_app/organiser/$orgId/events/$eventId/scan'
-    | '/_app/organiser/$orgId/events/$eventId/tickets'
-    | '/_app/organiser/$orgId/events/$eventId/'
+    | '/_app/management/$orgId/events/$eventId/edit'
+    | '/_app/management/$orgId/events/$eventId/scan'
+    | '/_app/management/$orgId/events/$eventId/tickets'
+    | '/_app/management/$orgId/events/$eventId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -590,11 +590,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_app/organiser': {
-      id: '/_app/organiser'
-      path: '/organiser'
-      fullPath: '/organiser'
-      preLoaderRoute: typeof AppOrganiserRouteImport
+    '/_app/management': {
+      id: '/_app/management'
+      path: '/management'
+      fullPath: '/management'
+      preLoaderRoute: typeof AppManagementRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/$': {
@@ -618,19 +618,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/organiser/': {
-      id: '/_app/organiser/'
-      path: '/'
-      fullPath: '/organiser/'
-      preLoaderRoute: typeof AppOrganiserIndexRouteImport
-      parentRoute: typeof AppOrganiserRoute
-    }
     '/_app/market/': {
       id: '/_app/market/'
       path: '/market'
       fullPath: '/market/'
       preLoaderRoute: typeof AppMarketIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/management/': {
+      id: '/_app/management/'
+      path: '/'
+      fullPath: '/management/'
+      preLoaderRoute: typeof AppManagementIndexRouteImport
+      parentRoute: typeof AppManagementRoute
     }
     '/_app/home/': {
       id: '/_app/home/'
@@ -702,12 +702,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileAboutRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/organiser/new': {
-      id: '/_app/organiser/new'
+    '/_app/management/new': {
+      id: '/_app/management/new'
       path: '/new'
-      fullPath: '/organiser/new'
-      preLoaderRoute: typeof AppOrganiserNewRouteImport
-      parentRoute: typeof AppOrganiserRoute
+      fullPath: '/management/new'
+      preLoaderRoute: typeof AppManagementNewRouteImport
+      parentRoute: typeof AppManagementRoute
     }
     '/_app/reservations/$reservationId/': {
       id: '/_app/reservations/$reservationId/'
@@ -715,13 +715,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/reservations/$reservationId/'
       preLoaderRoute: typeof AppReservationsReservationIdIndexRouteImport
       parentRoute: typeof AppRoute
-    }
-    '/_app/organiser/$orgId/': {
-      id: '/_app/organiser/$orgId/'
-      path: '/$orgId'
-      fullPath: '/organiser/$orgId/'
-      preLoaderRoute: typeof AppOrganiserOrgIdIndexRouteImport
-      parentRoute: typeof AppOrganiserRoute
     }
     '/_app/market/waitlists/': {
       id: '/_app/market/waitlists/'
@@ -744,6 +737,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMarketClaimsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/management/$orgId/': {
+      id: '/_app/management/$orgId/'
+      path: '/$orgId'
+      fullPath: '/management/$orgId/'
+      preLoaderRoute: typeof AppManagementOrgIdIndexRouteImport
+      parentRoute: typeof AppManagementRoute
+    }
     '/_app/events/$eventId/': {
       id: '/_app/events/$eventId/'
       path: '/events/$eventId'
@@ -765,20 +765,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEventsEventIdCheckoutRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/organiser/$orgId/members/': {
-      id: '/_app/organiser/$orgId/members/'
-      path: '/$orgId/members'
-      fullPath: '/organiser/$orgId/members/'
-      preLoaderRoute: typeof AppOrganiserOrgIdMembersIndexRouteImport
-      parentRoute: typeof AppOrganiserRoute
-    }
-    '/_app/organiser/$orgId/events/': {
-      id: '/_app/organiser/$orgId/events/'
-      path: '/$orgId/events'
-      fullPath: '/organiser/$orgId/events/'
-      preLoaderRoute: typeof AppOrganiserOrgIdEventsIndexRouteImport
-      parentRoute: typeof AppOrganiserRoute
-    }
     '/_app/market/assignments/$assignmentId/': {
       id: '/_app/market/assignments/$assignmentId/'
       path: '/market/assignments/$assignmentId'
@@ -786,99 +772,113 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMarketAssignmentsAssignmentIdIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/organiser/$orgId/venues/new': {
-      id: '/_app/organiser/$orgId/venues/new'
+    '/_app/management/$orgId/members/': {
+      id: '/_app/management/$orgId/members/'
+      path: '/$orgId/members'
+      fullPath: '/management/$orgId/members/'
+      preLoaderRoute: typeof AppManagementOrgIdMembersIndexRouteImport
+      parentRoute: typeof AppManagementRoute
+    }
+    '/_app/management/$orgId/events/': {
+      id: '/_app/management/$orgId/events/'
+      path: '/$orgId/events'
+      fullPath: '/management/$orgId/events/'
+      preLoaderRoute: typeof AppManagementOrgIdEventsIndexRouteImport
+      parentRoute: typeof AppManagementRoute
+    }
+    '/_app/management/$orgId/venues/new': {
+      id: '/_app/management/$orgId/venues/new'
       path: '/$orgId/venues/new'
-      fullPath: '/organiser/$orgId/venues/new'
-      preLoaderRoute: typeof AppOrganiserOrgIdVenuesNewRouteImport
-      parentRoute: typeof AppOrganiserRoute
+      fullPath: '/management/$orgId/venues/new'
+      preLoaderRoute: typeof AppManagementOrgIdVenuesNewRouteImport
+      parentRoute: typeof AppManagementRoute
     }
-    '/_app/organiser/$orgId/members/new': {
-      id: '/_app/organiser/$orgId/members/new'
+    '/_app/management/$orgId/members/new': {
+      id: '/_app/management/$orgId/members/new'
       path: '/$orgId/members/new'
-      fullPath: '/organiser/$orgId/members/new'
-      preLoaderRoute: typeof AppOrganiserOrgIdMembersNewRouteImport
-      parentRoute: typeof AppOrganiserRoute
+      fullPath: '/management/$orgId/members/new'
+      preLoaderRoute: typeof AppManagementOrgIdMembersNewRouteImport
+      parentRoute: typeof AppManagementRoute
     }
-    '/_app/organiser/$orgId/events/new': {
-      id: '/_app/organiser/$orgId/events/new'
+    '/_app/management/$orgId/events/new': {
+      id: '/_app/management/$orgId/events/new'
       path: '/$orgId/events/new'
-      fullPath: '/organiser/$orgId/events/new'
-      preLoaderRoute: typeof AppOrganiserOrgIdEventsNewRouteImport
-      parentRoute: typeof AppOrganiserRoute
+      fullPath: '/management/$orgId/events/new'
+      preLoaderRoute: typeof AppManagementOrgIdEventsNewRouteImport
+      parentRoute: typeof AppManagementRoute
     }
-    '/_app/organiser/$orgId/events/$eventId/': {
-      id: '/_app/organiser/$orgId/events/$eventId/'
+    '/_app/management/$orgId/events/$eventId/': {
+      id: '/_app/management/$orgId/events/$eventId/'
       path: '/$orgId/events/$eventId'
-      fullPath: '/organiser/$orgId/events/$eventId/'
-      preLoaderRoute: typeof AppOrganiserOrgIdEventsEventIdIndexRouteImport
-      parentRoute: typeof AppOrganiserRoute
+      fullPath: '/management/$orgId/events/$eventId/'
+      preLoaderRoute: typeof AppManagementOrgIdEventsEventIdIndexRouteImport
+      parentRoute: typeof AppManagementRoute
     }
-    '/_app/organiser/$orgId/events/$eventId/tickets': {
-      id: '/_app/organiser/$orgId/events/$eventId/tickets'
+    '/_app/management/$orgId/events/$eventId/tickets': {
+      id: '/_app/management/$orgId/events/$eventId/tickets'
       path: '/$orgId/events/$eventId/tickets'
-      fullPath: '/organiser/$orgId/events/$eventId/tickets'
-      preLoaderRoute: typeof AppOrganiserOrgIdEventsEventIdTicketsRouteImport
-      parentRoute: typeof AppOrganiserRoute
+      fullPath: '/management/$orgId/events/$eventId/tickets'
+      preLoaderRoute: typeof AppManagementOrgIdEventsEventIdTicketsRouteImport
+      parentRoute: typeof AppManagementRoute
     }
-    '/_app/organiser/$orgId/events/$eventId/scan': {
-      id: '/_app/organiser/$orgId/events/$eventId/scan'
+    '/_app/management/$orgId/events/$eventId/scan': {
+      id: '/_app/management/$orgId/events/$eventId/scan'
       path: '/$orgId/events/$eventId/scan'
-      fullPath: '/organiser/$orgId/events/$eventId/scan'
-      preLoaderRoute: typeof AppOrganiserOrgIdEventsEventIdScanRouteImport
-      parentRoute: typeof AppOrganiserRoute
+      fullPath: '/management/$orgId/events/$eventId/scan'
+      preLoaderRoute: typeof AppManagementOrgIdEventsEventIdScanRouteImport
+      parentRoute: typeof AppManagementRoute
     }
-    '/_app/organiser/$orgId/events/$eventId/edit': {
-      id: '/_app/organiser/$orgId/events/$eventId/edit'
+    '/_app/management/$orgId/events/$eventId/edit': {
+      id: '/_app/management/$orgId/events/$eventId/edit'
       path: '/$orgId/events/$eventId/edit'
-      fullPath: '/organiser/$orgId/events/$eventId/edit'
-      preLoaderRoute: typeof AppOrganiserOrgIdEventsEventIdEditRouteImport
-      parentRoute: typeof AppOrganiserRoute
+      fullPath: '/management/$orgId/events/$eventId/edit'
+      preLoaderRoute: typeof AppManagementOrgIdEventsEventIdEditRouteImport
+      parentRoute: typeof AppManagementRoute
     }
   }
 }
 
-interface AppOrganiserRouteChildren {
-  AppOrganiserNewRoute: typeof AppOrganiserNewRoute
-  AppOrganiserIndexRoute: typeof AppOrganiserIndexRoute
-  AppOrganiserOrgIdIndexRoute: typeof AppOrganiserOrgIdIndexRoute
-  AppOrganiserOrgIdEventsNewRoute: typeof AppOrganiserOrgIdEventsNewRoute
-  AppOrganiserOrgIdMembersNewRoute: typeof AppOrganiserOrgIdMembersNewRoute
-  AppOrganiserOrgIdVenuesNewRoute: typeof AppOrganiserOrgIdVenuesNewRoute
-  AppOrganiserOrgIdEventsIndexRoute: typeof AppOrganiserOrgIdEventsIndexRoute
-  AppOrganiserOrgIdMembersIndexRoute: typeof AppOrganiserOrgIdMembersIndexRoute
-  AppOrganiserOrgIdEventsEventIdEditRoute: typeof AppOrganiserOrgIdEventsEventIdEditRoute
-  AppOrganiserOrgIdEventsEventIdScanRoute: typeof AppOrganiserOrgIdEventsEventIdScanRoute
-  AppOrganiserOrgIdEventsEventIdTicketsRoute: typeof AppOrganiserOrgIdEventsEventIdTicketsRoute
-  AppOrganiserOrgIdEventsEventIdIndexRoute: typeof AppOrganiserOrgIdEventsEventIdIndexRoute
+interface AppManagementRouteChildren {
+  AppManagementNewRoute: typeof AppManagementNewRoute
+  AppManagementIndexRoute: typeof AppManagementIndexRoute
+  AppManagementOrgIdIndexRoute: typeof AppManagementOrgIdIndexRoute
+  AppManagementOrgIdEventsNewRoute: typeof AppManagementOrgIdEventsNewRoute
+  AppManagementOrgIdMembersNewRoute: typeof AppManagementOrgIdMembersNewRoute
+  AppManagementOrgIdVenuesNewRoute: typeof AppManagementOrgIdVenuesNewRoute
+  AppManagementOrgIdEventsIndexRoute: typeof AppManagementOrgIdEventsIndexRoute
+  AppManagementOrgIdMembersIndexRoute: typeof AppManagementOrgIdMembersIndexRoute
+  AppManagementOrgIdEventsEventIdEditRoute: typeof AppManagementOrgIdEventsEventIdEditRoute
+  AppManagementOrgIdEventsEventIdScanRoute: typeof AppManagementOrgIdEventsEventIdScanRoute
+  AppManagementOrgIdEventsEventIdTicketsRoute: typeof AppManagementOrgIdEventsEventIdTicketsRoute
+  AppManagementOrgIdEventsEventIdIndexRoute: typeof AppManagementOrgIdEventsEventIdIndexRoute
 }
 
-const AppOrganiserRouteChildren: AppOrganiserRouteChildren = {
-  AppOrganiserNewRoute: AppOrganiserNewRoute,
-  AppOrganiserIndexRoute: AppOrganiserIndexRoute,
-  AppOrganiserOrgIdIndexRoute: AppOrganiserOrgIdIndexRoute,
-  AppOrganiserOrgIdEventsNewRoute: AppOrganiserOrgIdEventsNewRoute,
-  AppOrganiserOrgIdMembersNewRoute: AppOrganiserOrgIdMembersNewRoute,
-  AppOrganiserOrgIdVenuesNewRoute: AppOrganiserOrgIdVenuesNewRoute,
-  AppOrganiserOrgIdEventsIndexRoute: AppOrganiserOrgIdEventsIndexRoute,
-  AppOrganiserOrgIdMembersIndexRoute: AppOrganiserOrgIdMembersIndexRoute,
-  AppOrganiserOrgIdEventsEventIdEditRoute:
-    AppOrganiserOrgIdEventsEventIdEditRoute,
-  AppOrganiserOrgIdEventsEventIdScanRoute:
-    AppOrganiserOrgIdEventsEventIdScanRoute,
-  AppOrganiserOrgIdEventsEventIdTicketsRoute:
-    AppOrganiserOrgIdEventsEventIdTicketsRoute,
-  AppOrganiserOrgIdEventsEventIdIndexRoute:
-    AppOrganiserOrgIdEventsEventIdIndexRoute,
+const AppManagementRouteChildren: AppManagementRouteChildren = {
+  AppManagementNewRoute: AppManagementNewRoute,
+  AppManagementIndexRoute: AppManagementIndexRoute,
+  AppManagementOrgIdIndexRoute: AppManagementOrgIdIndexRoute,
+  AppManagementOrgIdEventsNewRoute: AppManagementOrgIdEventsNewRoute,
+  AppManagementOrgIdMembersNewRoute: AppManagementOrgIdMembersNewRoute,
+  AppManagementOrgIdVenuesNewRoute: AppManagementOrgIdVenuesNewRoute,
+  AppManagementOrgIdEventsIndexRoute: AppManagementOrgIdEventsIndexRoute,
+  AppManagementOrgIdMembersIndexRoute: AppManagementOrgIdMembersIndexRoute,
+  AppManagementOrgIdEventsEventIdEditRoute:
+    AppManagementOrgIdEventsEventIdEditRoute,
+  AppManagementOrgIdEventsEventIdScanRoute:
+    AppManagementOrgIdEventsEventIdScanRoute,
+  AppManagementOrgIdEventsEventIdTicketsRoute:
+    AppManagementOrgIdEventsEventIdTicketsRoute,
+  AppManagementOrgIdEventsEventIdIndexRoute:
+    AppManagementOrgIdEventsEventIdIndexRoute,
 }
 
-const AppOrganiserRouteWithChildren = AppOrganiserRoute._addFileChildren(
-  AppOrganiserRouteChildren,
+const AppManagementRouteWithChildren = AppManagementRoute._addFileChildren(
+  AppManagementRouteChildren,
 )
 
 interface AppRouteChildren {
   AppSplatRoute: typeof AppSplatRoute
-  AppOrganiserRoute: typeof AppOrganiserRouteWithChildren
+  AppManagementRoute: typeof AppManagementRouteWithChildren
   AppProfileAboutRoute: typeof AppProfileAboutRoute
   AppProfileAccountRoute: typeof AppProfileAccountRoute
   AppProfileHelpRoute: typeof AppProfileHelpRoute
@@ -904,7 +904,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppSplatRoute: AppSplatRoute,
-  AppOrganiserRoute: AppOrganiserRouteWithChildren,
+  AppManagementRoute: AppManagementRouteWithChildren,
   AppProfileAboutRoute: AppProfileAboutRoute,
   AppProfileAccountRoute: AppProfileAccountRoute,
   AppProfileHelpRoute: AppProfileHelpRoute,

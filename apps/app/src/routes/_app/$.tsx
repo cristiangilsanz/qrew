@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { House } from 'lucide-react'
 
 import notFoundImg from '@/assets/images/404.png'
 
@@ -16,9 +17,10 @@ function NotFoundPage() {
       />
       <Link
         to="/home"
-        className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-12 items-center rounded-full px-8 text-sm font-semibold transition-colors"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-12 items-center gap-2 rounded-full px-8 text-sm font-semibold transition-colors"
       >
-        Back to home
+        <House className="h-4 w-4" />
+        Back To Home
       </Link>
     </div>
   )

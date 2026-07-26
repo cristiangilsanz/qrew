@@ -1,20 +1,8 @@
-import axios from 'axios'
-
 import { env } from '@/config/env'
-import { useAuthStore } from '@/store/auth'
 
-import { attachRefreshInterceptor } from './refreshInterceptor'
+import { createServiceClient } from './http'
 
-export const apiClient = axios.create({
+export const apiClient = createServiceClient({
   baseURL: `${env.API_URL}/api/identity`,
-  timeout: 10_000,
-  headers: { 'Content-Type': 'application/json' },
+  useSetupToken: true,
 })
-
-apiClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken ?? useAuthStore.getState().setupToken
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
-
-attachRefreshInterceptor(apiClient)

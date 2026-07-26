@@ -17,6 +17,15 @@ function AppLayout() {
   )
 }
 
+function RouteError({ error }: { error: unknown }) {
+  const message = error instanceof Error ? error.message : 'Something went wrong'
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
+      <p className="text-muted-foreground text-sm">{message}</p>
+    </div>
+  )
+}
+
 export const Route = createFileRoute('/_app')({
   beforeLoad: () => {
     if (!useAuthStore.getState().isAuthenticated) {
@@ -24,4 +33,5 @@ export const Route = createFileRoute('/_app')({
     }
   },
   component: AppLayout,
+  errorComponent: RouteError,
 })

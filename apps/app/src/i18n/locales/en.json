@@ -21,21 +21,21 @@
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",
-    "retry": "Try again",
+    "retry": "Try Again",
     "save": "Save",
     "cancel": "Cancel",
     "back": "Back",
     "confirm": "Confirm",
     "delete": "Delete",
-    "goBack": "Go back",
+    "goBack": "Go Back",
     "waitSeconds": "Wait {{seconds}}s"
   },
   "auth": {
-    "login": "Sign in",
+    "login": "Sign In",
     "loginSubtitle": "Welcome back",
-    "register": "Create account",
+    "register": "Create Account",
     "registerSubtitle": "Join qrew to discover events",
-    "logout": "Sign out",
+    "logout": "Sign Out",
     "email": "Email",
     "password": "Password",
     "fullName": "Full name",
@@ -46,7 +46,7 @@
     "hasAccount": "Already have an account?",
     "registrationSuccess": "Account created! Check your email to verify.",
     "or": "or",
-    "passkeyLogin": "Sign in with passkey",
+    "passkeyLogin": "Sign In With Passkey",
     "emailRequiredForPasskey": "Enter your email to sign in with a passkey",
     "errors": {
       "loginFailed": "Invalid email or password",
@@ -77,8 +77,8 @@
   "tickets": {
     "title": "My Tickets",
     "empty": "You have no tickets yet",
-    "browseEvents": "Browse events",
-    "backToTickets": "Back to my tickets",
+    "browseEvents": "Browse Events",
+    "backToTickets": "Back To My Tickets",
     "sections": {
       "active": "Active",
       "past": "Past"
@@ -126,12 +126,12 @@
         "flagged": "Your ticket was quarantined for security reasons."
       },
       "sale": {
-        "button": "List for resale",
+        "button": "List For Resale",
         "closes": "Sale closes 24h before the event",
         "title": "List for resale",
         "description": "Your ticket will be frozen and listed at the original price.",
         "note": "If unsold, returned automatically in 7 days.",
-        "confirm": "List ticket"
+        "confirm": "List Ticket"
       }
     },
     "qr": {
@@ -140,7 +140,7 @@
       "showButton": "Show QR Code",
       "locating": "Getting your location…",
       "expiresAt": "Rotates at {{time}}",
-      "retry": "Try again",
+      "retry": "Try Again",
       "denied": "QR unavailable.",
       "deniedLocation": "Location access denied. Enable location in your browser and try again.",
       "deniedGeofence": "You must be at the venue to display your QR code.",
@@ -181,7 +181,7 @@
       "expired": "This reservation has expired.",
       "cancelled": "This reservation was cancelled.",
       "paid": "Payment confirmed!",
-      "cancelButton": "Cancel reservation",
+      "cancelButton": "Cancel Reservation",
       "cancelSuccess": "Reservation cancelled.",
       "cancelFailed": "Failed to cancel reservation.",
       "createFailed": "Could not create reservation. Please try again.",
@@ -202,27 +202,27 @@
   },
   "market": {
     "title": "Market",
-    "myTicketsOnSale": "My tickets on sale",
-    "myTicketsToClaim": "My tickets to claim",
-    "myWaitlists": "My waitlists",
+    "myTicketsOnSale": "My Tickets on Sale",
+    "myTicketsToClaim": "My Tickets to Claim",
+    "myWaitlists": "My Waitlists",
     "searchByEvent": "Search by event…",
     "noResults": "No results.",
     "noTicketsOnSale": "No tickets on sale.",
     "noPendingClaims": "No pending claims.",
     "noWaitlists": "You're not on any waitlists.",
     "resaleMarket": "Resale market",
-    "joinQueueButton": "Join resale queue",
-    "leaveQueueButton": "Leave resale queue",
+    "joinQueueButton": "Join Resale Queue",
+    "leaveQueueButton": "Leave Resale Queue",
     "leaveQueue": {
       "title": "Leave resale queue",
       "description": "If someone lists a ticket, you won't be considered for it.",
-      "confirm": "Leave queue"
+      "confirm": "Leave Queue"
     },
     "assignment": {
-      "viewEventDetails": "View event details",
+      "viewEventDetails": "View Event Details",
       "total": "Total",
       "decline": "Decline",
-      "acceptAndPay": "Accept & pay",
+      "acceptAndPay": "Accept & Pay",
       "declineTitle": "Decline",
       "declineDesc": "You will lose this ticket offer and it may be reassigned to someone else.",
       "generalAdmission": "General admission",
@@ -247,7 +247,7 @@
     "title": "Profile",
     "subtitle": "Manage your account",
     "memberSince": "Member since",
-    "backToProfile": "Back to profile",
+    "backToProfile": "Back To Profile",
     "managePasskeys": "Manage",
     "myProfile": "My Profile",
     "myAccount": "My Account",
@@ -292,8 +292,8 @@
       "recentActivityLabel": "Recent Activity",
       "noDevices": "No trusted devices",
       "noActivity": "No activity yet",
-      "showMore": "Show more",
-      "revokeAll": "Revoke all"
+      "showMore": "Show More",
+      "revokeAll": "Revoke All"
     },
     "help": {
       "title": "Help & Support",
@@ -329,14 +329,14 @@
       "title": "Change password",
       "currentPassword": "Current password",
       "newPassword": "New password",
-      "submit": "Update password",
+      "submit": "Update Password",
       "success": "Password updated."
     },
     "changeEmail": {
       "title": "Change email address",
       "newEmail": "New email",
       "currentPassword": "Password confirmation",
-      "submit": "Send confirmation link",
+      "submit": "Send Confirmation Link",
       "success": "Confirmation link sent. Check your inbox.",
       "confirmTitle": "Email address updated",
       "confirmDescription": "Your email address has been changed successfully.",
@@ -347,13 +347,13 @@
       "newPhone": "New phone number",
       "currentPassword": "Password confirmation",
       "otpSent": "Enter the code sent to your new number",
-      "submit": "Send verification code",
+      "submit": "Send Verification Code",
       "otp": "Verification code",
       "confirmSubmit": "Confirm",
       "success": "Phone number updated."
     },
     "sessions": {
-      "revokeAll": "Revoke all",
+      "revokeAll": "Revoke All",
       "revoke": "Revoke",
       "revokeAllSuccess": "All sessions revoked.",
       "revokeSuccess": "Session revoked.",
@@ -365,9 +365,9 @@
       "title": "Delete account",
       "description": "This is permanent and cannot be undone.",
       "irreversible": "This action is irreversible",
-      "button": "Delete my account",
+      "button": "Delete My Account",
       "currentPassword": "Current password",
-      "confirm": "Delete account",
+      "confirm": "Delete Account",
       "cancel": "Cancel",
       "success": "Account deleted."
     },
@@ -391,7 +391,7 @@
     "register": {
       "title": "Add a passkey",
       "description": "Use your device's biometric sensor or PIN to authenticate quickly and securely.",
-      "submit": "Register passkey"
+      "submit": "Register Passkey"
     },
     "errors": {
       "registerFailed": "Passkey registration failed. Please try again.",
@@ -406,7 +406,7 @@
     "backToOrgs": "Back to organisations",
     "backToOrg": "Back to organisation",
     "org": {
-      "create": "Create organisation",
+      "create": "Create Organisation",
       "createTitle": "Create organisation",
       "createSuccess": "Organisation created.",
       "empty": "You have no organisations yet.",
@@ -415,14 +415,14 @@
       "slugPlaceholder": "my-org",
       "nameLabel": "Name",
       "descriptionLabel": "Description (optional)",
-      "deleteButton": "Delete organisation",
+      "deleteButton": "Delete Organisation",
       "deleteTitle": "Delete organisation",
       "deleteDesc": "This will permanently delete the organisation and all its events, ticket types and members.\n\nThis action cannot be undone.",
       "deleteSuccess": "Organisation deleted."
     },
     "events": {
       "title": "Events",
-      "create": "Create event",
+      "create": "Create Event",
       "createSuccess": "Event created.",
       "updateSuccess": "Event updated.",
       "publishSuccess": "Event published.",
@@ -431,9 +431,9 @@
       "edit": "Edit event information",
       "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
-      "cancel": "Cancel event",
-      "confirmPublish": "Confirm publish",
-      "confirmCancel": "Cancel event",
+      "cancel": "Cancel Event",
+      "confirmPublish": "Confirm Publish",
+      "confirmCancel": "Cancel Event",
       "nameLabel": "Name",
       "descriptionLabel": "Description",
       "venueLabel": "Venue",
@@ -454,7 +454,7 @@
       "createSuccess": "Ticket type created.",
       "updateSuccess": "Ticket type updated.",
       "deleteSuccess": "Ticket type deleted.",
-      "addButton": "Add ticket type",
+      "addButton": "Add Ticket Type",
       "deleteTitle": "Delete ticket type",
       "deleteDesc": "This ticket type will be permanently removed. Tickets already issued will not be affected.",
       "deleteConfirm": "Delete",
@@ -490,11 +490,11 @@
     "venues": {
       "createSuccess": "Venue created.",
       "createTitle": "Create venue",
-      "newVenue": "Create venue",
+      "newVenue": "Create Venue",
       "searchLabel": "Search on Google Maps",
       "searchPlaceholder": "Search for a venue, address…",
       "searchUnavailable": "Maps search unavailable",
-      "manualHint": "Pre-filled from the map. Edit below if needed.",
+      "manualHint": "Pre-filled from the map.",
       "nameLabel": "Venue name",
       "addressLabel": "Street address",
       "cityLabel": "City",
@@ -555,7 +555,7 @@
       "description": "Check your email for a verification link or code.",
       "label": "Verification code",
       "placeholder": "Paste your verification token",
-      "submit": "Verify email",
+      "submit": "Verify Email",
       "successToast": "Email verified!"
     },
     "phone": {
@@ -563,8 +563,8 @@
       "description": "Enter the 6-digit code sent to your registered phone number.",
       "label": "Verification code",
       "placeholder": "123456",
-      "submit": "Verify phone number",
-      "resend": "Resend code",
+      "submit": "Verify Phone Number",
+      "resend": "Resend Code",
       "resendSuccess": "Code resent successfully.",
       "successToast": "Phone number verified!"
     },
@@ -573,7 +573,7 @@
       "description": "Upload a clear photo of your national ID or passport.",
       "label": "Document",
       "dropzone": "Click to select a file",
-      "submit": "Upload document",
+      "submit": "Upload Document",
       "successToast": "Document uploaded successfully."
     },
     "pending": {
@@ -583,8 +583,8 @@
       "approvedDescription": "Your identity has been verified. You're ready to go.",
       "rejected": "Verification failed",
       "rejectedDescription": "We couldn't verify your identity. Please try again with a clearer photo.",
-      "retry": "Upload new document",
-      "continue": "Continue to app"
+      "retry": "Upload New Document",
+      "continue": "Continue To App"
     },
     "errors": {
       "verifyEmailFailed": "Email verification failed. Please check your code.",

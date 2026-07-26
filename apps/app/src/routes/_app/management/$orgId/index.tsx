@@ -11,7 +11,7 @@ import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisation
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 import { useOrgMembers } from '@/features/organiser/hooks/useOrgMembers'
 
-export const Route = createFileRoute('/_app/organiser/$orgId/')({
+export const Route = createFileRoute('/_app/management/$orgId/')({
   component: OrgDashboardPage,
 })
 
@@ -64,7 +64,7 @@ function OrgDashboardPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
-      <BackButton to="/organiser" />
+      <BackButton to="/management" />
       <div>
         {allLoading ? (
           <div className="space-y-1.5">
@@ -81,7 +81,7 @@ function OrgDashboardPage() {
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <Link
-          to="/organiser/$orgId/events"
+          to="/management/$orgId/events"
           params={{ orgId }}
           className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
         >
@@ -104,7 +104,7 @@ function OrgDashboardPage() {
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <Link
-          to="/organiser/$orgId/members"
+          to="/management/$orgId/members"
           params={{ orgId }}
           className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
         >

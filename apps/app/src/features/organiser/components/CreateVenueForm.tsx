@@ -1,7 +1,7 @@
 /* global google */
 import { Loader } from '@googlemaps/js-api-loader'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MapPin, Plus } from 'lucide-react'
+import { Info, MapPin, Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -172,7 +172,8 @@ export function CreateVenueForm({ onSuccess }: Props) {
         </div>
 
         <div className="border-t border-white/10 pt-4">
-          <p className="text-muted-foreground mb-3 text-xs whitespace-pre-line">
+          <p className="text-muted-foreground mb-3 flex items-center gap-1.5 text-xs">
+            <Info className="h-3.5 w-3.5 shrink-0" />
             {t('organiser.venues.manualHint')}
           </p>
 

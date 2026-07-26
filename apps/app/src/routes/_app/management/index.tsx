@@ -8,7 +8,7 @@ import { OrgCard } from '@/features/organiser/components/OrgCard'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
 import { useSearchOrgs } from '@/features/organiser/hooks/useSearchOrgs'
 
-export const Route = createFileRoute('/_app/organiser/')({
+export const Route = createFileRoute('/_app/management/')({
   component: OrganiserPage,
 })
 
@@ -87,7 +87,7 @@ function OrganiserPage() {
 
       {/* FAB */}
       <Link
-        to="/organiser/new"
+        to="/management/new"
         className="bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
         style={{ right: 'max(calc((100vw - 430px) / 2 + 1.5rem), 1.5rem)' }}
       >

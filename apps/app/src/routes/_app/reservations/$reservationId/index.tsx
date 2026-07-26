@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import axios from 'axios'
 import { CheckCircle2, Clock, CreditCard, Save } from 'lucide-react'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -10,10 +10,15 @@ import { BackButton } from '@/components/ui/back-button'
 import { ReservationSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { ticketsApi } from '@/features/tickets/api'
-import { StripeCheckout } from '@/features/tickets/components/StripeCheckout'
 import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useInitiatePayment } from '@/features/tickets/hooks/useInitiatePayment'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
+
+const StripeCheckout = lazy(() =>
+  import('@/features/tickets/components/StripeCheckout').then((m) => ({
+    default: m.StripeCheckout,
+  })),
+)
 
 export const Route = createFileRoute('/_app/reservations/$reservationId/')({
   component: ReservationPage,
@@ -259,10 +264,12 @@ function ReservationPage() {
         </div>
       )}
 
-      {/* Stripe form */}
+      {/* Stripe form — lazy loaded to defer @stripe/stripe-js from initial bundle */}
       {clientSecret && (
         <div className="mt-6">
-          <StripeCheckout clientSecret={clientSecret} onSuccess={handlePaySuccess} />
+          <Suspense fallback={null}>
+            <StripeCheckout clientSecret={clientSecret} onSuccess={handlePaySuccess} />
+          </Suspense>
         </div>
       )}
 

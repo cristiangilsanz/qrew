@@ -7,7 +7,7 @@ import { CancelEventSection } from '@/features/organiser/components/CancelEventS
 import { EditEventForm } from '@/features/organiser/components/EditEventForm'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 
-export const Route = createFileRoute('/_app/organiser/$orgId/events/$eventId/edit')({
+export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/edit')({
   component: EditEventPage,
 })
 
@@ -21,7 +21,7 @@ function EditEventPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
-      <BackButton to="/organiser/$orgId/events/$eventId/" params={{ orgId, eventId }} />
+      <BackButton to="/management/$orgId/events/$eventId/" params={{ orgId, eventId }} />
       <h1 className="text-2xl font-semibold">{t('organiser.events.edit')}</h1>
 
       {isLoading || !event ? (

@@ -29,7 +29,7 @@ export function OrgEventList({ orgId }: Props) {
     <div className="space-y-3">
       <div className="flex justify-end">
         <Link
-          to="/organiser/$orgId/events/new"
+          to="/management/$orgId/events/new"
           params={{ orgId }}
           className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-8 items-center rounded-md px-3 text-sm font-medium"
         >
@@ -45,7 +45,7 @@ export function OrgEventList({ orgId }: Props) {
         {events.map((event) => (
           <Link
             key={event.id}
-            to="/organiser/$orgId/events/$eventId"
+            to="/management/$orgId/events/$eventId"
             params={{ orgId, eventId: event.id }}
             className="hover:bg-muted/50 flex items-center justify-between rounded-md border p-3 transition-colors"
           >

@@ -11,7 +11,7 @@ import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/_app/organiser/$orgId/events/$eventId/')({
+export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/')({
   component: EventManagePage,
 })
 
@@ -44,7 +44,7 @@ function EventManagePage() {
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent" />
 
         <BackButton
-          to="/organiser/$orgId/events"
+          to="/management/$orgId/events"
           params={{ orgId }}
           className="absolute top-4 left-4"
         />
@@ -62,7 +62,7 @@ function EventManagePage() {
           {(event.status === 'draft' || event.status === 'published') && (
             <>
               <Link
-                to="/organiser/$orgId/events/$eventId/edit"
+                to="/management/$orgId/events/$eventId/edit"
                 params={{ orgId, eventId }}
                 className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
               >
@@ -79,7 +79,7 @@ function EventManagePage() {
             </>
           )}
           <Link
-            to="/organiser/$orgId/events/$eventId/tickets"
+            to="/management/$orgId/events/$eventId/tickets"
             params={{ orgId, eventId }}
             className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
           >

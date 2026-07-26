@@ -39,7 +39,7 @@ export function EventActions({ event, orgId }: Props) {
         )}
         {showScan && (
           <Link
-            to="/organiser/$orgId/events/$eventId/scan"
+            to="/management/$orgId/events/$eventId/scan"
             params={{ orgId, eventId: event.id }}
             className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
           >

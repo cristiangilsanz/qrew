@@ -11,7 +11,7 @@ import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/_app/organiser/$orgId/events/')({
+export const Route = createFileRoute('/_app/management/$orgId/events/')({
   component: OrgEventsPage,
 })
 
@@ -29,7 +29,7 @@ function OrgEventsPage() {
   return (
     <div className="mx-auto max-w-2xl p-6 pb-28">
       <div className="mb-6 space-y-4">
-        <BackButton to="/organiser/$orgId" params={{ orgId }} />
+        <BackButton to="/management/$orgId" params={{ orgId }} />
         <h1 className="text-2xl font-semibold">{t('organiser.events.title')}</h1>
 
         {/* Search bar */}
@@ -65,7 +65,7 @@ function OrgEventsPage() {
           return (
             <Link
               key={event.id}
-              to="/organiser/$orgId/events/$eventId"
+              to="/management/$orgId/events/$eventId"
               params={{ orgId, eventId: event.id }}
               className="block"
             >
@@ -118,7 +118,7 @@ function OrgEventsPage() {
 
       {/* FAB */}
       <Link
-        to="/organiser/$orgId/events/new"
+        to="/management/$orgId/events/new"
         params={{ orgId }}
         className="bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
         style={{ right: 'max(calc((100vw - 430px) / 2 + 1.5rem), 1.5rem)' }}

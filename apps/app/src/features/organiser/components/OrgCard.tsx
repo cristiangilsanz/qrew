@@ -14,7 +14,7 @@ interface Props {
 export function OrgCard({ org }: Props) {
   return (
     <Link
-      to="/organiser/$orgId"
+      to="/management/$orgId"
       params={{ orgId: org.id }}
       className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
     >

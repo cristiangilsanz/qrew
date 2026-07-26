@@ -263,7 +263,7 @@ export function EditEventForm({ event, orgId }: Props) {
               </FormItem>
             )}
           />
-          <div className="flex justify-end">
+          <div className="mt-8 flex justify-end">
             <Button type="submit" isLoading={updateEvent.isPending} className="rounded-full px-6">
               <RefreshCw className="h-4 w-4" />
               {t('organiser.events.updateEvent')}

@@ -11,7 +11,7 @@ import { useOrgMembers } from '@/features/organiser/hooks/useOrgMembers'
 import { useRemoveMember } from '@/features/organiser/hooks/useRemoveMember'
 import { useUserPublicProfiles } from '@/features/profile/hooks/useUserPublicProfiles'
 
-export const Route = createFileRoute('/_app/organiser/$orgId/members/')({
+export const Route = createFileRoute('/_app/management/$orgId/members/')({
   component: OrgMembersPage,
 })
 
@@ -40,7 +40,7 @@ function OrgMembersPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
-      <BackButton to="/organiser/$orgId" params={{ orgId }} />
+      <BackButton to="/management/$orgId" params={{ orgId }} />
       <h1 className="text-2xl font-semibold">{t('organiser.members.title')}</h1>
 
       <div className="relative">
@@ -181,7 +181,7 @@ function OrgMembersPage() {
 
       {/* FAB */}
       <Link
-        to="/organiser/$orgId/members/new"
+        to="/management/$orgId/members/new"
         params={{ orgId }}
         className="bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
         style={{ right: 'max(calc((100vw - 430px) / 2 + 1.5rem), 1.5rem)' }}

@@ -1,329 +1,14 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { z } from 'zod'
 
-import { Button } from '@/components/ui/button'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
 import { TicketTypeListSkeleton } from '@/components/ui/skeleton'
 
-import { useCreateTicketType } from '../hooks/useCreateTicketType'
 import { useDeleteTicketType } from '../hooks/useDeleteTicketType'
 import { useOrgTicketTypes } from '../hooks/useOrgTicketTypes'
-import { useUpdateTicketType } from '../hooks/useUpdateTicketType'
-
-const createSchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .max(32)
-    .transform((v) => v.toLowerCase())
-    .pipe(
-      z
-        .string()
-        .regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars'),
-    ),
-  description: z.string().optional(),
-  capacity: z.coerce.number().int().min(1).max(100000),
-  price_cents: z.coerce
-    .number()
-    .min(0)
-    .max(100000)
-    .transform((v) => Math.round(v * 100)),
-  currency: z.literal('EUR').default('EUR'),
-  position: z.coerce.number().int().optional(),
-})
-
-const editSchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .max(32)
-    .transform((v) => v.toLowerCase())
-    .pipe(
-      z
-        .string()
-        .regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars'),
-    ),
-  description: z.string().optional(),
-  capacity: z.coerce.number().int().min(1).max(100000),
-  price_cents: z.coerce
-    .number()
-    .min(0)
-    .max(100000)
-    .transform((v) => Math.round(v * 100)),
-  position: z.coerce.number().int().optional(),
-})
-
-type CreateValues = z.infer<typeof createSchema>
-type EditValues = z.infer<typeof editSchema>
-
-interface EditRowProps {
-  ttId: string
-  eventId: string
-  defaultValues: EditValues
-  onClose: () => void
-}
-
-function EditRow({ ttId, eventId, defaultValues, onClose }: EditRowProps) {
-  const { t } = useTranslation()
-  const updateTt = useUpdateTicketType(eventId)
-  const form = useForm<EditValues>({
-    resolver: zodResolver(editSchema),
-    defaultValues,
-  })
-
-  return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((v) => {
-          updateTt.mutate({ ttId, data: v })
-          onClose()
-        })}
-        className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5"
-      >
-        <p className="text-sm font-semibold">{t('organiser.ticketTypes.title')}</p>
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('organiser.ticketTypes.nameLabel')}</FormLabel>
-              <FormControl>
-                <input className={darkInput} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="capacity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('organiser.ticketTypes.capacityLabel')}</FormLabel>
-                <FormControl>
-                  <input type="number" className={darkInput} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="price_cents"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('organiser.ticketTypes.priceLabel')} (€)</FormLabel>
-                <FormControl>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    className={darkInput}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <FormField
-          control={form.control}
-          name="position"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('organiser.ticketTypes.positionLabel')}</FormLabel>
-              <FormControl>
-                <input type="number" className={darkInput} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-between pt-1">
-          <button
-            type="button"
-            className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
-            onClick={onClose}
-          >
-            {t('common.cancel')}
-          </button>
-          <Button type="submit" isLoading={updateTt.isPending} className="rounded-full px-6">
-            <RefreshCw className="h-4 w-4" />
-            {t('organiser.events.updateEvent')}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  )
-}
-
-const capacitySchema = z.object({
-  capacity: z.coerce.number().int().min(1).max(100000),
-})
-type CapacityValues = z.infer<typeof capacitySchema>
-
-interface CapacityEditRowProps {
-  ttId: string
-  eventId: string
-  currentCapacity: number
-  onClose: () => void
-}
-
-function CapacityEditRow({ ttId, eventId, currentCapacity, onClose }: CapacityEditRowProps) {
-  const { t } = useTranslation()
-  const updateTt = useUpdateTicketType(eventId)
-  const form = useForm<CapacityValues>({
-    resolver: zodResolver(capacitySchema),
-    defaultValues: { capacity: currentCapacity },
-  })
-
-  return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((v) => {
-          updateTt.mutate({ ttId, data: { capacity: v.capacity } })
-          onClose()
-        })}
-        className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5"
-      >
-        <FormField
-          control={form.control}
-          name="capacity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('organiser.ticketTypes.capacityLabel')}</FormLabel>
-              <FormControl>
-                <input type="number" className={darkInput} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-between pt-1">
-          <button
-            type="button"
-            className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
-            onClick={onClose}
-          >
-            {t('common.cancel')}
-          </button>
-          <Button type="submit" isLoading={updateTt.isPending} className="rounded-full px-6">
-            <RefreshCw className="h-4 w-4" />
-            {t('organiser.events.updateEvent')}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  )
-}
-
-interface AddFormProps {
-  eventId: string
-  onClose: () => void
-}
-
-const darkInput =
-  'border-white/15 bg-white/5 text-white placeholder:text-white/30 focus:border-primary/60 w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition-colors'
-
-function AddForm({ eventId, onClose }: AddFormProps) {
-  const { t } = useTranslation()
-  const createTt = useCreateTicketType(eventId)
-  const form = useForm<CreateValues>({
-    resolver: zodResolver(createSchema),
-    defaultValues: { name: '', description: '', capacity: 100, price_cents: 0 },
-  })
-
-  return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((v) => {
-          createTt.mutate(v)
-          form.reset()
-          onClose()
-        })}
-        className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5"
-      >
-        <p className="text-sm font-semibold">{t('organiser.ticketTypes.addButton')}</p>
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('organiser.ticketTypes.nameLabel')}</FormLabel>
-              <FormControl>
-                <input className={darkInput} placeholder="General Admission" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="capacity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('organiser.ticketTypes.capacityLabel')}</FormLabel>
-                <FormControl>
-                  <input type="number" className={darkInput} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="price_cents"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('organiser.ticketTypes.priceLabel')} (€)</FormLabel>
-                <FormControl>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className={darkInput}
-                    placeholder="0.00"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="flex justify-between pt-1">
-          <button
-            type="button"
-            className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
-            onClick={onClose}
-          >
-            {t('common.cancel')}
-          </button>
-          <Button type="submit" isLoading={createTt.isPending} className="rounded-full px-6">
-            <Plus className="h-4 w-4" />
-            {t('organiser.ticketTypes.addButton')}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  )
-}
+import { AddTicketTypeForm } from './AddTicketTypeForm'
+import { CapacityEditTicketTypeForm, EditTicketTypeForm } from './EditTicketTypeForm'
 
 interface Props {
   eventId: string
@@ -351,7 +36,7 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
     <div className="space-y-4">
       {ticketTypes.map((tt) =>
         canEdit && editingId === tt.id ? (
-          <EditRow
+          <EditTicketTypeForm
             key={tt.id}
             ttId={tt.id}
             eventId={eventId}
@@ -365,7 +50,7 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
             onClose={() => setEditingId(null)}
           />
         ) : canEditCapacity && editingId === tt.id ? (
-          <CapacityEditRow
+          <CapacityEditTicketTypeForm
             key={tt.id}
             ttId={tt.id}
             eventId={eventId}
@@ -505,7 +190,7 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
       {/* Add ticket type */}
       {canAdd &&
         (showAdd ? (
-          <AddForm eventId={eventId} onClose={() => setShowAdd(false)} />
+          <AddTicketTypeForm eventId={eventId} onClose={() => setShowAdd(false)} />
         ) : (
           <div className="flex justify-end">
             <button

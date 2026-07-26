@@ -1,29 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { CheckCircle2, ScanLine, XCircle } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
-import { scannerApi } from '@/features/scanner/api'
+import { useScanner } from '@/features/scanner/hooks/useScanner'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/_app/organiser/$orgId/events/$eventId/scan')({
+export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/scan')({
   component: ScanPage,
 })
-
-type ScanResult = { allowed: boolean; reason: string | null; ticketId: string | null } | null
-type Phase = 'init' | 'scanning' | 'result' | 'error'
-
-// BarcodeDetector is not in lib.dom.d.ts yet
-interface BarcodeDetector {
-  detect(image: ImageBitmapSource): Promise<Array<{ rawValue: string }>>
-}
-// eslint-disable-next-line no-redeclare
-declare const BarcodeDetector: {
-  new (options: { formats: string[] }): BarcodeDetector
-  getSupportedFormats(): Promise<string[]>
-}
 
 function ScanPage() {
   const { t } = useTranslation()
@@ -33,121 +19,17 @@ function ScanPage() {
   const { data: eventsData } = useOrgEvents(orgId)
   const event = eventsData?.items.find((e) => e.id === eventId)
 
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const detectorRef = useRef<BarcodeDetector | null>(null)
-  const scannerTokenRef = useRef<string | null>(null)
-  const rafRef = useRef<number | null>(null)
-  const processingRef = useRef(false)
-
-  const [phase, setPhase] = useState<Phase>('init')
-  const [scanResult, setScanResult] = useState<ScanResult>(null)
-  const [errorMsg, setErrorMsg] = useState('')
-  const [scanCount, setScanCount] = useState(0)
-
-  const stopCamera = useCallback(() => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    streamRef.current?.getTracks().forEach((t) => t.stop())
-  }, [])
-
-  useEffect(() => () => stopCamera(), [stopCamera])
-
-  const handleScan = useCallback(
-    async (raw: string) => {
-      if (processingRef.current || !scannerTokenRef.current) return
-      processingRef.current = true
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-      try {
-        const result = await scannerApi.validateEntry(scannerTokenRef.current, raw)
-        setScanResult({
-          allowed: result.allowed,
-          reason: result.reason,
-          ticketId: result.ticket_id,
-        })
-        setScanCount((c) => c + 1)
-        setPhase('result')
-        // Resume scanning after 2s
-        setTimeout(() => {
-          setPhase('scanning')
-          setScanResult(null)
-          processingRef.current = false
-          startDetectLoop()
-        }, 2000)
-      } catch {
-        setScanResult({ allowed: false, reason: 'error', ticketId: null })
-        setPhase('result')
-        setTimeout(() => {
-          setPhase('scanning')
-          setScanResult(null)
-          processingRef.current = false
-          startDetectLoop()
-        }, 2000)
-      }
-    },
-    [], // startDetectLoop defined below
-  )
-
-  function startDetectLoop() {
-    if (!detectorRef.current || !videoRef.current) return
-    const detector = detectorRef.current
-    const video = videoRef.current
-
-    async function tick() {
-      if (processingRef.current) return
-      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-        try {
-          const barcodes = await detector.detect(video)
-          if (barcodes.length > 0) {
-            void handleScan(barcodes[0].rawValue)
-            return
-          }
-        } catch {
-          // ignore detection errors
-        }
-      }
-      rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-  }
-
-  async function startScanning() {
-    try {
-      // Get scanner token
-      const tok = await scannerApi.createForEvent(eventId, `${event?.name ?? 'Event'} scanner`)
-      scannerTokenRef.current = tok.token
-
-      // Check BarcodeDetector support
-      if (typeof BarcodeDetector === 'undefined') {
-        setErrorMsg(t('organiser.scanner.notSupported'))
-        setPhase('error')
-        return
-      }
-
-      // Start camera
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-      }
-
-      detectorRef.current = new BarcodeDetector({ formats: ['qr_code'] })
-      setPhase('scanning')
-      startDetectLoop()
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      setErrorMsg(msg)
-      setPhase('error')
-    }
-  }
+  const { videoRef, phase, scanResult, scanCount, errorMsg, startScanning } = useScanner({
+    eventId,
+    eventName: event?.name ?? 'Event',
+    notSupportedMessage: t('organiser.scanner.notSupported'),
+  })
 
   return (
     <div className="flex h-screen flex-col bg-black">
       <div className="safe-top flex items-center gap-3 p-4">
         <BackButton
-          to="/organiser/$orgId/events/$eventId/"
+          to="/management/$orgId/events/$eventId/"
           params={{ orgId, eventId }}
           className="text-white"
         />
@@ -188,7 +70,7 @@ function ScanPage() {
                 <button
                   onClick={() =>
                     void navigate({
-                      to: '/organiser/$orgId/events/$eventId/',
+                      to: '/management/$orgId/events/$eventId/',
                       params: { orgId, eventId },
                     })
                   }

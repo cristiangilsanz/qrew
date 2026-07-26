@@ -17,7 +17,7 @@ const baseTabs = [
   { to: '/profile' as const, icon: User, labelKey: 'nav.profile' },
 ]
 
-const organiserTab = { to: '/organiser' as const, icon: Building2, labelKey: 'nav.organiser' }
+const organiserTab = { to: '/management' as const, icon: Building2, labelKey: 'nav.organiser' }
 
 function DockTab({
   to,

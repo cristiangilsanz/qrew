@@ -17,7 +17,7 @@ export function useDeleteOrganisation() {
     mutationFn: (orgId: string) => organiserApi.deleteOrganisation(orgId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['organisations'] })
-      void navigate({ to: '/organiser' })
+      void navigate({ to: '/management' })
       toast.success(t('organiser.org.deleteSuccess'))
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {

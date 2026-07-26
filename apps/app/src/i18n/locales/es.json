@@ -21,7 +21,7 @@
   "common": {
     "loading": "Cargando…",
     "error": "Algo ha ido mal",
-    "retry": "Intentar de nuevo",
+    "retry": "Intentar De Nuevo",
     "save": "Guardar",
     "cancel": "Cancelar",
     "back": "Volver",
@@ -31,11 +31,11 @@
     "waitSeconds": "Esperar {{seconds}}s"
   },
   "auth": {
-    "login": "Iniciar sesión",
+    "login": "Iniciar Sesión",
     "loginSubtitle": "Bienvenido de nuevo",
-    "register": "Crear cuenta",
+    "register": "Crear Cuenta",
     "registerSubtitle": "Únete a qrew para descubrir eventos",
-    "logout": "Cerrar sesión",
+    "logout": "Cerrar Sesión",
     "email": "Correo electrónico",
     "password": "Contraseña",
     "fullName": "Nombre completo",
@@ -46,7 +46,7 @@
     "hasAccount": "¿Ya tienes cuenta?",
     "registrationSuccess": "¡Cuenta creada! Revisa tu correo para verificarla.",
     "or": "o",
-    "passkeyLogin": "Iniciar sesión con passkey",
+    "passkeyLogin": "Iniciar Sesión Con Passkey",
     "emailRequiredForPasskey": "Introduce tu correo para iniciar sesión con passkey",
     "errors": {
       "loginFailed": "Correo o contraseña incorrectos",
@@ -77,8 +77,8 @@
   "tickets": {
     "title": "Mis Entradas",
     "empty": "Todavía no tienes entradas",
-    "browseEvents": "Ver eventos",
-    "backToTickets": "Volver a mis entradas",
+    "browseEvents": "Ver Eventos",
+    "backToTickets": "Volver A Mis Entradas",
     "sections": {
       "active": "Activas",
       "past": "Pasadas"
@@ -126,12 +126,12 @@
         "flagged": "Tu entrada fue puesta en cuarentena por razones de seguridad."
       },
       "sale": {
-        "button": "Poner en reventa",
+        "button": "Poner En Reventa",
         "closes": "La venta cierra 24h antes del evento",
         "title": "Poner en reventa",
         "description": "Tu entrada se congelará y se publicará al precio original.",
         "note": "Si no se vende, se devuelve automáticamente en 7 días.",
-        "confirm": "Publicar entrada"
+        "confirm": "Publicar Entrada"
       }
     },
     "qr": {
@@ -140,7 +140,7 @@
       "showButton": "Mostrar código QR",
       "locating": "Obteniendo tu ubicación…",
       "expiresAt": "Rota a las {{time}}",
-      "retry": "Intentar de nuevo",
+      "retry": "Intentar De Nuevo",
       "denied": "QR no disponible.",
       "deniedLocation": "Acceso a ubicación denegado. Activa la ubicación en tu navegador e inténtalo de nuevo.",
       "deniedGeofence": "Debes estar en el recinto para mostrar tu código QR.",
@@ -150,23 +150,25 @@
     },
     "queue": {
       "title": "Sala de espera",
-      "description": "Este es un evento de alta demanda. Únete a la cola para obtener tus entradas.",
-      "joinButton": "Unirse a la cola",
+      "joinButton": "Unirse A La Cola",
       "joinFailed": "No se pudo unir a la cola. Por favor, inténtalo de nuevo.",
       "waiting": "Tu posición en la cola",
-      "positionHint": "La posición se actualiza cada pocos segundos",
       "ready": "¡Eres el siguiente!",
       "readyDescription": "Tu turno está listo. Vuelve pronto para obtener tu enlace de canje.",
       "notInQueue": "No estás en la cola.",
-      "redeemFailed": "No se pudo canjear tu turno. Por favor, inténtalo de nuevo."
+      "redeemFailed": "No se pudo canjear tu turno. Por favor, inténtalo de nuevo.",
+      "descriptionTitle": "Este es un evento de alta demanda",
+      "descriptionSub": "Únete a la cola para conseguir tus entradas",
+      "updatingIn": "Actualizando en {{seconds}}s",
+      "doNotClose": "No cierres esta página"
     },
     "checkout": {
       "title": "Obtener entradas",
-      "buyButton": "Comprar entradas",
+      "buyButton": "Comprar Entradas",
       "ticketTypeLabel": "Tipo de entrada",
       "quantityLabel": "Cantidad",
       "total": "Total",
-      "reserveButton": "Reservar entradas",
+      "reserveButton": "Reservar Entradas",
       "selected": "seleccionada",
       "alreadyHeld": "ya tienes",
       "limitReached": "Ya tienes el número máximo de entradas para este evento."
@@ -179,7 +181,7 @@
       "expired": "Esta reserva ha expirado.",
       "cancelled": "Esta reserva fue cancelada.",
       "paid": "¡Pago confirmado!",
-      "cancelButton": "Cancelar reserva",
+      "cancelButton": "Cancelar Reserva",
       "cancelSuccess": "Reserva cancelada.",
       "cancelFailed": "No se pudo cancelar la reserva.",
       "createFailed": "No se pudo crear la reserva. Por favor, inténtalo de nuevo.",
@@ -187,8 +189,8 @@
     },
     "payment": {
       "title": "Pago",
-      "payButton": "Pagar ahora",
-      "confirmButton": "Confirmar pago",
+      "payButton": "Pagar Ahora",
+      "confirmButton": "Confirmar Pago",
       "initFailed": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo.",
       "failed": "Pago fallido. Por favor, inténtalo de nuevo.",
       "success": "¡Pago realizado! Tu entrada está en camino."
@@ -200,27 +202,27 @@
   },
   "market": {
     "title": "Mercado",
-    "myTicketsOnSale": "Mis entradas en venta",
-    "myTicketsToClaim": "Mis entradas por reclamar",
-    "myWaitlists": "Mis listas de espera",
+    "myTicketsOnSale": "Mis Entradas en Venta",
+    "myTicketsToClaim": "Mis Entradas por Reclamar",
+    "myWaitlists": "Mis Listas de Espera",
     "searchByEvent": "Buscar por evento…",
     "noResults": "Sin resultados.",
     "noTicketsOnSale": "No hay entradas en venta.",
     "noPendingClaims": "No hay reclamaciones pendientes.",
     "noWaitlists": "No estás en ninguna lista de espera.",
     "resaleMarket": "Mercado de reventa",
-    "joinQueueButton": "Unirse a la cola de reventa",
-    "leaveQueueButton": "Abandonar cola de reventa",
+    "joinQueueButton": "Unirse A La Cola De Reventa",
+    "leaveQueueButton": "Abandonar Cola De Reventa",
     "leaveQueue": {
       "title": "Abandonar cola de reventa",
       "description": "Si alguien publica una entrada, no serás considerado para ella.",
-      "confirm": "Abandonar cola"
+      "confirm": "Abandonar Cola"
     },
     "assignment": {
-      "viewEventDetails": "Ver detalles del evento",
+      "viewEventDetails": "Ver Detalles Del Evento",
       "total": "Total",
       "decline": "Rechazar",
-      "acceptAndPay": "Aceptar y pagar",
+      "acceptAndPay": "Aceptar Y Pagar",
       "declineTitle": "Rechazar",
       "declineDesc": "Perderás esta oferta de entrada y podrá ser reasignada a otra persona.",
       "generalAdmission": "Acceso general",
@@ -245,7 +247,7 @@
     "title": "Perfil",
     "subtitle": "Gestiona tu cuenta",
     "memberSince": "Miembro desde",
-    "backToProfile": "Volver al perfil",
+    "backToProfile": "Volver Al Perfil",
     "managePasskeys": "Gestionar",
     "myProfile": "Mi Perfil",
     "myAccount": "Mi Cuenta",
@@ -290,8 +292,8 @@
       "recentActivityLabel": "Actividad Reciente",
       "noDevices": "Sin dispositivos de confianza",
       "noActivity": "Sin actividad todavía",
-      "showMore": "Ver más",
-      "revokeAll": "Revocar todas"
+      "showMore": "Ver Más",
+      "revokeAll": "Revocar Todas"
     },
     "help": {
       "title": "Ayuda y Soporte",
@@ -327,14 +329,14 @@
       "title": "Cambiar contraseña",
       "currentPassword": "Contraseña actual",
       "newPassword": "Nueva contraseña",
-      "submit": "Actualizar contraseña",
+      "submit": "Actualizar Contraseña",
       "success": "Contraseña actualizada."
     },
     "changeEmail": {
       "title": "Cambiar correo electrónico",
       "newEmail": "Nuevo correo",
       "currentPassword": "Confirmar contraseña",
-      "submit": "Enviar enlace de confirmación",
+      "submit": "Enviar Enlace De Confirmación",
       "success": "Enlace de confirmación enviado. Revisa tu bandeja de entrada.",
       "confirmTitle": "Correo electrónico actualizado",
       "confirmDescription": "Tu correo electrónico ha sido cambiado correctamente.",
@@ -345,13 +347,13 @@
       "newPhone": "Nuevo número de teléfono",
       "currentPassword": "Confirmar contraseña",
       "otpSent": "Introduce el código enviado a tu nuevo número",
-      "submit": "Enviar código de verificación",
+      "submit": "Enviar Código De Verificación",
       "otp": "Código de verificación",
       "confirmSubmit": "Confirmar",
       "success": "Número de teléfono actualizado."
     },
     "sessions": {
-      "revokeAll": "Revocar todas",
+      "revokeAll": "Revocar Todas",
       "revoke": "Revocar",
       "revokeAllSuccess": "Todas las sesiones revocadas.",
       "revokeSuccess": "Sesión revocada.",
@@ -363,9 +365,9 @@
       "title": "Eliminar cuenta",
       "description": "Esta acción es permanente y no se puede deshacer.",
       "irreversible": "Esta acción es irreversible",
-      "button": "Eliminar mi cuenta",
+      "button": "Eliminar Mi Cuenta",
       "currentPassword": "Contraseña actual",
-      "confirm": "Eliminar cuenta",
+      "confirm": "Eliminar Cuenta",
       "cancel": "Cancelar",
       "success": "Cuenta eliminada."
     },
@@ -389,7 +391,7 @@
     "register": {
       "title": "Añadir una passkey",
       "description": "Usa el sensor biométrico o PIN de tu dispositivo para autenticarte de forma rápida y segura.",
-      "submit": "Registrar passkey"
+      "submit": "Registrar Passkey"
     },
     "errors": {
       "registerFailed": "El registro de passkey ha fallado. Por favor, inténtalo de nuevo.",
@@ -404,7 +406,7 @@
     "backToOrgs": "Volver a organizaciones",
     "backToOrg": "Volver a la organización",
     "org": {
-      "create": "Nueva organización",
+      "create": "Nueva Organización",
       "createTitle": "Crear organización",
       "createSuccess": "Organización creada.",
       "empty": "Aún no tienes organizaciones.",
@@ -413,14 +415,14 @@
       "slugPlaceholder": "mi-org",
       "nameLabel": "Nombre",
       "descriptionLabel": "Descripción (opcional)",
-      "deleteButton": "Eliminar organización",
+      "deleteButton": "Eliminar Organización",
       "deleteTitle": "Eliminar organización",
       "deleteDesc": "Esto eliminará permanentemente la organización y todos sus eventos, tipos de entrada y miembros.\n\nEsta acción no se puede deshacer.",
       "deleteSuccess": "Organización eliminada."
     },
     "events": {
       "title": "Eventos",
-      "create": "Crear evento",
+      "create": "Crear Evento",
       "createSuccess": "Evento creado.",
       "updateSuccess": "Evento actualizado.",
       "publishSuccess": "Evento publicado.",
@@ -429,9 +431,9 @@
       "edit": "Editar evento",
       "editDesc": "Gestiona fecha, lugar, imagen, descripción y máximo de entradas por usuario",
       "publish": "Publicar",
-      "cancel": "Cancelar evento",
-      "confirmPublish": "Confirmar publicación",
-      "confirmCancel": "Confirmar cancelación",
+      "cancel": "Cancelar Evento",
+      "confirmPublish": "Confirmar Publicación",
+      "confirmCancel": "Confirmar Cancelación",
       "nameLabel": "Nombre",
       "descriptionLabel": "Descripción",
       "venueLabel": "Lugar",
@@ -452,7 +454,7 @@
       "createSuccess": "Tipo de entrada creado.",
       "updateSuccess": "Tipo de entrada actualizado.",
       "deleteSuccess": "Tipo de entrada eliminado.",
-      "addButton": "Añadir tipo de entrada",
+      "addButton": "Añadir Tipo De Entrada",
       "deleteTitle": "Eliminar tipo de entrada",
       "deleteDesc": "Este tipo de entrada se eliminará permanentemente. Las entradas ya emitidas no se verán afectadas.",
       "deleteConfirm": "Eliminar",
@@ -488,8 +490,19 @@
     "venues": {
       "createSuccess": "Lugar creado.",
       "createTitle": "Crear lugar",
-      "newVenue": "Nuevo lugar",
-      "manualHint": "Pre-rellenado desde el mapa. Edita si es necesario."
+      "newVenue": "Nuevo Lugar",
+      "manualHint": "Pre-rellenado desde el mapa.",
+      "searchLabel": "Buscar en Google Maps",
+      "searchPlaceholder": "Busca un recinto, dirección…",
+      "searchUnavailable": "Búsqueda de mapas no disponible",
+      "nameLabel": "Nombre del recinto",
+      "addressLabel": "Dirección",
+      "cityLabel": "Ciudad",
+      "countryLabel": "País (2 caracteres)",
+      "latLabel": "Latitud",
+      "lngLabel": "Longitud",
+      "timezoneLabel": "Zona horaria",
+      "geofenceLabel": "Radio de geovalla (m)"
     },
     "errors": {
       "createOrgFailed": "No se pudo crear la organización.",
@@ -509,6 +522,16 @@
     "search": {
       "placeholder": "Buscar organizaciones…",
       "empty": "No se encontraron organizaciones."
+    },
+    "scanner": {
+      "title": "Escáner de Entradas",
+      "scanTickets": "Escanear entradas",
+      "prompt": "Apunta la cámara al código QR de la entrada.",
+      "start": "Iniciar",
+      "notSupported": "El escaneo QR no está disponible en este navegador.\nUsa Chrome o la app de Qrew.",
+      "scanned": "escaneadas",
+      "admitted": "Admitido",
+      "rejected": "Rechazado"
     }
   },
   "realtime": {
@@ -532,7 +555,7 @@
       "description": "Revisa tu correo para encontrar un enlace o código de verificación.",
       "label": "Código de verificación",
       "placeholder": "Pega tu token de verificación",
-      "submit": "Verificar correo",
+      "submit": "Verificar Correo",
       "successToast": "¡Correo verificado!"
     },
     "phone": {
@@ -540,8 +563,8 @@
       "description": "Introduce el código de 6 dígitos enviado a tu número de teléfono registrado.",
       "label": "Código de verificación",
       "placeholder": "123456",
-      "submit": "Verificar número de teléfono",
-      "resend": "Reenviar código",
+      "submit": "Verificar Número De Teléfono",
+      "resend": "Reenviar Código",
       "resendSuccess": "Código reenviado correctamente.",
       "successToast": "¡Número de teléfono verificado!"
     },
@@ -550,7 +573,7 @@
       "description": "Sube una foto clara de tu DNI o pasaporte.",
       "label": "Documento",
       "dropzone": "Haz clic para seleccionar un archivo",
-      "submit": "Subir documento",
+      "submit": "Subir Documento",
       "successToast": "Documento subido correctamente."
     },
     "pending": {
@@ -560,8 +583,8 @@
       "approvedDescription": "Tu identidad ha sido verificada. Ya puedes comenzar.",
       "rejected": "Verificación fallida",
       "rejectedDescription": "No pudimos verificar tu identidad. Por favor, inténtalo de nuevo con una foto más clara.",
-      "retry": "Subir nuevo documento",
-      "continue": "Continuar a la app"
+      "retry": "Subir Nuevo Documento",
+      "continue": "Continuar A La App"
     },
     "errors": {
       "verifyEmailFailed": "Verificación de correo fallida. Por favor, comprueba tu código.",
