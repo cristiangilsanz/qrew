@@ -1,4 +1,4 @@
-import eventPlaceholder from '@/assets/images/no-event-cover.png'
+import eventPlaceholder from '@/assets/images/no-event-cover.webp'
 import { env } from '@/config/env'
 
 export function getEventImageUrl(key: string | null | undefined): string {

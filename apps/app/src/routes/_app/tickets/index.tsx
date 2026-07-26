@@ -4,7 +4,7 @@ import { Search } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import noTicketsImg from '@/assets/images/no-tickets.png'
+import noTicketsImg from '@/assets/images/no-tickets.webp'
 import { ReservationRowSkeleton } from '@/components/ui/skeleton'
 import { eventsApi } from '@/features/events/api'
 import type { Ticket } from '@/features/tickets/api'
