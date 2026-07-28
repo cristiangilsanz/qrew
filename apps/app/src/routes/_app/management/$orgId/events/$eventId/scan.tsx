@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { CheckCircle2, ScanLine, XCircle } from 'lucide-react'
+import { CheckCircle2, XCircle } from 'lucide-react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
@@ -19,11 +20,14 @@ function ScanPage() {
   const { data: eventsData } = useOrgEvents(orgId)
   const event = eventsData?.items.find((e) => e.id === eventId)
 
-  const { videoRef, phase, scanResult, scanCount, errorMsg, startScanning } = useScanner({
+  const { videoRef, phase, scanResult, scanCount, startScanning } = useScanner({
     eventId,
     eventName: event?.name ?? 'Event',
     notSupportedMessage: t('organiser.scanner.notSupported'),
   })
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { void startScanning() }, [])
 
   return (
     <div className="flex h-screen flex-col bg-black">
@@ -49,37 +53,21 @@ function ScanPage() {
         <video ref={videoRef} className="h-full w-full object-cover" playsInline muted autoPlay />
 
         {/* Overlay when not scanning */}
-        {phase !== 'scanning' && phase !== 'result' && (
+        {phase === 'error' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-black/70 px-8">
-            {phase === 'init' && (
-              <>
-                <p className="text-center text-sm text-white/70">{t('organiser.scanner.prompt')}</p>
-                <button
-                  onClick={() => void startScanning()}
-                  className="bg-primary flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold text-white"
-                >
-                  <ScanLine className="h-4 w-4 shrink-0" />
-                  {t('organiser.scanner.start')}
-                </button>
-              </>
-            )}
-            {phase === 'error' && (
-              <>
-                <XCircle className="h-12 w-12 text-red-400" />
-                <p className="text-center text-sm whitespace-pre-line text-white/70">{errorMsg}</p>
-                <button
-                  onClick={() =>
-                    void navigate({
-                      to: '/management/$orgId/events/$eventId/',
-                      params: { orgId, eventId },
-                    })
-                  }
-                  className="rounded-full bg-white/10 px-8 py-3 text-sm font-semibold text-white"
-                >
-                  {t('common.back')}
-                </button>
-              </>
-            )}
+            <XCircle className="h-12 w-12 text-red-400" />
+            <p className="text-center text-sm text-white/70">{t('organiser.scanner.notSupported')}</p>
+            <button
+              onClick={() =>
+                void navigate({
+                  to: '/management/$orgId/events/$eventId/',
+                  params: { orgId, eventId },
+                })
+              }
+              className="flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-semibold text-black"
+            >
+              {t('common.goBack')}
+            </button>
           </div>
         )}
 

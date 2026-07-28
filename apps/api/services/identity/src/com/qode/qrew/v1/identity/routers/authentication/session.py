@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Request, status
 
 from pagination import Page
-from com.qode.qrew.v1.identity.core.dependencies import get_current_user
+from com.qode.qrew.v1.identity.core.dependencies import get_current_session, get_current_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
+from com.qode.qrew.v1.identity.models.session import Session
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.schemas.authentication.session import (
     RevokeAllResponse,
@@ -28,10 +29,11 @@ router = APIRouter(prefix="/sessions")
 async def list_sessions(
     request: Request,
     current_user: User = Depends(get_current_user),
+    current_session: Session = Depends(get_current_session),
     service: SessionService = Depends(get_session_service),
 ) -> Page[SessionResponse]:
     """List all active sessions for the current user."""
-    sessions = await service.list_sessions(current_user.id)
+    sessions = await service.list_sessions(current_user.id, current_jti=current_session.jti)
     return Page[SessionResponse](items=sessions, next_cursor=None)
 
 

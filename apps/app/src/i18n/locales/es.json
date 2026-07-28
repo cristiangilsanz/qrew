@@ -23,6 +23,7 @@
     "error": "Algo ha ido mal",
     "retry": "Intentar De Nuevo",
     "save": "Guardar",
+    "update": "Actualizar",
     "cancel": "Cancelar",
     "back": "Volver",
     "confirm": "Confirmar",
@@ -293,7 +294,17 @@
       "noDevices": "Sin dispositivos de confianza",
       "noActivity": "Sin actividad todavía",
       "showMore": "Ver Más",
-      "revokeAll": "Revocar Todas"
+      "revokeAll": "Eliminar Todo",
+      "deviceRevoked": "Dispositivo eliminado.",
+      "devicesRevokedAll": "Todos los dispositivos eliminados.",
+      "revokeDeviceTitle": "Eliminar Dispositivo",
+      "removeDevice": "Eliminar",
+      "revokeDeviceDesc": "Esto cerrará todas las sesiones activas.",
+      "revokeCurrentDeviceTitle": "Eliminar Dispositivo",
+      "revokeCurrentDeviceDesc": "Esto eliminará este dispositivo y cerrará tu sesión inmediatamente.",
+      "revokeAndSignOut": "Eliminar y Cerrar Sesión",
+      "revokeAllDevicesTitle": "Eliminar Todos los Dispositivos",
+      "revokeAllDevicesDesc": "Todos los dispositivos de confianza serán eliminados y se cerrará tu sesión."
     },
     "help": {
       "title": "Ayuda y Soporte",
@@ -353,13 +364,20 @@
       "success": "Número de teléfono actualizado."
     },
     "sessions": {
-      "revokeAll": "Revocar Todas",
+      "revokeAll": "Revocar Todo",
+      "revokeAndSignOut": "Revocar y Cerrar Sesión",
       "revoke": "Revocar",
       "revokeAllSuccess": "Todas las sesiones revocadas.",
       "revokeSuccess": "Sesión revocada.",
       "unknownDevice": "Dispositivo desconocido",
       "unknownIp": "IP desconocida",
-      "lastUsed": "Último uso {{date}}"
+      "lastUsed": "Último uso {{date}}",
+      "empty": "No hay sesiones activas",
+      "current": "Actual",
+      "revokeTitle": "Cerrar Sesión",
+      "revokeDesc": "Este dispositivo cerrará sesión inmediatamente.",
+      "revokeAllTitle": "Revocar Todas las Sesiones",
+      "revokeAllDesc": "Todas las sesiones activas serán cerradas. También se cerrará esta sesión."
     },
     "deleteAccount": {
       "title": "Eliminar cuenta",
@@ -402,7 +420,7 @@
     }
   },
   "organiser": {
-    "title": "Organizaciones",
+    "title": "Gestión",
     "backToOrgs": "Volver a organizaciones",
     "backToOrg": "Volver a la organización",
     "org": {
@@ -528,7 +546,7 @@
       "scanTickets": "Escanear entradas",
       "prompt": "Apunta la cámara al código QR de la entrada.",
       "start": "Iniciar",
-      "notSupported": "El escaneo QR no está disponible en este navegador.\nUsa Chrome o la app de Qrew.",
+      "notSupported": "El escaneo QR no está disponible ahora mismo.",
       "scanned": "escaneadas",
       "admitted": "Admitido",
       "rejected": "Rechazado"

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { formatDate } from '@/lib/formatDate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
@@ -60,7 +61,7 @@ export function ProfileCard() {
             {t('profile.memberSince', { date: '' }).trim()}
           </span>
           <span className="font-medium">
-            {new Date(profile.created_at).toLocaleDateString(i18n.language)}
+            {formatDate(profile.created_at, i18n.language)}
           </span>
         </div>
       </CardContent>

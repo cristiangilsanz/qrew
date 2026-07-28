@@ -12,7 +12,7 @@ _SUMMARIES: dict[str, str] = {
     AuditAction.LOGIN_LOCKED: "Account temporarily locked",
     AuditAction.LOGIN_UNLOCKED: "Account unlocked by support",
     AuditAction.LOGIN_COMPROMISED_PASSWORD: ("Sign-in with a password found in a breach database"),
-    AuditAction.SESSION_EVICTED: "Older session evicted (session cap)",
+    AuditAction.SESSION_EVICTED: "Older session evicted",
     AuditAction.ACCOUNT_DELETED: "Account deleted",
     AuditAction.LOGOUT: "Signed out",
     AuditAction.VERIFY_EMAIL: "Email address verified",

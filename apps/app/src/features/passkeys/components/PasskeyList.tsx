@@ -1,7 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { KeyRound, Pencil, Plus, Trash2 } from 'lucide-react'
+import { KeyRound, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { formatDate } from '@/lib/formatDate'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -52,20 +54,29 @@ export function PasskeyList() {
       )}
       <ul className="space-y-2">
         {passkeys.map((pk) => (
-          <li key={pk.id} className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3">
-            <KeyRound className="text-muted-foreground h-5 w-5 shrink-0" />
-            <div className="min-w-0 flex-1">
-              {editingId === pk.id ? (
-                <div className="flex gap-2">
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="h-7 text-sm"
-                    // eslint-disable-next-line jsx-a11y/no-autofocus
-                    autoFocus
-                  />
+          <li key={pk.id} className="rounded-xl bg-white/[0.04] px-3 py-3">
+            {editingId === pk.id ? (
+              <div className="flex items-center gap-3">
+                <KeyRound className="text-muted-foreground h-5 w-5 shrink-0" />
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="h-7 w-36 text-xs"
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                />
+                <div className="flex gap-1.5">
                   <Button
                     size="sm"
+                    variant="outline"
+                    className="h-7 rounded-full border-white/20 bg-white px-2.5 text-xs font-medium text-black hover:bg-white/90"
+                    onClick={() => setEditingId(null)}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 rounded-full px-2.5 text-xs font-medium"
                     isLoading={renamePasskey.isPending}
                     onClick={() => {
                       if (editName.trim()) {
@@ -76,49 +87,48 @@ export function PasskeyList() {
                       }
                     }}
                   >
-                    {t('common.save')}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                    {t('common.cancel')}
+                    <RefreshCw className="h-3 w-3" />
+                    {t('common.update')}
                   </Button>
                 </div>
-              ) : (
-                <>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <KeyRound className="text-muted-foreground h-5 w-5 shrink-0" />
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
                     {pk.name ?? t('passkeys.unnamedPasskey')}
                   </p>
                   {pk.last_used_at && (
                     <p className="text-muted-foreground text-xs">
                       {t('passkeys.lastUsed', {
-                        date: new Date(pk.last_used_at).toLocaleDateString(i18n.language),
+                        date: formatDate(pk.last_used_at, i18n.language),
                       })}
                     </p>
                   )}
-                </>
-              )}
-            </div>
-            {editingId !== pk.id && (
-              <div className="flex gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7"
-                  onClick={() => {
-                    setEditingId(pk.id)
-                    setEditName(pk.name ?? '')
-                  }}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive h-7 w-7"
-                  isLoading={deletePasskey.isPending}
-                  onClick={() => deletePasskey.mutate(pk.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={() => {
+                      setEditingId(pk.id)
+                      setEditName('')
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive h-7 w-7"
+                    isLoading={deletePasskey.isPending}
+                    onClick={() => deletePasskey.mutate(pk.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             )}
           </li>

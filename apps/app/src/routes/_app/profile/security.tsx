@@ -14,6 +14,7 @@ import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PasskeyList } from '@/features/passkeys/components/PasskeyList'
 import { ChangePasswordForm } from '@/features/profile/components/ChangePasswordForm'
@@ -24,6 +25,7 @@ import {
   useRevokeAllDevices,
   useRevokeDevice,
 } from '@/features/profile/hooks/useDevices'
+import { formatDate, formatDateTime } from '@/lib/formatDate'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/profile/security')({
@@ -96,6 +98,8 @@ function DeviceList() {
   const { data, isLoading } = useDevices()
   const revoke = useRevokeDevice()
   const revokeAll = useRevokeAllDevices()
+  const [confirmDeviceId, setConfirmDeviceId] = useState<string | null>(null)
+  const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
 
   if (isLoading) {
     return (
@@ -134,30 +138,64 @@ function DeviceList() {
               <p className="truncate text-sm font-medium text-white/80">{device.name}</p>
               {device.last_seen_at && (
                 <p className="text-muted-foreground text-xs">
-                  Last seen {new Date(device.last_seen_at).toLocaleDateString(i18n.language)}
+                  Last seen {formatDate(device.last_seen_at, i18n.language)}
                 </p>
               )}
             </div>
             <button
-              onClick={() => revoke.mutate(device.id)}
+              onClick={() => setConfirmDeviceId(device.id)}
               disabled={revoke.isPending}
               className="text-muted-foreground hover:text-destructive shrink-0 disabled:opacity-40"
             >
               <Trash2 className="h-4 w-4" />
             </button>
+            {confirmDeviceId === device.id && (
+              <ConfirmDialog
+                open
+                onOpenChange={(o) => !o && setConfirmDeviceId(null)}
+                title={
+                  device.is_current
+                    ? t('profile.security.revokeCurrentDeviceTitle')
+                    : t('profile.security.revokeDeviceTitle')
+                }
+                description={
+                  device.is_current
+                    ? t('profile.security.revokeCurrentDeviceDesc')
+                    : t('profile.security.revokeDeviceDesc')
+                }
+                confirmLabel={
+                  device.is_current
+                    ? t('profile.security.revokeAndSignOut')
+                    : t('profile.security.removeDevice')
+                }
+                destructive
+                isLoading={revoke.isPending}
+                onConfirm={() => revoke.mutate({ deviceId: device.id, isCurrent: device.is_current })}
+              />
+            )}
           </li>
         ))}
       </ul>
       {devices.length > 1 && (
         <div className="flex justify-end pt-1">
           <button
-            onClick={() => revokeAll.mutate()}
+            onClick={() => setConfirmRevokeAll(true)}
             disabled={revokeAll.isPending}
             className="bg-destructive flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
           >
             <Trash2 className="h-3.5 w-3.5" />
             {t('profile.security.revokeAll')}
           </button>
+          <ConfirmDialog
+            open={confirmRevokeAll}
+            onOpenChange={setConfirmRevokeAll}
+            title={t('profile.security.revokeAllDevicesTitle')}
+            description={t('profile.security.revokeAllDevicesDesc')}
+            confirmLabel={t('profile.security.revokeAndSignOut')}
+            destructive
+            isLoading={revokeAll.isPending}
+            onConfirm={() => revokeAll.mutate()}
+          />
         </div>
       )}
     </div>
@@ -210,7 +248,7 @@ function AuditLog() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-white/80">{event.summary}</p>
                 <p className="text-muted-foreground mt-0.5 text-xs">
-                  {new Date(event.created_at).toLocaleString(i18n.language, {
+                  {formatDateTime(event.created_at, i18n.language, {
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric',

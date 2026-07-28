@@ -10,6 +10,7 @@ import { StatusChip } from '@/components/ui/status-chip'
 import { useOrgMembers } from '@/features/organiser/hooks/useOrgMembers'
 import { useRemoveMember } from '@/features/organiser/hooks/useRemoveMember'
 import { useUserPublicProfiles } from '@/features/profile/hooks/useUserPublicProfiles'
+import { formatDate } from '@/lib/formatDate'
 
 export const Route = createFileRoute('/_app/management/$orgId/members/')({
   component: OrgMembersPage,
@@ -95,7 +96,7 @@ function OrgMembersPage() {
                   </p>
                   <p className="text-muted-foreground mt-0.5 text-xs">
                     {t('organiser.members.joined')}{' '}
-                    {new Date(m.joined_at).toLocaleDateString(i18n.language, {
+                    {formatDate(m.joined_at, i18n.language, {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',

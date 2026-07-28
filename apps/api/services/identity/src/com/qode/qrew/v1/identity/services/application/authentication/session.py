@@ -4,6 +4,7 @@ import redis.asyncio as aioredis
 import structlog
 
 from com.qode.qrew.v1.identity.core.errors import DomainError
+from com.qode.qrew.v1.identity.core.utils.geoip import GeoIpService
 from com.qode.qrew.v1.identity.repositories.session import SessionRepository
 from com.qode.qrew.v1.identity.schemas.authentication.session import SessionResponse
 from com.qode.qrew.v1.identity.services.application.authentication.login.flow.logout import (
@@ -23,11 +24,15 @@ class SessionService:
         self,
         repo: SessionRepository,
         redis: aioredis.Redis,  # type: ignore[type-arg]
+        geoip: GeoIpService,
     ) -> None:
         self._repo = repo
         self._redis = redis
+        self._geoip = geoip
 
-    async def list_sessions(self, user_id: uuid.UUID) -> list[SessionResponse]:
+    async def list_sessions(
+        self, user_id: uuid.UUID, current_jti: str | None = None
+    ) -> list[SessionResponse]:
         """Return all active sessions for the given user."""
         sessions = await self._repo.get_all_by_user_id(user_id)
         return [
@@ -39,6 +44,8 @@ class SessionService:
                 device_fingerprint=s.device_fingerprint,
                 created_at=s.created_at,
                 last_used_at=s.last_used_at,
+                is_current=s.jti == current_jti,
+                location=self._geoip.locate_label(s.ip_address) if s.ip_address else None,
             )
             for s in sessions
         ]

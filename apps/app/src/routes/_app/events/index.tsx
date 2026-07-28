@@ -19,8 +19,8 @@ function EventsPage() {
   const { data, isLoading } = useEvents(filters)
 
   return (
-    <div className="space-y-6 p-4">
-      <h1 className="text-2xl font-semibold">{t('events.title')}</h1>
+    <div className="space-y-6 px-4 pt-5 pb-4">
+      <h1 className="text-2xl font-bold">{t('events.title')}</h1>
       <EventFiltersBar onFiltersChange={setFilters} />
       {!isLoading && data?.items.length === 0 && (
         <p className="text-muted-foreground py-12 text-center">{t('events.empty')}</p>

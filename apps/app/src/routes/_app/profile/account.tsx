@@ -13,6 +13,7 @@ import { useOnboardingStatus } from '@/features/onboarding/hooks/useOnboardingSt
 import { ChangeEmailForm } from '@/features/profile/components/ChangeEmailForm'
 import { ChangePhoneForm } from '@/features/profile/components/ChangePhoneForm'
 import { useProfile } from '@/features/profile/hooks/useProfile'
+import { formatDate } from '@/lib/formatDate'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/profile/account')({
@@ -150,7 +151,7 @@ function AccountPage() {
 
           <Row icon={<Calendar className={iconClass} />} label={t('profile.account.createdAt')}>
             <span className="text-sm font-medium">
-              {new Date(profile.created_at).toLocaleDateString(i18n.language, {
+              {formatDate(profile.created_at, i18n.language, {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',

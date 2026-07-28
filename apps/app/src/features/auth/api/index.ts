@@ -68,4 +68,9 @@ export const authApi = {
     apiClient
       .post<LoginResponse>('/v1/auth/passkeys/authenticate/complete', credential)
       .then((r) => r.data),
+
+  logout: (refreshToken: string) =>
+    apiClient
+      .post<{ message: string }>('/v1/auth/logout', { refresh_token: refreshToken })
+      .then((r) => r.data),
 }

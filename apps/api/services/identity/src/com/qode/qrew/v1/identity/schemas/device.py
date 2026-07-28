@@ -9,6 +9,7 @@ class DeviceResponse(BaseModel):
     name: str
     created_at: datetime
     last_seen_at: datetime | None = None
+    is_current: bool = False
 
 
 class DeviceRevokeResponse(BaseModel):

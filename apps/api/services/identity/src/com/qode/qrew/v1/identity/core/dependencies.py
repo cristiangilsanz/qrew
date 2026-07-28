@@ -370,8 +370,9 @@ def get_logout_service(
 def get_session_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+    geoip: GeoIpService = Depends(get_geoip_service),
 ) -> SessionService:
-    return SessionService(SessionRepository(db), redis)
+    return SessionService(SessionRepository(db), redis, geoip)
 
 
 def get_profile_service(

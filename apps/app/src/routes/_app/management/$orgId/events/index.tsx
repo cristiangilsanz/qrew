@@ -9,6 +9,7 @@ import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 import { getEventImageUrl } from '@/lib/imageUrl'
+import { formatDate } from '@/lib/formatDate'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/management/$orgId/events/')({
@@ -101,7 +102,7 @@ function OrgEventsPage() {
                     {event.starts_at && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5 shrink-0" />
-                        {new Date(event.starts_at).toLocaleDateString(i18n.language, {
+                        {formatDate(event.starts_at, i18n.language, {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',

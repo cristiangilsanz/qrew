@@ -30,8 +30,8 @@ function OrganiserPage() {
   }, [query])
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
-      <h1 className="text-2xl font-semibold">{t('organiser.title')}</h1>
+    <div className="mx-auto max-w-2xl space-y-6 px-4 pt-5 pb-28">
+      <h1 className="text-2xl font-bold">{t('organiser.title')}</h1>
 
       {/* Search bar */}
       <div className="relative">

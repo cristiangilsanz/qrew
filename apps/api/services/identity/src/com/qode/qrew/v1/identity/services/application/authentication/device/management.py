@@ -53,13 +53,11 @@ class DeviceService:
             raise DeviceError("Device not found.", field=None)
         if device.revoked_at is not None:
             raise DeviceError("Device is already revoked.", field=None)
-        if calling_device_id is not None and calling_device_id == device_id:
-            raise DeviceError("Cannot revoke the device you are currently using.", field=None)
 
         device.revoked_at = datetime.now(UTC)
         await self._device_repo.save(device)
 
-        await self._kill_all_sessions(user.id)
+        await self._kill_device_sessions(device.id)
 
         await logger.ainfo("device_revoked", user_id=str(user.id), device_id=str(device_id))
         try:
@@ -106,6 +104,12 @@ class DeviceService:
             )
 
         return revoked_count
+
+    async def _kill_device_sessions(self, device_id: uuid.UUID) -> None:
+        """Removes sessions linked to a specific device and blacklists their tokens."""
+        jtis = await self._session_repo.delete_by_device_id(device_id)
+        for jti in jtis:
+            await self._redis.setex(_BLACKLIST_JTI_PREFIX + jti, _JTI_TTL_SECONDS, "1")
 
     async def _kill_all_sessions(self, user_id: uuid.UUID) -> None:
         """Removes all active sessions for a user and invalidates their tokens."""

@@ -39,6 +39,7 @@ export interface Device {
   name: string
   created_at: string
   last_seen_at: string | null
+  is_current: boolean
 }
 
 export interface Session {
@@ -49,6 +50,8 @@ export interface Session {
   device_fingerprint: string | null
   created_at: string
   last_used_at: string
+  is_current: boolean
+  location: string | null
 }
 
 export const profileApi = {

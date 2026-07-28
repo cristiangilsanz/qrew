@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Qrew',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
+    androidScheme: 'http',
+    url: 'http://172.17.154.191:5173',
+    cleartext: true,
   },
   plugins: {
     SplashScreen: {

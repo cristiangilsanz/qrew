@@ -23,6 +23,7 @@
     "error": "Something went wrong",
     "retry": "Try Again",
     "save": "Save",
+    "update": "Update",
     "cancel": "Cancel",
     "back": "Back",
     "confirm": "Confirm",
@@ -293,7 +294,17 @@
       "noDevices": "No trusted devices",
       "noActivity": "No activity yet",
       "showMore": "Show More",
-      "revokeAll": "Revoke All"
+      "revokeAll": "Remove All",
+      "deviceRevoked": "Device removed.",
+      "devicesRevokedAll": "All devices removed.",
+      "revokeDeviceTitle": "Remove Device",
+      "removeDevice": "Remove",
+      "revokeDeviceDesc": "This will sign you out of all active sessions.",
+      "revokeCurrentDeviceTitle": "Remove Device",
+      "revokeCurrentDeviceDesc": "This will remove this device and sign you out immediately.",
+      "revokeAndSignOut": "Remove & Sign Out",
+      "revokeAllDevicesTitle": "Remove All Devices",
+      "revokeAllDevicesDesc": "All trusted devices will be removed and you will be signed out."
     },
     "help": {
       "title": "Help & Support",
@@ -354,12 +365,19 @@
     },
     "sessions": {
       "revokeAll": "Revoke All",
+      "revokeAndSignOut": "Revoke & Sign Out",
       "revoke": "Revoke",
       "revokeAllSuccess": "All sessions revoked.",
       "revokeSuccess": "Session revoked.",
       "unknownDevice": "Unknown device",
       "unknownIp": "Unknown IP",
-      "lastUsed": "Last used {{date}}"
+      "lastUsed": "Last used {{date}}",
+      "empty": "No active sessions",
+      "current": "Current",
+      "revokeTitle": "Sign Out Session",
+      "revokeDesc": "This device will be signed out immediately.",
+      "revokeAllTitle": "Revoke All Sessions",
+      "revokeAllDesc": "All other active sessions will be signed out. You will also be signed out of this session."
     },
     "deleteAccount": {
       "title": "Delete account",
@@ -402,7 +420,7 @@
     }
   },
   "organiser": {
-    "title": "Organisations",
+    "title": "Management",
     "backToOrgs": "Back to organisations",
     "backToOrg": "Back to organisation",
     "org": {
@@ -506,10 +524,10 @@
     },
     "scanner": {
       "title": "Ticket Scanner",
-      "scanTickets": "Scan tickets",
+      "scanTickets": "Scan Tickets",
       "prompt": "Point the camera at a ticket QR code.",
       "start": "Start",
-      "notSupported": "QR scanning is not supported on this browser.\nPlease use Chrome or the Qrew app.",
+      "notSupported": "QR scanning is not supported right now.",
       "scanned": "scanned",
       "admitted": "Admitted",
       "rejected": "Rejected"

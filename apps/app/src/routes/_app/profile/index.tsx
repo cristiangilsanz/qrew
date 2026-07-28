@@ -3,6 +3,7 @@ import { ChevronRight, Globe, HelpCircle, Info, LogOut, Shield, User } from 'luc
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { authApi } from '@/features/auth/api'
 import { DeleteAccountDialog } from '@/features/profile/components/DeleteAccountDialog'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import i18n from '@/i18n'
@@ -22,6 +23,7 @@ function ProfilePage() {
   const { t } = useTranslation()
   useProfile()
   const clearSession = useAuthStore((s) => s.clearSession)
+  const refreshToken = useAuthStore((s) => s.refreshToken)
   const navigate = useNavigate()
   const [currentLang, setCurrentLang] = useState(i18n.language.split('-')[0])
 
@@ -32,13 +34,16 @@ function ProfilePage() {
   }
 
   const handleLogout = () => {
+    if (refreshToken) {
+      void authApi.logout(refreshToken).catch(() => {})
+    }
     clearSession()
     void navigate({ to: '/login' })
   }
 
   return (
-    <div className="min-h-screen px-4 pt-6 pb-28">
-      <h1 className="mb-8 text-2xl font-bold">{t('profile.myProfile')}</h1>
+    <div className="min-h-screen space-y-6 px-4 pt-5 pb-28">
+      <h1 className="text-2xl font-bold">{t('profile.myProfile')}</h1>
 
       {/* Main sections */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">

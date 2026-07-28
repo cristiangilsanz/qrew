@@ -61,7 +61,7 @@ function TicketsPage() {
   )
 
   return (
-    <div className="space-y-6 p-4 pb-24">
+    <div className="space-y-6 px-4 pt-5 pb-24">
       <h1 className="text-2xl font-bold">{t('tickets.title')}</h1>
 
       {isLoading && (

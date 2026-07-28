@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { formatDate } from '@/lib/formatDate'
 import { OrgCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 
@@ -11,7 +12,7 @@ interface Props {
 }
 
 export function OrgEventList({ orgId }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { data, isLoading } = useOrgEvents(orgId)
   const events = data?.items ?? []
 
@@ -52,7 +53,7 @@ export function OrgEventList({ orgId }: Props) {
             <div>
               <p className="font-medium">{event.name}</p>
               <p className="text-muted-foreground text-xs">
-                {new Date(event.starts_at).toLocaleDateString()} · {event.venue_city}
+                {formatDate(event.starts_at, i18n.language)} · {event.venue_city}
               </p>
             </div>
             <StatusChip label={event.status} />

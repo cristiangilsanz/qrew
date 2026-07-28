@@ -1,17 +1,30 @@
-import { Monitor, Trash2 } from 'lucide-react'
+import { Monitor, Smartphone, Tablet, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { formatDate } from '@/lib/formatDate'
+import { parseUserAgent } from '@/lib/parseUserAgent'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { useRevokeAllSessions } from '../hooks/useRevokeAllSessions'
 import { useRevokeSession } from '../hooks/useRevokeSession'
 import { useSessions } from '../hooks/useSessions'
 
+function DeviceIcon({ type }: { type: 'mobile' | 'tablet' | 'desktop' }) {
+  const cls = 'text-muted-foreground h-4 w-4 shrink-0'
+  if (type === 'mobile') return <Smartphone className={cls} />
+  if (type === 'tablet') return <Tablet className={cls} />
+  return <Monitor className={cls} />
+}
+
 export function SessionList() {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useSessions()
   const revokeSession = useRevokeSession()
   const revokeAll = useRevokeAllSessions()
+  const [confirmJti, setConfirmJti] = useState<string | null>(null)
+  const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
 
   if (isLoading) {
     return (
@@ -34,45 +47,84 @@ export function SessionList() {
 
   return (
     <div className="space-y-2">
-      {sessions.length === 0 && <p className="text-muted-foreground py-4 text-center text-sm">—</p>}
+      {sessions.length === 0 && (
+        <p className="text-muted-foreground py-4 text-center text-sm">
+          {t('profile.sessions.empty')}
+        </p>
+      )}
       <ul className="space-y-1">
-        {sessions.map((session) => (
-          <li
-            key={session.jti}
-            className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3 text-sm"
-          >
-            <Monitor className="text-muted-foreground h-4 w-4 shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-white/80">
-                {session.user_agent ?? t('profile.sessions.unknownDevice')}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {session.ip_address ?? t('profile.sessions.unknownIp')} ·{' '}
-                {t('profile.sessions.lastUsed', {
-                  date: new Date(session.last_used_at).toLocaleDateString(i18n.language),
-                })}
-              </p>
-            </div>
-            <button
-              onClick={() => revokeSession.mutate(session.jti)}
-              disabled={revokeSession.isPending}
-              className="text-muted-foreground hover:text-destructive shrink-0 disabled:opacity-40"
+        {sessions.map((session) => {
+          const parsed = parseUserAgent(session.user_agent)
+          const subtitle = [
+            session.location,
+            t('profile.sessions.lastUsed', {
+              date: formatDate(session.last_used_at, i18n.language),
+            }),
+          ]
+            .filter(Boolean)
+            .join(' · ')
+
+          return (
+            <li
+              key={session.jti}
+              className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3 text-sm"
             >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </li>
-        ))}
+              <DeviceIcon type={parsed.deviceType} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-white/80">{parsed.label}</p>
+                <p className="text-muted-foreground truncate text-xs">{subtitle}</p>
+              </div>
+              {session.is_current ? (
+                <span className="text-muted-foreground shrink-0 text-xs">
+                  {t('profile.sessions.current')}
+                </span>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setConfirmJti(session.jti)}
+                    disabled={revokeSession.isPending}
+                    className="text-muted-foreground hover:text-destructive shrink-0 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                  {confirmJti === session.jti && (
+                    <ConfirmDialog
+                      open
+                      onOpenChange={(o) => !o && setConfirmJti(null)}
+                      title={t('profile.sessions.revokeTitle')}
+                      description={t('profile.sessions.revokeDesc')}
+                      confirmLabel={t('profile.sessions.revoke')}
+                      destructive
+                      isLoading={revokeSession.isPending}
+                      onConfirm={() => revokeSession.mutate(session.jti)}
+                    />
+                  )}
+                </>
+              )}
+            </li>
+          )
+        })}
       </ul>
       {sessions.length > 1 && (
         <div className="flex justify-end pt-1">
           <button
-            onClick={() => revokeAll.mutate()}
+            onClick={() => setConfirmRevokeAll(true)}
             disabled={revokeAll.isPending}
             className="bg-destructive flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
           >
             <Trash2 className="h-3.5 w-3.5" />
             {t('profile.sessions.revokeAll')}
           </button>
+          <ConfirmDialog
+            open={confirmRevokeAll}
+            onOpenChange={setConfirmRevokeAll}
+            title={t('profile.sessions.revokeAllTitle')}
+            description={t('profile.sessions.revokeAllDesc')}
+            confirmLabel={t('profile.sessions.revokeAndSignOut')}
+            destructive
+            isLoading={revokeAll.isPending}
+            onConfirm={() => revokeAll.mutate()}
+          />
         </div>
       )}
     </div>
