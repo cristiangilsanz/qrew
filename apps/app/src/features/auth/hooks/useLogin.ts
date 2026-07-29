@@ -11,12 +11,15 @@ export function useLogin() {
   const { t } = useTranslation()
   const setTokens = useAuthStore((s) => s.setTokens)
   const setSetupToken = useAuthStore((s) => s.setSetupToken)
+  const setTotpToken = useAuthStore((s) => s.setTotpToken)
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
     onSuccess: (data) => {
       if (data.setup_required) {
         setSetupToken(data.access_token)
+      } else if (data.totp_required) {
+        setTotpToken(data.access_token)
       } else {
         setTokens(data.access_token, data.refresh_token ?? '')
       }

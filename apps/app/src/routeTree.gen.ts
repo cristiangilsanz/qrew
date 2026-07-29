@@ -13,6 +13,7 @@ import { Route as ConfirmEmailChangeRouteImport } from './routes/confirm-email-c
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthVerifyTotpRouteImport } from './routes/_auth/verify-totp'
 import { Route as AuthSetupRouteImport } from './routes/_auth/setup'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
@@ -69,6 +70,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyTotpRoute = AuthVerifyTotpRouteImport.update({
+  id: '/verify-totp',
+  path: '/verify-totp',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthSetupRoute = AuthSetupRouteImport.update({
   id: '/setup',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/setup': typeof AuthSetupRoute
+  '/verify-totp': typeof AuthVerifyTotpRoute
   '/management/new': typeof AppManagementNewRoute
   '/profile/about': typeof AppProfileAboutRoute
   '/profile/account': typeof AppProfileAccountRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/setup': typeof AuthSetupRoute
+  '/verify-totp': typeof AuthVerifyTotpRoute
   '/management/new': typeof AppManagementNewRoute
   '/profile/about': typeof AppProfileAboutRoute
   '/profile/account': typeof AppProfileAccountRoute
@@ -368,6 +376,7 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/setup': typeof AuthSetupRoute
+  '/_auth/verify-totp': typeof AuthVerifyTotpRoute
   '/_app/management/new': typeof AppManagementNewRoute
   '/_app/profile/about': typeof AppProfileAboutRoute
   '/_app/profile/account': typeof AppProfileAccountRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/setup'
+    | '/verify-totp'
     | '/management/new'
     | '/profile/about'
     | '/profile/account'
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/setup'
+    | '/verify-totp'
     | '/management/new'
     | '/profile/about'
     | '/profile/account'
@@ -497,6 +508,7 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/register'
     | '/_auth/setup'
+    | '/_auth/verify-totp'
     | '/_app/management/new'
     | '/_app/profile/about'
     | '/_app/profile/account'
@@ -568,6 +580,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_auth/verify-totp': {
+      id: '/_auth/verify-totp'
+      path: '/verify-totp'
+      fullPath: '/verify-totp'
+      preLoaderRoute: typeof AuthVerifyTotpRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/setup': {
       id: '/_auth/setup'
@@ -936,12 +955,14 @@ interface AuthRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthSetupRoute: typeof AuthSetupRoute
+  AuthVerifyTotpRoute: typeof AuthVerifyTotpRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   AuthSetupRoute: AuthSetupRoute,
+  AuthVerifyTotpRoute: AuthVerifyTotpRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

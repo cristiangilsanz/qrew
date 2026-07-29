@@ -135,6 +135,19 @@ def decode_refresh_token(token: str) -> dict[str, object]:
     return jwt_keys.verify(jwt_keys.REFRESH, token)
 
 
+def create_totp_token(subject: str) -> str:
+    """Mint a short-lived token for the TOTP verification step after login."""
+    now = datetime.now(UTC)
+    payload: dict[str, object] = {
+        "sub": subject,
+        "type": "access",
+        "scope": "totp",
+        "iat": now,
+        "exp": now + timedelta(minutes=settings.totp_token_expire_minutes),
+    }
+    return jwt_keys.sign(jwt_keys.TOTP, payload)
+
+
 def extract_jti(token: str) -> str | None:
     """Extract the token identifier claim from a refresh token."""
     payload = jwt_keys.verify(jwt_keys.REFRESH, token)

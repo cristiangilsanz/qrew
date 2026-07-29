@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { hapticHeavy, hapticLight } from '@/lib/haptics'
 import { scannerApi } from '@/features/scanner/api'
 
 export type ScanResult = {
@@ -82,6 +83,7 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
           ticketId: result.ticket_id,
         })
         setScanCount((c) => c + 1)
+        void (result.allowed ? hapticLight() : hapticHeavy())
         setPhase('result')
         setTimeout(() => {
           setPhase('scanning')

@@ -29,7 +29,9 @@
     "confirm": "Confirmar",
     "delete": "Eliminar",
     "goBack": "Volver",
-    "waitSeconds": "Esperar {{seconds}}s"
+    "waitSeconds": "Esperar {{seconds}}s",
+    "done": "Listo",
+    "copied": "¡Copiado!"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -52,6 +54,13 @@
     "errors": {
       "loginFailed": "Correo o contraseña incorrectos",
       "registerFailed": "Registro fallido. Por favor, inténtalo de nuevo."
+    },
+    "totp": {
+      "title": "Verificación en Dos Pasos",
+      "subtitle": "Introduce el código de 6 dígitos de tu aplicación de autenticación.",
+      "codeLabel": "Código de Autenticación",
+      "verify": "Verificar",
+      "invalidCode": "Código inválido o expirado. Por favor, inténtalo de nuevo."
     }
   },
   "events": {
@@ -127,12 +136,12 @@
         "flagged": "Tu entrada fue puesta en cuarentena por razones de seguridad."
       },
       "sale": {
-        "button": "Poner En Reventa",
+        "button": "Reventa",
         "closes": "La venta cierra 24h antes del evento",
-        "title": "Poner en reventa",
+        "title": "Reventa",
         "description": "Tu entrada se congelará y se publicará al precio original.",
         "note": "Si no se vende, se devuelve automáticamente en 7 días.",
-        "confirm": "Publicar Entrada"
+        "confirm": "Reventa"
       }
     },
     "qr": {
@@ -143,11 +152,11 @@
       "expiresAt": "Rota a las {{time}}",
       "retry": "Intentar De Nuevo",
       "denied": "QR no disponible.",
-      "deniedLocation": "Acceso a ubicación denegado. Activa la ubicación en tu navegador e inténtalo de nuevo.",
+      "deniedLocation": "Acceso a ubicación denegado.",
       "deniedGeofence": "Debes estar en el recinto para mostrar tu código QR.",
       "deniedAttestation": "Dispositivo no verificado. Los códigos QR solo están disponibles en dispositivos atestados.",
       "deniedState": "Esta entrada no puede usarse para el acceso en su estado actual.",
-      "error": "No se pudo cargar el código QR. Por favor, inténtalo de nuevo."
+      "error": "Tu código QR no se pudo cargar."
     },
     "queue": {
       "title": "Sala de espera",
@@ -215,9 +224,9 @@
     "joinQueueButton": "Unirse A La Cola De Reventa",
     "leaveQueueButton": "Abandonar Cola De Reventa",
     "leaveQueue": {
-      "title": "Abandonar cola de reventa",
+      "title": "Abandonar Cola de Reventa",
       "description": "Si alguien publica una entrada, no serás considerado para ella.",
-      "confirm": "Abandonar Cola"
+      "confirm": "Abandonar Cola de Reventa"
     },
     "assignment": {
       "viewEventDetails": "Ver Detalles Del Evento",
@@ -304,7 +313,25 @@
       "revokeCurrentDeviceDesc": "Esto eliminará este dispositivo y cerrará tu sesión inmediatamente.",
       "revokeAndSignOut": "Eliminar y Cerrar Sesión",
       "revokeAllDevicesTitle": "Eliminar Todos los Dispositivos",
-      "revokeAllDevicesDesc": "Todos los dispositivos de confianza serán eliminados y se cerrará tu sesión."
+      "revokeAllDevicesDesc": "Todos los dispositivos de confianza serán eliminados y se cerrará tu sesión.",
+      "totp": {
+        "title": "Verificación en Dos Pasos",
+        "description": "Verifica tu identidad con una app de autenticación.",
+        "enabled": "Activada",
+        "setUp": "Configurar",
+        "disable": "Desactivar",
+        "scanInstruction": "Escanea este código QR con tu app de autenticación:",
+        "getAuthApp": "Consigue Google Authenticator en Google Play",
+        "manualKey": "O introduce esta clave manualmente:",
+        "confirmCode": "Introduce el código de 6 dígitos de tu aplicación para confirmar la configuración.",
+        "confirm": "Confirmar y Activar",
+        "backupTitle": "Guarda Tus Códigos de Respaldo",
+        "backupNote": "Guárdalos — cada uno solo puede usarse una vez.",
+        "copyBackups": "Copiar Códigos",
+        "disableInstruction": "Introduce tu código de autenticación para desactivar el 2FA:",
+        "confirmDisable": "Desactivar 2FA",
+        "disabledToast": "Verificación en dos pasos desactivada."
+      }
     },
     "help": {
       "title": "Ayuda y Soporte",

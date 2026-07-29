@@ -42,7 +42,11 @@ export function LoginForm() {
 
   const onSubmit = (values: LoginFormValues) => {
     login.mutate(values, {
-      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/home' }),
+      onSuccess: (data) => {
+        if (data.setup_required) navigate({ to: '/setup' })
+        else if (data.totp_required) navigate({ to: '/verify-totp' })
+        else navigate({ to: '/home' })
+      },
     })
   }
 

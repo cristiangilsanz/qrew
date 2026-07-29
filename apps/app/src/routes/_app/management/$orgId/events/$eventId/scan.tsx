@@ -50,7 +50,13 @@ function ScanPage() {
 
       {/* Camera viewfinder */}
       <div className="relative flex-1 overflow-hidden">
-        <video ref={videoRef} className="h-full w-full object-cover" playsInline muted autoPlay />
+        <video
+          ref={videoRef}
+          className={`h-full w-full object-cover ${phase === 'error' ? 'hidden' : ''}`}
+          playsInline
+          muted
+          autoPlay
+        />
 
         {/* Overlay when not scanning */}
         {phase === 'error' && (

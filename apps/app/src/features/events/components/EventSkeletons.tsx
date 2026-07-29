@@ -20,17 +20,30 @@ export function EventCardSkeleton() {
 export function EventDetailSkeleton() {
   return (
     <div className="pb-24">
+      {/* Hero */}
       <Skeleton className="h-64 w-full rounded-none" />
+
       <div className="space-y-5 px-4 py-4">
+        {/* Organiser + title */}
         <div className="space-y-2">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-7 w-3/4" />
         </div>
-        <Skeleton className="h-12 w-full" />
+
+        {/* Description */}
+        <div className="space-y-1.5">
+          <Skeleton className="h-3.5 w-full" />
+          <Skeleton className="h-3.5 w-5/6" />
+          <Skeleton className="h-3.5 w-4/6" />
+        </div>
+
+        {/* Date */}
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-4 rounded" />
-          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-52" />
         </div>
+
+        {/* Location */}
         <div className="space-y-2">
           <Skeleton className="h-5 w-20" />
           <div className="flex items-center gap-2">
@@ -39,6 +52,13 @@ export function EventDetailSkeleton() {
           </div>
           <Skeleton className="h-48 w-full rounded-xl" />
         </div>
+
+        {/* Sale countdown */}
+        <div className="text-center">
+          <Skeleton className="mx-auto mb-2 h-3 w-28" />
+          <Skeleton className="mx-auto h-8 w-36" />
+        </div>
+
       </div>
     </div>
   )

@@ -110,6 +110,7 @@ from com.qode.qrew.v1.identity.services.application.authentication.registration.
     PhoneVerificationService,
 )
 from com.qode.qrew.v1.identity.services.application.authentication.session import SessionService
+from com.qode.qrew.v1.identity.services.application.authentication.login.guards.totp import TotpService
 
 logger = structlog.get_logger(__name__)
 
@@ -609,3 +610,36 @@ def get_user_repository(
     db: AsyncSession = Depends(get_db),
 ) -> UserRepository:
     return UserRepository(db)
+
+
+async def get_totp_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    try:
+        payload = jwt_keys.verify(jwt_keys.TOTP, credentials.credentials)
+    except (ExpiredSignatureError, InvalidTokenError) as exc:
+        raise _CREDENTIALS_EXCEPTION from exc
+
+    if payload.get("type") != "access" or payload.get("scope") != "totp":
+        raise _CREDENTIALS_EXCEPTION
+
+    subject = payload.get("sub")
+    if not isinstance(subject, str):
+        raise _CREDENTIALS_EXCEPTION
+
+    try:
+        user_id = uuid.UUID(subject)
+    except ValueError as exc:
+        raise _CREDENTIALS_EXCEPTION from exc
+
+    user = await UserRepository(db).get_by_id(user_id)
+    if user is None or not user.is_active:
+        raise _CREDENTIALS_EXCEPTION
+    return user
+
+
+def get_totp_service(
+    db: AsyncSession = Depends(get_db),
+) -> TotpService:
+    return TotpService(UserRepository(db))

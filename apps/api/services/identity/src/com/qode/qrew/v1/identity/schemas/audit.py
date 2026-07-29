@@ -46,11 +46,16 @@ _SUMMARIES: dict[str, str] = {
     AuditAction.SCANNER_DEACTIVATED: "Scanner deactivated",
     AuditAction.FINGERPRINT_MULTI_ACCOUNT_FLAG: "Device flagged: multiple accounts",
     AuditAction.FINGERPRINT_HEADLESS_FLAG: "Device flagged: automation detected",
+    AuditAction.TOTP_ENABLED: "Two-factor authentication enabled",
+    AuditAction.TOTP_DISABLED: "Two-factor authentication disabled",
+    AuditAction.TOTP_VERIFIED: "Signed in with two-factor authentication",
+    AuditAction.TOTP_VERIFY_FAILED: "Two-factor authentication attempt failed",
+    AuditAction.TOTP_BACKUP_USED: "Signed in using a backup code",
 }
 
 
 def summarize(action: str) -> str:
-    return _SUMMARIES.get(action, action.replace("_", " ").capitalize())
+    return _SUMMARIES.get(action, action.replace("_", " ").title())
 
 
 class UserAuditEventResponse(BaseModel):

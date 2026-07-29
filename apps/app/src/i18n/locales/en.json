@@ -29,7 +29,9 @@
     "confirm": "Confirm",
     "delete": "Delete",
     "goBack": "Go Back",
-    "waitSeconds": "Wait {{seconds}}s"
+    "waitSeconds": "Wait {{seconds}}s",
+    "done": "Done",
+    "copied": "Copied!"
   },
   "auth": {
     "login": "Sign In",
@@ -52,6 +54,13 @@
     "errors": {
       "loginFailed": "Invalid email or password",
       "registerFailed": "Registration failed. Please try again."
+    },
+    "totp": {
+      "title": "Two-Factor Authentication",
+      "subtitle": "Enter the 6-digit code from your authenticator app.",
+      "codeLabel": "Authentication Code",
+      "verify": "Verify",
+      "invalidCode": "Invalid or expired code. Please try again."
     }
   },
   "events": {
@@ -127,12 +136,12 @@
         "flagged": "Your ticket was quarantined for security reasons."
       },
       "sale": {
-        "button": "List For Resale",
+        "button": "Resale",
         "closes": "Sale closes 24h before the event",
-        "title": "List for resale",
+        "title": "Resale",
         "description": "Your ticket will be frozen and listed at the original price.",
         "note": "If unsold, returned automatically in 7 days.",
-        "confirm": "List Ticket"
+        "confirm": "Resale"
       }
     },
     "qr": {
@@ -143,11 +152,11 @@
       "expiresAt": "Rotates at {{time}}",
       "retry": "Try Again",
       "denied": "QR unavailable.",
-      "deniedLocation": "Location access denied. Enable location in your browser and try again.",
+      "deniedLocation": "Location access denied.",
       "deniedGeofence": "You must be at the venue to display your QR code.",
       "deniedAttestation": "Device not verified. QR codes are available on attested devices only.",
       "deniedState": "This ticket cannot be used for entry in its current state.",
-      "error": "Could not load QR code. Please try again."
+      "error": "Your QR code could not be loaded."
     },
     "queue": {
       "title": "Waiting Room",
@@ -215,9 +224,9 @@
     "joinQueueButton": "Join Resale Queue",
     "leaveQueueButton": "Leave Resale Queue",
     "leaveQueue": {
-      "title": "Leave resale queue",
+      "title": "Leave Resale Queue",
       "description": "If someone lists a ticket, you won't be considered for it.",
-      "confirm": "Leave Queue"
+      "confirm": "Leave Resale Queue"
     },
     "assignment": {
       "viewEventDetails": "View Event Details",
@@ -304,7 +313,25 @@
       "revokeCurrentDeviceDesc": "This will remove this device and sign you out immediately.",
       "revokeAndSignOut": "Remove & Sign Out",
       "revokeAllDevicesTitle": "Remove All Devices",
-      "revokeAllDevicesDesc": "All trusted devices will be removed and you will be signed out."
+      "revokeAllDevicesDesc": "All trusted devices will be removed and you will be signed out.",
+      "totp": {
+        "title": "Two-Factor Authentication",
+        "description": "Verify your identity with an authenticator app.",
+        "enabled": "Enabled",
+        "setUp": "Set Up",
+        "disable": "Disable",
+        "scanInstruction": "Scan this QR code with your authenticator app:",
+        "getAuthApp": "Get Google Authenticator on Google Play",
+        "manualKey": "Or enter this key manually:",
+        "confirmCode": "Enter the 6-digit code from your app to confirm setup.",
+        "confirm": "Confirm & Enable",
+        "backupTitle": "Save Your Backup Codes",
+        "backupNote": "Save these — each can only be used once.",
+        "copyBackups": "Copy Codes",
+        "disableInstruction": "Enter your authenticator code to disable 2FA:",
+        "confirmDisable": "Disable 2FA",
+        "disabledToast": "Two-factor authentication disabled."
+      }
     },
     "help": {
       "title": "Help & Support",

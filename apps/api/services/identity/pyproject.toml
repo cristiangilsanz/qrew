@@ -43,6 +43,8 @@ dependencies = [
     "cryptography>=42.0",
     "geoip2>=5.2.0",
     "nats-py>=2.7",
+    "pyotp>=2.9",
+    "qrcode[pil]>=7.4",
     "exceptions",
     "idempotency",
     "middleware",

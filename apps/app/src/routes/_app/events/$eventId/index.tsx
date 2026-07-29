@@ -186,6 +186,16 @@ function EventDetailPage() {
           </div>
         </div>
 
+        {/* Sale countdown */}
+        {saleNotStarted && (
+          <div className="text-center">
+            <p className="text-muted-foreground mb-0.5 text-xs">Tickets on sale in</p>
+            <p className="font-mono text-2xl font-bold text-white tabular-nums">
+              {formatCountdown(secondsUntilSale)}
+            </p>
+          </div>
+        )}
+
         {/* Resale queue info */}
         {showResaleQueue && (
           <div className="mt-8 flex flex-col items-center space-y-2">
@@ -197,55 +207,48 @@ function EventDetailPage() {
         )}
       </div>
 
-      {/* Sticky FAB — bottom right, above dock */}
-      {saleNotStarted ? (
-        <div className="fixed inset-x-0 bottom-24 z-40 flex justify-center">
-          <div className="mx-auto w-full max-w-[430px] px-4 text-center">
-            <p className="text-muted-foreground mb-0.5 text-xs">Tickets on sale in</p>
-            <p className="font-mono text-2xl font-bold text-white tabular-nums">
-              {formatCountdown(secondsUntilSale)}
-            </p>
-          </div>
-        </div>
-      ) : showResaleQueue ? (
-        inQueue ? (
+      {/* FAB — bottom right, above dock — hidden when sale hasn't started yet */}
+      {!saleNotStarted && (
+        showResaleQueue ? (
+          inQueue ? (
+            <button
+              onClick={() => setLeaveOpen(true)}
+              className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-red-500 px-5 text-white shadow-lg transition-colors hover:bg-red-600"
+              style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
+            >
+              <LogOut className="h-5 w-5 shrink-0" />
+              <span className="text-sm font-semibold">{t('market.leaveQueueButton')}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => joinQueue.mutate()}
+              disabled={joinQueue.isPending}
+              className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
+              style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
+            >
+              <Shuffle className="h-5 w-5 shrink-0" />
+              <span className="text-sm font-semibold">{t('market.joinQueueButton')}</span>
+            </button>
+          )
+        ) : event.queue_required ? (
           <button
-            onClick={() => setLeaveOpen(true)}
-            className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-red-500 px-5 text-white shadow-lg transition-colors hover:bg-red-600"
+            onClick={() => setShowQueue(true)}
+            className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
-            <LogOut className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">{t('market.leaveQueueButton')}</span>
+            <Users className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('tickets.queue.joinButton')}</span>
           </button>
         ) : (
           <button
-            onClick={() => joinQueue.mutate()}
-            disabled={joinQueue.isPending}
-            className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
+            onClick={() => void navigate({ to: '/events/$eventId/checkout', params: { eventId } })}
+            className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
-            <Shuffle className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">{t('market.joinQueueButton')}</span>
+            <Ticket className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('tickets.checkout.buyButton')}</span>
           </button>
         )
-      ) : event.queue_required ? (
-        <button
-          onClick={() => setShowQueue(true)}
-          className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
-          style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-        >
-          <Users className="h-5 w-5 shrink-0" />
-          <span className="text-sm font-semibold">{t('tickets.queue.joinButton')}</span>
-        </button>
-      ) : (
-        <button
-          onClick={() => void navigate({ to: '/events/$eventId/checkout', params: { eventId } })}
-          className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
-          style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-        >
-          <Ticket className="h-5 w-5 shrink-0" />
-          <span className="text-sm font-semibold">{t('tickets.checkout.buyButton')}</span>
-        </button>
       )}
 
       {/* Leave queue confirmation modal */}
@@ -256,14 +259,14 @@ function EventDetailPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
             style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
             onClick={(e) => e.target === e.currentTarget && setLeaveOpen(false)}
           >
             <motion.div
-              initial={{ y: 32, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 32, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
               transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
               className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-[#111] p-6"
             >

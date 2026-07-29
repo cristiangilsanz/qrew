@@ -63,6 +63,11 @@ class AuditAction(enum.StrEnum):
     CHARGEBACK_OPENED = "chargeback_opened"
     CHARGEBACK_CLOSED = "chargeback_closed"
     OUTBOX_ROW_DLQ = "outbox_row_dlq"
+    TOTP_ENABLED = "totp_enabled"
+    TOTP_DISABLED = "totp_disabled"
+    TOTP_VERIFIED = "totp_verified"
+    TOTP_VERIFY_FAILED = "totp_verify_failed"
+    TOTP_BACKUP_USED = "totp_backup_used"
 
 
 class AuditEvent(Base):

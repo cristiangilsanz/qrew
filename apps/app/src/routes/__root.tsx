@@ -1,8 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
+import { useEffect } from 'react'
 import { Toaster } from 'sonner'
+
+import { hapticLight } from '@/lib/haptics'
 
 interface RouterContext {
   queryClient: QueryClient
@@ -13,6 +14,16 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function Root() {
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if ((e.target as Element).closest('button, a[role="button"], [data-haptic]')) {
+        void hapticLight()
+      }
+    }
+    document.addEventListener('click', handler)
+    return () => document.removeEventListener('click', handler)
+  }, [])
+
   return (
     <div className="bg-background text-foreground min-h-screen">
       <div className="relative mx-auto min-h-screen max-w-[430px]">
@@ -24,12 +35,6 @@ function Root() {
         position="top-center"
         toastOptions={{ classNames: { title: 'text-center w-full' } }}
       />
-      {import.meta.env.DEV && (
-        <>
-          <TanStackRouterDevtools />
-          <ReactQueryDevtools />
-        </>
-      )}
     </div>
   )
 }

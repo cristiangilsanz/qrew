@@ -7,6 +7,7 @@ from com.qode.qrew.v1.identity.services.application.authentication.token.securit
     create_access_token,
     create_refresh_token,
     create_setup_token,
+    create_totp_token,
     extract_jti,
     hash_password,
     verify_password,
@@ -95,6 +96,8 @@ class LoginService:
         self._ensure_account_active(user)
 
         if await self._is_setup_complete(user):
+            if user.totp_enabled:
+                return self._issue_totp_challenge(user, password_compromised)
             return await self._issue_full_session(
                 user,
                 ip_address,
@@ -208,6 +211,14 @@ class LoginService:
         return LoginResponse(
             access_token=access_token,
             refresh_token=refresh_token,
+            password_compromised=password_compromised,
+        )
+
+    def _issue_totp_challenge(self, user: User, password_compromised: bool) -> LoginResponse:
+        """Mint a short-lived TOTP challenge token; the client must verify it before getting full access."""
+        return LoginResponse(
+            access_token=create_totp_token(str(user.id)),
+            totp_required=True,
             password_compromised=password_compromised,
         )
 

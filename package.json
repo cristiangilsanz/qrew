@@ -5,9 +5,10 @@
     "apps/app"
   ],
   "scripts": {
-    "dev": "npm run dev -w apps/app",
+    "dev:browser": "npm run dev -w apps/app",
     "dev:android": "cd apps/app && npx vite --host",
-    "android:deploy": "cd apps/app && npx cap run android",
+    "android:emulator": "bash scripts/android-emulator.sh",
+    "android:phone": "bash scripts/android-phone.sh",
     "build": "npm run build -w apps/app",
     "preview": "npm run preview -w apps/app",
     "lint": "npm run lint -w apps/app",

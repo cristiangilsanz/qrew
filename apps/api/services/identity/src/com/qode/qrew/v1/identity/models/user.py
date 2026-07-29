@@ -94,6 +94,23 @@ class User(Base):
 
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    totp_secret_ciphertext: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    totp_backup_codes_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    @property
+    def totp_secret(self) -> str | None:
+        if self.totp_secret_ciphertext is None:
+            return None
+        return pii_crypto.decrypt_bytes(self.totp_secret_ciphertext).decode()
+
+    @totp_secret.setter
+    def totp_secret(self, value: str | None) -> None:
+        if value is None:
+            self.totp_secret_ciphertext = None
+        else:
+            self.totp_secret_ciphertext = pii_crypto.encrypt_bytes(value.encode())
+
     @property
     def email(self) -> str:
         return pii_crypto.decrypt(self.email_ciphertext)
