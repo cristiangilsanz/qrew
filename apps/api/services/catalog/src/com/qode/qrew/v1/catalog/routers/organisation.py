@@ -75,6 +75,7 @@ def _event_response(event: Event) -> EventResponse:
         queue_admit_rate_per_minute=event.queue_admit_rate_per_minute,
         created_at=event.created_at,
         published_at=event.published_at,
+        started_at=event.started_at,
         cancelled_at=event.cancelled_at,
     )
 

@@ -100,14 +100,10 @@ export function ChangeEmailForm({ hideTitle }: Props) {
               disabled={changeEmail.isPending}
               className="bg-primary flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white disabled:opacity-50"
             >
-              {changeEmail.isPending ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                <>
-                  <Send className="h-3.5 w-3.5" />
-                  {t('profile.changeEmail.submit')}
-                </>
-              )}
+              <>
+                <Send className="h-3.5 w-3.5" />
+                {t('profile.changeEmail.submit')}
+              </>
             </button>
           </div>
         </form>

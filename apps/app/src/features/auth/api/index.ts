@@ -35,6 +35,7 @@ export interface RegisterRequest {
   phone_number: string
   password: string
   terms_accepted: boolean
+  captcha_token: string
 }
 
 export interface RegisterResponse {
@@ -74,7 +75,7 @@ export const authApi = {
 
   register: (data: RegisterRequest) =>
     apiClient
-      .post<RegisterResponse>('/v1/auth/registration/', { ...data, captcha_token: 'dev-bypass' })
+      .post<RegisterResponse>('/v1/auth/registration/', data)
       .then((r) => r.data),
 
   passkeyAuthBegin: (email: string) =>
@@ -88,6 +89,19 @@ export const authApi = {
   logout: (refreshToken: string) =>
     apiClient
       .post<{ message: string }>('/v1/auth/logout', { refresh_token: refreshToken })
+      .then((r) => r.data),
+
+  forgotPassword: (email: string) =>
+    apiClient
+      .post<{ message: string }>('/v1/auth/account/forgot-password', { email })
+      .then((r) => r.data),
+
+  resetPassword: (token: string, newPassword: string) =>
+    apiClient
+      .post<{ message: string }>('/v1/auth/account/reset-password', {
+        token,
+        new_password: newPassword,
+      })
       .then((r) => r.data),
 }
 

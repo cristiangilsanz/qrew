@@ -1,6 +1,6 @@
 """rename ticket states entry_pending->scanning and used->redeemed
 
-Revision ID: 0006_rename_entry_pending_and_used
+Revision ID: 0006_rename_states
 Revises: 0005_rename_frozen_to_on_sale
 Create Date: 2026-07-23
 
@@ -10,7 +10,7 @@ from typing import Union
 
 from alembic import op
 
-revision: str = "0006_rename_entry_pending_and_used"
+revision: str = "0006_rename_states"
 down_revision: Union[str, None] = "0005_rename_frozen_to_on_sale"
 branch_labels = None
 depends_on = None

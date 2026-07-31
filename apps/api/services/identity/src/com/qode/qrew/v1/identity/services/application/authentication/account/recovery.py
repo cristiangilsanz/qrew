@@ -197,11 +197,7 @@ class RecoveryService:
         )
 
     async def _notify_recovery(self, user: User) -> None:
-        """Send the recovery completion notification without propagating errors."""
-        try:
-            await self._notifier.send_account_recovery(user.email, user.full_name)
-        except Exception as exc:
-            await logger.awarning("notification_failed", action="account_recovery", error=repr(exc))
+        """Placeholder — account recovery notification removed."""
 
     async def _audit_failed(self, actor_id: uuid.UUID | None, reason: str) -> None:
         """Record a recovery failure audit event."""

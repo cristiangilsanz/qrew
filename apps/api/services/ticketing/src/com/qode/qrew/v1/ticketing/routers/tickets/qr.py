@@ -35,6 +35,7 @@ _REASON_TO_STATUS: dict[DenialReason, int] = {
     DenialReason.reassertion: status.HTTP_403_FORBIDDEN,
     DenialReason.attestation: status.HTTP_403_FORBIDDEN,
     DenialReason.geofence: status.HTTP_403_FORBIDDEN,
+    DenialReason.time_window: status.HTTP_403_FORBIDDEN,
 }
 
 

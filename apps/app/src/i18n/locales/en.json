@@ -51,13 +51,25 @@
     "or": "or",
     "passkeyLogin": "Sign In With Passkey",
     "emailRequiredForPasskey": "Enter your email to sign in with a passkey",
+    "forgotPassword": "Forgot password?",
+    "rememberedPassword": "Did you remember it?",
+    "forgotPasswordTitle": "Forgot password",
+    "forgotPasswordSubtitle": "Enter your email:",
+    "forgotPasswordSubmit": "Change password",
+    "forgotPasswordSuccess": "If an account with that email exists, we've sent a reset link.",
+    "resetPasswordTitle": "Reset password",
+    "resetPasswordSubtitle": "Enter your new password",
+    "newPassword": "New password",
+    "resetPasswordSubmit": "Reset password",
+    "resetPasswordSuccess": "Password reset. You can now sign in.",
     "errors": {
       "loginFailed": "Invalid email or password",
-      "registerFailed": "Registration failed. Please try again."
+      "registerFailed": "Registration failed. Please try again.",
+      "resetFailed": "Invalid or expired reset link."
     },
     "totp": {
       "title": "Two-Factor Authentication",
-      "subtitle": "Enter the 6-digit code from your authenticator app.",
+      "subtitle": "Enter the 6-digit code:",
       "codeLabel": "Authentication Code",
       "verify": "Verify",
       "invalidCode": "Invalid or expired code. Please try again."
@@ -156,6 +168,7 @@
       "deniedGeofence": "You must be at the venue to display your QR code.",
       "deniedAttestation": "Device not verified. QR codes are available on attested devices only.",
       "deniedState": "This ticket cannot be used for entry in its current state.",
+      "deniedTimeWindow": "QR codes are only available from 5 hours before the event until it ends.",
       "error": "Your QR code could not be loaded."
     },
     "queue": {
@@ -325,10 +338,10 @@
         "manualKey": "Or enter this key manually:",
         "confirmCode": "Enter the 6-digit code from your app to confirm setup.",
         "confirm": "Confirm & Enable",
-        "backupTitle": "Save Your Backup Codes",
+        "backupTitle": "Save your backup codes:",
         "backupNote": "Save these — each can only be used once.",
         "copyBackups": "Copy Codes",
-        "disableInstruction": "Enter your authenticator code to disable 2FA:",
+        "disableInstruction": "Enter your authenticator code:",
         "confirmDisable": "Disable 2FA",
         "disabledToast": "Two-factor authentication disabled."
       }
@@ -471,11 +484,13 @@
       "createSuccess": "Event created.",
       "updateSuccess": "Event updated.",
       "publishSuccess": "Event published.",
+      "startSuccess": "Event marked as ongoing.",
       "cancelSuccess": "Event cancelled.",
       "empty": "No events yet.",
       "edit": "Edit event information",
       "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
+      "markStarted": "Mark as Started",
       "cancel": "Cancel Event",
       "confirmPublish": "Confirm Publish",
       "confirmCancel": "Cancel Event",
@@ -491,7 +506,32 @@
       "saleEndBeforeStart": "Sale must end before event starts",
       "searchPlaceholder": "Search events…",
       "cancelDesc": "Issued tickets will be cancelled and reimbursed in the next 30 days.",
-      "updateEvent": "Update"
+      "updateEvent": "Update",
+      "notEditableAfterStart": "This event has already started and can no longer be edited."
+    },
+    "entryStats": {
+      "title": "Live entry stats",
+      "totalIssued": "Issued",
+      "totalEntered": "Entered",
+      "totalRemaining": "Remaining",
+      "entryRate": "Entry rate",
+      "lastScan": "Last scan",
+      "noScans": "No scans yet",
+      "rejections": "Rejections",
+      "noRejections": "No rejections",
+      "rejectionWindow": "Last 24 h",
+      "reasons": {
+        "state": "Already used",
+        "replay": "Duplicate scan",
+        "expired": "Expired QR",
+        "not_found": "Ticket not found",
+        "wrong_event": "Wrong event",
+        "wrong_venue": "Wrong venue",
+        "signature": "Invalid QR",
+        "wrong_owner": "Wrong owner",
+        "audience": "Audience mismatch",
+        "busy": "Scanner busy"
+      }
     },
     "ticketTypes": {
       "title": "Edit ticket type details",
@@ -564,6 +604,7 @@
       "createEventFailed": "Failed to create event.",
       "updateEventFailed": "Failed to update event.",
       "publishFailed": "Failed to publish event.",
+      "startFailed": "Failed to mark event as started.",
       "cancelFailed": "Failed to cancel event.",
       "createTicketTypeFailed": "Failed to create ticket type.",
       "updateTicketTypeFailed": "Failed to update ticket type.",

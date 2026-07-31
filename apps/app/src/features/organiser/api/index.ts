@@ -40,7 +40,8 @@ export interface OrgEvent {
   sale_starts_at: string
   sale_ends_at: string
   max_tickets_per_user: number
-  status: 'draft' | 'published' | 'cancelled'
+  status: 'draft' | 'published' | 'ongoing' | 'cancelled'
+  started_at: string | null
   organiser_name: string
   venue_city: string
   queue_required: boolean
@@ -173,6 +174,9 @@ export const organiserApi = {
 
   publishEvent: (eventId: string) =>
     catalogClient.post<OrgEvent>(`/v1/events/${eventId}/publish`).then((r) => r.data),
+
+  startEvent: (eventId: string) =>
+    catalogClient.post<OrgEvent>(`/v1/events/${eventId}/start`).then((r) => r.data),
 
   cancelEvent: (eventId: string) =>
     catalogClient.post<OrgEvent>(`/v1/events/${eventId}/cancel`).then((r) => r.data),

@@ -1,13 +1,50 @@
-def verification_link_email(full_name: str, link: str, expire_hours: int) -> str:
+def _cta_button(url: str, label: str) -> str:
+    return (
+        f'      <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">\n'
+        f"        <tr>\n"
+        f"          <td align=\"center\">\n"
+        f'            <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">\n'
+        f"              <tr>\n"
+        f"                <td align=\"center\">\n"
+        f'                  <a href="{url}" class="button" target="_blank">{label}</a>\n'
+        f"                </td>\n"
+        f"              </tr>\n"
+        f"            </table>\n"
+        f"          </td>\n"
+        f"        </tr>\n"
+        f"      </table>"
+    )
+
+
+def _fallback_link(url: str) -> str:
+    return (
+        f'      <table class="body-sub" role="presentation">\n'
+        f"        <tr>\n"
+        f"          <td>\n"
+        f'            <p class="sub">If the button above doesn\'t work, copy and paste this URL into your browser:</p>\n'
+        f'            <p class="sub"><a href="{url}">{url}</a></p>\n'
+        f"          </td>\n"
+        f"        </tr>\n"
+        f"      </table>"
+    )
+
+
+def base_email(*, title: str, preheader: str, logo_url: str | None, content_html: str) -> str:
+    masthead = (
+        f'<a href="https://qrew.com"><img src="{logo_url}" alt="Qrew" height="240"'
+        ' style="display:inline-block;border:none;max-height:240px;" /></a>'
+        if logo_url
+        else '<a href="https://qrew.com" class="email-masthead_name">Qrew</a>'
+    )
     return f"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="x-apple-disable-message-reformatting" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="supported-color-schemes" content="light dark" />
-    <title>Verify your Qrew account</title>
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
+    <title>{title}</title>
     <style type="text/css" rel="stylesheet" media="all">
       @import url("https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&display=swap");
 
@@ -16,11 +53,11 @@ def verification_link_email(full_name: str, link: str, expire_hours: int) -> str
         height: 100%;
         margin: 0;
         -webkit-text-size-adjust: none;
-        background-color: #F2F4F6;
-        color: #51545E;
+        background-color: #1A1A1A;
+        color: #E7EBEF;
       }}
 
-      a {{ color: #3869D4; }}
+      a {{ color: #BF7318; }}
       a img {{ border: none; }}
       td {{ word-break: break-word; }}
 
@@ -42,26 +79,26 @@ def verification_link_email(full_name: str, link: str, expire_hours: int) -> str
 
       h1 {{
         margin-top: 0;
-        color: #333333;
+        color: #FFFFFF;
         font-size: 22px;
         font-weight: bold;
         text-align: left;
       }}
 
       p {{
-        color: #51545E;
+        color: #E7EBEF;
         font-size: 16px;
         line-height: 1.625;
         margin: 0.4em 0 1.1875em;
       }}
 
-      p.sub {{ font-size: 13px; }}
+      p.sub {{ font-size: 13px; color: #768293; }}
 
       .email-wrapper {{
         width: 100%;
         margin: 0;
         padding: 0;
-        background-color: #F2F4F6;
+        background-color: #1A1A1A;
       }}
 
       .email-content {{ width: 100%; margin: 0; padding: 0; }}
@@ -69,22 +106,25 @@ def verification_link_email(full_name: str, link: str, expire_hours: int) -> str
       .email-masthead {{
         padding: 25px 0;
         text-align: center;
+        background-color: #1A1A1A;
       }}
 
       .email-masthead_name {{
         font-size: 20px;
         font-weight: bold;
-        color: #333333;
+        color: #BF7318;
         text-decoration: none;
       }}
 
-      .email-body {{ width: 100%; margin: 0; padding: 0; }}
+      .email-body {{ width: 100%; margin: 0; padding: 0; background-color: #1A1A1A; }}
 
       .email-body_inner {{
         width: 570px;
         margin: 0 auto;
         padding: 0;
-        background-color: #FFFFFF;
+        background-color: #171717;
+        border: 1px solid #292929;
+        border-radius: 8px;
       }}
 
       .email-footer {{
@@ -92,23 +132,25 @@ def verification_link_email(full_name: str, link: str, expire_hours: int) -> str
         margin: 0 auto;
         padding: 0;
         text-align: center;
+        background-color: #1A1A1A;
       }}
 
-      .email-footer p {{ color: #A8AAAF; }}
+      .email-footer p {{ color: #768293; }}
+      .email-footer a {{ color: #BF7318; }}
 
       .content-cell {{ padding: 45px; }}
 
       .button {{
-        background-color: #3869D4;
-        border-top: 10px solid #3869D4;
-        border-right: 18px solid #3869D4;
-        border-bottom: 10px solid #3869D4;
-        border-left: 18px solid #3869D4;
+        background-color: #BF7318;
+        border-top: 10px solid #BF7318;
+        border-right: 18px solid #BF7318;
+        border-bottom: 10px solid #BF7318;
+        border-left: 18px solid #BF7318;
         display: inline-block;
-        color: #FFF !important;
+        color: #FFFFFF !important;
         text-decoration: none;
-        border-radius: 3px;
-        box-shadow: 0 2px 3px rgba(0,0,0,0.16);
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(191,115,24,0.35);
         -webkit-text-size-adjust: none;
         box-sizing: border-box;
         font-weight: bold;
@@ -125,32 +167,17 @@ def verification_link_email(full_name: str, link: str, expire_hours: int) -> str
       .body-sub {{
         margin-top: 25px;
         padding-top: 25px;
-        border-top: 1px solid #EAEAEC;
+        border-top: 1px solid #292929;
       }}
 
       @media only screen and (max-width: 600px) {{
         .email-body_inner, .email-footer {{ width: 100% !important; }}
         .button {{ width: 100% !important; text-align: center !important; }}
       }}
-
-      @media (prefers-color-scheme: dark) {{
-        body, .email-body, .email-body_inner, .email-content,
-        .email-wrapper, .email-masthead, .email-footer {{
-          background-color: #333333 !important;
-          color: #FFF !important;
-        }}
-        p, h1, span {{ color: #FFF !important; }}
-        .email-masthead_name {{ color: #FFF !important; }}
-      }}
-
-      :root {{
-        color-scheme: light dark;
-        supported-color-schemes: light dark;
-      }}
     </style>
   </head>
   <body>
-    <span class="preheader">Verify your email address to get started with Qrew.</span>
+    <span class="preheader">{preheader}</span>
     <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation">
       <tr>
         <td align="center">
@@ -159,7 +186,7 @@ def verification_link_email(full_name: str, link: str, expire_hours: int) -> str
             <!-- Masthead -->
             <tr>
               <td class="email-masthead">
-                <a href="https://qrew.com" class="email-masthead_name">Qrew</a>
+                {masthead}
               </td>
             </tr>
 
@@ -169,37 +196,7 @@ def verification_link_email(full_name: str, link: str, expire_hours: int) -> str
                 <table class="email-body_inner" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
                   <tr>
                     <td class="content-cell">
-                      <h1>Verify your email, {full_name.split(maxsplit=1)[0]}!</h1>
-                      <p>Thanks for signing up.</p>
-                      <p>Please confirm your email address by clicking the button below.</p>
-
-                      <!-- CTA Button -->
-                      <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
-                        <tr>
-                          <td align="center">
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
-                              <tr>
-                                <td align="center">
-                                  <a href="{link}" class="button" target="_blank">Verify email address</a>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <p>This link expires in <strong>{expire_hours} hours</strong>. </p>
-                      <p>If you did not create an account, you can safely ignore this message.</p>
-
-                      <!-- Fallback link -->
-                      <table class="body-sub" role="presentation">
-                        <tr>
-                          <td>
-                            <p class="sub">If the button above doesn't work, copy and paste this URL into your browser:</p>
-                            <p class="sub"><a href="{link}">{link}</a></p>
-                          </td>
-                        </tr>
-                      </table>
+{content_html}
                     </td>
                   </tr>
                 </table>
@@ -212,7 +209,7 @@ def verification_link_email(full_name: str, link: str, expire_hours: int) -> str
                 <table class="email-footer" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
                   <tr>
                     <td class="content-cell" align="center">
-                      <p class="sub">Qrew &mdash; All rights reserved.</p>
+                      <p class="sub">Qrew. All rights reserved.</p>
                       <p class="sub">If you have questions, reply to this email or contact <a href="mailto:support@qrew.com">support@qrew.com</a>.</p>
                     </td>
                   </tr>

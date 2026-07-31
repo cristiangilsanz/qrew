@@ -16,6 +16,11 @@ function EditTicketsPage() {
   const { data, isLoading } = useOrgEvents(orgId)
   const event = data?.items.find((e) => e.id === eventId)
 
+  const hasStarted = event
+    ? event.status === 'ongoing' || new Date(event.starts_at) <= new Date()
+    : false
+  const effectiveStatus = hasStarted ? 'cancelled' : event?.status
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
       <BackButton to="/management/$orgId/events/$eventId/" params={{ orgId, eventId }} />
@@ -24,7 +29,7 @@ function EditTicketsPage() {
       {isLoading || !event ? (
         <TicketTypeListSkeleton />
       ) : (
-        <TicketTypeList eventId={eventId} eventStatus={event.status} />
+        <TicketTypeList eventId={eventId} eventStatus={effectiveStatus} />
       )}
     </div>
   )

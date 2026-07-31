@@ -30,6 +30,16 @@ export interface EntryResult {
   scanned_at: string
 }
 
+export interface EntryStats {
+  event_id: string
+  since: string
+  total_issued: number
+  total_entered: number
+  total_remaining: number
+  rejections_by_reason: Record<string, number>
+  last_scan_at: string | null
+}
+
 export const scannerApi = {
   createForEvent: (eventId: string, name: string, date?: string) =>
     entryClient
@@ -44,4 +54,7 @@ export const scannerApi = {
         { headers: { Authorization: `Bearer ${scannerToken}` } },
       )
       .then((r) => r.data),
+
+  getEntryStats: (eventId: string) =>
+    entryClient.get<EntryStats>(`/v1/events/${eventId}/entry-stats`).then((r) => r.data),
 }

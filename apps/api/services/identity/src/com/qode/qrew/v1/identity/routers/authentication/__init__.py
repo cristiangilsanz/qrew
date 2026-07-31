@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from ._deps import (
     get_deletion_service,
+    get_forgot_password_service,
     get_complete_setup_service,
     get_device_attestation_service,
     get_device_binding_service,
@@ -52,6 +53,7 @@ router.include_router(totp_router)
 
 __all__ = [
     "get_deletion_service",
+    "get_forgot_password_service",
     "get_complete_setup_service",
     "get_device_attestation_service",
     "get_device_binding_service",

@@ -9,6 +9,7 @@ from webauthn.helpers.structs import (
     AuthenticatorSelectionCriteria,
     PublicKeyCredentialType,
     RegistrationCredential,
+    ResidentKeyRequirement,
     UserVerificationRequirement,
 )
 from webauthn.registration.verify_registration_response import VerifiedRegistration
@@ -55,6 +56,7 @@ class PasskeyRegistrationService:
             user_name=user.email,
             user_display_name=user.full_name,
             authenticator_selection=AuthenticatorSelectionCriteria(
+                resident_key=ResidentKeyRequirement.REQUIRED,
                 user_verification=UserVerificationRequirement.REQUIRED,
             ),
         )
@@ -99,21 +101,26 @@ class PasskeyRegistrationService:
         request: PasskeyRegistrationCompleteRequest,
     ) -> VerifiedRegistration:
         """Verify the attestation payload against the cached challenge."""
-        credential = RegistrationCredential(
-            id=request.id,
-            raw_id=base64url_to_bytes(request.raw_id),
-            response=AuthenticatorAttestationResponse(
-                client_data_json=base64url_to_bytes(request.response.client_data_json),
-                attestation_object=base64url_to_bytes(request.response.attestation_object),
-            ),
-            type=PublicKeyCredentialType.PUBLIC_KEY,
+        expected_origins: str | list[str] = (
+            [settings.rp_expected_origin] + settings.rp_expected_origins
+            if settings.rp_expected_origins
+            else settings.rp_expected_origin
         )
         try:
+            credential = RegistrationCredential(
+                id=request.id,
+                raw_id=base64url_to_bytes(request.raw_id),
+                response=AuthenticatorAttestationResponse(
+                    client_data_json=base64url_to_bytes(request.response.client_data_json),
+                    attestation_object=base64url_to_bytes(request.response.attestation_object),
+                ),
+                type=PublicKeyCredentialType.PUBLIC_KEY,
+            )
             return webauthn.verify_registration_response(
                 credential=credential,
                 expected_challenge=raw_challenge,
                 expected_rp_id=settings.rp_id,
-                expected_origin=settings.rp_expected_origin,
+                expected_origin=expected_origins,
                 require_user_verification=True,
             )
         except Exception as exc:

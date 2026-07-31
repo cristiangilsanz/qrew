@@ -268,11 +268,7 @@ function CheckoutPage() {
             onClick={() => void handleReserve()}
             className="bg-primary hover:bg-primary/90 ml-auto flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-40"
           >
-            {isPending ? (
-              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            ) : (
-              <Ticket className="h-5 w-5 shrink-0" />
-            )}
+            <Ticket className="h-5 w-5 shrink-0" />
             <span className="text-sm font-semibold">{t('tickets.checkout.reserveButton')}</span>
           </button>
         </div>

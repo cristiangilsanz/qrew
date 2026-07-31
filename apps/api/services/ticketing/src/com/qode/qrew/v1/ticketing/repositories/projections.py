@@ -20,15 +20,27 @@ class EventVenueContextRepository:
         event_id: uuid.UUID,
         venue_id: uuid.UUID,
         event_status: str,
+        starts_at: datetime | None = None,
+        ends_at: datetime | None = None,
     ) -> None:
         ctx = await self._session.get(EventVenueContext, event_id)
         if ctx is None:
-            ctx = EventVenueContext(event_id=event_id, venue_id=venue_id, event_status=event_status)
+            ctx = EventVenueContext(
+                event_id=event_id,
+                venue_id=venue_id,
+                event_status=event_status,
+                starts_at=starts_at,
+                ends_at=ends_at,
+            )
             self._session.add(ctx)
         else:
             ctx.event_status = event_status
             if venue_id != ctx.venue_id:
                 ctx.venue_id = venue_id
+            if starts_at is not None:
+                ctx.starts_at = starts_at
+            if ends_at is not None:
+                ctx.ends_at = ends_at
         ctx.updated_at = datetime.now(UTC)
         await self._session.flush()
 

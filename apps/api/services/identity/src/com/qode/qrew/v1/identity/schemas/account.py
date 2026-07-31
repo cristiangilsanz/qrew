@@ -69,6 +69,23 @@ class AccountDeleteResponse(BaseModel):
     message: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8)
+
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+
+
 class RecoveryBeginResponse(BaseModel):
     message: str
     recovery_token: str | None = None

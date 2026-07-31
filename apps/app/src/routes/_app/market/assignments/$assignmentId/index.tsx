@@ -335,11 +335,7 @@ function AssignmentPage() {
                 disabled={accepting || countdownExpired}
                 className="bg-primary hover:bg-primary/90 flex h-14 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-lg transition disabled:opacity-40"
               >
-                {accepting ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <CreditCard className="h-4 w-4" />
-                )}
+                <CreditCard className="h-4 w-4" />
                 {t('market.assignment.acceptAndPay')}
               </button>
             </div>
@@ -392,9 +388,7 @@ function AssignmentPage() {
                   disabled={declineSeconds > 0 || declineAssignment.isPending}
                   className="flex h-10 min-w-[112px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  {declineAssignment.isPending ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : declineSeconds > 0 ? (
+                  {declineSeconds > 0 ? (
                     t('common.waitSeconds', { seconds: declineSeconds })
                   ) : (
                     <>

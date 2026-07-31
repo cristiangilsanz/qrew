@@ -100,11 +100,7 @@ export function ReservationSummary({ reservation, onCancel, onPay, payLoading }:
               className="flex w-full items-center gap-3 rounded-2xl bg-red-500 px-4 py-3 text-left text-white transition-colors hover:bg-red-600 disabled:opacity-50"
             >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
-                {cancel.isPending ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <XCircle className="h-4 w-4" />
-                )}
+                <XCircle className="h-4 w-4" />
               </div>
               <span className="text-sm font-semibold">{t('tickets.reservation.cancelButton')}</span>
             </button>

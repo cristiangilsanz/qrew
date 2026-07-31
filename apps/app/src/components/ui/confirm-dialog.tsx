@@ -83,14 +83,10 @@ export function ConfirmDialog({
                   destructive ? 'bg-red-500' : 'bg-primary'
                 }`}
               >
-                {isLoading ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <>
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {confirmLabel}
-                  </>
-                )}
+                <>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {confirmLabel}
+                </>
               </button>
             </div>
           </motion.div>

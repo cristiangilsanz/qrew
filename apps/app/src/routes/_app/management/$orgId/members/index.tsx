@@ -167,11 +167,7 @@ function OrgMembersPage() {
                   disabled={remove.isPending}
                   className="flex h-10 items-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  {remove.isPending ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <UserMinus className="h-3.5 w-3.5" />
-                  )}
+                  <UserMinus className="h-3.5 w-3.5" />
                   {t('organiser.members.removeConfirm')}
                 </button>
               </div>

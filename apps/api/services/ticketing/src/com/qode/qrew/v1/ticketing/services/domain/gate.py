@@ -13,11 +13,15 @@ from com.qode.qrew.v1.ticketing.core.config import settings
 _EARTH_RADIUS_M = 6_371_000.0
 
 
+_QR_WINDOW_HOURS_BEFORE = 5
+
+
 class DenialReason(StrEnum):
     state = "state"
     reassertion = "reassertion"
     attestation = "attestation"
     geofence = "geofence"
+    time_window = "time_window"
     not_found = "not_found"
     not_owner = "not_owner"
 
@@ -99,12 +103,23 @@ def evaluate_gate(
     )
     if distance > event_ctx.geofence_radius_m:
         return DenialReason.geofence
+    starts_at = event_ctx.starts_at
+    ends_at = event_ctx.ends_at
+    if starts_at is not None and ends_at is not None:
+        if starts_at.tzinfo is None:
+            starts_at = starts_at.replace(tzinfo=UTC)
+        if ends_at.tzinfo is None:
+            ends_at = ends_at.replace(tzinfo=UTC)
+        earliest = starts_at - timedelta(hours=_QR_WINDOW_HOURS_BEFORE)
+        if now < earliest or now > ends_at:
+            return DenialReason.time_window
     return None
 
 
 __all__ = [
     "DenialReason",
     "GateInputs",
+    "_QR_WINDOW_HOURS_BEFORE",
     "evaluate_gate",
     "haversine_metres",
     "load_inputs",

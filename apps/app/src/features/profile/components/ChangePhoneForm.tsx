@@ -103,14 +103,10 @@ export function ChangePhoneForm({ hideTitle }: Props) {
                 disabled={confirmPhone.isPending}
                 className="bg-primary flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white disabled:opacity-50"
               >
-                {confirmPhone.isPending ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <>
-                    <Check className="h-3.5 w-3.5" />
-                    {t('profile.changePhone.confirmSubmit')}
-                  </>
-                )}
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  {t('profile.changePhone.confirmSubmit')}
+                </>
               </button>
             </div>
           </form>
@@ -172,14 +168,10 @@ export function ChangePhoneForm({ hideTitle }: Props) {
               disabled={changePhone.isPending}
               className="bg-primary flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white disabled:opacity-50"
             >
-              {changePhone.isPending ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                <>
-                  <Send className="h-3.5 w-3.5" />
-                  {t('profile.changePhone.submit')}
-                </>
-              )}
+              <>
+                <Send className="h-3.5 w-3.5" />
+                {t('profile.changePhone.submit')}
+              </>
             </button>
           </div>
         </form>

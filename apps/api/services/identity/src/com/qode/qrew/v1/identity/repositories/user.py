@@ -69,6 +69,13 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_password_reset_token(self, token: str) -> User | None:
+        """Return the user matching the given password reset token."""
+        result = await self._session.execute(
+            select(User).where(User.password_reset_token == token).limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def get_by_national_id_hash(self, national_id_hash: str) -> User | None:
         """Return the user matching the given national ID hash."""
         result = await self._session.execute(

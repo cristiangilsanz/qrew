@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 
-import logo from '@/assets/images/logo.webp'
+import logo from '@/assets/brand/logo.webp'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 

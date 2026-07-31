@@ -56,16 +56,18 @@ export function PasskeyList() {
         {passkeys.map((pk) => (
           <li key={pk.id} className="rounded-xl bg-white/[0.04] px-3 py-3">
             {editingId === pk.id ? (
-              <div className="flex items-center gap-3">
-                <KeyRound className="text-muted-foreground h-5 w-5 shrink-0" />
-                <Input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="h-7 w-36 text-xs"
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
-                  autoFocus
-                />
-                <div className="flex gap-1.5">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="text-muted-foreground h-5 w-5 shrink-0" />
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="h-7 min-w-0 flex-1 text-xs"
+                    // eslint-disable-next-line jsx-a11y/no-autofocus
+                    autoFocus
+                  />
+                </div>
+                <div className="flex justify-end gap-1.5">
                   <Button
                     size="sm"
                     variant="outline"
@@ -141,14 +143,10 @@ export function PasskeyList() {
           disabled={registerPasskey.isPending}
           className="bg-primary flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
         >
-          {registerPasskey.isPending ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <>
-              <Plus className="h-3.5 w-3.5" />
-              Add passkey
-            </>
-          )}
+          <>
+            <Plus className="h-3.5 w-3.5" />
+            Add passkey
+          </>
         </button>
       </div>
     </div>

@@ -11,6 +11,7 @@ export const env = {
   STRIPE_PUBLISHABLE_KEY: (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined) ?? '',
   GATEWAY_URL: _wsHost,
   GOOGLE_MAPS_API_KEY: (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) ?? '',
+  TURNSTILE_SITE_KEY: (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) ?? '',
   DEV: import.meta.env.DEV,
   PROD: import.meta.env.PROD,
 } as const

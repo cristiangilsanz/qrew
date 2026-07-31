@@ -58,6 +58,9 @@ from com.qode.qrew.v1.identity.services.application.authentication.account.chang
 from com.qode.qrew.v1.identity.services.application.authentication.account.changes.phone_change import (
     PhoneChangeService,
 )
+from com.qode.qrew.v1.identity.services.application.authentication.account.changes.forgot_password import (
+    ForgotPasswordService,
+)
 from com.qode.qrew.v1.identity.services.application.authentication.account.recovery import (
     RecoveryService,
 )
@@ -476,6 +479,16 @@ def get_password_change_service(
         SessionRepository(db),
         redis,
         AuditService(),
+    )
+
+
+def get_forgot_password_service(
+    db: AsyncSession = Depends(get_db),
+    notifier: NotificationDispatcher = Depends(get_notification_service),
+) -> ForgotPasswordService:
+    return ForgotPasswordService(
+        user_repo=UserRepository(db),
+        notifier=notifier,
     )
 
 

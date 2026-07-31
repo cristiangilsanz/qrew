@@ -2,7 +2,10 @@ import json
 import secrets
 
 import pyotp
+import structlog
 from passlib.context import CryptContext
+
+logger = structlog.get_logger(__name__)
 
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.models.user import User
@@ -48,7 +51,7 @@ class TotpService:
     async def confirm(self, user: User, secret: str, code: str, backup_codes: list[str]) -> None:
         """Verify the first code against a pending secret and enable 2FA for the user."""
         totp = pyotp.TOTP(secret)
-        if not totp.verify(code, valid_window=1):
+        if not totp.verify(code, valid_window=2):
             raise TotpError("Invalid code")
         hashed_backups = [_hash_backup(c) for c in backup_codes]
         user.totp_secret = secret
@@ -67,7 +70,7 @@ class TotpService:
         if not user.totp_enabled or user.totp_secret is None:
             raise TotpError("2FA not enabled")
         totp = pyotp.TOTP(user.totp_secret)
-        if totp.verify(code, valid_window=1):
+        if totp.verify(code, valid_window=2):
             await self._audit.record(
                 action=AuditAction.TOTP_VERIFIED,
                 actor_id=user.id,
@@ -91,6 +94,7 @@ class TotpService:
                         payload={"remaining_backup_codes": len(hashed_list)},
                     )
                     return
+        await logger.awarning("totp_verify_failed", user_id=str(user.id))
         await self._audit.record(
             action=AuditAction.TOTP_VERIFY_FAILED,
             actor_id=user.id,

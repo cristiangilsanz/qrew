@@ -343,6 +343,8 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
     market_starts_at = now + timedelta(days=30)
     market_sale_ends_at = now - timedelta(days=1)
 
+    # (id, org, venue, name, desc, starts_at, ends_at, sale_starts_at, sale_ends_at,
+    #  max_tickets, venue_city, status, started_at)
     event_rows = [
         (
             event_past,
@@ -356,6 +358,8 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             datetime(2025, 12, 19, 23, 59, tzinfo=UTC),
             4,
             "Madrid",
+            "published",
+            None,
         ),
         (
             event_now,
@@ -363,12 +367,14 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             venue_bcn,
             "Summer Beats 2026",
             "The biggest summer festival hits Barcelona's iconic Palau Sant Jordi.",
-            datetime(2026, 8, 15, 20, 0, tzinfo=UTC),
-            datetime(2026, 8, 16, 2, 0, tzinfo=UTC),
-            datetime(2026, 7, 1, 10, 0, tzinfo=UTC),
-            datetime(2026, 8, 14, 23, 59, tzinfo=UTC),
+            now - timedelta(hours=2),
+            now + timedelta(hours=6),
+            now - timedelta(days=30),
+            now - timedelta(hours=3),
             4,
             "Barcelona",
+            "ongoing",
+            now - timedelta(hours=2),
         ),
         (
             event_future,
@@ -382,6 +388,8 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             datetime(2026, 10, 30, 23, 59, tzinfo=UTC),
             4,
             "Madrid",
+            "published",
+            None,
         ),
         # Market test event: sale already ended, starts 30 days from now
         (
@@ -396,6 +404,8 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             market_sale_ends_at,
             4,
             "Madrid",
+            "published",
+            None,
         ),
     ]
 
@@ -408,12 +418,12 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 max_tickets_per_user, status,
                 organiser_name, venue_city,
                 queue_required, queue_admit_rate_per_minute,
-                created_at, updated_at, published_at
+                created_at, updated_at, published_at, started_at
             ) VALUES (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-                'published'::text, $11,$12,
+                $11::text, 'Qrew Events',$12,
                 false, 60,
-                $13,$14,$15
+                $13,$14,$15,$16
             )
             """,
             row[0],
@@ -426,11 +436,12 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
             row[7],
             row[8],  # sale_starts_at, sale_ends_at
             row[9],  # max_tickets_per_user
-            "Qrew Events",
-            row[10],  # organiser_name, venue_city
+            row[11],  # status
+            row[10],  # venue_city
             now,
             now,
-            now,  # created, updated, published
+            now,   # created, updated, published
+            row[12],  # started_at
         )
 
     # ── Ticket types ──────────────────────────────────────────────────────────
@@ -620,8 +631,9 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
         """
         INSERT INTO ticketing.event_venue_context
             (event_id, venue_id, event_status,
-             latitude, longitude, geofence_radius_m, timezone, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+             latitude, longitude, geofence_radius_m, timezone,
+             starts_at, ends_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
         """,
         [
             (
@@ -632,16 +644,20 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 -3.661543,
                 100000,
                 "Europe/Madrid",
+                datetime(2025, 12, 20, 22, 0, tzinfo=UTC),
+                datetime(2025, 12, 21, 6, 0, tzinfo=UTC),
                 now,
             ),
             (
                 event_now,
                 venue_bcn,
-                "published",
+                "ongoing",
                 41.364667,
                 2.153028,
                 100000,
                 "Europe/Madrid",
+                now - timedelta(hours=2),
+                now + timedelta(hours=6),
                 now,
             ),
             (
@@ -652,6 +668,8 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 -3.661543,
                 100000,
                 "Europe/Madrid",
+                datetime(2026, 10, 31, 23, 0, tzinfo=UTC),
+                datetime(2026, 11, 1, 7, 0, tzinfo=UTC),
                 now,
             ),
             (
@@ -662,6 +680,8 @@ async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
                 -3.661543,
                 100000,
                 "Europe/Madrid",
+                market_starts_at,
+                market_starts_at + timedelta(hours=8),
                 now,
             ),
         ],

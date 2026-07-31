@@ -138,7 +138,9 @@ export function QrDisplay({ ticketId }: Props) {
             ? 'tickets.qr.deniedAttestation'
             : state.reason === 'state'
               ? 'tickets.qr.deniedState'
-              : 'tickets.qr.denied'
+              : state.reason === 'time_window'
+                ? 'tickets.qr.deniedTimeWindow'
+                : 'tickets.qr.denied'
     const isLocation = state.reason === 'geolocation'
     return (
       <div className="flex h-[300px] flex-col items-center justify-center gap-3 text-center">

@@ -73,6 +73,7 @@ def _event_response(event: Event) -> EventResponse:
         queue_admit_rate_per_minute=event.queue_admit_rate_per_minute,
         created_at=event.created_at,
         published_at=event.published_at,
+        started_at=event.started_at,
         cancelled_at=event.cancelled_at,
     )
 
@@ -158,6 +159,33 @@ async def publish_event(
     del request
     try:
         event = await svc.publish_event(actor_id=actor.user_id, event_id=event_id)
+    except EventError as exc:
+        raise _event_error(exc) from exc
+    except LockUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": "Another lifecycle change is in progress", "field": None},
+        ) from exc
+    return _event_response(event)
+
+
+@router.post(
+    "/{event_id}/start",
+    response_model=EventResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Mark a published event as ongoing",
+)
+@limiter.limit("60/hour")  # type: ignore[misc]
+@idempotent(scope="user", ttl_seconds=300)
+async def start_event(
+    request: Request,
+    event_id: uuid.UUID,
+    actor: OrganisationMember = Depends(get_event_member(OrganisationRole.manager)),
+    svc: EventService = Depends(get_event_service),
+) -> EventResponse:
+    del request
+    try:
+        event = await svc.start_event(actor_id=actor.user_id, event_id=event_id)
     except EventError as exc:
         raise _event_error(exc) from exc
     except LockUnavailableError as exc:

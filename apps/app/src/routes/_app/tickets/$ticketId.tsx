@@ -343,11 +343,7 @@ function TicketDetailPage() {
                     disabled={listForResale.isPending || eventStartsSoon}
                     className="bg-primary mt-4 flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
                   >
-                    {listForResale.isPending ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent" />
-                    ) : (
-                      <ShoppingBag className="h-4 w-4" />
-                    )}
+                    <ShoppingBag className="h-4 w-4" />
                     {t('tickets.ticket.sale.button')}
                   </button>
                   <p className="mt-1.5 flex items-center gap-1 text-xs text-gray-400">

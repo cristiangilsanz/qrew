@@ -27,11 +27,11 @@ function formatSeconds(s: number) {
 
 function AssignmentCard() {
   const { t } = useTranslation()
-  const { data: assignment, isLoading } = usePendingMarketAssignment()
-  const { data: event } = useEvent(assignment?.event_id ?? '')
+  const { data: assignment, isLoading: assignmentLoading } = usePendingMarketAssignment()
+  const { data: event, isLoading: eventLoading } = useEvent(assignment?.event_id ?? '')
   const countdown = useCountdown(assignment?.state === 'pending' ? assignment.expires_at : null)
 
-  if (isLoading) {
+  if (assignmentLoading || (assignment?.event_id && eventLoading)) {
     return <EventCardSkeleton />
   }
 
@@ -106,9 +106,10 @@ function AssignmentCard() {
 function ClaimsPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
-  const { data: assignment, isLoading } = usePendingMarketAssignment()
-  const { data: event } = useEvent(assignment?.event_id ?? '')
+  const { data: assignment, isLoading: assignmentLoading } = usePendingMarketAssignment()
+  const { data: event, isLoading: eventLoading } = useEvent(assignment?.event_id ?? '')
 
+  const isLoading = assignmentLoading || (!!assignment?.event_id && eventLoading)
   const eventName = event?.name ?? assignment?.event_name ?? ''
   const matches = !query || eventName.toLowerCase().includes(query.toLowerCase())
 

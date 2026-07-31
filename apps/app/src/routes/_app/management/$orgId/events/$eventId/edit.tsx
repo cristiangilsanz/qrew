@@ -17,7 +17,11 @@ function EditEventPage() {
   const { data, isLoading } = useOrgEvents(orgId)
   const event = data?.items.find((e) => e.id === eventId)
 
-  const showCancel = event && (event.status === 'draft' || event.status === 'published')
+  const hasStarted = event
+    ? event.status === 'ongoing' || new Date(event.starts_at) <= new Date()
+    : false
+  const showCancel =
+    event && !hasStarted && (event.status === 'draft' || event.status === 'published')
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
@@ -26,6 +30,10 @@ function EditEventPage() {
 
       {isLoading || !event ? (
         <FormPageSkeleton />
+      ) : hasStarted ? (
+        <p className="text-muted-foreground text-sm">
+          {t('organiser.events.notEditableAfterStart')}
+        </p>
       ) : (
         <>
           <EditEventForm event={event} orgId={orgId} />

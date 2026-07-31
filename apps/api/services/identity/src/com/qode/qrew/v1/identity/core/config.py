@@ -90,6 +90,7 @@ class Settings(BaseSettings):
     rp_id: str = "localhost"
     rp_name: str = "Qrew"
     rp_expected_origin: str = "http://localhost:3000"
+    rp_expected_origins: list[str] = []
 
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"

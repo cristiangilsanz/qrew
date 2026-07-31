@@ -95,11 +95,16 @@ def verify_assertion_response(
     stored: PasskeyCredential,
 ) -> VerifiedAuthentication:
     """Verify a passkey assertion against the stored public key."""
+    expected_origins: str | list[str] = (
+        [settings.rp_expected_origin] + settings.rp_expected_origins
+        if settings.rp_expected_origins
+        else settings.rp_expected_origin
+    )
     return webauthn.verify_authentication_response(
         credential=credential,
         expected_challenge=expected_challenge,
         expected_rp_id=settings.rp_id,
-        expected_origin=settings.rp_expected_origin,
+        expected_origin=expected_origins,
         credential_current_sign_count=stored.sign_count,
         credential_public_key=stored.public_key,
         require_user_verification=True,

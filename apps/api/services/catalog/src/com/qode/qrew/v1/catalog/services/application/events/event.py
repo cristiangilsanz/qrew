@@ -69,6 +69,9 @@ def _event_data(event: Any) -> dict[str, Any]:
     return {
         "event_id": str(event.id),
         "organisation_id": str(event.organisation_id),
+        "venue_id": str(event.venue_id) if event.venue_id else None,
+        "starts_at": event.starts_at.isoformat() if event.starts_at else None,
+        "ends_at": event.ends_at.isoformat() if event.ends_at else None,
         "sale_starts_at": event.sale_starts_at.isoformat() if event.sale_starts_at else None,
         "sale_ends_at": event.sale_ends_at.isoformat() if event.sale_ends_at else None,
         "max_tickets_per_user": event.max_tickets_per_user,
@@ -251,6 +254,42 @@ class EventService:
             )
             await _publish_nats(
                 "catalog.event.published.v1",
+                aggregate_type="event",
+                aggregate_id=str(event.id),
+                data=_event_data(event),
+            )
+            return event
+
+    @traced("event.start")
+    async def start_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
+        async with redlock(
+            f"event:{event_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            event = await self._repo.get_by_id(event_id)
+            if event is None:
+                raise EventError("Event not found", field="event_id")
+            if event.status == EventStatus.ongoing:
+                return event
+            if event.status != EventStatus.published:
+                raise EventError("Only published events can be started", field="status")
+            now = datetime.now(UTC)
+            starts_at = event.starts_at
+            if starts_at.tzinfo is None:
+                starts_at = starts_at.replace(tzinfo=UTC)
+            if now < starts_at:
+                raise EventError("Event has not reached its start time yet", field="starts_at")
+            event.status = EventStatus.ongoing
+            event.started_at = now
+            await self._repo.flush()
+            await self._reindex(event.id)
+            await self._record(
+                "event_started",
+                actor_id=actor_id,
+                event_id=event.id,
+                payload={"organisation_id": str(event.organisation_id)},
+            )
+            await _publish_nats(
+                "catalog.event.ongoing.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),
                 data=_event_data(event),

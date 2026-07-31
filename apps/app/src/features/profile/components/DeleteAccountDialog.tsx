@@ -150,9 +150,7 @@ export function DeleteAccountDialog() {
                       disabled={seconds > 0 || deleteAccount.isPending}
                       className="flex h-10 min-w-[112px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
                     >
-                      {deleteAccount.isPending ? (
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      ) : seconds > 0 ? (
+                      {seconds > 0 ? (
                         `Wait ${seconds}s`
                       ) : (
                         <>

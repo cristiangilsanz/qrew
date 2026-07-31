@@ -1,9 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { CheckCircle, ScanLine } from 'lucide-react'
+import { CheckCircle, Play, ScanLine } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import type { OrgEvent } from '../api'
 import { usePublishEvent } from '../hooks/usePublishEvent'
+import { useStartEvent } from '../hooks/useStartEvent'
 
 interface Props {
   event: OrgEvent
@@ -14,11 +15,15 @@ export function EventActions({ event, orgId }: Props) {
   const { t } = useTranslation()
 
   const publishEvent = usePublishEvent(orgId, event.id)
+  const startEvent = useStartEvent(orgId, event.id)
+
+  const hasStarted = new Date(event.starts_at) <= new Date()
 
   const showPublish = event.status === 'draft'
-  const showScan = event.status === 'published'
+  const showMarkStarted = event.status === 'published' && hasStarted
+  const showScan = event.status === 'published' || event.status === 'ongoing'
 
-  if (!showPublish && !showScan) return null
+  if (!showPublish && !showMarkStarted && !showScan) return null
 
   return (
     <div className="fixed inset-x-0 bottom-24 z-40">
@@ -29,12 +34,18 @@ export function EventActions({ event, orgId }: Props) {
             disabled={publishEvent.isPending}
             className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
           >
-            {publishEvent.isPending ? (
-              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            ) : (
-              <CheckCircle className="h-5 w-5 shrink-0" />
-            )}
+            <CheckCircle className="h-5 w-5 shrink-0" />
             <span className="text-sm font-semibold">{t('organiser.events.publish')}</span>
+          </button>
+        )}
+        {showMarkStarted && (
+          <button
+            onClick={() => startEvent.mutate()}
+            disabled={startEvent.isPending}
+            className="flex h-14 items-center gap-2 rounded-full bg-green-600 px-5 text-white shadow-lg transition-colors hover:bg-green-500 disabled:opacity-60"
+          >
+            <Play className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('organiser.events.markStarted')}</span>
           </button>
         )}
         {showScan && (

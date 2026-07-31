@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ChevronRight, FileEdit, Ticket } from 'lucide-react'
+import { Activity, ChevronRight, FileEdit, Ticket } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
@@ -21,9 +21,14 @@ function EventManagePage() {
   const { data } = useOrgEvents(orgId)
   const event = data?.items.find((e) => e.id === eventId)
 
+  const hasStarted = event
+    ? event.status === 'ongoing' || new Date(event.starts_at) <= new Date()
+    : false
+
   if (!event) return <EventManageSkeleton />
 
   const imageUrl = getEventImageUrl(event.image_url)
+  const isEditable = !hasStarted && (event.status === 'draft' || event.status === 'published')
 
   return (
     <div className="pb-28">
@@ -59,7 +64,7 @@ function EventManagePage() {
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-          {(event.status === 'draft' || event.status === 'published') && (
+          {isEditable && (
             <>
               <Link
                 to="/management/$orgId/events/$eventId/edit"
@@ -76,24 +81,43 @@ function EventManagePage() {
                 <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
               </Link>
               <div className="border-t border-white/10" />
+              <Link
+                to="/management/$orgId/events/$eventId/tickets"
+                params={{ orgId, eventId }}
+                className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
+                  <Ticket className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{t('organiser.ticketTypes.title')}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {t('organiser.ticketTypes.managePricing')}
+                  </p>
+                </div>
+                <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+              </Link>
             </>
           )}
-          <Link
-            to="/management/$orgId/events/$eventId/tickets"
-            params={{ orgId, eventId }}
-            className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
-              <Ticket className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{t('organiser.ticketTypes.title')}</p>
-              <p className="text-muted-foreground text-xs">
-                {t('organiser.ticketTypes.managePricing')}
-              </p>
-            </div>
-            <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
-          </Link>
+
+          {hasStarted && (
+            <>
+              {isEditable && <div className="border-t border-white/10" />}
+              <Link
+                to="/management/$orgId/events/$eventId/stats"
+                params={{ orgId, eventId }}
+                className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{t('organiser.entryStats.title')}</p>
+                </div>
+                <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+              </Link>
+            </>
+          )}
         </div>
 
         <EventActions event={event} orgId={orgId} />

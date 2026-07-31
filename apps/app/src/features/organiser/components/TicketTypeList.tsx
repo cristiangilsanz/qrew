@@ -174,11 +174,7 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
                   disabled={deleteTt.isPending}
                   className="flex h-10 items-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  {deleteTt.isPending ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <Trash2 className="h-3.5 w-3.5" />
-                  )}
+                  <Trash2 className="h-3.5 w-3.5" />
                   {t('organiser.ticketTypes.deleteConfirm')}
                 </button>
               </div>

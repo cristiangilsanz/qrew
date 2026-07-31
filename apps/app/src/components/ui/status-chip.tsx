@@ -4,6 +4,7 @@ const variants: Record<string, string> = {
   // event status
   draft: 'bg-white/8 text-white/50 border border-white/10',
   published: 'bg-primary/15 text-primary border border-primary/30',
+  ongoing: 'bg-green-500/15 text-green-400 border border-green-500/30',
   cancelled: 'bg-red-500/15 text-red-400 border border-red-500/20',
   // ticket states
   reserved: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',

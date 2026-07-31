@@ -55,6 +55,7 @@ class EventResponse(BaseModel):
     queue_admit_rate_per_minute: int
     created_at: datetime
     published_at: datetime | None
+    started_at: datetime | None
     cancelled_at: datetime | None
 
 

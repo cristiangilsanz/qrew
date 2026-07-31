@@ -15,8 +15,10 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthVerifyTotpRouteImport } from './routes/_auth/verify-totp'
 import { Route as AuthSetupRouteImport } from './routes/_auth/setup'
+import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
 import { Route as AppManagementRouteImport } from './routes/_app/management'
 import { Route as AppSplatRouteImport } from './routes/_app/$'
 import { Route as AppTicketsIndexRouteImport } from './routes/_app/tickets/index'
@@ -50,6 +52,7 @@ import { Route as AppManagementOrgIdMembersNewRouteImport } from './routes/_app/
 import { Route as AppManagementOrgIdEventsNewRouteImport } from './routes/_app/management/$orgId/events/new'
 import { Route as AppManagementOrgIdEventsEventIdIndexRouteImport } from './routes/_app/management/$orgId/events/$eventId/index'
 import { Route as AppManagementOrgIdEventsEventIdTicketsRouteImport } from './routes/_app/management/$orgId/events/$eventId/tickets'
+import { Route as AppManagementOrgIdEventsEventIdStatsRouteImport } from './routes/_app/management/$orgId/events/$eventId/stats'
 import { Route as AppManagementOrgIdEventsEventIdScanRouteImport } from './routes/_app/management/$orgId/events/$eventId/scan'
 import { Route as AppManagementOrgIdEventsEventIdEditRouteImport } from './routes/_app/management/$orgId/events/$eventId/edit'
 
@@ -81,6 +84,11 @@ const AuthSetupRoute = AuthSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -89,6 +97,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => AuthRoute,
 } as any)
 const AppManagementRoute = AppManagementRouteImport.update({
@@ -267,6 +280,12 @@ const AppManagementOrgIdEventsEventIdTicketsRoute =
     path: '/$orgId/events/$eventId/tickets',
     getParentRoute: () => AppManagementRoute,
   } as any)
+const AppManagementOrgIdEventsEventIdStatsRoute =
+  AppManagementOrgIdEventsEventIdStatsRouteImport.update({
+    id: '/$orgId/events/$eventId/stats',
+    path: '/$orgId/events/$eventId/stats',
+    getParentRoute: () => AppManagementRoute,
+  } as any)
 const AppManagementOrgIdEventsEventIdScanRoute =
   AppManagementOrgIdEventsEventIdScanRouteImport.update({
     id: '/$orgId/events/$eventId/scan',
@@ -285,8 +304,10 @@ export interface FileRoutesByFullPath {
   '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/$': typeof AppSplatRoute
   '/management': typeof AppManagementRouteWithChildren
+  '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/reset-password': typeof AuthResetPasswordRoute
   '/setup': typeof AuthSetupRoute
   '/verify-totp': typeof AuthVerifyTotpRoute
   '/management/new': typeof AppManagementNewRoute
@@ -320,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/market/assignments/$assignmentId/': typeof AppMarketAssignmentsAssignmentIdIndexRoute
   '/management/$orgId/events/$eventId/edit': typeof AppManagementOrgIdEventsEventIdEditRoute
   '/management/$orgId/events/$eventId/scan': typeof AppManagementOrgIdEventsEventIdScanRoute
+  '/management/$orgId/events/$eventId/stats': typeof AppManagementOrgIdEventsEventIdStatsRoute
   '/management/$orgId/events/$eventId/tickets': typeof AppManagementOrgIdEventsEventIdTicketsRoute
   '/management/$orgId/events/$eventId/': typeof AppManagementOrgIdEventsEventIdIndexRoute
 }
@@ -327,8 +349,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/$': typeof AppSplatRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/reset-password': typeof AuthResetPasswordRoute
   '/setup': typeof AuthSetupRoute
   '/verify-totp': typeof AuthVerifyTotpRoute
   '/management/new': typeof AppManagementNewRoute
@@ -362,6 +386,7 @@ export interface FileRoutesByTo {
   '/market/assignments/$assignmentId': typeof AppMarketAssignmentsAssignmentIdIndexRoute
   '/management/$orgId/events/$eventId/edit': typeof AppManagementOrgIdEventsEventIdEditRoute
   '/management/$orgId/events/$eventId/scan': typeof AppManagementOrgIdEventsEventIdScanRoute
+  '/management/$orgId/events/$eventId/stats': typeof AppManagementOrgIdEventsEventIdStatsRoute
   '/management/$orgId/events/$eventId/tickets': typeof AppManagementOrgIdEventsEventIdTicketsRoute
   '/management/$orgId/events/$eventId': typeof AppManagementOrgIdEventsEventIdIndexRoute
 }
@@ -373,8 +398,10 @@ export interface FileRoutesById {
   '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/_app/$': typeof AppSplatRoute
   '/_app/management': typeof AppManagementRouteWithChildren
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/setup': typeof AuthSetupRoute
   '/_auth/verify-totp': typeof AuthVerifyTotpRoute
   '/_app/management/new': typeof AppManagementNewRoute
@@ -408,6 +435,7 @@ export interface FileRoutesById {
   '/_app/market/assignments/$assignmentId/': typeof AppMarketAssignmentsAssignmentIdIndexRoute
   '/_app/management/$orgId/events/$eventId/edit': typeof AppManagementOrgIdEventsEventIdEditRoute
   '/_app/management/$orgId/events/$eventId/scan': typeof AppManagementOrgIdEventsEventIdScanRoute
+  '/_app/management/$orgId/events/$eventId/stats': typeof AppManagementOrgIdEventsEventIdStatsRoute
   '/_app/management/$orgId/events/$eventId/tickets': typeof AppManagementOrgIdEventsEventIdTicketsRoute
   '/_app/management/$orgId/events/$eventId/': typeof AppManagementOrgIdEventsEventIdIndexRoute
 }
@@ -418,8 +446,10 @@ export interface FileRouteTypes {
     | '/confirm-email-change'
     | '/$'
     | '/management'
+    | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reset-password'
     | '/setup'
     | '/verify-totp'
     | '/management/new'
@@ -453,6 +483,7 @@ export interface FileRouteTypes {
     | '/market/assignments/$assignmentId/'
     | '/management/$orgId/events/$eventId/edit'
     | '/management/$orgId/events/$eventId/scan'
+    | '/management/$orgId/events/$eventId/stats'
     | '/management/$orgId/events/$eventId/tickets'
     | '/management/$orgId/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
@@ -460,8 +491,10 @@ export interface FileRouteTypes {
     | '/'
     | '/confirm-email-change'
     | '/$'
+    | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reset-password'
     | '/setup'
     | '/verify-totp'
     | '/management/new'
@@ -495,6 +528,7 @@ export interface FileRouteTypes {
     | '/market/assignments/$assignmentId'
     | '/management/$orgId/events/$eventId/edit'
     | '/management/$orgId/events/$eventId/scan'
+    | '/management/$orgId/events/$eventId/stats'
     | '/management/$orgId/events/$eventId/tickets'
     | '/management/$orgId/events/$eventId'
   id:
@@ -505,8 +539,10 @@ export interface FileRouteTypes {
     | '/confirm-email-change'
     | '/_app/$'
     | '/_app/management'
+    | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/register'
+    | '/_auth/reset-password'
     | '/_auth/setup'
     | '/_auth/verify-totp'
     | '/_app/management/new'
@@ -540,6 +576,7 @@ export interface FileRouteTypes {
     | '/_app/market/assignments/$assignmentId/'
     | '/_app/management/$orgId/events/$eventId/edit'
     | '/_app/management/$orgId/events/$eventId/scan'
+    | '/_app/management/$orgId/events/$eventId/stats'
     | '/_app/management/$orgId/events/$eventId/tickets'
     | '/_app/management/$orgId/events/$eventId/'
   fileRoutesById: FileRoutesById
@@ -595,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSetupRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/register': {
       id: '/_auth/register'
       path: '/register'
@@ -607,6 +651,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_app/management': {
@@ -840,6 +891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppManagementOrgIdEventsEventIdTicketsRouteImport
       parentRoute: typeof AppManagementRoute
     }
+    '/_app/management/$orgId/events/$eventId/stats': {
+      id: '/_app/management/$orgId/events/$eventId/stats'
+      path: '/$orgId/events/$eventId/stats'
+      fullPath: '/management/$orgId/events/$eventId/stats'
+      preLoaderRoute: typeof AppManagementOrgIdEventsEventIdStatsRouteImport
+      parentRoute: typeof AppManagementRoute
+    }
     '/_app/management/$orgId/events/$eventId/scan': {
       id: '/_app/management/$orgId/events/$eventId/scan'
       path: '/$orgId/events/$eventId/scan'
@@ -868,6 +926,7 @@ interface AppManagementRouteChildren {
   AppManagementOrgIdMembersIndexRoute: typeof AppManagementOrgIdMembersIndexRoute
   AppManagementOrgIdEventsEventIdEditRoute: typeof AppManagementOrgIdEventsEventIdEditRoute
   AppManagementOrgIdEventsEventIdScanRoute: typeof AppManagementOrgIdEventsEventIdScanRoute
+  AppManagementOrgIdEventsEventIdStatsRoute: typeof AppManagementOrgIdEventsEventIdStatsRoute
   AppManagementOrgIdEventsEventIdTicketsRoute: typeof AppManagementOrgIdEventsEventIdTicketsRoute
   AppManagementOrgIdEventsEventIdIndexRoute: typeof AppManagementOrgIdEventsEventIdIndexRoute
 }
@@ -885,6 +944,8 @@ const AppManagementRouteChildren: AppManagementRouteChildren = {
     AppManagementOrgIdEventsEventIdEditRoute,
   AppManagementOrgIdEventsEventIdScanRoute:
     AppManagementOrgIdEventsEventIdScanRoute,
+  AppManagementOrgIdEventsEventIdStatsRoute:
+    AppManagementOrgIdEventsEventIdStatsRoute,
   AppManagementOrgIdEventsEventIdTicketsRoute:
     AppManagementOrgIdEventsEventIdTicketsRoute,
   AppManagementOrgIdEventsEventIdIndexRoute:
@@ -952,15 +1013,19 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetupRoute: typeof AuthSetupRoute
   AuthVerifyTotpRoute: typeof AuthVerifyTotpRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetupRoute: AuthSetupRoute,
   AuthVerifyTotpRoute: AuthVerifyTotpRoute,
 }

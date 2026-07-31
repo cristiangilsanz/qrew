@@ -4,31 +4,25 @@ from typing import Any
 
 from com.qode.qrew.v1.identity.models.notification import NotificationChannel
 from com.qode.qrew.v1.identity.core.config import settings
-from com.qode.qrew.v1.identity.services.application.notification.templates.change.alert import (
+from com.qode.qrew.v1.identity.services.application.notification.templates.email_address_changed import (
     email_change_alert_email,
 )
-from com.qode.qrew.v1.identity.services.application.notification.templates.change.verify import (
+from com.qode.qrew.v1.identity.services.application.notification.templates.email_address_confirm import (
     email_change_verify_email,
 )
-from com.qode.qrew.v1.identity.services.application.notification.templates.kyc_status_email import (
-    kyc_status_email,
-)
-from com.qode.qrew.v1.identity.services.application.notification.templates.lifecycle.event import (
-    event_cancelled_email,
-    ticket_cancelled_email,
-)
-from com.qode.qrew.v1.identity.services.application.notification.templates.lifecycle.payment import (
-    payment_failed_email,
-    payment_succeeded_email,
-)
-from com.qode.qrew.v1.identity.services.application.notification.templates.lifecycle.storage import (
-    ticket_restored_email,
-    tickets_frozen_email,
-)
-from com.qode.qrew.v1.identity.services.application.notification.templates.verification.email import (
+from com.qode.qrew.v1.identity.services.application.notification.templates.email_account_verify import (
     verification_link_email,
 )
-from com.qode.qrew.v1.identity.services.application.notification.templates.verification.sms import (
+from com.qode.qrew.v1.identity.services.application.notification.templates.email_password_reset import (
+    forgot_password_email,
+)
+from com.qode.qrew.v1.identity.services.application.notification.templates.email_kyc_notify import (
+    kyc_status_email,
+)
+from com.qode.qrew.v1.identity.services.application.notification.templates.email_login_alert import (
+    login_anomaly_alert_email,
+)
+from com.qode.qrew.v1.identity.services.application.notification.templates.sms_phone_verify import (
     verification_otp_sms,
 )
 
@@ -44,6 +38,10 @@ class RenderedSms:
     body: str
 
 
+def _logo_url() -> str:
+    return f"{settings.base_url}/logo.webp"
+
+
 def _verification_link(payload: dict[str, Any]) -> RenderedEmail:
     link = f"{settings.base_url}/verify-email?token={payload['token']}"
     return RenderedEmail(
@@ -52,6 +50,7 @@ def _verification_link(payload: dict[str, Any]) -> RenderedEmail:
             full_name=payload["full_name"],
             link=link,
             expire_hours=settings.email_verification_token_expire_hours,
+            logo_url=_logo_url(),
         ),
     )
 
@@ -69,11 +68,12 @@ def _kyc_status(payload: dict[str, Any]) -> RenderedEmail:
             full_name=payload["full_name"],
             status=status,
             reason=payload.get("reason"),
+            logo_url=_logo_url(),
         ),
     )
 
 
-def _email_change_verify(payload: dict[str, Any]) -> RenderedEmail:
+def _email_address_confirm(payload: dict[str, Any]) -> RenderedEmail:
     link = f"{settings.base_url}/verify-email-change?token={payload['token']}"
     return RenderedEmail(
         subject="Confirm your new Qrew email",
@@ -81,44 +81,48 @@ def _email_change_verify(payload: dict[str, Any]) -> RenderedEmail:
             full_name=payload["full_name"],
             link=link,
             expire_hours=settings.email_verification_token_expire_hours,
+            logo_url=_logo_url(),
         ),
     )
 
 
-def _email_change_alert(payload: dict[str, Any]) -> RenderedEmail:
+def _email_address_changed(payload: dict[str, Any]) -> RenderedEmail:
     return RenderedEmail(
         subject="Your Qrew email was changed",
         body_html=email_change_alert_email(
             full_name=payload["full_name"],
             new_email=payload["new_email"],
-        ),
-    )
-
-
-def _account_recovery(payload: dict[str, Any]) -> RenderedEmail:
-    return RenderedEmail(
-        subject="Your Qrew account was recovered",
-        body_html=(
-            f"<p>Hi {payload['full_name']},</p>"
-            "<p>Your account was just recovered. If this was not you, "
-            "contact support immediately.</p>"
+            logo_url=_logo_url(),
         ),
     )
 
 
 def _login_anomaly_alert(payload: dict[str, Any]) -> RenderedEmail:
-    ip = payload.get("ip_address") or "unknown"
     return RenderedEmail(
         subject="Unusual sign-in to your Qrew account",
-        body_html=(
-            f"<p>Hi {payload['full_name']},</p>"
-            f"<p>We detected an unusual sign-in: {payload['reason']} from {ip}.</p>"
-            "<p>If that wasn't you, change your password and revoke sessions.</p>"
+        body_html=login_anomaly_alert_email(
+            full_name=payload["full_name"],
+            ip_address=payload.get("ip_address") or "unknown",
+            location=payload.get("location"),
+            logo_url=_logo_url(),
         ),
     )
 
 
-def _phone_otp(payload: dict[str, Any]) -> RenderedSms:
+def _password_reset(payload: dict[str, Any]) -> RenderedEmail:
+    link = f"{settings.base_url}/reset-password?token={payload['token']}"
+    return RenderedEmail(
+        subject="Reset your Qrew password",
+        body_html=forgot_password_email(
+            full_name=payload["full_name"],
+            link=link,
+            expire_hours=settings.email_verification_token_expire_hours,
+            logo_url=_logo_url(),
+        ),
+    )
+
+
+def _phone_verify(payload: dict[str, Any]) -> RenderedSms:
     return RenderedSms(
         body=verification_otp_sms(
             otp=payload["otp"],
@@ -127,99 +131,21 @@ def _phone_otp(payload: dict[str, Any]) -> RenderedSms:
     )
 
 
-def _payment_succeeded(payload: dict[str, Any]) -> RenderedEmail:
-    return RenderedEmail(
-        subject="Your Qrew payment succeeded",
-        body_html=payment_succeeded_email(
-            full_name=payload.get("full_name", "there"),
-            event_name=payload.get("event_name", "your event"),
-        ),
-    )
-
-
-def _payment_failed(payload: dict[str, Any]) -> RenderedEmail:
-    return RenderedEmail(
-        subject="Your Qrew payment failed",
-        body_html=payment_failed_email(
-            full_name=payload.get("full_name", "there"),
-            event_name=payload.get("event_name", "your event"),
-            reason=payload.get("failure_code"),
-        ),
-    )
-
-
-def _event_cancelled(payload: dict[str, Any]) -> RenderedEmail:
-    return RenderedEmail(
-        subject="An event you reserved has been cancelled",
-        body_html=event_cancelled_email(
-            full_name=payload.get("full_name", "there"),
-            event_name=payload.get("event_name", "your event"),
-        ),
-    )
-
-
-def _ticket_cancelled_chargeback(payload: dict[str, Any]) -> RenderedEmail:
-    return RenderedEmail(
-        subject="Your Qrew ticket was cancelled (chargeback)",
-        body_html=ticket_cancelled_email(
-            full_name=payload.get("full_name", "there"),
-            event_name=payload.get("event_name", "your event"),
-            reason="chargeback opened",
-        ),
-    )
-
-
-def _ticket_cancelled_refund(payload: dict[str, Any]) -> RenderedEmail:
-    return RenderedEmail(
-        subject="Your Qrew ticket was refunded",
-        body_html=ticket_cancelled_email(
-            full_name=payload.get("full_name", "there"),
-            event_name=payload.get("event_name", "your event"),
-            reason="refund",
-        ),
-    )
-
-
-def _tickets_frozen_device_revoke(payload: dict[str, Any]) -> RenderedEmail:
-    return RenderedEmail(
-        subject="Tickets frozen on revoked device",
-        body_html=tickets_frozen_email(
-            full_name=payload.get("full_name", "there"),
-            ticket_count=int(payload.get("ticket_count", 0)),
-        ),
-    )
-
-
-def _ticket_restored(payload: dict[str, Any]) -> RenderedEmail:
-    return RenderedEmail(
-        subject="Your Qrew ticket is restored",
-        body_html=ticket_restored_email(full_name=payload.get("full_name", "there")),
-    )
-
-
 EMAIL_TEMPLATES: dict[str, Callable[[dict[str, Any]], RenderedEmail]] = {
-    "email_verification_link": _verification_link,
-    "kyc_status_email": _kyc_status,
-    "email_change_verify": _email_change_verify,
-    "email_change_alert": _email_change_alert,
-    "account_recovery": _account_recovery,
-    "login_anomaly_alert": _login_anomaly_alert,
-    "payment_succeeded": _payment_succeeded,
-    "payment_failed": _payment_failed,
-    "event_cancelled": _event_cancelled,
-    "ticket_cancelled_chargeback": _ticket_cancelled_chargeback,
-    "ticket_cancelled_refund": _ticket_cancelled_refund,
-    "tickets_frozen_device_revoke": _tickets_frozen_device_revoke,
-    "ticket_restored": _ticket_restored,
+    "email_account_verify": _verification_link,
+    "email_kyc_notify": _kyc_status,
+    "email_address_confirm": _email_address_confirm,
+    "email_address_changed": _email_address_changed,
+    "email_login_alert": _login_anomaly_alert,
+    "email_password_reset": _password_reset,
 }
 
 SMS_TEMPLATES: dict[str, Callable[[dict[str, Any]], RenderedSms]] = {
-    "phone_otp": _phone_otp,
+    "sms_phone_verify": _phone_verify,
 }
 
 
 def channel_for_template(template_key: str) -> NotificationChannel:
-    """Map a registered template key to the channel it belongs to."""
     if template_key in EMAIL_TEMPLATES:
         return NotificationChannel.email
     if template_key in SMS_TEMPLATES:
@@ -228,10 +154,8 @@ def channel_for_template(template_key: str) -> NotificationChannel:
 
 
 def render_email(template_key: str, payload: dict[str, Any]) -> RenderedEmail:
-    """Render an email template by key."""
     return EMAIL_TEMPLATES[template_key](payload)
 
 
 def render_sms(template_key: str, payload: dict[str, Any]) -> RenderedSms:
-    """Render an SMS template by key."""
     return SMS_TEMPLATES[template_key](payload)

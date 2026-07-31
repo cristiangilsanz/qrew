@@ -98,6 +98,13 @@ class User(Base):
     totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     totp_backup_codes_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    password_reset_token: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, index=True
+    )
+    password_reset_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     @property
     def totp_secret(self) -> str | None:
         if self.totp_secret_ciphertext is None:

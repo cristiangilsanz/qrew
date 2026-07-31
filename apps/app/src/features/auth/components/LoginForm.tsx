@@ -119,6 +119,12 @@ export function LoginForm() {
             )}
           />
 
+          <div className="flex justify-end">
+            <Link to="/forgot-password" className="text-muted-foreground hover:text-foreground text-xs">
+              {t('auth.forgotPassword')}
+            </Link>
+          </div>
+
           <Button type="submit" className="w-full rounded-full" isLoading={login.isPending}>
             <LogIn className="mr-2 h-4 w-4" />
             {t('auth.login')}

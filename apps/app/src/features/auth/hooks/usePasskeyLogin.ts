@@ -1,6 +1,8 @@
+import { Passkeys } from '@capawesome/capacitor-passkeys'
 import { startAuthentication } from '@simplewebauthn/browser'
 import { useMutation } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
+import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -16,7 +18,13 @@ export function usePasskeyLogin() {
   return useMutation({
     mutationFn: async (email: string) => {
       const options = await authApi.passkeyAuthBegin(email)
-      const credential = await startAuthentication({ optionsJSON: options })
+      const credential = Capacitor.isNativePlatform()
+        ? await Passkeys.getPasskey({
+            challenge: options.challenge,
+            rpId: options.rpId,
+            userVerification: options.userVerification,
+          })
+        : await startAuthentication({ optionsJSON: options })
       return authApi.passkeyAuthComplete(credential)
     },
     onSuccess: (data) => {

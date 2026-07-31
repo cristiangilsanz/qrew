@@ -54,11 +54,7 @@ function PaymentForm({ onSuccess }: FormProps) {
           disabled={loading || !stripe || !elements}
           className="bg-primary flex h-12 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
         >
-          {loading ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <CreditCard className="h-4 w-4" />
-          )}
+          <CreditCard className="h-4 w-4" />
           {t('tickets.payment.confirmButton')}
         </button>
       </div>

@@ -10,14 +10,13 @@ import {
   KeyRound,
   Lock,
   Monitor,
-  RefreshCw,
   Shield,
   ShieldCheck,
   ShieldOff,
   Smartphone,
   Trash2,
 } from 'lucide-react'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -26,7 +25,6 @@ import { totpApi } from '@/features/auth/api'
 
 import { BackButton } from '@/components/ui/back-button'
 import { Button } from '@/components/ui/button'
-import { StatusChip } from '@/components/ui/status-chip'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PasskeyList } from '@/features/passkeys/components/PasskeyList'
@@ -291,22 +289,17 @@ function AuditLog() {
   )
 }
 
-type TotpStep = 'status' | 'setup' | 'confirm' | 'backup' | 'disable'
+type TotpStep = 'setup' | 'confirm' | 'backup' | 'disable'
 
-function TotpSection() {
+function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose: () => void }) {
   const { t } = useTranslation()
   const qc = useQueryClient()
-  const [step, setStep] = useState<TotpStep>('status')
+  const [step, setStep] = useState<TotpStep>(initialStep)
   const [pendingSecret, setPendingSecret] = useState('')
   const [pendingUri, setPendingUri] = useState('')
   const [pendingBackups, setPendingBackups] = useState<string[]>([])
   const [confirmCode, setConfirmCode] = useState('')
   const [disableCode, setDisableCode] = useState('')
-
-  const { data: status, isLoading } = useQuery({
-    queryKey: ['totp', 'status'],
-    queryFn: () => totpApi.status(),
-  })
 
   const setupMut = useMutation({
     mutationFn: () => totpApi.setup(),
@@ -314,7 +307,6 @@ function TotpSection() {
       setPendingSecret(data.secret)
       setPendingUri(data.provisioning_uri)
       setPendingBackups(data.backup_codes)
-      setStep('setup')
     },
   })
 
@@ -331,49 +323,40 @@ function TotpSection() {
     mutationFn: () => totpApi.disable(disableCode),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['totp', 'status'] })
-      setStep('status')
       setDisableCode('')
       toast.success(t('profile.security.totp.disabledToast'))
+      onClose()
     },
     onError: () => toast.error(t('auth.totp.invalidCode')),
   })
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-1">
-        <Skeleton className="h-9 w-24 rounded-full" />
-      </div>
-    )
-  }
-
-  const enabled = status?.enabled ?? false
-
-  if (step === 'status') {
-    return (
-      <div className="flex justify-center">
-        {enabled ? (
-          <button
-            onClick={() => setStep('disable')}
-            className="flex items-center gap-2 rounded-full border border-red-500/30 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:border-red-500/60"
-          >
-            <ShieldOff className="h-4 w-4" />
-            {t('profile.security.totp.disable')}
-          </button>
-        ) : (
-          <Button
-            onClick={() => setupMut.mutate()}
-            disabled={setupMut.isPending}
-            className="rounded-full"
-          >
-            <ShieldCheck className="h-4 w-4" />
-            {t('profile.security.totp.setUp')}
-          </Button>
-        )}
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (initialStep === 'setup') setupMut.mutate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (step === 'setup') {
+    if (setupMut.isPending || (!pendingUri && !setupMut.isError)) {
+      return (
+        <div className="space-y-4">
+          <Skeleton className="h-4 w-48 rounded" />
+          <div className="flex justify-center">
+            <Skeleton className="h-[206px] w-[206px] rounded-xl" />
+          </div>
+          <div className="rounded-lg bg-white/5 px-3 py-2">
+            <Skeleton className="h-3.5 w-full rounded" />
+          </div>
+          <div className="space-y-1.5">
+            <Skeleton className="h-3.5 w-24 rounded" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 flex-1 rounded-full" />
+            <Skeleton className="h-9 flex-1 rounded-full" />
+          </div>
+        </div>
+      )
+    }
     return (
       <div className="space-y-4">
         <p className="text-muted-foreground text-sm">{t('profile.security.totp.scanInstruction')}</p>
@@ -422,7 +405,7 @@ function TotpSection() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setStep('status')}
+            onClick={onClose}
             className="flex-1 rounded-full bg-white py-2 text-sm font-medium text-black"
           >
             {t('common.cancel')}
@@ -443,10 +426,7 @@ function TotpSection() {
   if (step === 'backup') {
     return (
       <div className="space-y-4">
-        <div>
-          <p className="mb-1 text-sm font-medium text-green-400">{t('profile.security.totp.backupTitle')}</p>
-          <p className="text-xs text-white/50">{t('profile.security.totp.backupNote')}</p>
-        </div>
+        <p className="text-muted-foreground text-sm">{t('profile.security.totp.backupTitle')}</p>
         <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-white/5 p-3">
           {pendingBackups.map((code) => (
             <span key={code} className="font-mono text-xs text-white/80 text-center">{code}</span>
@@ -460,7 +440,7 @@ function TotpSection() {
           {t('profile.security.totp.copyBackups')}
         </button>
         <button
-          onClick={() => setStep('status')}
+          onClick={onClose}
           className="bg-primary flex w-full items-center justify-center gap-2 rounded-full py-2 text-sm font-semibold text-white"
         >
           <ShieldCheck className="h-4 w-4" />
@@ -485,7 +465,7 @@ function TotpSection() {
         />
         <div className="flex gap-2">
           <button
-            onClick={() => setStep('status')}
+            onClick={onClose}
             className="flex-1 rounded-full bg-white py-2 text-sm font-medium text-black"
           >
             {t('common.cancel')}
@@ -495,14 +475,10 @@ function TotpSection() {
             disabled={disableCode.length < 6 || disableMut.isPending}
             className="flex flex-1 items-center justify-center gap-2 rounded-full bg-red-500 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {disableMut.isPending ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <ShieldOff className="h-4 w-4" />
-                {t('profile.security.totp.confirmDisable')}
-              </>
-            )}
+            <>
+              <ShieldOff className="h-4 w-4" />
+              {t('profile.security.totp.confirmDisable')}
+            </>
           </button>
         </div>
       </div>
@@ -515,12 +491,22 @@ function TotpSection() {
 function SecurityPage() {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState<ExpandedRow>(null)
-  const { data: totpStatus } = useQuery({
+  const [totpInitialStep, setTotpInitialStep] = useState<TotpStep>('setup')
+  const { data: totpStatus, isLoading: totpLoading } = useQuery({
     queryKey: ['totp', 'status'],
     queryFn: () => totpApi.status(),
   })
 
   const toggle = (row: ExpandedRow) => setExpanded((prev) => (prev === row ? null : row))
+
+  const handleTotpButton = () => {
+    if (expanded === 'totp') {
+      setExpanded(null)
+    } else {
+      setTotpInitialStep(totpStatus?.enabled ? 'disable' : 'setup')
+      setExpanded('totp')
+    }
+  }
 
   const iconClass = 'h-4 w-4 text-muted-foreground'
 
@@ -545,16 +531,49 @@ function SecurityPage() {
 
         <div className="mx-4 border-t border-white/10" />
 
-        <ExpandRow
-          id="totp"
-          icon={<Shield className={iconClass} />}
-          label={t('profile.security.totp.title')}
-          badge={totpStatus?.enabled ? <StatusChip label={t('profile.security.totp.enabled')} variant="redeemed" /> : undefined}
-          expanded={expanded}
-          onToggle={toggle}
-        >
-          <TotpSection />
-        </ExpandRow>
+        <div>
+          <div className="flex w-full items-center gap-3 px-4 py-4">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
+              <Shield className={iconClass} />
+            </div>
+            <span className="flex-1 text-sm font-medium">{t('profile.security.totp.title')}</span>
+            {totpLoading ? (
+              <Skeleton className="h-9 w-24 rounded-full" />
+            ) : totpStatus?.enabled ? (
+              <button
+                onClick={handleTotpButton}
+                className="flex items-center gap-2 rounded-full border border-red-500/30 px-4 py-2 text-sm font-medium text-red-400"
+              >
+                <ShieldOff className="h-4 w-4" />
+                {t('profile.security.totp.disable')}
+              </button>
+            ) : (
+              <Button onClick={handleTotpButton} className="rounded-full" size="sm">
+                <ShieldCheck className="h-4 w-4" />
+                {t('profile.security.totp.setUp')}
+              </Button>
+            )}
+          </div>
+          <AnimatePresence initial={false}>
+            {expanded === 'totp' && (
+              <motion.div
+                key="totp"
+                variants={expandVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                style={{ overflow: 'hidden' }}
+              >
+                <div className="border-t border-white/10 bg-white/[0.03] px-4 pt-4 pb-4">
+                  <TotpSection
+                    initialStep={totpInitialStep}
+                    onClose={() => setExpanded(null)}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         <div className="mx-4 border-t border-white/10" />
 

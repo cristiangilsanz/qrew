@@ -1,7 +1,8 @@
+import { Turnstile } from '@marsidev/react-turnstile'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Lock, Mail, Phone, User, UserPlus } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -17,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { env } from '@/config/env'
 
 import { useRegister } from '../hooks/useRegister'
 import { AuthLayout } from './AuthLayout'
@@ -29,6 +31,7 @@ const registerSchema = z.object({
   terms_accepted: z
     .boolean()
     .refine((v) => v === true, { message: 'You must accept the terms and conditions' }),
+  captcha_token: z.string().min(1),
 })
 
 type RegisterFormValues = z.infer<typeof registerSchema>
@@ -38,6 +41,7 @@ export function RegisterForm() {
   const navigate = useNavigate()
   const register = useRegister()
   const [showPassword, setShowPassword] = useState(false)
+  const turnstileRef = useRef<{ reset: () => void }>(null)
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -47,6 +51,7 @@ export function RegisterForm() {
       phone_number: '',
       password: '',
       terms_accepted: false,
+      captcha_token: '',
     },
   })
 
@@ -55,6 +60,10 @@ export function RegisterForm() {
       onSuccess: () => {
         toast.success(t('auth.registrationSuccess'))
         navigate({ to: '/login' })
+      },
+      onError: () => {
+        turnstileRef.current?.reset()
+        form.setValue('captcha_token', '')
       },
     })
   }
@@ -189,7 +198,21 @@ export function RegisterForm() {
             )}
           />
 
-          <Button type="submit" className="w-full rounded-full" isLoading={register.isPending}>
+          <div className="flex justify-center">
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={env.TURNSTILE_SITE_KEY}
+              options={{ theme: 'dark', size: 'normal', language: 'en' }}
+              onSuccess={(token) => form.setValue('captcha_token', token)}
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full rounded-full"
+            isLoading={register.isPending}
+            disabled={!form.watch('captcha_token')}
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             {t('auth.register')}
           </Button>

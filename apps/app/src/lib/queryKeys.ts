@@ -29,4 +29,7 @@ export const queryKeys = {
   profile: {
     all: ['profile'] as const,
   },
+  entryStats: {
+    detail: (eventId: string) => ['entry-stats', eventId] as const,
+  },
 }

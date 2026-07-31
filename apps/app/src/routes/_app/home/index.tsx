@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import homeHero from '@/assets/images/home.webp'
+import homeHero from '@/assets/illustrations/home.webp'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { EventCard } from '@/features/events/components/EventCard'
 import { useEvents } from '@/features/events/hooks/useEvents'

@@ -23,7 +23,7 @@ export function createServiceClient({
   client.interceptors.request.use((config) => {
     const store = useAuthStore.getState()
     const token = store.accessToken ?? (useSetupToken ? store.setupToken : undefined)
-    if (token) config.headers.Authorization = `Bearer ${token}`
+    if (token && !config.headers.Authorization) config.headers.Authorization = `Bearer ${token}`
     if (idempotencyKey && (config.method === 'post' || config.method === 'patch')) {
       config.headers['Idempotency-Key'] = crypto.randomUUID()
     }

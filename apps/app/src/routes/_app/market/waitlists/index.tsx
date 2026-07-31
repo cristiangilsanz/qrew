@@ -75,9 +75,10 @@ function WaitlistRow({ eventId }: { eventId: string }) {
           </div>
           <button
             onClick={() => setLeaveOpen(true)}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500 transition-colors hover:bg-red-600"
+            className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/15 px-3 text-xs font-semibold text-red-400"
           >
-            <LogOut className="h-3.5 w-3.5 text-white" />
+            <LogOut className="h-3.5 w-3.5 shrink-0" />
+            {t('market.leaveQueueButton')}
           </button>
         </div>
       </div>
@@ -111,7 +112,7 @@ function WaitlistRow({ eventId }: { eventId: string }) {
               <p className="text-muted-foreground mb-6 text-sm">
                 {t('market.leaveQueue.description')}
               </p>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-1">
                 <button
                   onClick={() => setLeaveOpen(false)}
                   className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
@@ -121,16 +122,12 @@ function WaitlistRow({ eventId }: { eventId: string }) {
                 <button
                   onClick={() => leaveQueue.mutate()}
                   disabled={leaveQueue.isPending}
-                  className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
+                  className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full border border-red-500/25 bg-red-500/15 px-5 text-sm font-semibold text-red-400 disabled:opacity-50"
                 >
-                  {leaveQueue.isPending ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <>
-                      <LogOut className="h-3.5 w-3.5" />
-                      {t('market.leaveQueue.confirm')}
-                    </>
-                  )}
+                  <>
+                    <LogOut className="h-3.5 w-3.5" />
+                    {t('market.leaveQueue.confirm')}
+                  </>
                 </button>
               </div>
             </motion.div>

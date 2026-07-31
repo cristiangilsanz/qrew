@@ -22,6 +22,7 @@ from com.qode.qrew.v1.catalog.core.database import Base
 class EventStatus(enum.StrEnum):
     draft = "draft"
     published = "published"
+    ongoing = "ongoing"
     cancelled = "cancelled"
 
 
@@ -83,4 +84,5 @@ class Event(Base):
         nullable=False,
     )
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

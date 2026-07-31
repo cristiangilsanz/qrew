@@ -253,11 +253,7 @@ function ReservationPage() {
               disabled={!holdersComplete || saveHolders.isPending}
               className="bg-primary flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-lg transition-opacity disabled:opacity-40"
             >
-              {saveHolders.isPending ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              <Save className="h-4 w-4" />
               Save
             </button>
           </div>
@@ -298,11 +294,7 @@ function ReservationPage() {
               disabled={initiatePayment.isPending}
               className="bg-primary flex h-12 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
             >
-              {initiatePayment.isPending ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                <CreditCard className="h-4 w-4" />
-              )}
+              <CreditCard className="h-4 w-4" />
               Pay Now
             </button>
           </div>
