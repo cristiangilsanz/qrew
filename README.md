@@ -135,7 +135,7 @@ QREW/
 - **Docker** and **Docker Compose**
 - **Node.js 20+** and **npm**
 - **Python 3.12+** and **uv**
-- **Android Studio** or **Xcode** (for native builds)
+- **Android Studio** or **Xcode** (For native builds)
 
 ## ⚙️ Setup Guides
 
@@ -161,7 +161,7 @@ cp apps/app/.env.example apps/app/.env
 docker compose up
 ```
 
-The app will be available at `http://localhost:5173` and the API gateway at `http://localhost:8000`.
+The app will be available at `http://localhost:5173`.
 
 ---
 
@@ -169,48 +169,88 @@ The app will be available at `http://localhost:5173` and the API gateway at `htt
 
 ## 📱 Frontend
 
-| Layer | Technology |
+| | Technology |
 |---|---|
 | Framework | [React 18](https://react.dev/) |
 | Routing | [TanStack Router](https://tanstack.com/router) |
 | Data fetching | [TanStack Query](https://tanstack.com/query) |
-| Styling | [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) |
+| Styling | [Tailwind CSS](https://tailwindcss.com/) |
+| Components | [shadcn/ui](https://ui.shadcn.com/) |
 | Animations | [Framer Motion](https://www.framer.com/motion/) |
-| Native runtime | [Capacitor](https://capacitorjs.com/) (Android + iOS) |
-| i18n | [react-i18next](https://react.i18next.com/) |
+| Internationalisation | [react-i18next](https://react.i18next.com/) |
 
-## 🖥️ Backend
+## 📲 Native
 
-| Layer | Technology |
+| | Technology |
 |---|---|
-| Gateway | [Starlette](https://www.starlette.io/) |
-| Services | [FastAPI](https://fastapi.tiangolo.com/) + [SQLAlchemy](https://docs.sqlalchemy.org/) |
-| Auth | JWT ES256, [WebAuthn passkeys](https://webauthn.io/), TOTP, Argon2 |
-| Messaging | [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream) |
-| Background jobs | [Arq](https://arq-docs.helpmanual.io/) + [Redlock](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/) |
+| Runtime | [Capacitor](https://capacitorjs.com/) |
+| Platforms | Android · iOS |
+
+## 🔀 API Gateway
+
+| | Technology |
+|---|---|
+| Framework | [Starlette](https://www.starlette.io/) |
+| Responsibility | JWT validation · reverse proxy |
+
+## ⚙️ Backend Services
+
+| | Technology |
+|---|---|
+| Framework | [FastAPI](https://fastapi.tiangolo.com/) |
+| ORM | [SQLAlchemy](https://docs.sqlalchemy.org/) |
 | Migrations | [Alembic](https://alembic.sqlalchemy.org/) |
 
-## 🗃️ Infrastructure
+## 🔐 Auth & Security
 
-| Layer | Technology |
+| | Technology |
+|---|---|
+| Token signing | JWT ES256 |
+| Passwordless | [WebAuthn passkeys](https://webauthn.io/) |
+| 2FA | TOTP |
+| Password hashing | Argon2 |
+| PII encryption | Fernet |
+
+## ⚡ Messaging & Jobs
+
+| | Technology |
+|---|---|
+| Event bus | [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream) |
+| Background jobs | [Arq](https://arq-docs.helpmanual.io/) |
+| Distributed locks | [Redlock](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/) |
+
+## 🗃️ Data
+
+| | Technology |
 |---|---|
 | Database | [PostgreSQL 16](https://www.postgresql.org/) |
-| Cache / Locks | [Redis](https://redis.io/) |
-| Payments | [Stripe](https://stripe.com/docs) |
-| Notifications | [Resend](https://resend.com/docs) |
-| OTP | [Twilio](https://www.twilio.com/docs) |
-| Storage | [Cloudflare R2](https://developers.cloudflare.com/r2/) |
+| Cache | [Redis](https://redis.io/) |
 
-## 🧪 Testing & Quality
+## 🌐 External Services
 
-| Tool | Purpose |
+| | Technology |
 |---|---|
-| [Vitest](https://vitest.dev/) + [RTL](https://testing-library.com/) | Frontend unit tests |
-| [pytest](https://docs.pytest.org/) | Backend unit & integration tests |
-| [MSW](https://mswjs.io/) | API mocking in frontend tests |
-| [ruff](https://docs.astral.sh/ruff/) | Python linting + formatting |
-| [pyright](https://github.com/microsoft/pyright) | Python type checking |
-| [eslint](https://eslint.org/) + [prettier](https://prettier.io/) | TypeScript linting + formatting |
+| Payments | [Stripe](https://stripe.com/docs) |
+| Email | [Resend](https://resend.com/docs) |
+| SMS / OTP | [Twilio](https://www.twilio.com/docs) |
+| Object storage | [Cloudflare R2](https://developers.cloudflare.com/r2/) |
+
+## 🧪 Testing
+
+| | Technology |
+|---|---|
+| Frontend unit tests | [Vitest](https://vitest.dev/) + [React Testing Library](https://testing-library.com/) |
+| Backend unit tests | [pytest](https://docs.pytest.org/) |
+| API mocking | [MSW](https://mswjs.io/) |
+
+## 🔍 Code Quality
+
+| | Technology |
+|---|---|
+| Python linting + formatting | [ruff](https://docs.astral.sh/ruff/) |
+| Python type checking | [pyright](https://github.com/microsoft/pyright) |
+| TypeScript linting | [eslint](https://eslint.org/) |
+| TypeScript formatting | [prettier](https://prettier.io/) |
 
 ---
 
