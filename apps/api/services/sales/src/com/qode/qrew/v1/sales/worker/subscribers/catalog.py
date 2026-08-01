@@ -86,7 +86,7 @@ async def handle_event_updated(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
         return
-    # Preserve existing lifecycle status — update only propagates field changes
+    # Preserve lifecycle status, propagate field changes only
     try:
         event_id = uuid.UUID(str(data["data"]["event_id"]))
     except (KeyError, ValueError):

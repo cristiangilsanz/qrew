@@ -4,7 +4,6 @@ import { Search } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import noTicketsImg from '@/assets/illustrations/no-tickets.webp'
 import { ReservationRowSkeleton } from '@/components/ui/skeleton'
 import { eventsApi } from '@/features/events/api'
 import type { Ticket } from '@/features/tickets/api'
@@ -73,15 +72,11 @@ function TicketsPage() {
       )}
 
       {!isLoading && tickets?.length === 0 && (
-        <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 px-6 text-center">
-          <img
-            src={noTicketsImg}
-            alt="No tickets yet"
-            className="max-h-[35vh] w-auto object-contain"
-          />
+        <div className="flex flex-col items-center gap-4 py-12 text-center">
+          <p className="text-muted-foreground text-sm">{t('tickets.empty')}</p>
           <Link
             to="/events"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-11 items-center rounded-full px-6 text-sm font-semibold transition-colors"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center rounded-full px-6 text-sm font-semibold transition-colors"
           >
             <Search className="mr-2 h-4 w-4" />
             {t('tickets.browseEvents')}

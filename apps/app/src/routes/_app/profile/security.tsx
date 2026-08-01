@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -18,15 +19,13 @@ import {
 } from 'lucide-react'
 import { type ReactNode, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-
-import { totpApi } from '@/features/auth/api'
 
 import { BackButton } from '@/components/ui/back-button'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { totpApi } from '@/features/auth/api'
 import { PasskeyList } from '@/features/passkeys/components/PasskeyList'
 import { ChangePasswordForm } from '@/features/profile/components/ChangePasswordForm'
 import { SessionList } from '@/features/profile/components/SessionList'

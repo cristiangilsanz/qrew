@@ -20,6 +20,8 @@ RUN uv sync --package payments --no-dev --frozen
 
 FROM python:3.12-slim AS runtime
 
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 
@@ -38,6 +40,6 @@ ENV PYTHONPATH="src"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-EXPOSE 8002
+EXPOSE 8004
 
 CMD ["python", "-m", "com.qode.qrew.v1.payments"]

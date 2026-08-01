@@ -1,11 +1,3 @@
-"""HTTP reverse-proxy router.
-
-Routes /api/{service}/{path} to the appropriate upstream service.
-JWT is already validated by AuthMiddleware before this handler runs;
-the upstream receives X-Authenticated-User-Id so it can trust the identity
-without re-verifying the JWT signature.
-"""
-
 import structlog
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import StreamingResponse
@@ -29,7 +21,7 @@ _HOP_BY_HOP = frozenset(
         "keep-alive",
         "proxy-authenticate",
         "proxy-authorization",
-        # CORS is handled by the gateway's CORSMiddleware — strip upstream copies
+        # Strip upstream CORS headers
         "access-control-allow-origin",
         "access-control-allow-credentials",
         "access-control-allow-methods",
@@ -57,7 +49,7 @@ def _build_upstream_headers(request: Request) -> dict[str, str]:
     headers: dict[str, str] = {
         k: v for k, v in request.headers.items() if k.lower() not in _HOP_BY_HOP
     }
-    # Add forwarding headers for observability and rate-limiting downstream
+    # Add forwarding headers
     client_host = request.client.host if request.client else "unknown"
     headers["x-forwarded-for"] = client_host
     headers["x-forwarded-proto"] = request.url.scheme
@@ -77,7 +69,7 @@ async def proxy(service: str, path: str, request: Request) -> Response:
             media_type="text/plain",
         )
 
-    # Reconstruct the target URL (strip /api/{service} prefix)
+    # Strip service prefix from URL
     qs = request.url.query
     target = f"{upstream}/{path}"
     if qs:

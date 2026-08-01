@@ -26,6 +26,16 @@ Sales is the reservation and queue management service in the platform. It create
 | `POST` | `/queue/join` | Join the waitlist queue for a sold-out event | JWT |
 | `GET` | `/queue/{id}` | Get queue position and status | JWT |
 | `POST` | `/queue/{id}/admit` | Admit a queued user and open a reservation window | Internal |
+| `POST` | `/events/{id}/queue/join` | Join the market resale queue for an event | JWT |
+| `DELETE` | `/events/{id}/queue` | Leave the market resale queue | JWT |
+| `GET` | `/events/{id}/queue/status` | Check resale queue position and pending assignment | JWT |
+| `POST` | `/tickets/{id}/listings` | List a ticket for resale | JWT |
+| `GET` | `/tickets/{id}/listings/active` | Get the active listing for a ticket | JWT |
+| `GET` | `/market/queue` | List all active resale queue entries for the caller | JWT |
+| `GET` | `/market/assignment` | Get the caller's pending market assignment | JWT |
+| `GET` | `/market/assignments/{id}` | Get a specific market assignment | JWT |
+| `PUT` | `/market/assignments/{id}/holder` | Set holder name and DNI for the incoming ticket | JWT |
+| `POST` | `/market/assignments/{id}/decline` | Decline a market assignment | JWT |
 
 Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../packages/contracts/openapi/sales/openapi.yaml)
 
@@ -97,7 +107,7 @@ Schemas: [`packages/contracts/openapi/sales/events/`](../../../../packages/contr
 | `DATABASE_URL` | PostgreSQL async connection string. |
 | `REDIS_URL` | Redis connection URL. |
 | `NATS_URL` | NATS server address. |
-| `INTERNAL_API_KEY` | Shared secret for internal service-to-service calls. |
+| `INTERNAL_API_KEY` | Shared secret for internal service to service calls. |
 | `ACCESS_JWT_PRIVATE_KEY` | EC private key for user JWT verification. |
 | `QUEUE_JWT_PRIVATE_KEY` | EC private key for queue admission tokens. |
 | `PAYMENTS_DEFAULT_CURRENCY` | Default currency for new reservations. Defaults to `EUR`. |
@@ -109,7 +119,7 @@ Schemas: [`packages/contracts/openapi/sales/events/`](../../../../packages/contr
 | `FRAUD_SCORE_BLOCK_THRESHOLD` | Score above which a reservation is auto-blocked. Defaults to 80. |
 | `FRAUD_SCORE_REVIEW_THRESHOLD` | Score above which a reservation is flagged for review. Defaults to 40. |
 | `FRAUD_WEIGHT_VOIP_PHONE` | Fraud score added when the user's phone is detected as VoIP. Defaults to 60. |
-| `TWILIO_ACCOUNT_SID` | Twilio account SID for phone carrier lookup. Optional; VoIP signal is skipped if unset. |
+| `TWILIO_ACCOUNT_SID` | Twilio account SID for phone carrier lookup. Optional. VoIP signal is skipped if unset. |
 | `TWILIO_AUTH_TOKEN` | Twilio auth token for phone carrier lookup. |
 | `TRUSTED_PROXY_IP` | Trusted reverse proxy IP for real client IP extraction. |
 | `IDEMPOTENCY_ENABLED` | Flag to enable idempotency key enforcement. Defaults to true. |

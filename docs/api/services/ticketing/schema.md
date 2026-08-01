@@ -1,4 +1,4 @@
-# Ticketing — Database Schema
+# Ticketing Database Schema
 
 ```mermaid
 erDiagram
@@ -11,6 +11,10 @@ erDiagram
         UUID bound_device_id
         string state
         timestamp state_updated_at
+        timestamp issued_at
+        timestamp expired_at
+        string holder_name
+        string holder_dni
         timestamp created_at
         timestamp updated_at
     }

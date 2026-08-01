@@ -30,13 +30,23 @@ Emitted when an event is cancelled. Sales and Ticketing cancel pending reservati
 
 ---
 
-## `catalog.event.draft.v1`
+## `catalog.event.updated.v1`
 
-Emitted when a published event is moved back to draft. Consumers revert any projections that depend on published state.
+Emitted when a draft or published event's details are changed.
 
 | Field | Type | Description |
 |---|---|---|
-| `event_id` | UUID | Event returned to draft |
+| `event_id` | UUID | Updated event |
+
+---
+
+## `catalog.event.ongoing.v1`
+
+Emitted when an event is manually marked as started by an organiser.
+
+| Field | Type | Description |
+|---|---|---|
+| `event_id` | UUID | Event now in ongoing state |
 
 ---
 

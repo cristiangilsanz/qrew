@@ -72,7 +72,6 @@ def _market_error(exc: MarketError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": exc.message, "field": exc.field})
 
 
-# ------------------------------------------------------------------ queue
 
 
 @events_router.post(
@@ -140,7 +139,6 @@ async def market_queue_status(
     )
 
 
-# ------------------------------------------------------------------ listings
 
 
 @tickets_router.post(
@@ -190,7 +188,6 @@ async def get_ticket_listing(
     return _listing_response(listing)
 
 
-# ---------------------------------------------------------------- my queues
 
 
 @market_router.get(
@@ -211,7 +208,6 @@ async def get_my_queues(
     return [MarketQueueEntryResponse(**e) for e in entries]
 
 
-# ---------------------------------------------------------------- assignments
 
 
 @market_router.get(

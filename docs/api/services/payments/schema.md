@@ -1,10 +1,11 @@
-# Payments — Database Schema
+# Payments Database Schema
 
 ```mermaid
 erDiagram
     payments {
         UUID id PK
-        UUID reservation_id UK
+        UUID reservation_id
+        UUID market_assignment_id
         UUID user_id
         string provider
         string provider_payment_intent_id

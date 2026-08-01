@@ -74,6 +74,7 @@ def create_access_token(
     subject: str,
     device_id: str | None = None,
     session_jti: str | None = None,
+    is_admin: bool = False,
 ) -> str:
     """Mint a signed access token."""
     now = datetime.now(UTC)
@@ -84,6 +85,8 @@ def create_access_token(
         "iat": now,
         "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
     }
+    if is_admin:
+        payload["adm"] = True
     if device_id is not None:
         payload["device_id"] = device_id
     if session_jti is not None:

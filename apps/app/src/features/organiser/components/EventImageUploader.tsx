@@ -96,7 +96,7 @@ export function EventImageUploader({ value, onChange }: Props) {
     onChange(null)
   }
 
-  // Prefer local blob preview; fall back to server URL for existing saved keys
+  // Use blob preview for new uploads, server URL for saved keys
   const displayUrl = previewUrl ?? (value ? getEventImageUrl(value) : null)
 
   return (

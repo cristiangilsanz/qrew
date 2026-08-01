@@ -20,7 +20,7 @@ Emitted when a Stripe PaymentIntent is created and the client secret is returned
 
 ## `payments.payment.succeeded.v1`
 
-Emitted when a Stripe webhook confirms payment. Sales confirms the reservation; Identity logs the event.
+Emitted when a Stripe webhook confirms payment. Sales confirms the reservation. Identity logs the event.
 
 | Field | Type | Description |
 |---|---|---|

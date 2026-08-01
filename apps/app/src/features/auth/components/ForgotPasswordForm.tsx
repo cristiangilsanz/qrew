@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Mail, Send } from 'lucide-react'
 import { useState } from 'react'
@@ -16,9 +17,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+
 import { authApi } from '../api'
 import { AuthLayout } from './AuthLayout'
-import { useMutation } from '@tanstack/react-query'
 
 const schema = z.object({
   email: z.string().email(),

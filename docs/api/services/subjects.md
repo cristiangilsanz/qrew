@@ -1,6 +1,6 @@
 # Subject Registry
 
-Full list of NATS subjects across all streams. See [jetstream.md](jetstream.md) for stream configuration.
+Full list of NATS subjects across all streams. See [streams.md](streams.md) for stream configuration.
 
 ## IDENTITY stream
 
@@ -42,19 +42,19 @@ Wildcard: `payments.>`
 
 | Subject | Published by | Consumed by | Description |
 |---|---|---|---|
-| `payments.payment.initiated.v1` | Payments | — | Payment intent created with Stripe |
+| `payments.payment.initiated.v1` | Payments | | Payment intent created with Stripe |
 | `payments.payment.succeeded.v1` | Payments | Identity, Sales | Payment confirmed by Stripe webhook |
 | `payments.payment.failed.v1` | Payments | Identity | Payment failed |
 | `payments.payment.refunded.v1` | Payments | Identity, Sales | Payment refunded |
 | `payments.chargeback.opened.v1` | Payments | Identity, Sales | Chargeback dispute opened |
 | `payments.chargeback.closed.v1` | Payments | Identity | Chargeback dispute closed |
 
-## TICKETING (no dedicated stream)
+## TICKETING
 
 | Subject | Published by | Consumed by | Description |
 |---|---|---|---|
 | `ticketing.ticket.state_changed` | Ticketing | Entry | Ticket state transition occurred |
-| `ticketing.ticket.restored` | Ticketing | — | Ticket restored after device re-enrolment |
+| `ticketing.ticket.restored` | Ticketing | | Ticket restored after device re-enrolment |
 
 ## AUDIT stream
 

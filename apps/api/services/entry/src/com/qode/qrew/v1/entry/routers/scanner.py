@@ -64,9 +64,7 @@ def _scanner_summary(scanner: object) -> ScannerSummaryResponse:
     return ScannerSummaryResponse.model_validate(scanner, from_attributes=True)
 
 
-# ---------------------------------------------------------------------------
-# Scanner self-service
-# ---------------------------------------------------------------------------
+# Scanner endpoints
 
 
 @router.post(
@@ -103,9 +101,7 @@ async def refresh_scanner(
     )
 
 
-# ---------------------------------------------------------------------------
-# Org-member scanner creation
-# ---------------------------------------------------------------------------
+# Org member scanner creation
 
 
 @router.post(
@@ -154,9 +150,7 @@ async def create_scanner_for_event(
     )
 
 
-# ---------------------------------------------------------------------------
 # Admin scanner management
-# ---------------------------------------------------------------------------
 
 
 @admin_router.post(

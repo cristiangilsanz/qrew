@@ -30,7 +30,7 @@ class SearchService:
         cursor: str | None,
         limit: int,
     ) -> Page[EventSearchResult]:
-        # Merge single city + multi-city into one list
+        # Merge city filter variants
         all_cities: list[str] = []
         if cities:
             all_cities = [c for c in cities if c]

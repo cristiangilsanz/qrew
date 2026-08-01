@@ -1,5 +1,5 @@
-import { Turnstile } from '@marsidev/react-turnstile'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Turnstile } from '@marsidev/react-turnstile'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Lock, Mail, Phone, User, UserPlus } from 'lucide-react'
 import { useRef, useState } from 'react'

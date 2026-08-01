@@ -130,8 +130,7 @@ class FingerprintContextRepository:
         return await self._session.get(FingerprintContext, fingerprint_hash)
 
     async def seen(self, *, fingerprint_hash: str, now: datetime) -> None:
-        # Atomic upsert: INSERT wins the race on first occurrence; ON CONFLICT increments
-        # atomically so concurrent workers never double-count the same fingerprint hash.
+        # Atomic upsert avoids count duplication on concurrent writes
         await self._session.execute(
             text(
                 "INSERT INTO sales.fingerprint_context "

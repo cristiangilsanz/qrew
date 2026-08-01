@@ -201,8 +201,8 @@ class EventService:
         event = await self._repo.get_by_id(event_id)
         if event is None:
             raise EventError("Event not found", field="event_id")
-        if event.status == EventStatus.cancelled:
-            raise EventError("Cancelled events cannot be edited", field="status")
+        if event.status in (EventStatus.cancelled, EventStatus.ongoing):
+            raise EventError("Cancelled or ongoing events cannot be edited", field="status")
         unknown = set(changes) - _MUTABLE_FIELDS
         if unknown:
             raise EventError(f"Cannot edit fields: {sorted(unknown)}", field=None)

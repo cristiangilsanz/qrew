@@ -21,14 +21,12 @@ function EventManagePage() {
   const { data } = useOrgEvents(orgId)
   const event = data?.items.find((e) => e.id === eventId)
 
-  const hasStarted = event
-    ? event.status === 'ongoing' || new Date(event.starts_at) <= new Date()
-    : false
+  const isOngoing = event?.status === 'ongoing'
 
   if (!event) return <EventManageSkeleton />
 
   const imageUrl = getEventImageUrl(event.image_url)
-  const isEditable = !hasStarted && (event.status === 'draft' || event.status === 'published')
+  const isEditable = event.status === 'draft' || event.status === 'published'
 
   return (
     <div className="pb-28">
@@ -100,7 +98,7 @@ function EventManagePage() {
             </>
           )}
 
-          {hasStarted && (
+          {isOngoing && (
             <>
               {isEditable && <div className="border-t border-white/10" />}
               <Link

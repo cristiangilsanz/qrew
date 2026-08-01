@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
+import { NotFound } from '@/components/ui/not-found'
 import { TicketDetailSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
@@ -97,12 +98,14 @@ function TicketDetailPage() {
 
   if (isError || !ticket) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-muted-foreground">{t('tickets.ticket.notFound')}</p>
-        <Link to="/tickets" className="text-primary mt-4 inline-block text-sm underline">
-          {t('tickets.backToTickets')}
-        </Link>
-      </div>
+      <NotFound
+        message={t('tickets.ticket.notFound')}
+        action={
+          <Link to="/tickets" className="text-primary inline-block text-sm underline">
+            {t('tickets.backToTickets')}
+          </Link>
+        }
+      />
     )
   }
 
@@ -145,7 +148,7 @@ function TicketDetailPage() {
       status: 'error',
     })
   } else if (ticket.state === 'reserved') {
-    // still pending issuance — no placeholder shown
+    // Pending issuance
   } else {
     // issued, scanning, redeemed, on_sale, flagged
     timeline.push({
@@ -237,7 +240,7 @@ function TicketDetailPage() {
             </div>
           </div>
 
-          {/* Info grid — Date + Time */}
+          {/* Info grid */}
           <div className="grid grid-cols-2 gap-px">
             <div className="flex flex-col items-center gap-1 px-4 py-4">
               <Calendar className="h-4 w-4 text-gray-400" />
@@ -268,7 +271,7 @@ function TicketDetailPage() {
             </div>
           </div>
 
-          {/* History — separate rounded expandable */}
+          {/* History */}
           <div className="mx-4 mt-4 mb-5 overflow-hidden rounded-2xl border border-gray-100">
             <button
               onClick={() => setTimelineOpen((o) => !o)}

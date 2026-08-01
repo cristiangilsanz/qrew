@@ -35,7 +35,7 @@ def build_search_clause(
             parameters["search_q"] = prefix_q
             tsquery = f"to_tsquery('{config.language}', :search_q)"
             parameters["ilike_q"] = f"%{cleaned}%"
-            # Match either full-text prefix OR a raw substring (ILIKE) on the name column
+            # Fulltext prefix or substring match
             name_col = next(
                 (f.column_name for f in config.fields if f.weight == "A"),
                 config.fields[0].column_name if config.fields else "name",

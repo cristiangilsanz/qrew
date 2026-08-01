@@ -8,8 +8,8 @@ import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
-import { getEventImageUrl } from '@/lib/imageUrl'
 import { formatDate } from '@/lib/formatDate'
+import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/management/$orgId/events/')({

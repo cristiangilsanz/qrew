@@ -133,7 +133,7 @@ Schemas: [`packages/contracts/openapi/identity/events/`](../../../../packages/co
 | `TICKET_QR_JWT_PRIVATE_KEY` | EC private key for QR ticket tokens. |
 | `NATIONAL_ID_ENCRYPTION_KEY` | AES key for KYC document encryption at rest. |
 | `PII_ENCRYPTION_KEY` | AES key for PII field encryption. |
-| `INTERNAL_API_KEY` | Shared secret for internal service-to-service calls. |
+| `INTERNAL_API_KEY` | Shared secret for internal service to service calls. |
 | `STORAGE_ROOT` | Filesystem root for uploaded files. |
 | `STORAGE_SIGNING_KEY` | Key used to sign temporary storage URLs. |
 | `KYC_DOCUMENT_RETENTION_DAYS` | Days before KYC documents are permanently deleted. Defaults to 30. |

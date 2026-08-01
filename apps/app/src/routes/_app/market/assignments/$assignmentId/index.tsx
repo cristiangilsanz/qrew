@@ -271,7 +271,7 @@ function AssignmentPage() {
         })()}
       </div>
 
-      {/* Stripe checkout — lazy loaded to defer @stripe/stripe-js from initial bundle */}
+      {/* Stripe checkout */}
       {clientSecret && (
         <div className="mx-auto mt-5 max-w-[430px] px-4 pb-32">
           <Suspense fallback={null}>

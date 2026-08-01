@@ -92,7 +92,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
 
       {/* City dropdown + Date picker row */}
       <div className="flex gap-2">
-        {/* Multi-select city dropdown */}
+        {/* City filter */}
         {citiesLoading ? (
           <Skeleton className="h-10 flex-1 rounded-xl" />
         ) : availableCities.length > 0 ? (

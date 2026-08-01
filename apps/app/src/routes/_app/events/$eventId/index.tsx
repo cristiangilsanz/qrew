@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
+import { NotFound } from '@/components/ui/not-found'
 import { EventDetailSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
@@ -109,11 +110,7 @@ function EventDetailPage() {
   }
 
   if (isError || !event) {
-    return (
-      <div className="p-6">
-        <p className="text-muted-foreground">{t('events.notFound')}</p>
-      </div>
-    )
+    return <NotFound message={t('events.notFound')} />
   }
 
   const imageUrl = getEventImageUrl(event.image_url)
@@ -207,7 +204,7 @@ function EventDetailPage() {
         )}
       </div>
 
-      {/* FAB — bottom right, above dock — hidden when sale hasn't started yet */}
+      {/* FAB */}
       {!saleNotStarted && (
         showResaleQueue ? (
           inQueue ? (

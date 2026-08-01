@@ -5,21 +5,21 @@ export function Skeleton({ className }: { className?: string }) {
 }
 
 export {
+  CheckoutSkeleton,
   EventCardSkeleton,
   EventDetailSkeleton,
-  CheckoutSkeleton,
 } from '@/features/events/components/EventSkeletons'
-export {
-  ReservationRowSkeleton,
-  TicketDetailSkeleton,
-  ReservationSkeleton,
-} from '@/features/tickets/components/TicketSkeletons'
+export { WaitlistRowSkeleton } from '@/features/market/components/MarketSkeletons'
+export { OnboardingStepSkeleton } from '@/features/onboarding/components/OnboardingSkeletons'
 export {
   EventManageSkeleton,
+  FormPageSkeleton,
   OrgCardSkeleton,
   TicketTypeListSkeleton,
-  FormPageSkeleton,
 } from '@/features/organiser/components/OrganiserSkeletons'
-export { WaitlistRowSkeleton } from '@/features/market/components/MarketSkeletons'
-export { ProfileSkeleton, AccountSkeleton } from '@/features/profile/components/ProfileSkeletons'
-export { OnboardingStepSkeleton } from '@/features/onboarding/components/OnboardingSkeletons'
+export { AccountSkeleton,ProfileSkeleton } from '@/features/profile/components/ProfileSkeletons'
+export {
+  ReservationRowSkeleton,
+  ReservationSkeleton,
+  TicketDetailSkeleton,
+} from '@/features/tickets/components/TicketSkeletons'

@@ -145,9 +145,7 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[t
         await client.aclose()
 
 
-# ---------------------------------------------------------------------------
-# User / session resolution
-# ---------------------------------------------------------------------------
+# User and session resolution
 
 
 async def _resolve_user(
@@ -295,9 +293,7 @@ def domain_error(message: str, field: str | None, http_status: int) -> HTTPExcep
     return HTTPException(status_code=http_status, detail={"message": message, "field": field})
 
 
-# ---------------------------------------------------------------------------
 # Shared singletons
-# ---------------------------------------------------------------------------
 
 
 def get_captcha_service() -> CaptchaService:
@@ -316,9 +312,7 @@ def get_ocr_service() -> OcrService:
     return OcrService()
 
 
-# ---------------------------------------------------------------------------
 # Auth service factories
-# ---------------------------------------------------------------------------
 
 
 def get_login_service(
@@ -388,9 +382,7 @@ def get_profile_service(
     )
 
 
-# ---------------------------------------------------------------------------
 # Registration service factories
-# ---------------------------------------------------------------------------
 
 
 def get_registration_service(
@@ -427,9 +419,7 @@ def get_resend_phone_otp_service(
     return ResendPhoneOtpService(UserRepository(db), notifier)
 
 
-# ---------------------------------------------------------------------------
-# Setup / KYC service factories
-# ---------------------------------------------------------------------------
+# Setup and KYC service factories
 
 
 def get_kyc_service(
@@ -451,9 +441,7 @@ def get_complete_setup_service(
     )
 
 
-# ---------------------------------------------------------------------------
 # Account service factories
-# ---------------------------------------------------------------------------
 
 
 def get_email_change_service(
@@ -522,9 +510,7 @@ def get_recovery_service(
     )
 
 
-# ---------------------------------------------------------------------------
 # Device service factories
-# ---------------------------------------------------------------------------
 
 
 def get_fingerprint_service(
@@ -558,9 +544,7 @@ def get_device_service(
     )
 
 
-# ---------------------------------------------------------------------------
 # Passkey service factories
-# ---------------------------------------------------------------------------
 
 
 def get_passkey_registration_service(
@@ -601,9 +585,7 @@ def get_passkey_management_service(
     return PasskeyManagementService(PasskeyCredentialRepository(db), AuditService())
 
 
-# ---------------------------------------------------------------------------
 # Admin service factories
-# ---------------------------------------------------------------------------
 
 
 def get_kyc_review_service(

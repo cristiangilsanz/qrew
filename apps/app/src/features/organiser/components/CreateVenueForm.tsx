@@ -1,5 +1,5 @@
 /* global google */
-import { Loader } from '@googlemaps/js-api-loader'
+import { importLibrary,setOptions } from '@googlemaps/js-api-loader'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Info, MapPin, Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -48,7 +48,6 @@ export function CreateVenueForm({ onSuccess }: Props) {
   const searchRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
   const [mapsReady, setMapsReady] = useState(false)
-  const [placeName, setPlaceName] = useState('')
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -67,19 +66,14 @@ export function CreateVenueForm({ onSuccess }: Props) {
 
   const createVenue = useCreateVenue((venue: Venue) => {
     form.reset()
-    setPlaceName('')
     onSuccess?.(venue)
   })
 
   // Load Google Maps Places library
   useEffect(() => {
     if (!env.GOOGLE_MAPS_API_KEY) return
-    const loader = new Loader({
-      apiKey: env.GOOGLE_MAPS_API_KEY,
-      libraries: ['places'],
-    })
-    loader
-      .load()
+    setOptions({ apiKey: env.GOOGLE_MAPS_API_KEY })
+    importLibrary('places')
       .then(() => setMapsReady(true))
       .catch(() => {
         /* silent — fallback to manual */
@@ -121,9 +115,7 @@ export function CreateVenueForm({ onSuccess }: Props) {
       form.setValue('country', country, { shouldValidate: true })
       form.setValue('latitude', lat, { shouldValidate: true })
       form.setValue('longitude', lng, { shouldValidate: true })
-      setPlaceName(place.name ?? place.formatted_address ?? '')
-
-      // Auto-detect timezone via Google Timezone API
+      // Autodetect timezone
       if (env.GOOGLE_MAPS_API_KEY) {
         const ts = Math.floor(Date.now() / 1000)
         fetch(
@@ -163,12 +155,6 @@ export function CreateVenueForm({ onSuccess }: Props) {
               className={`${inputClass} pl-9 disabled:cursor-not-allowed disabled:opacity-40`}
             />
           </div>
-          {placeName && (
-            <p className="text-primary flex items-center gap-1 text-xs">
-              <MapPin className="h-3 w-3" />
-              {placeName}
-            </p>
-          )}
         </div>
 
         <div className="border-t border-white/10 pt-4">

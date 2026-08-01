@@ -19,28 +19,32 @@ Catalog is the source of truth for the public event catalog in the platform. It 
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `POST` | `/organisations` | Create an organisation | JWT |
-| `GET` | `/organisations` | List organisations | JWT |
-| `GET` | `/organisations/{id}` | Get an organisation by ID | JWT |
-| `POST` | `/organisations/{id}/members` | Add a member to an organisation | JWT |
-| `DELETE` | `/organisations/{id}/members/{uid}` | Remove a member from an organisation | JWT |
-| `POST` | `/organisations/{id}/venues` | Create a venue under an organisation | JWT |
-| `GET` | `/organisations/{id}/venues` | List venues for an organisation | JWT |
-| `GET` | `/organisations/{id}/venues/{vid}` | Get a specific venue | JWT |
-| `POST` | `/venues` | Create a standalone venue | JWT |
+| `POST` | `/organisations` | Create an organisation | JWT (admin only) |
+| `GET` | `/organisations` | List organisations the caller belongs to | JWT |
+| `GET` | `/organisations/search` | Search organisations by name or slug | JWT |
+| `GET` | `/organisations/{id}` | Get public organisation profile | Public |
+| `DELETE` | `/organisations/{id}` | Delete an organisation | JWT (owner) |
+| `GET` | `/organisations/{id}/members` | List members of an organisation | JWT |
+| `POST` | `/organisations/{id}/members` | Invite a member by email | JWT (manager) |
+| `POST` | `/organisations/{id}/members/add` | Add a member by user ID | JWT (manager) |
+| `DELETE` | `/organisations/{id}/members/{uid}` | Remove a member | JWT (manager) |
+| `POST` | `/organisations/{id}/events` | Create a draft event | JWT (manager) |
+| `GET` | `/organisations/{id}/events` | List events for an organisation | JWT (member) |
+| `GET` | `/organisations/{id}/events/{eid}` | Get a single org event | JWT (member) |
+| `POST` | `/venues` | Create a venue | JWT |
 | `GET` | `/venues` | List all venues | JWT |
 | `GET` | `/venues/{id}` | Get a venue by ID | JWT |
-| `POST` | `/events` | Create a new event | JWT |
-| `GET` | `/events` | List events paginated | JWT |
-| `GET` | `/events/{id}` | Get an event by ID | JWT |
-| `PATCH` | `/events/{id}` | Update event details | JWT |
-| `POST` | `/events/{id}/publish` | Publish a draft event | JWT |
-| `GET` | `/events/upcoming` | List upcoming published events | Public |
-| `GET` | `/events/search` | Search events by full-text query | Public |
-| `POST` | `/events/{id}/ticket-types` | Add a ticket type to an event | JWT |
+| `PATCH` | `/events/{id}` | Update event details (draft or published only) | JWT (manager) |
+| `POST` | `/events/{id}/publish` | Publish a draft event | JWT (manager) |
+| `POST` | `/events/{id}/start` | Mark a published event as ongoing | JWT (manager) |
+| `POST` | `/events/{id}/cancel` | Cancel an event | JWT (manager) |
+| `GET` | `/events` | Public catalog list with search and filters | Public |
+| `GET` | `/events/{id}` | Get a published event with ticket types | Public |
+| `GET` | `/events/{id}/availability` | Lightweight availability check | Public |
+| `POST` | `/events/{id}/ticket-types` | Add a ticket type (draft or published only) | JWT (manager) |
 | `GET` | `/events/{id}/ticket-types` | List ticket types for an event | Public |
-| `PATCH` | `/events/{id}/ticket-types/{tid}` | Update a ticket type | JWT |
-| `DELETE` | `/events/{id}/ticket-types/{tid}` | Delete a ticket type | JWT |
+| `PATCH` | `/events/{id}/ticket-types/{tid}` | Update a ticket type (draft or published only) | JWT (manager) |
+| `DELETE` | `/events/{id}/ticket-types/{tid}` | Delete a ticket type (draft or published only) | JWT (manager) |
 
 Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../packages/contracts/openapi/catalog/openapi.yaml)
 
@@ -52,9 +56,11 @@ Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../packa
 |-------|-------------|-------------|
 | `OrganisationCreated` | `catalog.organisation.created.v1` | Emitted when a new organisation was registered. |
 | `EventPublished` | `catalog.event.published.v1` | Emitted when an event was published and made visible. |
+| `EventUpdated` | `catalog.event.updated.v1` | Emitted when event details are changed. |
+| `EventOngoing` | `catalog.event.ongoing.v1` | Emitted when an event is marked as started. |
 | `EventCancelled` | `catalog.event.cancelled.v1` | Emitted when a published event was cancelled. |
 | `TicketTypeCreated` | `catalog.ticket_type.created.v1` | Emitted when a ticket type was added to an event. |
-| `TicketTypeDeleted` | `catalog.ticket_type.deleted.v1` | Emitted when a ticket type was removed from an event. |
+| `TicketTypeUpdated` | `catalog.ticket_type.updated.v1` | Emitted when a ticket type capacity or price changes. |
 
 Schemas: [`packages/contracts/openapi/catalog/events/`](../../../../packages/contracts/openapi/catalog/events/)
 
@@ -98,7 +104,7 @@ This service does not consume events from other services.
 | `REDIS_URL` | Redis connection URL. |
 | `NATS_URL` | NATS server address. |
 | `ACCESS_JWT_PRIVATE_KEY` | EC private key for JWT verification. |
-| `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma-separated previous public keys for key rotation. |
+| `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma separated previous public keys for key rotation. |
 | `CORS_ORIGINS` | Allowed CORS origins. |
 | `SEARCH_DEFAULT_LIMIT` | Default page size for search results. Defaults to 20. |
 | `SEARCH_MAX_LIMIT` | Maximum page size for search results. Defaults to 100. |

@@ -3,8 +3,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
-import { scannerApi } from '@/features/scanner/api'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
+import { scannerApi } from '@/features/scanner/api'
 import { queryKeys } from '@/lib/queryKeys'
 
 export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/stats')({
@@ -49,7 +49,7 @@ function EntryStatsPage() {
       </div>
 
       <div className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
-        {/* Issued / Entered / Remaining */}
+        {/* Issued, Entered, Remaining */}
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
           <div className="grid grid-cols-3 divide-x divide-white/10">
             {isLoading ? (

@@ -33,7 +33,7 @@ function Root() {
         richColors
         theme="dark"
         position="top-center"
-        toastOptions={{ classNames: { title: 'text-center w-full' } }}
+        toastOptions={{ classNames: { title: 'text-left' } }}
       />
     </div>
   )

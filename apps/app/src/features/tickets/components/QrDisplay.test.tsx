@@ -22,6 +22,15 @@ vi.mock('@/config/env', () => ({
   env: { API_URL: 'http://localhost:8000' },
 }))
 
+vi.mock('@capacitor/geolocation', () => ({
+  Geolocation: {
+    requestPermissions: vi.fn().mockResolvedValue({ location: 'granted' }),
+    getCurrentPosition: vi.fn().mockResolvedValue({
+      coords: { latitude: 40.4, longitude: -3.7 },
+    }),
+  },
+}))
+
 const makeClient = () => new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -30,34 +39,16 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 
 describe('QrDisplay', () => {
   beforeEach(() => {
-    vi.stubGlobal('navigator', {
-      geolocation: {
-        getCurrentPosition: vi.fn((success: PositionCallback) =>
-          success({ coords: { latitude: 40.4, longitude: -3.7 } } as GeolocationPosition),
-        ),
-      },
-    })
-
     vi.stubGlobal(
       'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          body: {
-            getReader: () => ({
-              read: vi
-                .fn()
-                .mockResolvedValueOnce({
-                  done: false,
-                  value: new TextEncoder().encode(
-                    'event: qr\ndata: {"jwt":"test.jwt.token","expires_at":"2026-01-01T00:00:20Z"}\n\n',
-                  ),
-                })
-                .mockResolvedValueOnce({ done: true, value: undefined }),
-            }),
-          },
-        }),
-      ),
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            jwt: 'test.jwt.token',
+            expires_at: new Date(Date.now() + 30000).toISOString(),
+          }),
+      }),
     )
   })
 
@@ -79,13 +70,8 @@ describe('QrDisplay', () => {
   })
 
   it('shows geolocation denied message when geo fails', async () => {
-    vi.stubGlobal('navigator', {
-      geolocation: {
-        getCurrentPosition: vi.fn((_success: unknown, error: PositionErrorCallback) =>
-          error({ code: 1, message: 'denied' } as GeolocationPositionError),
-        ),
-      },
-    })
+    const { Geolocation } = await import('@capacitor/geolocation')
+    vi.mocked(Geolocation.getCurrentPosition).mockRejectedValueOnce(new Error('denied'))
 
     const user = userEvent.setup()
     render(<QrDisplay ticketId="ticket-1" />, { wrapper })
@@ -100,24 +86,13 @@ describe('QrDisplay', () => {
   it('shows geofence denied message when stream returns denied event', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          body: {
-            getReader: () => ({
-              read: vi
-                .fn()
-                .mockResolvedValueOnce({
-                  done: false,
-                  value: new TextEncoder().encode(
-                    'event: denied\ndata: {"type":"denied","detail":{"field":"geofence"}}\n\n',
-                  ),
-                })
-                .mockResolvedValueOnce({ done: true, value: undefined }),
-            }),
-          },
-        }),
-      ),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: () =>
+          Promise.resolve({
+            detail: { field: 'geofence' },
+          }),
+      }),
     )
 
     const user = userEvent.setup()
@@ -130,13 +105,8 @@ describe('QrDisplay', () => {
   })
 
   it('shows retry button after denial', async () => {
-    vi.stubGlobal('navigator', {
-      geolocation: {
-        getCurrentPosition: vi.fn((_success: unknown, error: PositionErrorCallback) =>
-          error({ code: 1, message: 'denied' } as GeolocationPositionError),
-        ),
-      },
-    })
+    const { Geolocation } = await import('@capacitor/geolocation')
+    vi.mocked(Geolocation.getCurrentPosition).mockRejectedValueOnce(new Error('denied'))
 
     const user = userEvent.setup()
     render(<QrDisplay ticketId="ticket-1" />, { wrapper })

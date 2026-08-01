@@ -48,9 +48,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 _search_service = SearchService()
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 
 def _event_response(event: Event) -> EventResponse:
@@ -114,9 +112,7 @@ def _ticket_type_error(error: TicketTypeError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
-# ---------------------------------------------------------------------------
-# Event management (auth-gated)
-# ---------------------------------------------------------------------------
+# Event management
 
 
 @router.patch(
@@ -223,9 +219,7 @@ async def cancel_event(
     return _event_response(event)
 
 
-# ---------------------------------------------------------------------------
-# Ticket types (auth-gated, nested under events)
-# ---------------------------------------------------------------------------
+# Ticket types
 
 
 @router.post(
@@ -360,9 +354,7 @@ async def delete_ticket_type(
         ) from exc
 
 
-# ---------------------------------------------------------------------------
-# Public catalog (no auth)
-# ---------------------------------------------------------------------------
+# Public catalog
 
 
 @router.get(

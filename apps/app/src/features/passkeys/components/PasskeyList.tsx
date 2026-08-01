@@ -3,12 +3,11 @@ import { KeyRound, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { formatDate } from '@/lib/formatDate'
-
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useRegisterPasskey } from '@/features/onboarding/hooks/useRegisterPasskey'
+import { formatDate } from '@/lib/formatDate'
 
 import { useDeletePasskey } from '../hooks/useDeletePasskey'
 import { usePasskeys } from '../hooks/usePasskeys'

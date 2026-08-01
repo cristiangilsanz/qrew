@@ -1,7 +1,7 @@
+import { Capacitor } from '@capacitor/core'
 import { Passkeys } from '@capawesome/capacitor-passkeys'
 import { startRegistration } from '@simplewebauthn/browser'
 import { useMutation } from '@tanstack/react-query'
-import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 

@@ -132,6 +132,7 @@ class RefreshService:
             str(user.id),
             device_id=str(bound_device_id) if bound_device_id else None,
             session_jti=new_jti,
+            is_admin=user.is_admin,
         )
 
         if self._session_repo is not None and isinstance(jti, str) and new_jti is not None:

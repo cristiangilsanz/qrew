@@ -186,6 +186,7 @@ class LoginService:
             str(user.id),
             device_id=str(bound_device_id) if bound_device_id else None,
             session_jti=session_jti,
+            is_admin=user.is_admin,
         )
         await self._persist_session(
             user.id,

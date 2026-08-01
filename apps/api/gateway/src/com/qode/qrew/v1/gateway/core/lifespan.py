@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     await start_hub()
 
-    # Shared httpx client for HTTP reverse-proxy (keep-alive pool)
+    # Shared HTTP client with keepalive pool
     app.state.proxy_client = httpx.AsyncClient(
         timeout=httpx.Timeout(30.0),
         limits=httpx.Limits(max_connections=200, max_keepalive_connections=50),

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
+import { NotFound } from '@/components/ui/not-found'
 import { ReservationSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { ticketsApi } from '@/features/tickets/api'
@@ -90,11 +91,7 @@ function ReservationPage() {
   if (isLoading) return <ReservationSkeleton />
 
   if (isError || !reservation) {
-    return (
-      <div className="mx-auto max-w-md p-6">
-        <p className="text-muted-foreground">{t('tickets.reservation.notFound')}</p>
-      </div>
-    )
+    return <NotFound message={t('tickets.reservation.notFound')} />
   }
 
   const quantity = reservation.quantity
@@ -201,7 +198,7 @@ function ReservationPage() {
         </div>
       </div>
 
-      {/* Holder info — only shown when reservation is still open */}
+      {/* Holder info */}
       {!isPaid && !isCancelled && !clientSecret && (
         <div className="mt-4 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
           <div className="flex items-center justify-between">
@@ -260,7 +257,7 @@ function ReservationPage() {
         </div>
       )}
 
-      {/* Stripe form — lazy loaded to defer @stripe/stripe-js from initial bundle */}
+      {/* Stripe form */}
       {clientSecret && (
         <div className="mt-6">
           <Suspense fallback={null}>
@@ -285,7 +282,7 @@ function ReservationPage() {
         </p>
       )}
 
-      {/* Pay Now — fixed bottom right, only enabled after holders are saved */}
+      {/* Pay Now button */}
       {canPay && (
         <div className="fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto flex max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-5">

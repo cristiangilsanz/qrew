@@ -48,9 +48,9 @@ ConsumerConfig(
 | `sales-payment-handler-*` | `PAYMENTS` | `payments.payment.succeeded.v1`, `payments.payment.refunded.v1`, `payments.chargeback.opened.v1` | Sales |
 | `audit-events-handler` | `AUDIT` | `audit.events.v1` | Audit |
 | `gateway-fanout-handler` | `GATEWAY` | `ws.fanout.v1` | Gateway |
-| `entry-projector` | n/a | `ticketing.ticket.state_changed` | Entry |
+| `entry-projector` | none | `ticketing.ticket.state_changed` | Entry |
 
-Durable names suffixed with `*` are per-subject.
+Durable names suffixed with `*` are per subject.
 
 ### Gateway exception
 
@@ -58,7 +58,7 @@ The Gateway fanout consumer uses `DeliverPolicy.NEW` instead of `DeliverPolicy.A
 
 It only forwards live messages. Historical replay would flood open WebSocket connections with stale notifications.
 
-## Outbox (Identity only)
+## Outbox
 
 Identity uses a transactional outbox instead of publishing directly from request handlers. Domain events are written atomically to the `outbox` table in the same transaction as the business write. The outbox worker polls and publishes to JetStream, marking rows as dispatched. Failed rows enter a DLQ after a configurable retry count.
 

@@ -64,7 +64,7 @@ services:
       nats:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8001/v1/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/healthz || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -91,7 +91,7 @@ services:
     build:
       context: .
       dockerfile: apps/api/services/identity/Dockerfile
-    command: ["python", "-m", "com.qode.qrew.v1.identity.worker.arq_worker"]
+    command: ["python", "-m", "com.qode.qrew.v1.identity.worker.runner"]
     volumes:
       - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
     environment:
@@ -384,6 +384,18 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+
+  frontend:
+    build:
+      context: apps/app
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "3000:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
 
   jaeger:
     image: jaegertracing/all-in-one:1.62

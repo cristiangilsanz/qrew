@@ -18,7 +18,8 @@ RUN uv sync --package gateway --no-dev --frozen
 
 FROM python:3.12-slim AS runtime
 
-RUN useradd --system --no-create-home --uid 1001 appuser
+RUN useradd --system --no-create-home --uid 1001 appuser && \
+    apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
@@ -39,6 +40,6 @@ ENV HOST="0.0.0.0"
 
 USER appuser
 
-EXPOSE 8008
+EXPOSE 8000
 
 CMD ["python", "-m", "com.qode.qrew.v1.gateway"]

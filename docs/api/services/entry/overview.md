@@ -18,11 +18,17 @@ Entry is the gate control service in the platform. It registers scanner devices,
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `POST` | `/scanners` | Register a scanner device and issue scanner credentials | Internal |
+| `POST` | `/entry` | Validate a ticket QR at the gate | Scanner JWT |
+| `GET` | `/events/{id}/entry-stats` | Per-event entry rollup for organiser console | JWT |
+| `POST` | `/scanners/refresh` | Self-service scanner JWT refresh | Scanner JWT |
+| `POST` | `/scanners/token` | Create a scanner token for an event | JWT (org member or admin) |
+| `POST` | `/admin/scanners` | Register a new scanner device | JWT (admin) |
+| `GET` | `/admin/scanners` | List all registered scanners | JWT (admin) |
+| `GET` | `/admin/scanners/{id}` | Read a single scanner | JWT (admin) |
+| `POST` | `/admin/scanners/{id}/refresh` | Mint a fresh credential for a scanner | JWT (admin) |
+| `DELETE` | `/admin/scanners/{id}` | Deactivate a scanner | JWT (admin) |
 
 Full spec: [`packages/contracts/openapi/entry/openapi.yaml`](../../../../packages/contracts/openapi/entry/openapi.yaml)
-
-> Ticket scanning is handled internally via the WebSocket gateway entry channel and the ticketing service HTTP call. There is no public scan endpoint.
 
 ## Events
 
@@ -74,10 +80,10 @@ Schemas: [`packages/contracts/openapi/entry/events/`](../../../../packages/contr
 | `DATABASE_URL` | PostgreSQL async connection string. |
 | `REDIS_URL` | Redis connection URL. |
 | `NATS_URL` | NATS server address. |
-| `INTERNAL_API_KEY` | Shared secret for internal service-to-service calls. |
+| `INTERNAL_API_KEY` | Shared secret for internal service to service calls. |
 | `TICKETING_URL` | Base URL of the ticketing service. Defaults to `http://localhost:8005`. |
 | `ACCESS_JWT_PRIVATE_KEY` | EC private key for user JWT verification. |
-| `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma-separated previous public keys for key rotation. |
+| `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma separated previous public keys for key rotation. |
 | `TICKET_QR_JWT_PRIVATE_KEY` | EC private key for QR token verification. |
 | `TICKET_QR_JWT_PREVIOUS_PUBLIC_KEYS` | Previous QR JWT public keys for key rotation. |
 | `SCANNER_JWT_PRIVATE_KEY` | EC private key for signing scanner credentials. |

@@ -35,6 +35,6 @@ def register_middleware(app: FastAPI) -> None:
         allow_methods=["*"],
         allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-ID"],
     )
-    # AuthMiddleware runs after CORS (LIFO: added last → executes first)
+    # Auth runs after CORS middleware
     # so OPTIONS preflights are already handled by CORSMiddleware before auth checks.
     app.add_middleware(AuthMiddleware)

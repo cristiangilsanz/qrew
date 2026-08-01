@@ -1,4 +1,4 @@
-# Catalog — Database Schema
+# Catalog Database Schema
 
 ```mermaid
 erDiagram
@@ -41,7 +41,10 @@ erDiagram
         UUID venue_id FK
         string name
         text description
+        string image_url
         string status
+        string organiser_name
+        string venue_city
         timestamp starts_at
         timestamp ends_at
         timestamp sale_starts_at
@@ -52,6 +55,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
         timestamp published_at
+        timestamp started_at
         timestamp cancelled_at
     }
 

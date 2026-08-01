@@ -1,13 +1,3 @@
-"""Gateway JWT authentication middleware.
-
-Validates the Bearer token on every proxied HTTP request and injects
-X-Authenticated-User-Id (and X-Authenticated-Token-Type) into the request
-so upstream services can trust the identity without re-verifying the JWT.
-
-Public routes (login, register, refresh, passkeys) are passed through
-without requiring a token.
-"""
-
 import json
 import re
 
@@ -26,7 +16,7 @@ from com.qode.qrew.v1.gateway.core.auth import (
 logger = structlog.get_logger(__name__)
 
 # Routes that are accessible without a valid access token.
-# Patterns are matched against "METHOD /api/service/path".
+# Each pattern matches against METHOD plus path
 _PUBLIC_PATTERNS: list[re.Pattern[str]] = [
     # Identity: auth flows
     re.compile(r"^POST /api/identity/v1/auth/login$"),
@@ -112,10 +102,12 @@ class AuthMiddleware:
             headers = MutableHeaders(scope=scope)
             headers.append("x-authenticated-user-id", sub)
             headers.append("x-authenticated-token-type", token_type)
+            if claims.get("adm") is True:
+                headers.append("x-authenticated-user-is-admin", "1")
             await self.app(scope, receive, send)
             return
 
-        # Try scanner token (for entry service endpoints)
+        # Try scanner token
         scanner_keys = scanner_public_keys()
         if scanner_keys:
             claims = try_verify(token, scanner_keys)

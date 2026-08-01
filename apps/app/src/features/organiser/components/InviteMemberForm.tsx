@@ -40,7 +40,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Fetch all users once on mount; client-side filter for instant response
+  // Fetch all users once then filter on client
   const { data: allUsers = [] } = useQuery({
     queryKey: ['user-search-all'],
     queryFn: () => profileApi.searchUsers(''),
@@ -92,7 +92,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
         })}
         className="w-full space-y-4"
       >
-        {/* Hidden user_id field — value set when a suggestion is selected */}
+        {/* Hidden user_id field */}
         <input type="hidden" {...form.register('user_id')} />
 
         <FormItem>

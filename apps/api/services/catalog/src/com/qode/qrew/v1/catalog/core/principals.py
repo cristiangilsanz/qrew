@@ -24,6 +24,7 @@ _bearer = HTTPBearer(auto_error=False)
 @dataclass(frozen=True)
 class AuthenticatedUser:
     id: uuid.UUID
+    is_admin: bool = False
 
 
 @dataclass(frozen=True)
@@ -112,7 +113,8 @@ async def get_current_user(
     user_id_str = request.headers.get("x-authenticated-user-id")
     if user_id_str:
         try:
-            return AuthenticatedUser(id=uuid.UUID(user_id_str))
+            is_admin = request.headers.get("x-authenticated-user-is-admin") == "1"
+            return AuthenticatedUser(id=uuid.UUID(user_id_str), is_admin=is_admin)
         except ValueError:
             raise credentials_exception()
     if credentials is None:
@@ -127,4 +129,4 @@ async def get_current_user(
         user_id = uuid.UUID(str(payload["sub"]))
     except (KeyError, ValueError):
         raise credentials_exception()
-    return AuthenticatedUser(id=user_id)
+    return AuthenticatedUser(id=user_id, is_admin=payload.get("adm") is True)

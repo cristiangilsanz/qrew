@@ -175,8 +175,7 @@ identity-dev:
 identity-worker:
     cd {{IDENTITY}} && uv run identity-worker
 
-# Run identity Arq background job worker
-identity-arq-worker:
+identity-job-worker:
     cd {{IDENTITY}} && uv run identity-arq-worker
 
 # Apply identity migrations

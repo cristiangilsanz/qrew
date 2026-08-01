@@ -17,11 +17,9 @@ export function EventActions({ event, orgId }: Props) {
   const publishEvent = usePublishEvent(orgId, event.id)
   const startEvent = useStartEvent(orgId, event.id)
 
-  const hasStarted = new Date(event.starts_at) <= new Date()
-
   const showPublish = event.status === 'draft'
-  const showMarkStarted = event.status === 'published' && hasStarted
-  const showScan = event.status === 'published' || event.status === 'ongoing'
+  const showMarkStarted = event.status === 'published'
+  const showScan = event.status === 'ongoing'
 
   if (!showPublish && !showMarkStarted && !showScan) return null
 

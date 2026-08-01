@@ -263,8 +263,9 @@ class TestTicketTypeServiceUpdate:
     async def test_raises_when_capacity_decreases(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
+        event = make_event(event_id=event_id, status=EventStatus.published)
         tt = make_ticket_type(ticket_type_id=ticket_type_id, event_id=event_id, capacity=500)
-        svc, _ = _make_svc(ticket_type=tt)
+        svc, _ = _make_svc(event=event, ticket_type=tt)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -280,9 +281,10 @@ class TestTicketTypeServiceUpdate:
     async def test_raises_on_name_conflict(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
+        event = make_event(event_id=event_id, status=EventStatus.published)
         tt = make_ticket_type(ticket_type_id=ticket_type_id, event_id=event_id, name="general")
         other = make_ticket_type(event_id=event_id, name="vip")
-        svc, _ = _make_svc(ticket_type=tt, name_conflict=other)
+        svc, _ = _make_svc(event=event, ticket_type=tt, name_conflict=other)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -298,8 +300,9 @@ class TestTicketTypeServiceUpdate:
     async def test_updates_fields_and_flushes(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
+        event = make_event(event_id=event_id, status=EventStatus.published)
         tt = make_ticket_type(ticket_type_id=ticket_type_id, event_id=event_id, price_cents=1000)
-        svc, repo = _make_svc(ticket_type=tt, name_conflict=None)
+        svc, repo = _make_svc(event=event, ticket_type=tt, name_conflict=None)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -329,8 +332,9 @@ class TestTicketTypeServiceDelete:
     async def test_raises_when_has_live_reservations(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
+        event = make_event(event_id=event_id, status=EventStatus.published)
         tt = make_ticket_type(ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=5)
-        svc, _ = _make_svc(ticket_type=tt)
+        svc, _ = _make_svc(event=event, ticket_type=tt)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -341,8 +345,9 @@ class TestTicketTypeServiceDelete:
     async def test_sets_deleted_at_and_flushes(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
+        event = make_event(event_id=event_id, status=EventStatus.published)
         tt = make_ticket_type(ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=0)
-        svc, repo = _make_svc(ticket_type=tt)
+        svc, repo = _make_svc(event=event, ticket_type=tt)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),

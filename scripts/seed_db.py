@@ -1,29 +1,5 @@
 #!/usr/bin/env python3
 # ruff: noqa: E501
-"""
-Seed the database with test data for development.
-
-Run with:
-    just db-seed
-
-Creates:
-  Users (password Password123! / AdminPass1!):
-    - alice@qrew.dev  (regular, KYC approved)
-    - bob@qrew.dev    (regular, KYC pending)
-    - admin@qrew.dev  (admin)
-
-  Organisation: Qrew Events (admin=owner, alice=manager)
-
-  Venues: WiZink Center (Madrid), Palau Sant Jordi (Barcelona)
-
-  Events:
-    - Midnight Festival 2025   (past, sale ended)
-    - Summer Beats 2026        (upcoming, sale open now)
-    - Techno Underground 2026  (upcoming, sale opens Sep 2026)
-
-  Tickets for alice: 1 used (past event) + 2 issued (Summer Beats)
-  Reservation for bob: 1 reserved GA (Summer Beats)
-"""
 
 import asyncio
 import hashlib
@@ -38,8 +14,6 @@ from passlib.context import CryptContext
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 IDENTITY_CFG = REPO_ROOT / "apps/api/services/identity/config/local.yaml"
-
-# ── PII helpers ──────────────────────────────────────────────────────────────
 
 
 def _make_fernet(key: str, prev: str = "") -> MultiFernet:
@@ -67,1284 +41,486 @@ def _hpw(password: str) -> str:
     return _pwd.hash(password)
 
 
-# ── DB URL ───────────────────────────────────────────────────────────────────
-
-
 def _pg_url(url: str) -> str:
     return url.replace("postgresql+asyncpg://", "postgresql://")
 
 
-# ── Seed ─────────────────────────────────────────────────────────────────────
-
-
-async def seed() -> None:
+async def main() -> None:
     cfg = yaml.safe_load(IDENTITY_CFG.read_text())
-    fernet = _make_fernet(
-        cfg["pii_encryption_key"],
-        cfg.get("pii_encryption_previous_keys", ""),
-    )
-    conn = await asyncpg.connect(_pg_url(cfg["database_url"]))
+    fernet = _make_fernet(cfg["pii_encryption_key"], cfg.get("pii_encryption_previous_keys", ""))
+    db_url = _pg_url(cfg["database_url"])
+
+    conn = await asyncpg.connect(db_url)
+    now = datetime.now(UTC)
+
+    def dt(delta: timedelta) -> datetime:
+        return now + delta
+
+    def u(hex_str: str) -> uuid.UUID:
+        return uuid.UUID(hex_str)
+
     try:
-        await _run(conn, fernet)
+        # Stable UUIDs so reseeding is idempotent
+        u_admin = u("ffffffff-0001-0001-0001-000000000001")
+        u_user1 = u("ffffffff-0002-0002-0002-000000000002")
+        u_user2 = u("ffffffff-0003-0003-0003-000000000003")
+
+        o_demo = u("00000001-0001-0001-0001-000000000001")
+
+        v_alpha = u("00000010-0010-0010-0010-000000000010")
+        v_beta  = u("00000020-0020-0020-0020-000000000020")
+        v_gamma = u("00000030-0030-0030-0030-000000000030")
+
+        e_a = u("00000100-0100-0100-0100-000000000100")  # published, sale open
+        e_b = u("00000200-0200-0200-0200-000000000200")  # published, sale pending
+        e_c = u("00000300-0300-0300-0300-000000000300")  # ongoing
+        e_d = u("00000400-0400-0400-0400-000000000400")  # draft
+        e_e = u("00000500-0500-0500-0500-000000000500")  # cancelled
+        e_f = u("00000600-0600-0600-0600-000000000600")  # published, sale ended
+        e_g = u("00000700-0700-0700-0700-000000000700")  # published, past
+
+        tt_a_ga  = u("00001000-0001-0001-0001-000000000001")
+        tt_a_vip = u("00001000-0002-0002-0002-000000000002")
+        tt_b_eb  = u("00002000-0001-0001-0001-000000000001")
+        tt_b_ga  = u("00002000-0002-0002-0002-000000000002")
+        tt_c_ga  = u("00003000-0001-0001-0001-000000000001")
+        tt_c_vip = u("00003000-0002-0002-0002-000000000002")
+        tt_d_ga  = u("00004000-0001-0001-0001-000000000001")
+        tt_e_ga  = u("00005000-0001-0001-0001-000000000001")
+        tt_f_ga  = u("00006000-0001-0001-0001-000000000001")
+        tt_g_ga  = u("00007000-0001-0001-0001-000000000001")
+        tt_g_vip = u("00007000-0002-0002-0002-000000000002")
+
+        # Admin reservations
+        r_a = u("00010000-0001-0001-0001-000000000001")  # paid
+        r_b = u("00010000-0002-0002-0002-000000000002")  # reserved
+        r_c = u("00010000-0003-0003-0003-000000000003")  # paid
+        r_f = u("00010000-0004-0004-0004-000000000004")  # expired
+        r_g = u("00010000-0005-0005-0005-000000000005")  # paid past
+
+        # Admin tickets covering every TicketState
+        t_issued   = u("00100000-0001-0001-0001-000000000001")  # issued
+        t_on_sale  = u("00100000-0002-0002-0002-000000000002")  # on_sale
+        t_reserved = u("00100000-0003-0003-0003-000000000003")  # reserved
+        t_redeemed = u("00100000-0004-0004-0004-000000000004")  # redeemed
+        t_scanning = u("00100000-0005-0005-0005-000000000005")  # scanning
+        t_flagged  = u("00100000-0006-0006-0006-000000000006")  # flagged
+        t_expired  = u("00100000-0007-0007-0007-000000000007")  # expired
+
+        # Market
+        ml_active    = u("01000000-0001-0001-0001-000000000001")
+        ml_completed = u("01000000-0002-0002-0002-000000000002")
+        ma_pending   = u("02000000-0001-0001-0001-000000000001")
+        ma_paid      = u("02000000-0002-0002-0002-000000000002")
+
+        # Payments
+        p_a      = u("10000000-0001-0001-0001-000000000001")
+        p_c      = u("10000000-0002-0002-0002-000000000002")
+        p_g      = u("10000000-0003-0003-0003-000000000003")
+        p_failed = u("10000000-0004-0004-0004-000000000004")
+        p_market = u("10000000-0005-0005-0005-000000000005")
+
+        # Scanner
+        sc_alpha = u("20000000-0001-0001-0001-000000000001")
+
+        print("Truncating tables...")
+        await conn.execute("""
+            TRUNCATE
+                payments.payments,
+                sales.market_assignments,
+                sales.market_listings,
+                sales.market_queue_entries,
+                ticketing.tickets,
+                sales.reservation_holders,
+                sales.reservations,
+                sales.event_context,
+                sales.ticket_type_inventory,
+                sales.user_age_context,
+                sales.fingerprint_context,
+                ticketing.event_venue_context,
+                ticketing.device_context,
+                entry.scans,
+                entry.scanners,
+                catalog.ticket_types,
+                catalog.events,
+                catalog.venues,
+                catalog.organisation_members,
+                catalog.organisations,
+                identity.passkey_credentials,
+                identity.users
+            CASCADE
+        """)
+
+        print("Seeding users...")
+        pw_regular = _hpw("Password123!")
+        pw_admin   = _hpw("AdminPass1!")
+
+        users = [
+            (u_admin, "Admin User",  "admin@qrew.dev",  "+34600000001", True, True, "approved", True,  pw_admin),
+            (u_user1, "User One",    "user1@qrew.dev",  "+34600000002", True, True, "approved", False, pw_regular),
+            (u_user2, "User Two",    "user2@qrew.dev",  "+34600000003", True, True, "approved", False, pw_regular),
+        ]
+
+        for uid, name, email, phone, ev, pv, kyc, is_admin, pw in users:
+            await conn.execute("""
+                INSERT INTO identity.users (
+                    id, full_name_ciphertext,
+                    email_ciphertext, email_hash,
+                    phone_number_ciphertext, phone_number_hash,
+                    hashed_password, email_verified, phone_number_verified,
+                    kyc_status, is_admin, is_active,
+                    terms_accepted_at, registration_ip, created_at, updated_at
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)
+            """,
+                uid,
+                _enc(fernet, name),
+                _enc(fernet, email), _hash(email),
+                _enc(fernet, phone), _hash(phone),
+                pw, ev, pv,
+                kyc, is_admin, True,
+                now, "127.0.0.1", now,
+            )
+
+        # Dummy passkeys satisfy the has_passkey check without being usable for auth
+        print("Seeding passkeys...")
+        for idx, uid in enumerate([u_admin, u_user1, u_user2]):
+            await conn.execute("""
+                INSERT INTO identity.passkey_credentials (
+                    id, user_id, credential_id, public_key,
+                    sign_count, aaguid, name, created_at
+                ) VALUES ($1,$2,$3,$4,0,$5,'Seeded Device',$6)
+            """,
+                uuid.uuid4(), uid,
+                bytes([idx + 1]) + b'\x00' * 31,
+                b'\x04' + b'\x00' * 63,
+                "00000000-0000-0000-0000-000000000000",
+                now,
+            )
+
+        print("Seeding organisation...")
+        await conn.execute("""
+            INSERT INTO catalog.organisations (id, slug, name, description, created_at, updated_at)
+            VALUES ($1, 'demo-org', 'Demo Organisation', $2, $3, $3)
+        """, o_demo, "A demo organisation for testing all platform features.", now)
+
+        await conn.execute("""
+            INSERT INTO catalog.organisation_members (organisation_id, user_id, role, joined_at)
+            VALUES ($1, $2, 'owner', $3)
+        """, o_demo, u_admin, now)
+
+        print("Seeding venues...")
+        await conn.executemany("""
+            INSERT INTO catalog.venues (
+                id, name, address_line, city, country,
+                latitude, longitude, geofence_radius_m,
+                timezone, description, created_at, updated_at
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11)
+        """, [
+            (v_alpha, "Venue Alpha", "Calle Mayor 1",        "Madrid",    "ES", 40.416775, -3.703790, 300, "Europe/Madrid", "Main venue for demo events.", now),
+            (v_beta,  "Venue Beta",  "Passeig de Gracia 10", "Barcelona", "ES", 41.391648,  2.164994, 250, "Europe/Madrid", "Secondary venue for demo events.", now),
+            (v_gamma, "Venue Gamma", "Calle Larios 5",       "Malaga",    "ES", 36.721395, -4.421810, 150, "Europe/Madrid", "Third venue for demo events.", now),
+        ])
+
+        print("Seeding events...")
+        events = [
+            (
+                e_a, v_alpha,
+                "Event A",
+                "Published event with sale open. Tickets are available now.",
+                dt(timedelta(days=60)),  dt(timedelta(days=60, hours=6)),
+                dt(timedelta(days=-30)), dt(timedelta(days=59)),
+                4, "published", "Madrid", False, dt(timedelta(days=-29)), None, None,
+            ),
+            (
+                e_b, v_beta,
+                "Event B",
+                "Published event with sale not yet open. Queue required.",
+                dt(timedelta(days=90)),  dt(timedelta(days=90, hours=8)),
+                dt(timedelta(days=30)),  dt(timedelta(days=89)),
+                6, "published", "Barcelona", True, dt(timedelta(days=-1)), None, None,
+            ),
+            (
+                e_c, v_gamma,
+                "Event C",
+                "Ongoing event. Currently in progress.",
+                dt(timedelta(hours=-2)), dt(timedelta(hours=4)),
+                dt(timedelta(days=-45)), dt(timedelta(hours=-2)),
+                4, "ongoing", "Malaga", False, dt(timedelta(days=-44)), dt(timedelta(hours=-2)), None,
+            ),
+            (
+                e_d, v_alpha,
+                "Event D",
+                "Draft event. Not yet published.",
+                dt(timedelta(days=120)), dt(timedelta(days=120, hours=8)),
+                dt(timedelta(days=60)),  dt(timedelta(days=119)),
+                4, "draft", "Madrid", True, None, None, None,
+            ),
+            (
+                e_e, v_beta,
+                "Event E",
+                "Cancelled event.",
+                dt(timedelta(days=45)),  dt(timedelta(days=45, hours=8)),
+                dt(timedelta(days=-15)), dt(timedelta(days=44)),
+                4, "cancelled", "Barcelona", False, dt(timedelta(days=-14)), None, dt(timedelta(days=-5)),
+            ),
+            (
+                e_f, v_gamma,
+                "Event F",
+                "Published event. Sale has ended, doors open soon.",
+                dt(timedelta(days=5)),   dt(timedelta(days=5, hours=6)),
+                dt(timedelta(days=-45)), dt(timedelta(days=-1)),
+                2, "published", "Malaga", False, dt(timedelta(days=-44)), None, None,
+            ),
+            (
+                e_g, v_alpha,
+                "Event G",
+                "Past published event. Ended 30 days ago.",
+                dt(timedelta(days=-30)), dt(timedelta(days=-30, hours=6)),
+                dt(timedelta(days=-90)), dt(timedelta(days=-31)),
+                4, "published", "Madrid", False, dt(timedelta(days=-89)), None, None,
+            ),
+        ]
+
+        for row in events:
+            (eid, venue, name, desc, starts, ends, sale_s, sale_e,
+             max_tix, status, city, queue, pub_at, start_at, cancel_at) = row
+            await conn.execute("""
+                INSERT INTO catalog.events (
+                    id, organisation_id, venue_id, name, description, image_url,
+                    starts_at, ends_at, sale_starts_at, sale_ends_at,
+                    max_tickets_per_user, status, organiser_name, venue_city,
+                    queue_required, queue_admit_rate_per_minute,
+                    published_at, started_at, cancelled_at, created_at, updated_at
+                ) VALUES ($1,$2,$3,$4,$5,NULL,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$19)
+            """,
+                eid, o_demo, venue, name, desc,
+                starts, ends, sale_s, sale_e,
+                max_tix, status, "Demo Organisation", city,
+                queue, 60,
+                pub_at, start_at, cancel_at, now,
+            )
+
+        print("Seeding ticket types...")
+        ticket_types = [
+            (tt_a_ga,  e_a, "General Admission", "Standing floor access.",          500, 200, 7500,  "EUR", 0),
+            (tt_a_vip, e_a, "VIP",               "Front area with premium access.",  50,  10, 18000, "EUR", 1),
+            (tt_b_eb,  e_b, "Early Bird",        "Limited early-bird price.",        100,   0, 5500,  "EUR", 0),
+            (tt_b_ga,  e_b, "General Admission", "Standing floor access.",           400,   0, 8500,  "EUR", 1),
+            (tt_c_ga,  e_c, "General Admission", "Full access to the venue floor.", 1000, 800, 4500,  "EUR", 0),
+            (tt_c_vip, e_c, "VIP",               "Exclusive backstage access.",       20,  20, 25000, "EUR", 1),
+            (tt_d_ga,  e_d, "General Admission", "Standing floor access.",           300,   0, 6500,  "EUR", 0),
+            (tt_e_ga,  e_e, "General Admission", "Event cancelled.",                 400,   0, 6000,  "EUR", 0),
+            (tt_f_ga,  e_f, "General Admission", "Sale is now closed.",              300, 150, 5000,  "EUR", 0),
+            (tt_g_ga,  e_g, "General Admission", "Standing floor access.",           200, 200, 3500,  "EUR", 0),
+            (tt_g_vip, e_g, "VIP",               "VIP lounge. Sold out.",             20,  20, 12000, "EUR", 1),
+        ]
+
+        for ttid, eid, name, desc, cap, res, price, curr, pos in ticket_types:
+            await conn.execute("""
+                INSERT INTO catalog.ticket_types (
+                    id, event_id, name, description,
+                    capacity, reserved_count, price_cents, currency,
+                    position, created_at, updated_at
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10)
+            """, ttid, eid, name, desc, cap, res, price, curr, pos, now)
+
+        print("Seeding reservations...")
+        reservations = [
+            (r_a, e_a, tt_a_ga, 2, "paid",     dt(timedelta(hours=-23))),
+            (r_b, e_b, tt_b_ga, 1, "reserved", dt(timedelta(minutes=15))),
+            (r_c, e_c, tt_c_ga, 2, "paid",     dt(timedelta(hours=-25))),
+            (r_f, e_f, tt_f_ga, 1, "expired",  dt(timedelta(days=-5))),
+            (r_g, e_g, tt_g_ga, 1, "paid",     dt(timedelta(days=-30, hours=-23))),
+        ]
+
+        for rid, eid, ttid, qty, status, expires in reservations:
+            await conn.execute("""
+                INSERT INTO sales.reservations (
+                    id, user_id, event_id, ticket_type_id,
+                    quantity, status, expires_at, created_at, updated_at
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$8)
+            """, rid, u_admin, eid, ttid, qty, status, expires, now)
+
+        print("Seeding reservation holders...")
+        holders = [
+            (r_a, 1, "Admin User",  "12345678A"),
+            (r_a, 2, "Guest One",   "87654321B"),
+            (r_b, 1, "Admin User",  "12345678A"),
+            (r_c, 1, "Admin User",  "12345678A"),
+            (r_c, 2, "Guest Two",   "55443322C"),
+            (r_f, 1, "Admin User",  "12345678A"),
+            (r_g, 1, "Admin User",  "12345678A"),
+        ]
+
+        for rid, pos, name, dni in holders:
+            await conn.execute("""
+                INSERT INTO sales.reservation_holders (id, reservation_id, position, holder_name, holder_dni)
+                VALUES ($1,$2,$3,$4,$5)
+            """, uuid.uuid4(), rid, pos, name, dni)
+
+        print("Seeding tickets...")
+        tickets = [
+            (t_issued,   r_a, e_a, tt_a_ga, "issued",   now,                             "Admin User"),
+            (t_on_sale,  r_a, e_a, tt_a_ga, "on_sale",  now,                             "Guest One"),
+            (t_reserved, r_b, e_b, tt_b_ga, "reserved", None,                            "Admin User"),
+            (t_redeemed, r_g, e_g, tt_g_ga, "redeemed", dt(timedelta(days=-30, hours=1)),"Admin User"),
+            (t_scanning, r_c, e_c, tt_c_ga, "scanning", dt(timedelta(hours=-1)),         "Admin User"),
+            (t_flagged,  r_c, e_c, tt_c_ga, "flagged",  dt(timedelta(hours=-1)),         "Guest Two"),
+            (t_expired,  r_f, e_f, tt_f_ga, "expired",  None,                            "Admin User"),
+        ]
+
+        for tid, rid, eid, ttid, state, issued, holder in tickets:
+            await conn.execute("""
+                INSERT INTO ticketing.tickets (
+                    id, reservation_id, event_id, ticket_type_id, owner_user_id,
+                    state, state_updated_at, issued_at,
+                    holder_name, created_at, updated_at
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10)
+            """, tid, rid, eid, ttid, u_admin, state, now, issued, holder, now)
+
+        print("Seeding market listings...")
+
+        await conn.execute("""
+            INSERT INTO sales.market_listings (
+                id, ticket_id, event_id, seller_user_id, ticket_type_id,
+                price_cents, currency, state, listed_at, expires_at
+            ) VALUES ($1,$2,$3,$4,$5,$6,'EUR',$7,$8,$9)
+        """, ml_active, t_on_sale, e_a, u_admin, tt_a_ga,
+            1500, "assigned", now, dt(timedelta(hours=24)))
+
+        await conn.execute("""
+            INSERT INTO sales.market_listings (
+                id, ticket_id, event_id, seller_user_id, ticket_type_id,
+                price_cents, currency, state, listed_at, expires_at, completed_at
+            ) VALUES ($1,$2,$3,$4,$5,$6,'EUR',$7,$8,$9,$10)
+        """, ml_completed, t_redeemed, e_g, u_admin, tt_g_ga,
+            1200, "completed",
+            dt(timedelta(days=-35)), dt(timedelta(days=-34)), dt(timedelta(days=-34)))
+
+        print("Seeding market assignments...")
+
+        await conn.execute("""
+            INSERT INTO sales.market_assignments (
+                id, listing_id, event_id, buyer_user_id,
+                assigned_at, expires_at, state, holder_name, holder_dni
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        """, ma_pending, ml_active, e_a, u_admin,
+            now, dt(timedelta(minutes=15)),
+            "pending", "Admin User", "12345678A")
+
+        await conn.execute("""
+            INSERT INTO sales.market_assignments (
+                id, listing_id, event_id, buyer_user_id,
+                assigned_at, expires_at, paid_at, state, holder_name, holder_dni
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        """, ma_paid, ml_completed, e_g, u_admin,
+            dt(timedelta(days=-34)), dt(timedelta(days=-34, hours=1)),
+            dt(timedelta(days=-34)), "paid",
+            "Admin User", "12345678A")
+
+        print("Seeding waitlist...")
+        await conn.execute("""
+            INSERT INTO sales.market_queue_entries (id, event_id, user_id, tiebreak, joined_at)
+            VALUES ($1,$2,$3,$4,$5)
+        """, uuid.uuid4(), e_b, u_admin, 0, now)
+
+        print("Seeding payments...")
+        payments = [
+            (p_a,      r_a, None,       "pi_3QxAdmin001", 3000, "EUR", "succeeded", None,                None),
+            (p_c,      r_c, None,       "pi_3QxAdmin002", 2500, "EUR", "succeeded", None,                None),
+            (p_g,      r_g, None,       "pi_3QxAdmin003", 1200, "EUR", "succeeded", None,                None),
+            (p_failed, r_b, None,       "pi_3QxAdmin004", 3500, "EUR", "failed",    "insufficient_funds","Your card has insufficient funds."),
+            (p_market, None, ma_pending,"pi_3QxAdmin005", 1500, "EUR", "succeeded", None,               None),
+        ]
+
+        for pid, res_id, mkt_id, pi_id, amount, curr, status, fail_code, fail_msg in payments:
+            await conn.execute("""
+                INSERT INTO payments.payments (
+                    id, reservation_id, market_assignment_id, user_id,
+                    provider, provider_payment_intent_id,
+                    amount_cents, currency, status,
+                    failure_code, failure_message, created_at, updated_at
+                ) VALUES ($1,$2,$3,$4,'stripe',$5,$6,$7,$8,$9,$10,$11,$11)
+            """, pid, res_id, mkt_id, u_admin, pi_id, amount, curr, status, fail_code, fail_msg, now)
+
+        print("Seeding scanner...")
+        await conn.execute("""
+            INSERT INTO entry.scanners (id, name, venue_id, created_by, created_at, is_active)
+            VALUES ($1, 'Main Gate Venue Alpha', $2, $3, $4, true)
+        """, sc_alpha, v_alpha, u_admin, now)
+
+        print("Seeding projections...")
+
+        event_ctx_rows = [
+            (e_a, "published", dt(timedelta(days=-30)),  dt(timedelta(days=59)),   dt(timedelta(days=60)),    4, False, 60),
+            (e_b, "published", dt(timedelta(days=30)),   dt(timedelta(days=89)),   dt(timedelta(days=90)),    6, True,  60),
+            (e_c, "ongoing",   dt(timedelta(days=-45)),  dt(timedelta(hours=-2)),  dt(timedelta(hours=-2)),   4, False, 60),
+            (e_d, "draft",     dt(timedelta(days=60)),   dt(timedelta(days=119)),  dt(timedelta(days=120)),   4, True,  60),
+            (e_e, "cancelled", dt(timedelta(days=-15)),  dt(timedelta(days=44)),   dt(timedelta(days=45)),    4, False, 60),
+            (e_f, "published", dt(timedelta(days=-45)),  dt(timedelta(days=-1)),   dt(timedelta(days=5)),     2, False, 60),
+            (e_g, "published", dt(timedelta(days=-90)),  dt(timedelta(days=-31)),  dt(timedelta(days=-30)),   4, False, 60),
+        ]
+
+        for eid, status, sale_s, sale_e, starts, max_tix, queue, rate in event_ctx_rows:
+            await conn.execute("""
+                INSERT INTO sales.event_context (
+                    event_id, status, sale_starts_at, sale_ends_at, starts_at,
+                    max_tickets_per_user, queue_required, queue_admit_rate_per_minute, updated_at
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+            """, eid, status, sale_s, sale_e, starts, max_tix, queue, rate, now)
+
+        for ttid, eid, _name, _desc, cap, res, price, curr, _pos in ticket_types:
+            await conn.execute("""
+                INSERT INTO sales.ticket_type_inventory (
+                    ticket_type_id, event_id, capacity, reserved_count,
+                    price_cents, currency, updated_at
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7)
+            """, ttid, eid, cap, res, price, curr, now)
+
+        for uid, _name, _email, phone, _ev, _pv, _kyc, _admin, _pw in users:
+            await conn.execute("""
+                INSERT INTO sales.user_age_context (user_id, registered_at, phone_e164, updated_at)
+                VALUES ($1,$2,$3,$4)
+            """, uid, now, phone, now)
+
+        venue_coords = {
+            v_alpha: (40.416775, -3.703790, 300, "Europe/Madrid"),
+            v_beta:  (41.391648,  2.164994, 250, "Europe/Madrid"),
+            v_gamma: (36.721395, -4.421810, 150, "Europe/Madrid"),
+        }
+        event_venue_map = [
+            (e_a, v_alpha, dt(timedelta(days=60)),   dt(timedelta(days=60, hours=6)),   "published"),
+            (e_b, v_beta,  dt(timedelta(days=90)),   dt(timedelta(days=90, hours=8)),   "published"),
+            (e_c, v_gamma, dt(timedelta(hours=-2)),  dt(timedelta(hours=4)),            "ongoing"),
+            (e_d, v_alpha, dt(timedelta(days=120)),  dt(timedelta(days=120, hours=8)),  "draft"),
+            (e_e, v_beta,  dt(timedelta(days=45)),   dt(timedelta(days=45, hours=8)),   "cancelled"),
+            (e_f, v_gamma, dt(timedelta(days=5)),    dt(timedelta(days=5, hours=6)),    "published"),
+            (e_g, v_alpha, dt(timedelta(days=-30)),  dt(timedelta(days=-30, hours=6)),  "published"),
+        ]
+
+        for eid, vid, starts, ends, status in event_venue_map:
+            lat, lon, radius, tz = venue_coords[vid]
+            await conn.execute("""
+                INSERT INTO ticketing.event_venue_context (
+                    event_id, venue_id, event_status,
+                    latitude, longitude, geofence_radius_m, timezone,
+                    starts_at, ends_at, updated_at
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+            """, eid, vid, status, lat, lon, radius, tz, starts, ends, now)
+
+        print()
+        print("✓  Database seeded.")
+        print()
+        print("  admin@qrew.dev  /  AdminPass1!   — org owner, all event states, all ticket states")
+        print("  user1@qrew.dev  /  Password123!  — empty")
+        print("  user2@qrew.dev  /  Password123!  — empty")
+        print()
+        print("  Events: A published sale open · B published sale pending queue")
+        print("          C ongoing · D draft · E cancelled · F sale ended · G past")
+
     finally:
         await conn.close()
 
 
-async def _run(conn: asyncpg.Connection, fernet: MultiFernet) -> None:
-
-    now = datetime.now(UTC)
-
-    # ── Fixed UUIDs ──────────────────────────────────────────────────────────
-
-    user_alice = uuid.UUID("aaaaaaaa-0001-0001-0001-000000000001")
-    user_bob = uuid.UUID("bbbbbbbb-0002-0002-0002-000000000002")
-    user_admin = uuid.UUID("cccccccc-0003-0003-0003-000000000003")
-
-    org_id = uuid.UUID("00000000-aaaa-aaaa-aaaa-000000000001")
-
-    venue_mad = uuid.UUID("11111111-0001-0001-0001-000000000001")
-    venue_bcn = uuid.UUID("11111111-0002-0002-0002-000000000002")
-
-    event_past = uuid.UUID("22222222-0001-0001-0001-000000000001")
-    event_now = uuid.UUID("22222222-0002-0002-0002-000000000002")
-    event_future = uuid.UUID("22222222-0003-0003-0003-000000000003")
-
-    tt_past_ga = uuid.UUID("33333333-0001-0001-0001-000000000001")
-    tt_past_vip = uuid.UUID("33333333-0002-0002-0002-000000000002")
-    tt_now_ga = uuid.UUID("33333333-0003-0003-0003-000000000003")
-    tt_now_vip = uuid.UUID("33333333-0004-0004-0004-000000000004")
-    tt_now_artist = uuid.UUID("33333333-0005-0005-0005-000000000005")
-    tt_fut_early = uuid.UUID("33333333-0006-0006-0006-000000000006")
-    tt_fut_ga = uuid.UUID("33333333-0007-0007-0007-000000000007")
-
-    res_alice_past = uuid.UUID("44444444-0001-0001-0001-000000000001")
-    res_alice_now = uuid.UUID("44444444-0002-0002-0002-000000000002")
-    res_bob_now = uuid.UUID("44444444-0003-0003-0003-000000000003")
-
-    tk_alice_past = uuid.UUID("55555555-0001-0001-0001-000000000001")
-    tk_alice_now1 = uuid.UUID("55555555-0002-0002-0002-000000000002")
-    tk_alice_now2 = uuid.UUID("55555555-0003-0003-0003-000000000003")
-    tk_bob_now = uuid.UUID("55555555-0004-0004-0004-000000000004")
-
-    # Market test data (event with sale ended + starts 30 days from now)
-    event_market = uuid.UUID("22222222-0004-0004-0004-000000000004")
-    tt_market_ga = uuid.UUID("33333333-0008-0008-0008-000000000008")
-    res_admin_market = uuid.UUID("44444444-0006-0006-0006-000000000006")
-    res_alice_market = uuid.UUID("44444444-0007-0007-0007-000000000007")
-    tk_admin_market = uuid.UUID(
-        "55555555-0007-0007-0007-000000000007"
-    )  # issued — test Sale btn
-    tk_alice_market = uuid.UUID(
-        "55555555-0008-0008-0008-000000000008"
-    )  # frozen — test My Listings
-    # State showcase tickets for alice
-    res_alice_expired = uuid.UUID("44444444-0009-0009-0009-000000000009")
-    res_alice_cancelled = uuid.UUID("44444444-0010-0010-0010-000000000010")
-    res_alice_entry = uuid.UUID("44444444-0011-0011-0011-000000000011")
-    res_alice_flagged = uuid.UUID("44444444-0012-0012-0012-000000000012")
-    res_alice_reserved = uuid.UUID("44444444-0013-0013-0013-000000000013")
-    tk_alice_expired = uuid.UUID("55555555-0009-0009-0009-000000000009")
-    tk_alice_cancelled = uuid.UUID("55555555-0010-0010-0010-000000000010")
-    tk_alice_entry = uuid.UUID("55555555-0011-0011-0011-000000000011")
-    tk_alice_flagged = uuid.UUID("55555555-0012-0012-0012-000000000012")
-    tk_alice_reserved = uuid.UUID("55555555-0013-0013-0013-000000000013")
-    # State showcase tickets for admin
-    res_admin_used = uuid.UUID("44444444-0014-0014-0014-000000000014")
-    res_admin_frozen = uuid.UUID("44444444-0015-0015-0015-000000000015")
-    res_admin_reserved = uuid.UUID("44444444-0016-0016-0016-000000000016")
-    res_admin_expired = uuid.UUID("44444444-0017-0017-0017-000000000017")
-    res_admin_cancelled = uuid.UUID("44444444-0018-0018-0018-000000000018")
-    res_admin_entry = uuid.UUID("44444444-0019-0019-0019-000000000019")
-    res_admin_flagged = uuid.UUID("44444444-0020-0020-0020-000000000020")
-    res_alice_reserved_expired = uuid.UUID("44444444-0021-0021-0021-000000000021")
-    res_admin_reserved_expired = uuid.UUID("44444444-0022-0022-0022-000000000022")
-    tk_alice_reserved_expired = uuid.UUID("55555555-0021-0021-0021-000000000021")
-    tk_admin_reserved_expired = uuid.UUID("55555555-0022-0022-0022-000000000022")
-    tk_admin_used = uuid.UUID("55555555-0014-0014-0014-000000000014")
-    tk_admin_frozen = uuid.UUID("55555555-0015-0015-0015-000000000015")
-    tk_admin_reserved = uuid.UUID("55555555-0016-0016-0016-000000000016")
-    tk_admin_expired = uuid.UUID("55555555-0017-0017-0017-000000000017")
-    tk_admin_cancelled = uuid.UUID("55555555-0018-0018-0018-000000000018")
-    tk_admin_entry = uuid.UUID("55555555-0019-0019-0019-000000000019")
-    tk_admin_flagged = uuid.UUID("55555555-0020-0020-0020-000000000020")
-    market_listing_id = uuid.UUID("66666666-0001-0001-0001-000000000001")
-    market_assignment_id = uuid.UUID("77777777-0001-0001-0001-000000000001")
-
-    # ── Truncate all seed tables ──────────────────────────────────────────────
-    print("  Truncating tables…")
-    await conn.execute("""
-        TRUNCATE
-            sales.market_assignments,
-            sales.market_listings,
-            sales.market_queue_entries,
-            ticketing.tickets,
-            ticketing.event_venue_context,
-            ticketing.device_context,
-            sales.reservation_holders,
-            sales.reservations,
-            sales.event_context,
-            sales.ticket_type_inventory,
-            sales.user_age_context,
-            sales.fingerprint_context,
-            catalog.ticket_types,
-            catalog.events,
-            catalog.organisation_members,
-            catalog.venues,
-            catalog.organisations,
-            identity.passkey_credentials,
-            identity.users
-        CASCADE
-    """)
-
-    # ── Users ─────────────────────────────────────────────────────────────────
-    print("  Creating users…")
-
-    users = [
-        {
-            "id": user_alice,
-            "email": "alice@qrew.dev",
-            "full_name": "Alice Dev",
-            "phone": "+34600000001",
-            "password": "Password123!",
-            "kyc_status": "approved",
-            "is_admin": False,
-        },
-        {
-            "id": user_bob,
-            "email": "bob@qrew.dev",
-            "full_name": "Bob Dev",
-            "phone": "+34600000002",
-            "password": "Password123!",
-            "kyc_status": "pending",
-            "is_admin": False,
-        },
-        {
-            "id": user_admin,
-            "email": "admin@qrew.dev",
-            "full_name": "Admin User",
-            "phone": "+34600000003",
-            "password": "AdminPass1!",
-            "kyc_status": "approved",
-            "is_admin": True,
-        },
-    ]
-
-    for u in users:
-        await conn.execute(
-            """
-            INSERT INTO identity.users (
-                id,
-                full_name_ciphertext,
-                email_ciphertext, email_hash,
-                phone_number_ciphertext, phone_number_hash,
-                hashed_password,
-                email_verified, phone_number_verified,
-                kyc_status,
-                terms_accepted_at, registration_ip,
-                is_active, is_admin,
-                created_at, updated_at
-            ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9,
-                $10::kyc_status,
-                $11, $12, $13, $14, $15, $16
-            )
-            """,
-            u["id"],
-            _enc(fernet, u["full_name"]),
-            _enc(fernet, u["email"]),
-            _hash(u["email"]),
-            _enc(fernet, u["phone"]),
-            _hash(u["phone"]),
-            _hpw(u["password"]),
-            True,  # email_verified
-            True,  # phone_number_verified
-            u["kyc_status"],
-            now,  # terms_accepted_at
-            "127.0.0.1",
-            True,  # is_active
-            u["is_admin"],
-            now,
-            now,
-        )
-
-    # ── Organisation ──────────────────────────────────────────────────────────
-    print("  Creating organisation…")
-
-    await conn.execute(
-        """
-        INSERT INTO catalog.organisations (id, slug, name, description, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        """,
-        org_id,
-        "qrew-events",
-        "Qrew Events",
-        "Official Qrew Events organisation for development testing.",
-        now,
-        now,
-    )
-    await conn.execute(
-        """
-        INSERT INTO catalog.organisation_members (organisation_id, user_id, role, joined_at)
-        VALUES
-            ($1, $2, 'owner'::organisation_role,   $3),
-            ($4, $5, 'manager'::organisation_role, $6)
-        """,
-        org_id,
-        user_admin,
-        now,
-        org_id,
-        user_alice,
-        now,
-    )
-
-    # ── Venues ────────────────────────────────────────────────────────────────
-    print("  Creating venues…")
-
-    await conn.executemany(
-        """
-        INSERT INTO catalog.venues
-            (id, name, address_line, city, country, latitude, longitude,
-             geofence_radius_m, timezone, created_at, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-        """,
-        [
-            (
-                venue_mad,
-                "WiZink Center",
-                "Av. de Felipe II, s/n",
-                "Madrid",
-                "ES",
-                40.437775,
-                -3.661543,
-                100000,
-                "Europe/Madrid",
-                now,
-                now,
-            ),
-            (
-                venue_bcn,
-                "Palau Sant Jordi",
-                "Passeig Olímpic, 5-7",
-                "Barcelona",
-                "ES",
-                41.364667,
-                2.153028,
-                100000,
-                "Europe/Madrid",
-                now,
-                now,
-            ),
-        ],
-    )
-
-    # ── Events ────────────────────────────────────────────────────────────────
-    print("  Creating events…")
-
-    market_starts_at = now + timedelta(days=30)
-    market_sale_ends_at = now - timedelta(days=1)
-
-    # (id, org, venue, name, desc, starts_at, ends_at, sale_starts_at, sale_ends_at,
-    #  max_tickets, venue_city, status, started_at)
-    event_rows = [
-        (
-            event_past,
-            org_id,
-            venue_mad,
-            "Midnight Festival 2025",
-            "An unforgettable night of electronic music at WiZink Center.",
-            datetime(2025, 12, 20, 22, 0, tzinfo=UTC),
-            datetime(2025, 12, 21, 6, 0, tzinfo=UTC),
-            datetime(2025, 11, 1, 10, 0, tzinfo=UTC),
-            datetime(2025, 12, 19, 23, 59, tzinfo=UTC),
-            4,
-            "Madrid",
-            "published",
-            None,
-        ),
-        (
-            event_now,
-            org_id,
-            venue_bcn,
-            "Summer Beats 2026",
-            "The biggest summer festival hits Barcelona's iconic Palau Sant Jordi.",
-            now - timedelta(hours=2),
-            now + timedelta(hours=6),
-            now - timedelta(days=30),
-            now - timedelta(hours=3),
-            4,
-            "Barcelona",
-            "ongoing",
-            now - timedelta(hours=2),
-        ),
-        (
-            event_future,
-            org_id,
-            venue_mad,
-            "Techno Underground 2026",
-            "Halloween night goes underground. Limited capacity, maximum vibes.",
-            datetime(2026, 10, 31, 23, 0, tzinfo=UTC),
-            datetime(2026, 11, 1, 7, 0, tzinfo=UTC),
-            datetime(2026, 9, 1, 10, 0, tzinfo=UTC),
-            datetime(2026, 10, 30, 23, 59, tzinfo=UTC),
-            4,
-            "Madrid",
-            "published",
-            None,
-        ),
-        # Market test event: sale already ended, starts 30 days from now
-        (
-            event_market,
-            org_id,
-            venue_mad,
-            "Neon Rave 2026",
-            "A sold-out underground rave. Secondary market only.",
-            market_starts_at,
-            market_starts_at + timedelta(hours=8),
-            now - timedelta(days=30),
-            market_sale_ends_at,
-            4,
-            "Madrid",
-            "published",
-            None,
-        ),
-    ]
-
-    for row in event_rows:
-        await conn.execute(
-            """
-            INSERT INTO catalog.events (
-                id, organisation_id, venue_id, name, description,
-                starts_at, ends_at, sale_starts_at, sale_ends_at,
-                max_tickets_per_user, status,
-                organiser_name, venue_city,
-                queue_required, queue_admit_rate_per_minute,
-                created_at, updated_at, published_at, started_at
-            ) VALUES (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-                $11::text, 'Qrew Events',$12,
-                false, 60,
-                $13,$14,$15,$16
-            )
-            """,
-            row[0],
-            row[1],
-            row[2],  # id, org, venue
-            row[3],
-            row[4],  # name, description
-            row[5],
-            row[6],  # starts_at, ends_at
-            row[7],
-            row[8],  # sale_starts_at, sale_ends_at
-            row[9],  # max_tickets_per_user
-            row[11],  # status
-            row[10],  # venue_city
-            now,
-            now,
-            now,   # created, updated, published
-            row[12],  # started_at
-        )
-
-    # ── Ticket types ──────────────────────────────────────────────────────────
-    print("  Creating ticket types…")
-
-    ticket_types = [
-        # Past event
-        (
-            tt_past_ga,
-            event_past,
-            "General Admission",
-            "Standard entry",
-            500,
-            100,
-            3500,
-            "EUR",
-            0,
-        ),
-        (tt_past_vip, event_past, "VIP", "VIP lounge", 100, 20, 7500, "EUR", 1),
-        # Current sale
-        (
-            tt_now_ga,
-            event_now,
-            "General Admission",
-            "Standard entry",
-            1000,
-            3,
-            2500,
-            "EUR",
-            0,
-        ),
-        (tt_now_vip, event_now, "VIP", "VIP area", 200, 1, 6500, "EUR", 1),
-        (
-            tt_now_artist,
-            event_now,
-            "Artist Meet",
-            "Meet & greet pass",
-            50,
-            0,
-            12000,
-            "EUR",
-            2,
-        ),
-        # Future sale
-        (
-            tt_fut_early,
-            event_future,
-            "Early Bird",
-            "Limited early access",
-            200,
-            0,
-            2000,
-            "EUR",
-            0,
-        ),
-        (
-            tt_fut_ga,
-            event_future,
-            "General Admission",
-            "Standard entry",
-            800,
-            0,
-            3000,
-            "EUR",
-            1,
-        ),
-        # Market test
-        (
-            tt_market_ga,
-            event_market,
-            "General Admission",
-            "Access to all areas, standing floor. Valid for one person.",
-            200,
-            200,
-            4500,
-            "EUR",
-            0,
-        ),
-    ]
-
-    await conn.executemany(
-        """
-        INSERT INTO catalog.ticket_types
-            (id, event_id, name, description, capacity, reserved_count,
-             price_cents, currency, position, created_at, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-        """,
-        [
-            (t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], now, now)
-            for t in ticket_types
-        ],
-    )
-
-    # ── Sales projections ─────────────────────────────────────────────────────
-    print("  Creating sales projections…")
-
-    # EventContext — mirrors catalog.events sale/capacity settings
-    # Requires migration 0005 (adds starts_at column)
-    await conn.executemany(
-        """
-        INSERT INTO sales.event_context
-            (event_id, status, sale_starts_at, sale_ends_at, starts_at,
-             max_tickets_per_user, queue_required, queue_admit_rate_per_minute, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-        """,
-        [
-            (
-                event_past,
-                "published",
-                datetime(2025, 11, 1, 10, 0, tzinfo=UTC),
-                datetime(2025, 12, 19, 23, 59, tzinfo=UTC),
-                datetime(2025, 12, 20, 22, 0, tzinfo=UTC),
-                4,
-                False,
-                60,
-                now,
-            ),
-            (
-                event_now,
-                "published",
-                datetime(2026, 7, 1, 10, 0, tzinfo=UTC),
-                datetime(2026, 8, 14, 23, 59, tzinfo=UTC),
-                datetime(2026, 8, 15, 20, 0, tzinfo=UTC),
-                4,
-                False,
-                60,
-                now,
-            ),
-            (
-                event_future,
-                "published",
-                datetime(2026, 9, 1, 10, 0, tzinfo=UTC),
-                datetime(2026, 10, 30, 23, 59, tzinfo=UTC),
-                datetime(2026, 10, 31, 23, 0, tzinfo=UTC),
-                4,
-                False,
-                60,
-                now,
-            ),
-            (
-                event_market,
-                "published",
-                now - timedelta(days=30),
-                market_sale_ends_at,
-                market_starts_at,
-                4,
-                False,
-                60,
-                now,
-            ),
-        ],
-    )
-
-    # TicketTypeInventory — mirrors catalog.ticket_types capacity/price
-    await conn.executemany(
-        """
-        INSERT INTO sales.ticket_type_inventory
-            (ticket_type_id, event_id, capacity, reserved_count,
-             price_cents, currency, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7)
-        """,
-        [
-            (tt_past_ga, event_past, 500, 100, 3500, "EUR", now),
-            (tt_past_vip, event_past, 100, 20, 7500, "EUR", now),
-            (tt_now_ga, event_now, 1000, 3, 2500, "EUR", now),
-            (tt_now_vip, event_now, 200, 1, 6500, "EUR", now),
-            (tt_now_artist, event_now, 50, 0, 12000, "EUR", now),
-            (tt_fut_early, event_future, 200, 0, 2000, "EUR", now),
-            (tt_fut_ga, event_future, 800, 0, 3000, "EUR", now),
-            (tt_market_ga, event_market, 200, 200, 4500, "EUR", now),
-        ],
-    )
-
-    # UserAgeContext — one row per user for fraud detection
-    await conn.executemany(
-        """
-        INSERT INTO sales.user_age_context (user_id, registered_at, updated_at)
-        VALUES ($1,$2,$3)
-        """,
-        [(uid, now, now) for uid in (user_alice, user_bob, user_admin)],
-    )
-
-    # ── Ticketing projections ─────────────────────────────────────────────────
-    print("  Creating ticketing projections…")
-
-    await conn.executemany(
-        """
-        INSERT INTO ticketing.event_venue_context
-            (event_id, venue_id, event_status,
-             latitude, longitude, geofence_radius_m, timezone,
-             starts_at, ends_at, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-        """,
-        [
-            (
-                event_past,
-                venue_mad,
-                "published",
-                40.437775,
-                -3.661543,
-                100000,
-                "Europe/Madrid",
-                datetime(2025, 12, 20, 22, 0, tzinfo=UTC),
-                datetime(2025, 12, 21, 6, 0, tzinfo=UTC),
-                now,
-            ),
-            (
-                event_now,
-                venue_bcn,
-                "ongoing",
-                41.364667,
-                2.153028,
-                100000,
-                "Europe/Madrid",
-                now - timedelta(hours=2),
-                now + timedelta(hours=6),
-                now,
-            ),
-            (
-                event_future,
-                venue_mad,
-                "published",
-                40.437775,
-                -3.661543,
-                100000,
-                "Europe/Madrid",
-                datetime(2026, 10, 31, 23, 0, tzinfo=UTC),
-                datetime(2026, 11, 1, 7, 0, tzinfo=UTC),
-                now,
-            ),
-            (
-                event_market,
-                venue_mad,
-                "published",
-                40.437775,
-                -3.661543,
-                100000,
-                "Europe/Madrid",
-                market_starts_at,
-                market_starts_at + timedelta(hours=8),
-                now,
-            ),
-        ],
-    )
-
-    # ── Reservations ──────────────────────────────────────────────────────────
-    print("  Creating reservations…")
-
-    far_future = now + timedelta(days=365 * 5)
-
-    await conn.executemany(
-        """
-        INSERT INTO sales.reservations
-            (id, user_id, event_id, ticket_type_id, quantity, status, expires_at,
-             created_at, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-        """,
-        [
-            # alice — 1 GA at past event (paid)
-            (
-                res_alice_past,
-                user_alice,
-                event_past,
-                tt_past_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            # alice — 2 GA at Summer Beats (paid)
-            (
-                res_alice_now,
-                user_alice,
-                event_now,
-                tt_now_ga,
-                2,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            # bob — 1 GA at Summer Beats (pending payment)
-            (
-                res_bob_now,
-                user_bob,
-                event_now,
-                tt_now_ga,
-                1,
-                "reserved",
-                far_future,
-                now,
-                now,
-            ),
-            # admin — 1 GA at Neon Rave (paid, issued — for testing Sale button)
-            (
-                res_admin_market,
-                user_admin,
-                event_market,
-                tt_market_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            # alice — 1 GA at Neon Rave (paid, will be frozen for resale listing)
-            (
-                res_alice_market,
-                user_alice,
-                event_market,
-                tt_market_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            # alice — state showcase: reserved (awaiting payment)
-            (
-                res_alice_reserved,
-                user_alice,
-                event_now,
-                tt_now_ga,
-                1,
-                "reserved",
-                now + timedelta(minutes=30),
-                now,
-                now,
-            ),
-            # alice — state showcase: expired reservation
-            (
-                res_alice_expired,
-                user_alice,
-                event_now,
-                tt_now_ga,
-                1,
-                "expired",
-                now - timedelta(hours=1),
-                now,
-                now,
-            ),
-            # alice — state showcase: cancelled ticket
-            (
-                res_alice_cancelled,
-                user_alice,
-                event_now,
-                tt_now_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            # alice — state showcase: entry_pending
-            (
-                res_alice_entry,
-                user_alice,
-                event_now,
-                tt_now_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            # alice — state showcase: flagged
-            (
-                res_alice_flagged,
-                user_alice,
-                event_now,
-                tt_now_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            # admin — state showcase reservations
-            (
-                res_admin_used,
-                user_admin,
-                event_past,
-                tt_past_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            (
-                res_admin_frozen,
-                user_admin,
-                event_market,
-                tt_market_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            (
-                res_admin_reserved,
-                user_admin,
-                event_now,
-                tt_now_ga,
-                1,
-                "reserved",
-                now + timedelta(minutes=30),
-                now,
-                now,
-            ),
-            (
-                res_admin_expired,
-                user_admin,
-                event_now,
-                tt_now_ga,
-                1,
-                "expired",
-                now - timedelta(hours=1),
-                now,
-                now,
-            ),
-            (
-                res_admin_cancelled,
-                user_admin,
-                event_now,
-                tt_now_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            (
-                res_admin_entry,
-                user_admin,
-                event_now,
-                tt_now_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            (
-                res_admin_flagged,
-                user_admin,
-                event_now,
-                tt_now_ga,
-                1,
-                "paid",
-                far_future,
-                now,
-                now,
-            ),
-            # reserved tickets with expired reservations (shows "Payment window closed")
-            (
-                res_alice_reserved_expired,
-                user_alice,
-                event_now,
-                tt_now_ga,
-                1,
-                "expired",
-                now - timedelta(hours=2),
-                now,
-                now,
-            ),
-            (
-                res_admin_reserved_expired,
-                user_admin,
-                event_now,
-                tt_now_ga,
-                1,
-                "expired",
-                now - timedelta(hours=2),
-                now,
-                now,
-            ),
-        ],
-    )
-
-    # ── Tickets ───────────────────────────────────────────────────────────────
-    print("  Creating tickets…")
-
-    await conn.executemany(
-        """
-        INSERT INTO ticketing.tickets
-            (id, reservation_id, event_id, ticket_type_id, owner_user_id, state,
-             state_updated_at, issued_at, expired_at, holder_name, holder_dni,
-             created_at, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-        """,
-        [
-            # alice's past-event ticket — used
-            (
-                tk_alice_past,
-                res_alice_past,
-                event_past,
-                tt_past_ga,
-                user_alice,
-                "redeemed",
-                now,
-                now,
-                None,
-                "Alice Dev",
-                "12345678A",
-                now,
-                now,
-            ),
-            # alice's Summer Beats tickets — issued
-            (
-                tk_alice_now1,
-                res_alice_now,
-                event_now,
-                tt_now_ga,
-                user_alice,
-                "issued",
-                now,
-                now,
-                None,
-                "Alice Dev",
-                "12345678A",
-                now,
-                now,
-            ),
-            (
-                tk_alice_now2,
-                res_alice_now,
-                event_now,
-                tt_now_ga,
-                user_alice,
-                "issued",
-                now,
-                now,
-                None,
-                "Alice Dev",
-                "12345678A",
-                now,
-                now,
-            ),
-            # bob's pending ticket — reserved
-            (
-                tk_bob_now,
-                res_bob_now,
-                event_now,
-                tt_now_ga,
-                user_bob,
-                "reserved",
-                now,
-                None,
-                None,
-                None,
-                None,
-                now,
-                now,
-            ),
-            # admin's market ticket — issued (to test Sale button)
-            (
-                tk_admin_market,
-                res_admin_market,
-                event_market,
-                tt_market_ga,
-                user_admin,
-                "issued",
-                now,
-                now,
-                None,
-                "Admin User",
-                "87654321B",
-                now,
-                now,
-            ),
-            # alice's market ticket — frozen (listed on resale)
-            (
-                tk_alice_market,
-                res_alice_market,
-                event_market,
-                tt_market_ga,
-                user_alice,
-                "on_sale",
-                now,
-                now,
-                None,
-                "Alice Dev",
-                "12345678A",
-                now,
-                now,
-            ),
-            # alice — expired ticket
-            (
-                tk_alice_expired,
-                res_alice_expired,
-                event_now,
-                tt_now_ga,
-                user_alice,
-                "expired",
-                now,
-                None,
-                now - timedelta(minutes=30),
-                None,
-                None,
-                now,
-                now,
-            ),
-            # alice — cancelled ticket
-            (
-                tk_alice_cancelled,
-                res_alice_cancelled,
-                event_now,
-                tt_now_ga,
-                user_alice,
-                "cancelled",
-                now,
-                now,
-                None,
-                "Alice Dev",
-                "12345678A",
-                now,
-                now,
-            ),
-            # alice — entry_pending ticket
-            (
-                tk_alice_entry,
-                res_alice_entry,
-                event_now,
-                tt_now_ga,
-                user_alice,
-                "scanning",
-                now,
-                now,
-                None,
-                "Alice Dev",
-                "12345678A",
-                now,
-                now,
-            ),
-            # alice — flagged ticket
-            (
-                tk_alice_flagged,
-                res_alice_flagged,
-                event_now,
-                tt_now_ga,
-                user_alice,
-                "flagged",
-                now,
-                now,
-                None,
-                "Alice Dev",
-                "12345678A",
-                now,
-                now,
-            ),
-            # alice — reserved ticket (awaiting payment)
-            (
-                tk_alice_reserved,
-                res_alice_reserved,
-                event_now,
-                tt_now_ga,
-                user_alice,
-                "reserved",
-                now,
-                None,
-                None,
-                None,
-                None,
-                now,
-                now,
-            ),
-            # admin — all states showcase
-            (
-                tk_admin_used,
-                res_admin_used,
-                event_past,
-                tt_past_ga,
-                user_admin,
-                "redeemed",
-                now,
-                now,
-                None,
-                "Admin User",
-                "87654321B",
-                now,
-                now,
-            ),
-            (
-                tk_admin_frozen,
-                res_admin_frozen,
-                event_market,
-                tt_market_ga,
-                user_admin,
-                "on_sale",
-                now,
-                now,
-                None,
-                "Admin User",
-                "87654321B",
-                now,
-                now,
-            ),
-            (
-                tk_admin_reserved,
-                res_admin_reserved,
-                event_now,
-                tt_now_ga,
-                user_admin,
-                "reserved",
-                now,
-                None,
-                None,
-                None,
-                None,
-                now,
-                now,
-            ),
-            (
-                tk_admin_expired,
-                res_admin_expired,
-                event_now,
-                tt_now_ga,
-                user_admin,
-                "expired",
-                now,
-                None,
-                now - timedelta(minutes=30),
-                None,
-                None,
-                now,
-                now,
-            ),
-            (
-                tk_admin_cancelled,
-                res_admin_cancelled,
-                event_now,
-                tt_now_ga,
-                user_admin,
-                "cancelled",
-                now,
-                now,
-                None,
-                "Admin User",
-                "87654321B",
-                now,
-                now,
-            ),
-            (
-                tk_admin_entry,
-                res_admin_entry,
-                event_now,
-                tt_now_ga,
-                user_admin,
-                "scanning",
-                now,
-                now,
-                None,
-                "Admin User",
-                "87654321B",
-                now,
-                now,
-            ),
-            (
-                tk_admin_flagged,
-                res_admin_flagged,
-                event_now,
-                tt_now_ga,
-                user_admin,
-                "flagged",
-                now,
-                now,
-                None,
-                "Admin User",
-                "87654321B",
-                now,
-                now,
-            ),
-            # reserved tickets whose reservation expired (shows "Payment window closed")
-            (
-                tk_alice_reserved_expired,
-                res_alice_reserved_expired,
-                event_now,
-                tt_now_ga,
-                user_alice,
-                "expired",
-                now,
-                None,
-                now - timedelta(hours=2),
-                None,
-                None,
-                now,
-                now,
-            ),
-            (
-                tk_admin_reserved_expired,
-                res_admin_reserved_expired,
-                event_now,
-                tt_now_ga,
-                user_admin,
-                "expired",
-                now,
-                None,
-                now - timedelta(hours=2),
-                None,
-                None,
-                now,
-                now,
-            ),
-        ],
-    )
-
-    # ── Market test data ──────────────────────────────────────────────────────
-    print("  Creating market test data…")
-
-    # Alice's frozen ticket listed on the market
-    await conn.execute(
-        """
-        INSERT INTO sales.market_listings
-            (id, ticket_id, event_id, seller_user_id, ticket_type_id,
-             price_cents, currency, state, listed_at, expires_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-        """,
-        market_listing_id,
-        tk_alice_market,
-        event_market,
-        user_alice,
-        tt_market_ga,
-        4500,
-        "EUR",
-        "assigned",  # already assigned to admin
-        now,
-        now + timedelta(days=30),
-    )
-
-    # Pending assignment for admin (buyer)
-    await conn.execute(
-        """
-        INSERT INTO sales.market_assignments
-            (id, listing_id, event_id, buyer_user_id, assigned_at, expires_at, state)
-        VALUES ($1,$2,$3,$4,$5,$6,$7)
-        """,
-        market_assignment_id,
-        market_listing_id,
-        event_market,
-        user_admin,
-        now,
-        now + timedelta(days=1),
-        "pending",
-    )
-
-    # ── Passkeys (dummy dev credentials so login skips the setup flow) ────────
-    print("  Creating dummy passkeys…")
-
-    await conn.executemany(
-        """
-        INSERT INTO identity.passkey_credentials
-            (id, user_id, credential_id, public_key, sign_count, aaguid, name, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        """,
-        [
-            (
-                uuid.uuid4(),
-                user_alice,
-                b"dev-credential-alice",
-                b"dev-public-key-alice",
-                0,
-                "00000000-0000-0000-0000-000000000000",
-                "Dev Passkey",
-                now,
-            ),
-            (
-                uuid.uuid4(),
-                user_admin,
-                b"dev-credential-admin",
-                b"dev-public-key-admin",
-                0,
-                "00000000-0000-0000-0000-000000000000",
-                "Dev Passkey",
-                now,
-            ),
-        ],
-    )
-
-    # ── Done ──────────────────────────────────────────────────────────────────
-    print()
-    print("Database seeded successfully!")
-    print()
-    print("Users (password: Password123! / AdminPass1!):")
-    print("  alice@qrew.dev  — regular, KYC approved, manager of Qrew Events")
-    print("  bob@qrew.dev    — regular, KYC pending")
-    print("  admin@qrew.dev  — admin, owner of Qrew Events  [password: AdminPass1!]")
-    print()
-    print("Events:")
-    print(
-        "  Midnight Festival 2025   — past, WiZink Center Madrid   (alice has 1 used ticket)"
-    )
-    print(
-        "  Summer Beats 2026        — upcoming, sale open now       (alice: 2 issued, bob: 1 reserved)"
-    )
-    print("  Techno Underground 2026  — upcoming, sale opens Sep 2026")
-    print("  Neon Rave 2026           — sold-out, sale ended, starts in 30 days")
-    print("                             admin: 1 issued ticket (test Sale button)")
-    print("                             alice: 1 frozen ticket listed on market")
-    print("                             admin: 1 pending market assignment")
-
-
 if __name__ == "__main__":
-    asyncio.run(seed())
+    asyncio.run(main())

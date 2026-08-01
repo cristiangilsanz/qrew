@@ -31,7 +31,7 @@
     "goBack": "Volver",
     "waitSeconds": "Esperar {{seconds}}s",
     "done": "Listo",
-    "copied": "¡Copiado!"
+    "copied": "Copiado"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -47,7 +47,7 @@
     "acceptTerms": "Acepto los términos y condiciones",
     "noAccount": "¿No tienes cuenta?",
     "hasAccount": "¿Ya tienes cuenta?",
-    "registrationSuccess": "¡Cuenta creada! Revisa tu correo para verificarla.",
+    "registrationSuccess": "Cuenta creada. Revisa tu correo para verificarla.",
     "or": "o",
     "passkeyLogin": "Iniciar Sesión Con Passkey",
     "emailRequiredForPasskey": "Introduce tu correo para iniciar sesión con passkey",
@@ -65,7 +65,7 @@
   },
   "events": {
     "title": "Eventos",
-    "empty": "No se encontraron eventos. Prueba a ajustar tu búsqueda.",
+    "empty": "No se encontraron eventos.",
     "notFound": "Evento no encontrado.",
     "backToList": "Volver a eventos",
     "backToEvent": "Volver al evento",
@@ -86,7 +86,7 @@
   },
   "tickets": {
     "title": "Mis Entradas",
-    "empty": "Todavía no tienes entradas",
+    "empty": "No se encontraron entradas.",
     "browseEvents": "Ver Eventos",
     "backToTickets": "Volver A Mis Entradas",
     "sections": {
@@ -152,7 +152,7 @@
       "expiresAt": "Rota a las {{time}}",
       "retry": "Intentar De Nuevo",
       "denied": "QR no disponible.",
-      "deniedLocation": "Acceso a ubicación denegado.",
+      "deniedLocation": "Debes permitir el acceso a tu ubicación.",
       "deniedGeofence": "Debes estar en el recinto para mostrar tu código QR.",
       "deniedAttestation": "Dispositivo no verificado. Los códigos QR solo están disponibles en dispositivos atestados.",
       "deniedState": "Esta entrada no puede usarse para el acceso en su estado actual.",
@@ -164,7 +164,7 @@
       "joinButton": "Unirse A La Cola",
       "joinFailed": "No se pudo unir a la cola. Por favor, inténtalo de nuevo.",
       "waiting": "Tu posición en la cola",
-      "ready": "¡Eres el siguiente!",
+      "ready": "Eres el siguiente",
       "readyDescription": "Tu turno está listo. Vuelve pronto para obtener tu enlace de canje.",
       "notInQueue": "No estás en la cola.",
       "redeemFailed": "No se pudo canjear tu turno. Por favor, inténtalo de nuevo.",
@@ -191,7 +191,7 @@
       "expiresIn": "restantes",
       "expired": "Esta reserva ha expirado.",
       "cancelled": "Esta reserva fue cancelada.",
-      "paid": "¡Pago confirmado!",
+      "paid": "Pago confirmado.",
       "cancelButton": "Cancelar Reserva",
       "cancelSuccess": "Reserva cancelada.",
       "cancelFailed": "No se pudo cancelar la reserva.",
@@ -204,7 +204,7 @@
       "confirmButton": "Confirmar Pago",
       "initFailed": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo.",
       "failed": "Pago fallido. Por favor, inténtalo de nuevo.",
-      "success": "¡Pago realizado! Tu entrada está en camino."
+      "success": "Pago realizado. Tu entrada está en camino."
     },
     "toast": {
       "listSuccess": "Entrada publicada en reventa",
@@ -218,8 +218,8 @@
     "myWaitlists": "Mis Listas de Espera",
     "searchByEvent": "Buscar por evento…",
     "noResults": "Sin resultados.",
-    "noTicketsOnSale": "No hay entradas en venta.",
-    "noPendingClaims": "No hay reclamaciones pendientes.",
+    "noTicketsOnSale": "No tienes entradas en venta.",
+    "noPendingClaims": "No tienes reclamaciones pendientes.",
     "noWaitlists": "No estás en ninguna lista de espera.",
     "resaleMarket": "Mercado de reventa",
     "joinQueueButton": "Unirse A La Cola De Reventa",
@@ -237,7 +237,7 @@
       "declineTitle": "Rechazar",
       "declineDesc": "Perderás esta oferta de entrada y podrá ser reasignada a otra persona.",
       "generalAdmission": "Acceso general",
-      "notFound": "Oferta no encontrada o ya gestionada.",
+      "notFound": "Reclamación no encontrada.",
       "paymentConfirmed": "Pago confirmado",
       "ticketTransferring": "Tu entrada está siendo transferida.",
       "expired": "Esta oferta ha caducado.",
@@ -247,10 +247,10 @@
     "toast": {
       "declined": "Oferta rechazada",
       "declineFailed": "No se pudo rechazar la oferta",
-      "paymentSuccess": "¡Pago realizado — tu entrada está siendo transferida!",
+      "paymentSuccess": "Pago realizado. Tu entrada está siendo transferida.",
       "leftWaitlist": "Has abandonado la lista de espera",
       "leaveFailed": "No se pudo abandonar la cola de reventa",
-      "joinSuccess": "¡Estás en la cola de reventa!",
+      "joinSuccess": "Estás en la cola de reventa.",
       "joinFailed": "No se pudo unir a la cola de reventa"
     }
   },
@@ -302,7 +302,7 @@
       "activitySection": "Actividad",
       "recentActivityLabel": "Actividad Reciente",
       "noDevices": "Sin dispositivos de confianza",
-      "noActivity": "Sin actividad todavía",
+      "noActivity": "Sin actividad",
       "showMore": "Ver Más",
       "revokeAll": "Eliminar Todo",
       "deviceRevoked": "Dispositivo eliminado.",
@@ -431,7 +431,7 @@
     "empty": "Aún no hay passkeys registradas.",
     "unnamedPasskey": "Passkey sin nombre",
     "lastUsed": "Último uso {{date}}",
-    "registerSuccess": "¡Passkey registrada!",
+    "registerSuccess": "Passkey registrada.",
     "deleteSuccess": "Passkey eliminada.",
     "renameSuccess": "Passkey renombrada.",
     "register": {
@@ -455,7 +455,7 @@
       "create": "Nueva Organización",
       "createTitle": "Crear organización",
       "createSuccess": "Organización creada.",
-      "empty": "Aún no tienes organizaciones.",
+      "empty": "No se encontraron organizaciones.",
       "loading": "Cargando…",
       "slugLabel": "Slug",
       "slugPlaceholder": "mi-org",
@@ -609,10 +609,10 @@
     }
   },
   "realtime": {
-    "ticketIssued": "¡Tu entrada ha sido emitida!",
+    "ticketIssued": "Tu entrada ha sido emitida.",
     "ticketCancelled": "Una entrada ha sido cancelada.",
     "ticketFrozen": "Una entrada ha sido congelada. Contacta con soporte.",
-    "paymentSucceeded": "¡Pago confirmado! Tu entrada está en camino.",
+    "paymentSucceeded": "Pago confirmado. Tu entrada está en camino.",
     "reconnecting": "Conexión perdida. Reconectando..."
   },
   "onboarding": {
@@ -630,7 +630,7 @@
       "label": "Código de verificación",
       "placeholder": "Pega tu token de verificación",
       "submit": "Verificar Correo",
-      "successToast": "¡Correo verificado!"
+      "successToast": "Correo verificado."
     },
     "phone": {
       "title": "Verifica tu teléfono",
@@ -640,7 +640,7 @@
       "submit": "Verificar Número De Teléfono",
       "resend": "Reenviar Código",
       "resendSuccess": "Código reenviado correctamente.",
-      "successToast": "¡Número de teléfono verificado!"
+      "successToast": "Número de teléfono verificado."
     },
     "kyc": {
       "title": "Verificación de identidad",
@@ -653,7 +653,7 @@
     "pending": {
       "title": "En revisión",
       "description": "Tus documentos de identidad han sido enviados. Los verificaremos en un plazo de 24 horas.",
-      "approved": "¡Identidad verificada!",
+      "approved": "Identidad verificada.",
       "approvedDescription": "Tu identidad ha sido verificada. Ya puedes comenzar.",
       "rejected": "Verificación fallida",
       "rejectedDescription": "No pudimos verificar tu identidad. Por favor, inténtalo de nuevo con una foto más clara.",

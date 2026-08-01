@@ -13,6 +13,7 @@ interface Props {
 
 export function ImageWithSkeleton({ src, alt, className, skeletonClassName }: Props) {
   const [loaded, setLoaded] = useState(false)
+  const settle = () => setLoaded(true)
 
   return (
     <div className="relative h-full w-full">
@@ -20,7 +21,8 @@ export function ImageWithSkeleton({ src, alt, className, skeletonClassName }: Pr
       <img
         src={src}
         alt={alt}
-        onLoad={() => setLoaded(true)}
+        onLoad={settle}
+        onError={settle}
         className={cn(className, !loaded && 'invisible')}
       />
     </div>

@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ShieldCheck } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { type KeyboardEvent, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { totpApi } from '@/features/auth/api'
-import { useAuthStore } from '@/store/auth'
+import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/store/auth'
 
 export const Route = createFileRoute('/_auth/verify-totp')({
   component: VerifyTotpPage,
@@ -79,7 +79,7 @@ function VerifyTotpPage() {
     }
   }
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace') {
       if (digits[index]) {
         const next = [...digits]

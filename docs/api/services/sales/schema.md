@@ -1,4 +1,4 @@
-# Sales — Database Schema
+# Sales Database Schema
 
 ```mermaid
 erDiagram
@@ -51,7 +51,55 @@ erDiagram
         timestamp updated_at
     }
 
+    reservation_holders {
+        UUID id PK
+        UUID reservation_id FK
+        int position
+        string holder_name
+        string holder_dni
+    }
+
+    market_queue_entries {
+        UUID id PK
+        UUID event_id
+        UUID user_id
+        int tiebreak
+        timestamp joined_at
+        timestamp left_at
+    }
+
+    market_listings {
+        UUID id PK
+        UUID ticket_id UK
+        UUID event_id
+        UUID seller_user_id
+        UUID ticket_type_id
+        int price_cents
+        string currency
+        string state
+        timestamp listed_at
+        timestamp expires_at
+        timestamp completed_at
+        timestamp cancelled_at
+    }
+
+    market_assignments {
+        UUID id PK
+        UUID listing_id FK
+        UUID event_id
+        UUID buyer_user_id
+        timestamp assigned_at
+        timestamp expires_at
+        timestamp paid_at
+        string payment_intent_id
+        string holder_name
+        string holder_dni
+        string state
+    }
+
     reservations }o--|| event_context : "validates against"
     reservations }o--|| ticket_type_inventory : "checks inventory"
     reservations }o--|| user_age_context : "fraud check"
+    reservations ||--o{ reservation_holders : "has"
+    market_listings ||--o{ market_assignments : "has"
 ```

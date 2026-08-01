@@ -1,5 +1,3 @@
-"""Expires timed-out assignments (24h) and auto-cancels expired listings (N days)."""
-
 from datetime import UTC, datetime, timedelta
 
 import structlog
@@ -21,12 +19,7 @@ _NATS_TIMEOUT = 5.0
 
 
 async def sweep_expired() -> tuple[int, int]:
-    """
-    Expires timed-out pending assignments and tries to re-assign.
-    Cancels listings past their expires_at and returns the ticket to the seller.
-
-    Returns (assignments_expired, listings_cancelled).
-    """
+    """Expire pending assignments and cancel overdue listings."""
     assignments_expired = await _expire_assignments()
     listings_cancelled = await _cancel_expired_listings()
     if assignments_expired or listings_cancelled:
@@ -60,7 +53,7 @@ async def _expire_assignments() -> int:
 
                     fresh.state = MarketAssignmentState.expired
 
-                    # Remove buyer from queue so they don't get re-assigned on this event
+                    # Remove from queue to prevent reassignment
                     entry = await repo.get_queue_entry(
                         event_id=fresh.event_id, user_id=fresh.buyer_user_id
                     )
@@ -82,7 +75,7 @@ async def _expire_assignments() -> int:
                     row = result.mappings().first()
                     max_tickets = int(row["max_tickets_per_user"]) if row else 10
 
-                    # Try to pick next random member (exclude all previously assigned users)
+                    # Pick next eligible queue member
                     previous_ids = await repo.previously_assigned_user_ids(listing.id)
                     member = await repo.pick_random_queue_member(
                         event_id=listing.event_id,

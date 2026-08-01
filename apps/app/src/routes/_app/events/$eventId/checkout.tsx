@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { BackButton } from '@/components/ui/back-button'
+import { NotFound } from '@/components/ui/not-found'
 import { CheckoutSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { ticketsApi } from '@/features/tickets/api'
@@ -46,14 +47,10 @@ function CheckoutPage() {
   if (isLoading) return <CheckoutSkeleton />
 
   if (isError || !event) {
-    return (
-      <div className="p-6">
-        <p className="text-muted-foreground">{t('events.notFound')}</p>
-      </div>
-    )
+    return <NotFound message={t('events.notFound')} />
   }
 
-  // Queue flow — show join button unless user was admitted from the queue
+  // Queue flow: redirect to queue unless admitted
   if (event.queue_required && !admitted) {
     return (
       <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">

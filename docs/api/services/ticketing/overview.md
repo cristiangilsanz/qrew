@@ -94,9 +94,9 @@ Schemas: [`packages/contracts/openapi/ticketing/events/`](../../../../packages/c
 | `DATABASE_URL` | PostgreSQL async connection string. |
 | `REDIS_URL` | Redis connection URL. |
 | `NATS_URL` | NATS server address. |
-| `INTERNAL_API_KEY` | Shared secret for internal service-to-service calls. |
+| `INTERNAL_API_KEY` | Shared secret for internal service to service calls. |
 | `ACCESS_JWT_PRIVATE_KEY` | EC private key for user JWT verification. |
-| `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma-separated previous public keys for key rotation. |
+| `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma separated previous public keys for key rotation. |
 | `TICKET_QR_JWT_PRIVATE_KEY` | EC private key for QR token signing. |
 | `TICKET_QR_JWT_PREVIOUS_PUBLIC_KEYS` | Previous QR JWT keys for key rotation. |
 | `TICKET_QR_TTL_SECONDS` | QR token lifetime in seconds. Defaults to 20. |

@@ -1,4 +1,4 @@
-# Audit — Database Schema
+# Audit Database Schema
 
 ```mermaid
 erDiagram

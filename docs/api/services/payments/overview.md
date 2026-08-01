@@ -8,7 +8,7 @@ Payments is the Stripe integration service in the platform. It creates and track
 
 ## Responsibilities
 
-1. Creates and tracks Stripe PaymentIntents with 3DS2 enforcement (`request_three_d_secure: any`).
+1. Creates and tracks Stripe PaymentIntents with 3DS2 enforcement via `request_three_d_secure: any`.
 2. Receives and verifies Stripe webhook callbacks.
 3. Publishes payment outcome events to the platform.
 4. Encrypts PII associated with payments at rest.
@@ -18,7 +18,8 @@ Payments is the Stripe integration service in the platform. It creates and track
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `POST` | `/payments` | Initiate a payment for a reservation | Internal |
+| `POST` | `/reservations/{id}/payment` | Initiate a payment for a reservation | JWT |
+| `POST` | `/market-assignments/{id}/payment` | Initiate a payment for a market assignment | JWT |
 | `POST` | `/payments/webhook` | Receive a Stripe webhook for payment outcomes | Stripe signature |
 
 Full spec: [`packages/contracts/openapi/payments/openapi.yaml`](../../../../packages/contracts/openapi/payments/openapi.yaml)
@@ -72,10 +73,10 @@ This service has no background workers. All processing is driven by incoming HTT
 | `DATABASE_URL` | PostgreSQL async connection string. |
 | `REDIS_URL` | Redis connection URL. |
 | `NATS_URL` | NATS server address. |
-| `INTERNAL_API_KEY` | Shared secret for internal service-to-service calls. |
+| `INTERNAL_API_KEY` | Shared secret for internal service to service calls. |
 | `SALES_URL` | Base URL of the sales service. Defaults to `http://localhost:8003`. |
 | `ACCESS_JWT_PRIVATE_KEY` | EC private key for JWT verification. |
-| `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma-separated previous public keys for key rotation. |
+| `ACCESS_JWT_PREVIOUS_PUBLIC_KEYS` | Comma separated previous public keys for key rotation. |
 | `PII_ENCRYPTION_KEY` | AES key for PII field encryption at rest. |
 | `PII_ENCRYPTION_PREVIOUS_KEYS` | Previous PII keys for decryption during key rotation. |
 | `STRIPE_SECRET_KEY` | Stripe secret API key. |

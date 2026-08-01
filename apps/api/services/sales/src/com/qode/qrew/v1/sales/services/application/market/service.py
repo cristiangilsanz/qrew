@@ -58,7 +58,6 @@ class MarketService:
         self._assignment_ttl = timedelta(hours=assignment_ttl_hours)
         self._listing_ttl = timedelta(days=listing_ttl_days)
 
-    # ------------------------------------------------------------------ queue
 
     @traced("market.service.join_queue")
     async def join_queue(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> MarketQueueEntry:
@@ -125,7 +124,6 @@ class MarketService:
         entries = await self._repo.get_active_queue_entries_for_user(user_id=user_id)
         return [{"event_id": e.event_id, "joined_at": e.joined_at} for e in entries]
 
-    # ----------------------------------------------------------------- listing
 
     @traced("market.service.list_ticket")
     async def list_ticket(self, *, user_id: uuid.UUID, ticket_id: uuid.UUID) -> MarketListing:
@@ -181,7 +179,6 @@ class MarketService:
     ) -> MarketListing | None:
         return await self._repo.get_listing_by_ticket_id(ticket_id)
 
-    # --------------------------------------------------------------- assignment
 
     @traced("market.service.get_assignment")
     async def get_assignment(
@@ -268,7 +265,7 @@ class MarketService:
         assignment.state = MarketAssignmentState.declined
         await self._repo.flush()
 
-        # Remove user from queue so they won't be re-assigned on this event
+        # Remove from queue to prevent reassignment
         entry = await self._repo.get_queue_entry(event_id=assignment.event_id, user_id=user_id)
         if entry is not None:
             entry.left_at = _now()
@@ -281,7 +278,6 @@ class MarketService:
 
         await self._record(_ASSIGNMENT_DECLINED, actor_id=user_id, entity_id=str(assignment_id))
 
-    # ------------------------------------------------------------ settlement
 
     @traced("market.service.complete_assignment")
     async def complete_assignment(self, *, payment_intent_id: str) -> None:
@@ -324,7 +320,6 @@ class MarketService:
             entity_id=str(assignment.id),
         )
 
-    # ----------------------------------------------------------------- helpers
 
     async def _get_ticket_for_listing(
         self, user_id: uuid.UUID, ticket_id: uuid.UUID

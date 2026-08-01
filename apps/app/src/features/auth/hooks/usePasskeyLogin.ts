@@ -1,8 +1,8 @@
+import { Capacitor } from '@capacitor/core'
 import { Passkeys } from '@capawesome/capacitor-passkeys'
 import { startAuthentication } from '@simplewebauthn/browser'
 import { useMutation } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
-import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 

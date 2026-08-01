@@ -66,7 +66,7 @@ class ReservationService:
 
     async def _lock_inventory_nowait(self, ticket_type_id: uuid.UUID) -> TicketTypeInventory | None:
         # Single SELECT FOR UPDATE NOWAIT that both locks the row and returns fresh data,
-        # avoiding the TOCTOU window of a separate lock query followed by a session.get().
+        # Avoids TOCTOU between lock check and session fetch
         try:
             return await self._session.get(
                 TicketTypeInventory,

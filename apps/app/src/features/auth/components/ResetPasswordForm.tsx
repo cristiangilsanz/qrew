@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import type { AxiosError } from 'axios'
 import { Eye, EyeOff, Lock, LogIn } from 'lucide-react'
 import { useState } from 'react'
@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+
 import { type ApiErrorDetail, authApi, extractErrorMessage } from '../api'
 import { AuthLayout } from './AuthLayout'
 

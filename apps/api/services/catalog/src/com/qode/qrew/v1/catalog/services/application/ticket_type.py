@@ -111,9 +111,9 @@ class TicketTypeService:
             event = await self._event_repo.get_by_id(event_id)
             if event is None:
                 raise TicketTypeError("Event not found", field="event_id")
-            if event.status == EventStatus.cancelled:
+            if event.status in (EventStatus.cancelled, EventStatus.ongoing):
                 raise TicketTypeError(
-                    "Cannot add ticket types to a cancelled event", field="status"
+                    "Cannot add ticket types to a cancelled or ongoing event", field="status"
                 )
             existing = await self._repo.get_by_event_and_name(event_id, name)
             if existing is not None:
@@ -153,6 +153,13 @@ class TicketTypeService:
         async with redlock(
             f"event:{event_id}:ticket-types", redis_url=settings.redis_url, ttl_seconds=10
         ):
+            event = await self._event_repo.get_by_id(event_id)
+            if event is None:
+                raise TicketTypeError("Event not found", field="event_id")
+            if event.status in (EventStatus.cancelled, EventStatus.ongoing):
+                raise TicketTypeError(
+                    "Cannot edit ticket types of a cancelled or ongoing event", field="status"
+                )
             ticket_type = await self._repo.get_by_id(ticket_type_id)
             if ticket_type is None or ticket_type.event_id != event_id:
                 raise TicketTypeError("Ticket type not found", field="ticket_type_id")
@@ -197,6 +204,13 @@ class TicketTypeService:
         async with redlock(
             f"event:{event_id}:ticket-types", redis_url=settings.redis_url, ttl_seconds=10
         ):
+            event = await self._event_repo.get_by_id(event_id)
+            if event is None:
+                raise TicketTypeError("Event not found", field="event_id")
+            if event.status in (EventStatus.cancelled, EventStatus.ongoing):
+                raise TicketTypeError(
+                    "Cannot delete ticket types of a cancelled or ongoing event", field="status"
+                )
             ticket_type = await self._repo.get_by_id(ticket_type_id)
             if ticket_type is None or ticket_type.event_id != event_id:
                 raise TicketTypeError("Ticket type not found", field="ticket_type_id")

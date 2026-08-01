@@ -48,7 +48,7 @@ describe('ChangePasswordForm', () => {
   it('shows toast.error when change-password returns 400', async () => {
     const { toast } = await import('sonner')
     server.use(
-      http.post('http://localhost:8001/v1/auth/account/change-password', () =>
+      http.post('http://localhost:8000/api/identity/v1/auth/account/change-password', () =>
         HttpResponse.json({ detail: 'Incorrect current password' }, { status: 400 }),
       ),
     )

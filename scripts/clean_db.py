@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Wipe all application data from the database (preserves schema/migrations)."""
 
 import asyncio
 from pathlib import Path

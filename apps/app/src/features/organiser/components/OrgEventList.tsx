@@ -1,9 +1,9 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
-import { formatDate } from '@/lib/formatDate'
 import { OrgCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
+import { formatDate } from '@/lib/formatDate'
 
 import { useOrgEvents } from '../hooks/useOrgEvents'
 

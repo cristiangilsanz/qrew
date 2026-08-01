@@ -35,7 +35,7 @@ Emitted when a device passes hardware attestation.
 |---|---|---|
 | `device_id` | UUID | Attested device |
 | `user_id` | UUID | Owning user |
-| `platform` | string | Attestation platform (e.g. android, ios) |
+| `platform` | string | Attestation platform, e.g. android or ios |
 
 ---
 

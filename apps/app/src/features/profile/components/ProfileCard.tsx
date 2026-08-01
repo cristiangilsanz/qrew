@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next'
 
-import { formatDate } from '@/lib/formatDate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
+import { formatDate } from '@/lib/formatDate'
 
 import { useProfile } from '../hooks/useProfile'
 

@@ -3,9 +3,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/lib/formatDate'
 import { parseUserAgent } from '@/lib/parseUserAgent'
-import { Skeleton } from '@/components/ui/skeleton'
 
 import { useRevokeAllSessions } from '../hooks/useRevokeAllSessions'
 import { useRevokeSession } from '../hooks/useRevokeSession'

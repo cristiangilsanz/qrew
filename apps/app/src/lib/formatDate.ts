@@ -1,4 +1,4 @@
-// Maps language codes to locales that use DD/MM/YYYY format
+// Language to locale map for local date format
 const LOCALE_MAP: Record<string, string> = {
   en: 'en-GB',
   es: 'es-ES',

@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     jwt_audience: str = ""
     jwt_issuer: str = ""
 
-    # Upstream service URLs (used by HTTP proxy)
+    # Upstream service URLs
     identity_url: str = "http://identity:8001"
     catalog_url: str = "http://catalog:8002"
     sales_url: str = "http://sales:8003"

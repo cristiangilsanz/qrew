@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { hapticHeavy, hapticLight } from '@/lib/haptics'
 import { scannerApi } from '@/features/scanner/api'
+import { hapticHeavy, hapticLight } from '@/lib/haptics'
 
 export type ScanResult = {
   allowed: boolean

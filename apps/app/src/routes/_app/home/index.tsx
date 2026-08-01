@@ -38,7 +38,7 @@ function HomePage() {
 
   return (
     <div className="space-y-4 pb-4">
-      {/* Greeting + Hero — full bleed, no padding, no rounding */}
+      {/* Greeting and Hero */}
       <div className="relative h-96 overflow-hidden">
         <img
           src={homeHero}

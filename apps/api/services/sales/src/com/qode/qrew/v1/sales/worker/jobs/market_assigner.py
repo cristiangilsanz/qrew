@@ -1,5 +1,3 @@
-"""Picks a random queue member for each available market listing that has no active assignment."""
-
 from datetime import UTC, datetime, timedelta
 
 import structlog
@@ -35,7 +33,7 @@ async def assign_pending() -> int:
                 async with AsyncSessionLocal() as session:
                     repo = MarketRepository(session)
 
-                    # Re-fetch under lock to avoid races
+                    # Refetch under lock
                     fresh = await repo.get_listing_by_id(listing.id)
                     if fresh is None or fresh.state != MarketListingState.available:
                         continue

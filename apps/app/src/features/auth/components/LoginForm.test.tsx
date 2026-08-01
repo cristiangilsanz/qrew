@@ -80,7 +80,7 @@ describe('LoginForm', () => {
 
   it('navigates to /setup when setup_required is true', async () => {
     server.use(
-      http.post('http://localhost:8001/v1/auth/login', () =>
+      http.post('http://localhost:8000/api/identity/v1/auth/login', () =>
         HttpResponse.json({
           access_token: 'mock-setup-token',
           refresh_token: null,
@@ -105,7 +105,7 @@ describe('LoginForm', () => {
   it('calls toast.error when login fails', async () => {
     const { toast } = await import('sonner')
     server.use(
-      http.post('http://localhost:8001/v1/auth/login', () =>
+      http.post('http://localhost:8000/api/identity/v1/auth/login', () =>
         HttpResponse.json({ detail: 'Invalid credentials' }, { status: 401 }),
       ),
     )

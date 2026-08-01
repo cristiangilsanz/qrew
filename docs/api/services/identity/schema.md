@@ -1,4 +1,4 @@
-# Identity — Database Schema
+# Identity Database Schema
 
 ```mermaid
 erDiagram

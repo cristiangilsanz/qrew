@@ -27,13 +27,13 @@ Every message published to a JetStream stream uses this envelope:
 
 * `event_id`: globally unique, used for idempotency deduplication at the consumer
 * `occurred_at`: wall clock time at the publisher
-* `aggregate_type` / `aggregate_id`: identify the domain object the event belongs to
+* `aggregate_type` and `aggregate_id`: identify the domain object the event belongs to
 * `actor_id`: the user or system that triggered the action, if applicable
 * `data`: event-specific payload, typed per contract
 
 ## Delivery guarantees
 
-* JetStream provides at-least-once delivery. Every consumer must be idempotent.
+* JetStream delivers at least once. Every consumer must be idempotent.
 * All consumers use `DeliverPolicy.ALL` so they replay from the beginning on first start.
 * The Gateway fanout consumer uses `DeliverPolicy.NEW` and only delivers live messages.
 * On handler failure a message is nack'd and redelivered by NATS after the ack wait window.
@@ -53,5 +53,5 @@ Examples: `identity.user.registered.v1`, `payments.payment.succeeded.v1`
 
 Exceptions:
 * `audit.events.v1`: single subject for all audit records, from all services
-* `ws.fanout.v1`: internal subject used by Identity to push real-time notifications to Gateway
-* `ticketing.ticket.state_changed`: internal subject without `.v1` suffix (legacy)
+* `ws.fanout.v1`: internal subject used by Identity to push live notifications to Gateway
+* `ticketing.ticket.state_changed`: internal subject without `.v1` suffix, kept for compatibility

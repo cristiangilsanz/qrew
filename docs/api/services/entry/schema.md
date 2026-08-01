@@ -1,4 +1,4 @@
-# Entry — Database Schema
+# Entry Database Schema
 
 ```mermaid
 erDiagram

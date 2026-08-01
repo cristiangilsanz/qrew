@@ -104,6 +104,11 @@ async def create_organisation(
     svc: OrganisationService = Depends(get_organisation_service),
 ) -> OrganisationResponse:
     del request
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"message": "Admin access required", "field": None},
+        )
     try:
         org = await svc.create_organisation(
             owner_id=current_user.id,
@@ -303,9 +308,7 @@ async def remove_member(
         raise _bad_request(exc) from exc
 
 
-# ---------------------------------------------------------------------------
 # Delete organisation
-# ---------------------------------------------------------------------------
 
 
 @router.delete(
@@ -330,9 +333,7 @@ async def delete_organisation(
         raise _bad_request(exc) from exc
 
 
-# ---------------------------------------------------------------------------
 # Events nested under organisations
-# ---------------------------------------------------------------------------
 
 
 @router.post(

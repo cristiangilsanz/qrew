@@ -31,7 +31,7 @@
     "goBack": "Go Back",
     "waitSeconds": "Wait {{seconds}}s",
     "done": "Done",
-    "copied": "Copied!"
+    "copied": "Copied"
   },
   "auth": {
     "login": "Sign In",
@@ -47,7 +47,7 @@
     "acceptTerms": "I accept the terms and conditions",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
-    "registrationSuccess": "Account created! Check your email to verify.",
+    "registrationSuccess": "Account created. Check your email to verify.",
     "or": "or",
     "passkeyLogin": "Sign In With Passkey",
     "emailRequiredForPasskey": "Enter your email to sign in with a passkey",
@@ -77,7 +77,7 @@
   },
   "events": {
     "title": "Events",
-    "empty": "No events found. Try adjusting your search.",
+    "empty": "No events found.",
     "notFound": "Event not found.",
     "backToList": "Back to events",
     "backToEvent": "Back to event",
@@ -98,7 +98,7 @@
   },
   "tickets": {
     "title": "My Tickets",
-    "empty": "You have no tickets yet",
+    "empty": "No tickets found.",
     "browseEvents": "Browse Events",
     "backToTickets": "Back To My Tickets",
     "sections": {
@@ -164,7 +164,7 @@
       "expiresAt": "Rotates at {{time}}",
       "retry": "Try Again",
       "denied": "QR unavailable.",
-      "deniedLocation": "Location access denied.",
+      "deniedLocation": "You must allow access to your location.",
       "deniedGeofence": "You must be at the venue to display your QR code.",
       "deniedAttestation": "Device not verified. QR codes are available on attested devices only.",
       "deniedState": "This ticket cannot be used for entry in its current state.",
@@ -180,7 +180,7 @@
       "waiting": "Your position in the queue",
       "updatingIn": "Updating in {{seconds}}s",
       "doNotClose": "Do not close this page",
-      "ready": "You're next!",
+      "ready": "You're next",
       "readyDescription": "Your slot is ready. Check back shortly for your redemption link.",
       "notInQueue": "You are not in the queue.",
       "redeemFailed": "Failed to redeem your slot. Please try again."
@@ -203,7 +203,7 @@
       "expiresIn": "remaining",
       "expired": "This reservation has expired.",
       "cancelled": "This reservation was cancelled.",
-      "paid": "Payment confirmed!",
+      "paid": "Payment confirmed.",
       "cancelButton": "Cancel Reservation",
       "cancelSuccess": "Reservation cancelled.",
       "cancelFailed": "Failed to cancel reservation.",
@@ -216,7 +216,7 @@
       "confirmButton": "Confirm Payment",
       "initFailed": "Could not start payment. Please try again.",
       "failed": "Payment failed. Please try again.",
-      "success": "Payment successful! Your ticket is on its way."
+      "success": "Payment successful. Your ticket is on its way."
     },
     "toast": {
       "listSuccess": "Ticket is now on sale",
@@ -230,8 +230,8 @@
     "myWaitlists": "My Waitlists",
     "searchByEvent": "Search by event…",
     "noResults": "No results.",
-    "noTicketsOnSale": "No tickets on sale.",
-    "noPendingClaims": "No pending claims.",
+    "noTicketsOnSale": "You have no tickets on sale.",
+    "noPendingClaims": "You have no pending claims.",
     "noWaitlists": "You're not on any waitlists.",
     "resaleMarket": "Resale market",
     "joinQueueButton": "Join Resale Queue",
@@ -249,7 +249,7 @@
       "declineTitle": "Decline",
       "declineDesc": "You will lose this ticket offer and it may be reassigned to someone else.",
       "generalAdmission": "General admission",
-      "notFound": "Assignment not found or already handled.",
+      "notFound": "Claim not found.",
       "paymentConfirmed": "Payment confirmed",
       "ticketTransferring": "Your ticket is being transferred.",
       "expired": "This assignment has expired.",
@@ -259,10 +259,10 @@
     "toast": {
       "declined": "Assignment declined",
       "declineFailed": "Failed to decline assignment",
-      "paymentSuccess": "Payment successful — ticket is being transferred!",
+      "paymentSuccess": "Payment confirmed. Ticket is being transferred.",
       "leftWaitlist": "Left the waitlist",
       "leaveFailed": "Failed to leave the resale queue",
-      "joinSuccess": "You're in the resale queue!",
+      "joinSuccess": "You are in the resale queue.",
       "joinFailed": "Failed to join the resale queue"
     }
   },
@@ -314,7 +314,7 @@
       "activitySection": "Activity",
       "recentActivityLabel": "Recent Activity",
       "noDevices": "No trusted devices",
-      "noActivity": "No activity yet",
+      "noActivity": "No activity",
       "showMore": "Show More",
       "revokeAll": "Remove All",
       "deviceRevoked": "Device removed.",
@@ -443,7 +443,7 @@
     "empty": "No passkeys registered yet.",
     "unnamedPasskey": "Unnamed passkey",
     "lastUsed": "Last used {{date}}",
-    "registerSuccess": "Passkey registered!",
+    "registerSuccess": "Passkey registered.",
     "deleteSuccess": "Passkey removed.",
     "renameSuccess": "Passkey renamed.",
     "register": {
@@ -467,7 +467,7 @@
       "create": "Create Organisation",
       "createTitle": "Create organisation",
       "createSuccess": "Organisation created.",
-      "empty": "You have no organisations yet.",
+      "empty": "No organisations found.",
       "loading": "Loading…",
       "slugLabel": "Slug",
       "slugPlaceholder": "my-org",
@@ -490,7 +490,7 @@
       "edit": "Edit event information",
       "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
-      "markStarted": "Mark as Started",
+      "markStarted": "Mark As Started",
       "cancel": "Cancel Event",
       "confirmPublish": "Confirm Publish",
       "confirmCancel": "Cancel Event",
@@ -621,10 +621,10 @@
     }
   },
   "realtime": {
-    "ticketIssued": "Your ticket has been issued!",
+    "ticketIssued": "Your ticket has been issued.",
     "ticketCancelled": "A ticket has been cancelled.",
     "ticketFrozen": "A ticket has been frozen. Contact support.",
-    "paymentSucceeded": "Payment confirmed! Your ticket is on its way.",
+    "paymentSucceeded": "Payment confirmed. Your ticket is on its way.",
     "reconnecting": "Connection lost. Reconnecting..."
   },
   "onboarding": {
@@ -642,7 +642,7 @@
       "label": "Verification code",
       "placeholder": "Paste your verification token",
       "submit": "Verify Email",
-      "successToast": "Email verified!"
+      "successToast": "Email verified."
     },
     "phone": {
       "title": "Verify your phone",
@@ -652,7 +652,7 @@
       "submit": "Verify Phone Number",
       "resend": "Resend Code",
       "resendSuccess": "Code resent successfully.",
-      "successToast": "Phone number verified!"
+      "successToast": "Phone number verified."
     },
     "kyc": {
       "title": "Identity verification",
@@ -665,7 +665,7 @@
     "pending": {
       "title": "In Review",
       "description": "Your identity documents have been submitted. We'll verify them within 24 hours.",
-      "approved": "Identity verified!",
+      "approved": "Identity verified.",
       "approvedDescription": "Your identity has been verified. You're ready to go.",
       "rejected": "Verification failed",
       "rejectedDescription": "We couldn't verify your identity. Please try again with a clearer photo.",

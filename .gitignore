@@ -64,6 +64,7 @@ docker-compose.override.yml
 .env.*
 !.env.example
 config/local.yaml
+**/config/local.yaml
 .secrets.baseline
 certs/
 secrets/
