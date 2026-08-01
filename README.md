@@ -73,6 +73,8 @@ flowchart TB
     classDef ext  fill:#1a1a2e,color:#fff,stroke:#555588,stroke-width:1px
 ```
 
+→ [Full architecture deep-dive](docs/architecture/overview.md)
+
 </div>
 
 # 📁 **Project Structure**
