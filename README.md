@@ -30,51 +30,35 @@ Zero friction. One product. Three roles.
 
 ```mermaid
 flowchart TB
-    app["📱 Mobile App\nReact + Capacitor"]:::nodeStyle
+    app["📱 Mobile App"]:::n
+    gw["🔀 API Gateway"]:::n
 
-    subgraph Edge
-        gw["🔀 API Gateway\nJWT validation + reverse proxy"]:::nodeStyle
+    subgraph svc["⚙️ Services"]
+        identity["🔑 Identity"]:::n
+        catalog["📋 Catalog"]:::n
+        sales["💸 Sales"]:::n
+        ticketing["🎟️ Ticketing"]:::n
+        payments["💳 Payments"]:::n
+        entry["🚪 Entry"]:::n
+        audit["📜 Audit"]:::n
     end
 
-    subgraph Services
-        identity["🔑 Identity"]:::nodeStyle
-        catalog["📋 Catalog"]:::nodeStyle
-        sales["💸 Sales"]:::nodeStyle
-        ticketing["🎟️ Ticketing"]:::nodeStyle
-        payments["💳 Payments"]:::nodeStyle
-        entry["🚪 Entry"]:::nodeStyle
-        audit["📜 Audit"]:::nodeStyle
+    subgraph infra["🏗️ Infrastructure"]
+        pg[("🐘 PostgreSQL 16")]:::i
+        nats["⚡ NATS JetStream\nEvent bus"]:::i
+        redis[("🔴 Redis\nCache · Locks · Jobs")]:::i
+        stripe(["💳 Stripe"]):::i
     end
 
-    subgraph Infrastructure
-        pg[("🐘 PostgreSQL 16")]:::infraStyle
-        nats["⚡ NATS JetStream\nEvent bus"]:::infraStyle
-        redis[("🔴 Redis\nCache · Locks · Jobs")]:::infraStyle
-        stripe(["💳 Stripe"]):::infraStyle
-    end
+    app -->|HTTPS| gw
+    gw --> svc
+    svc <-->|Domain events| nats
+    svc --> pg
+    identity & sales --> redis
+    payments <-->|Webhooks| stripe
 
-    app -->|"HTTPS"| gw
-    gw -->|"HTTP proxy"| identity
-    gw -->|"HTTP proxy"| catalog
-    gw -->|"HTTP proxy"| sales
-    gw -->|"HTTP proxy"| entry
-    catalog <-->|"Domain events"| nats
-    sales <-->|"Domain events"| nats
-    entry <-->|"Domain events"| nats
-    nats --> ticketing
-    nats --> payments
-    nats --> audit
-    identity --> pg
-    catalog --> pg
-    sales --> pg
-    ticketing --> pg
-    payments --> pg
-    identity --> redis
-    sales --> redis
-    payments <-->|"Webhooks"| stripe
-
-    classDef nodeStyle fill:#333333,color:#ffffff,stroke:#555555,stroke-width:2px,font-weight:bold
-    classDef infraStyle fill:#1a1a2e,color:#ffffff,stroke:#555555,stroke-width:2px,font-weight:bold
+    classDef n fill:#333333,color:#ffffff,stroke:#555555,stroke-width:2px,font-weight:bold
+    classDef i fill:#1a1a2e,color:#ffffff,stroke:#555555,stroke-width:2px,font-weight:bold
 ```
 
 </div>
