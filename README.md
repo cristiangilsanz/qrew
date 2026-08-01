@@ -29,11 +29,11 @@
 ```mermaid
 flowchart TB
     subgraph "📱 Client"
-        phone["Your Phone\nAttendee · Scanner · Organiser"]:::app
+        phone["Your Phone"]:::app
     end
 
     subgraph "🔀 Edge"
-        gw["API Gateway\nJWT · Proxy · WebSocket"]:::edge
+        gw["API Gateway"]:::edge
     end
 
     subgraph "⚙️ Services"
