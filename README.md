@@ -102,13 +102,13 @@ QREW/
 │   └── api/
 │       ├── gateway/                   # FastAPI Gateway (:8000)
 │       └── services/
-│           ├── identity/              # Auth, Users, Passkeys, TOTP, KYC
-│           ├── catalog/               # Events, Venues, Organisations
-│           ├── sales/                 # Reservations, Resale Market, Queue
-│           ├── ticketing/             # Tickets, QR Tokens
-│           ├── payments/              # Stripe Webhooks + Disbursements
-│           ├── entry/                 # Scanner Auth, QR Validation
-│           └── audit/                 # Immutable Audit Log
+│           ├── identity/              # Auth, Users, Passkeys, TOTP, KYC (:8006)
+│           ├── catalog/               # Events, Venues, Organisations (:8003)
+│           ├── sales/                 # Reservations, Resale Market, Queue (:8005)
+│           ├── ticketing/             # Tickets, QR Tokens (:8004)
+│           ├── payments/              # Stripe Webhooks + Disbursements (:8002)
+│           ├── entry/                 # Scanner Auth, QR Validation (:8001)
+│           └── audit/                 # Immutable Audit Log (:8007)
 │
 ├── packages/
 │   ├── contracts/                     # Shared API Contracts (OpenAPI)
@@ -139,8 +139,8 @@ QREW/
 | 🔑 Environment variables | [environment-variables.md](docs/development/guides/environment-variables.md) |
 | 🖥️ Local · Native | [local-native.md](docs/development/setup/local-native.md) |
 | 🐳 Local · Docker | [local-docker.md](docs/development/setup/local-docker.md) |
-| 📱 Android · Emulator | [android-emulator.md](docs/development/setup/android-emulator.md) |
 | 📲 Android · USB | [android-usb.md](docs/development/setup/android-usb.md) |
+| 📱 Android · Emulator | [android-emulator.md](docs/development/setup/android-emulator.md) |
 
 ## ⚡ Quick Start
 
