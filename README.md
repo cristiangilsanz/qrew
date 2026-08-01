@@ -83,7 +83,7 @@ flowchart TB
 QREW/
 ├── README.md                          # You Are Here! ⬅️
 ├── CONTRIBUTING.md                    # Contribution Guidelines
-├── SECURITY.md                        # Security Policy
+├── SECURITY.md                        # Security Policyarch
 ├── CHANGELOG.md                       # Release History
 ├── LICENSE                            # MIT License
 ├── docker-compose.yml                 # Full Local Stack
@@ -102,12 +102,12 @@ QREW/
 │   └── api/
 │       ├── gateway/                   # FastAPI Gateway (:8000)
 │       └── services/
-│           ├── identity/              # Auth, Users, Passkeys, TOTP, KYC (:8006)
-│           ├── catalog/               # Events, Venues, Organisations (:8003)
-│           ├── sales/                 # Reservations, Resale Market, Queue (:8005)
-│           ├── ticketing/             # Tickets, QR Tokens (:8004)
-│           ├── payments/              # Stripe Webhooks + Disbursements (:8002)
-│           ├── entry/                 # Scanner Auth, QR Validation (:8001)
+│           ├── identity/              # Auth, Users, Passkeys, TOTP, KYC (:8001)
+│           ├── catalog/               # Events, Venues, Organisations (:8002)
+│           ├── sales/                 # Reservations, Resale Market, Queue (:8003)
+│           ├── ticketing/             # Tickets, QR Tokens (:8005)
+│           ├── payments/              # Stripe Webhooks + Disbursements (:8004)
+│           ├── entry/                 # Scanner Auth, QR Validation (:8006)
 │           └── audit/                 # Immutable Audit Log (:8007)
 │
 ├── packages/
