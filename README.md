@@ -176,15 +176,17 @@ Open `apps/app/.env` and fill in:
 | `VITE_API_URL` | Leave empty in local dev — Vite proxy handles it |
 | `VITE_GATEWAY_URL` | Leave empty in local dev — Vite proxy handles it |
 
-**3. Set up the backend config files**
+**3. Set up the backend environment**
 
-Each service has its own `local.yaml`. Copy all examples at once:
+Each service has its own `local.yaml`.
+
+Copy all examples:
 
 ```bash
 for f in $(find apps/api -name "local.yaml.example"); do cp "$f" "${f%.example}"; done
 ```
 
-Then fill in the required secrets across the service configs:
+Fill in the required secrets across all the service configuration files:
 
 | Secret | Where | Description |
 |---|---|---|
@@ -196,7 +198,7 @@ Then fill in the required secrets across the service configs:
 | `captcha_secret_key` | identity | Cloudflare Turnstile secret (optional in dev) |
 | `storage_signing_key` | identity | Key for signed storage URLs |
 
-> Most secrets can be left empty for local dev — features that need them (SMS, captcha, storage signing) are disabled by default via their `*_enabled: false` flags.
+> Most secrets can be left empty for local dev. Features that need them are disabled by default via their `*_enabled: false` flags.
 
 **4. Spin up the full stack**
 
@@ -204,7 +206,10 @@ Then fill in the required secrets across the service configs:
 docker compose up
 ```
 
-The app will be available at `http://localhost:5173` and the API gateway at `http://localhost:8000`.
+| Service | URL |
+|---|---|
+| Mobile app | `http://localhost:5173` |
+| API gateway | `http://localhost:8000` |
 
 # 📚 **Tech Stack**
 
