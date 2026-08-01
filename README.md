@@ -217,64 +217,71 @@ Once running, the following services will be available locally:
 
 ## 🗣️ Languages
 
-- **[Python 3.12](https://www.python.org/)** — Backend services · API gateway
-- **[TypeScript 5](https://www.typescriptlang.org/)** — Mobile app
+- **[Python 3.12](https://www.python.org/)**
+- **[TypeScript 5](https://www.typescriptlang.org/)**
 
 ## 🧩 Frameworks & Libraries
 
-- **[React](https://react.dev/)** — UI framework
-- **[FastAPI](https://fastapi.tiangolo.com/)** — Backend REST services
-- **[Starlette](https://www.starlette.io/)** — API gateway
-- **[Capacitor](https://capacitorjs.com/)** — Native mobile runtime (Android · iOS)
-- **[TanStack Router](https://tanstack.com/router)** — Client-side routing
-- **[TanStack Query](https://tanstack.com/query)** — Server state & data fetching
-- **[SQLAlchemy](https://docs.sqlalchemy.org/)** — ORM
-- **[Alembic](https://alembic.sqlalchemy.org/)** — Database migrations
-- **[Tailwind CSS](https://tailwindcss.com/)** — Utility-first styling
-- **[shadcn/ui](https://ui.shadcn.com/)** — Component library
-- **[Framer Motion](https://www.framer.com/motion/)** — Animations
-- **[react-i18next](https://react.i18next.com/)** — Internationalisation
+- **[React 19](https://react.dev/)**
+- **[FastAPI](https://fastapi.tiangolo.com/)**
+- **[Uvicorn](https://www.uvicorn.org/)**
+- **[Pydantic](https://docs.pydantic.dev/)**
+- **[Capacitor](https://capacitorjs.com/)**
+- **[TanStack Router](https://tanstack.com/router)**
+- **[TanStack Query](https://tanstack.com/query)**
+- **[SQLAlchemy](https://docs.sqlalchemy.org/)**
+- **[Alembic](https://alembic.sqlalchemy.org/)**
+- **[Tailwind CSS](https://tailwindcss.com/)**
+- **[shadcn/ui](https://ui.shadcn.com/)**
+- **[Framer Motion](https://www.framer.com/motion/)**
+- **[React Hook Form](https://react-hook-form.com/)**
+- **[Zod](https://zod.dev/)**
+- **[Zustand](https://zustand-demo.pmnd.rs/)**
+- **[react-i18next](https://react.i18next.com/)**
+- **[Structlog](https://www.structlog.org/)**
+- **[OpenTelemetry](https://opentelemetry.io/)**
 
-## 🗄️ Databases & Storage
+## 🗄️ Databases
 
-- **[PostgreSQL](https://www.postgresql.org/)** — Primary relational database
-- **[Redis](https://redis.io/)** — Cache · distributed locks · job queues
-- **[Cloudflare R2](https://developers.cloudflare.com/r2/)** — Object storage
+- **[PostgreSQL](https://www.postgresql.org/)**
+- **[Redis](https://redis.io/)**
 
 ## ⚡ Messaging & Background Jobs
 
-- **[NATS JetStream](https://docs.nats.io/nats-concepts/jetstream)** — Event bus · at-least-once delivery
-- **[Arq](https://arq-docs.helpmanual.io/)** — Async background job runner
-- **[Redlock](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)** — Distributed locking
+- **[NATS JetStream](https://docs.nats.io/nats-concepts/jetstream)**
+- **[Arq](https://arq-docs.helpmanual.io/)**
+- **[Redlock](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)**
 
 ## 🔐 Security & Auth
 
-- **JWT ES256** — Asymmetric token signing
-- **[WebAuthn](https://webauthn.io/)** — Passkey authentication
-- **TOTP** — Two-factor authentication
-- **Argon2** — Password hashing
-- **Fernet** — PII encryption at rest
+- **[PyJWT](https://pyjwt.readthedocs.io/)** (ES256)
+- **[WebAuthn](https://webauthn.io/)**
+- **[pyotp](https://pyauth.github.io/pyotp/)** (TOTP)
+- **[argon2-cffi](https://argon2-cffi.readthedocs.io/)**
+- **[cryptography](https://cryptography.io/)** (Fernet)
+- **[simplewebauthn](https://simplewebauthn.dev/)**
 
 ## 💳 Third-party Services
 
-- **[Stripe](https://stripe.com/docs)** — Payments & webhooks
-- **[Resend](https://resend.com/docs)** — Transactional email
-- **[Twilio](https://www.twilio.com/docs)** — SMS · OTP delivery
-- **[Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/)** — Bot protection
+- **[Stripe](https://stripe.com/docs)**
+- **[Twilio](https://www.twilio.com/docs)**
+- **[Google Maps](https://developers.google.com/maps)**
+- **[Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/)**
 
 ## 🧪 Testing
 
-- **[Vitest](https://vitest.dev/)** — Frontend unit testing
-- **[React Testing Library](https://testing-library.com/)** — Component testing
-- **[pytest](https://docs.pytest.org/)** — Backend unit & integration testing
-- **[MSW](https://mswjs.io/)** — API mocking
+- **[Vitest](https://vitest.dev/)**
+- **[React Testing Library](https://testing-library.com/)**
+- **[pytest](https://docs.pytest.org/)**
+- **[MSW](https://mswjs.io/)**
+- **[Testcontainers](https://testcontainers.com/)**
 
 ## 🔍 Code Quality
 
-- **[Ruff](https://docs.astral.sh/ruff/)** — Python linting + formatting
-- **[Pyright](https://github.com/microsoft/pyright)** — Python type checking
-- **[ESLint](https://eslint.org/)** — TypeScript linting
-- **[Prettier](https://prettier.io/)** — TypeScript formatting
+- **[Ruff](https://docs.astral.sh/ruff/)**
+- **[Pyright](https://github.com/microsoft/pyright)**
+- **[ESLint](https://eslint.org/)**
+- **[Prettier](https://prettier.io/)**
 
 # 📖 **Documentation**
 
