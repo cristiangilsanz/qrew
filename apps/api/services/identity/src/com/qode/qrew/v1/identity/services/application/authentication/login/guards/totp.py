@@ -5,12 +5,12 @@ import pyotp
 import structlog
 from passlib.context import CryptContext
 
-logger = structlog.get_logger(__name__)
-
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.repositories.user import UserRepository
 from com.qode.qrew.v1.identity.services.application.audit import AuditService
+
+logger = structlog.get_logger(__name__)
 
 _BACKUP_COUNT = 10
 _BACKUP_LEN = 10

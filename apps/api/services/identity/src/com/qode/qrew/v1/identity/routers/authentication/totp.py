@@ -10,7 +10,6 @@ from com.qode.qrew.v1.identity.core.dependencies import (
 )
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.repositories.session import SessionRepository
-from com.qode.qrew.v1.identity.repositories.device import DeviceRepository
 from com.qode.qrew.v1.identity.schemas.authentication.totp import (
     TotpConfirmRequest,
     TotpConfirmResponse,
@@ -26,7 +25,6 @@ from com.qode.qrew.v1.identity.services.application.authentication.login.guards.
     TotpService,
 )
 from com.qode.qrew.v1.identity.core.database import get_db
-from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.services.application.authentication.token.security import (
     create_access_token,
     create_refresh_token,
