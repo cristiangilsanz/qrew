@@ -207,90 +207,82 @@ The app will be available at `http://localhost:5173` and the API gateway at `htt
 
 # 📚 **Tech Stack**
 
-## 📱 Frontend
+## 🗣️ Languages
 
-| | Technology |
+| | |
 |---|---|
-| Framework | [React 18](https://react.dev/) |
-| Routing | [TanStack Router](https://tanstack.com/router) |
-| Data fetching | [TanStack Query](https://tanstack.com/query) |
-| Styling | [Tailwind CSS](https://tailwindcss.com/) |
-| Components | [shadcn/ui](https://ui.shadcn.com/) |
-| Animations | [Framer Motion](https://www.framer.com/motion/) |
-| Internationalisation | [react-i18next](https://react.i18next.com/) |
+| [Python 3.12](https://www.python.org/) | Backend services · API gateway |
+| [TypeScript 5](https://www.typescriptlang.org/) | Mobile app |
 
-## 📲 Native
+## 🧩 Frameworks & Libraries
 
-| | Technology |
+| | |
 |---|---|
-| Runtime | [Capacitor](https://capacitorjs.com/) |
-| Platforms | Android · iOS |
+| [React](https://react.dev/) | UI framework |
+| [FastAPI](https://fastapi.tiangolo.com/) | Backend REST services |
+| [Starlette](https://www.starlette.io/) | API gateway |
+| [Capacitor](https://capacitorjs.com/) | Native mobile runtime (Android · iOS) |
+| [TanStack Router](https://tanstack.com/router) | Client-side routing |
+| [TanStack Query](https://tanstack.com/query) | Server state & data fetching |
+| [SQLAlchemy](https://docs.sqlalchemy.org/) | ORM |
+| [Alembic](https://alembic.sqlalchemy.org/) | Database migrations |
+| [Tailwind CSS](https://tailwindcss.com/) | Utility-first styling |
+| [shadcn/ui](https://ui.shadcn.com/) | Component library |
+| [Framer Motion](https://www.framer.com/motion/) | Animations |
+| [react-i18next](https://react.i18next.com/) | Internationalisation |
 
-## 🔀 API Gateway
+## 🗄️ Databases & Storage
 
-| | Technology |
+| | |
 |---|---|
-| Framework | [Starlette](https://www.starlette.io/) |
-| Responsibility | JWT validation · reverse proxy |
+| [PostgreSQL](https://www.postgresql.org/) | Primary relational database |
+| [Redis](https://redis.io/) | Cache · distributed locks · job queues |
+| [Cloudflare R2](https://developers.cloudflare.com/r2/) | Object storage |
 
-## ⚙️ Backend Services
+## ⚡ Messaging & Background Jobs
 
-| | Technology |
+| | |
 |---|---|
-| Framework | [FastAPI](https://fastapi.tiangolo.com/) |
-| ORM | [SQLAlchemy](https://docs.sqlalchemy.org/) |
-| Migrations | [Alembic](https://alembic.sqlalchemy.org/) |
+| [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream) | Event bus · at-least-once delivery |
+| [Arq](https://arq-docs.helpmanual.io/) | Async background job runner |
+| [Redlock](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/) | Distributed locking |
 
-## 🔐 Auth & Security
+## 🔐 Security & Auth
 
-| | Technology |
+| | |
 |---|---|
-| Token signing | JWT ES256 |
-| Passwordless | [WebAuthn passkeys](https://webauthn.io/) |
-| 2FA | TOTP |
-| Password hashing | Argon2 |
-| PII encryption | Fernet |
+| JWT ES256 | Asymmetric token signing |
+| [WebAuthn](https://webauthn.io/) | Passkey authentication |
+| TOTP | Two-factor authentication |
+| Argon2 | Password hashing |
+| Fernet | PII encryption at rest |
 
-## ⚡ Messaging & Jobs
+## 💳 Third-party Services
 
-| | Technology |
+| | |
 |---|---|
-| Event bus | [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream) |
-| Background jobs | [Arq](https://arq-docs.helpmanual.io/) |
-| Distributed locks | [Redlock](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/) |
-
-## 🗃️ Data
-
-| | Technology |
-|---|---|
-| Database | [PostgreSQL 16](https://www.postgresql.org/) |
-| Cache | [Redis](https://redis.io/) |
-
-## 🌐 External Services
-
-| | Technology |
-|---|---|
-| Payments | [Stripe](https://stripe.com/docs) |
-| Email | [Resend](https://resend.com/docs) |
-| SMS / OTP | [Twilio](https://www.twilio.com/docs) |
-| Object storage | [Cloudflare R2](https://developers.cloudflare.com/r2/) |
+| [Stripe](https://stripe.com/docs) | Payments & webhooks |
+| [Resend](https://resend.com/docs) | Transactional email |
+| [Twilio](https://www.twilio.com/docs) | SMS · OTP delivery |
+| [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) | Bot protection |
 
 ## 🧪 Testing
 
-| | Technology |
+| | |
 |---|---|
-| Frontend unit tests | [Vitest](https://vitest.dev/) + [React Testing Library](https://testing-library.com/) |
-| Backend unit tests | [pytest](https://docs.pytest.org/) |
-| API mocking | [MSW](https://mswjs.io/) |
+| [Vitest](https://vitest.dev/) | Frontend unit testing |
+| [React Testing Library](https://testing-library.com/) | Component testing |
+| [pytest](https://docs.pytest.org/) | Backend unit & integration testing |
+| [MSW](https://mswjs.io/) | API mocking |
 
 ## 🔍 Code Quality
 
-| | Technology |
+| | |
 |---|---|
-| Python linting + formatting | [ruff](https://docs.astral.sh/ruff/) |
-| Python type checking | [pyright](https://github.com/microsoft/pyright) |
-| TypeScript linting | [eslint](https://eslint.org/) |
-| TypeScript formatting | [prettier](https://prettier.io/) |
+| [ruff](https://docs.astral.sh/ruff/) | Python linting + formatting |
+| [pyright](https://github.com/microsoft/pyright) | Python type checking |
+| [eslint](https://eslint.org/) | TypeScript linting |
+| [prettier](https://prettier.io/) | TypeScript formatting |
 
 ---
 
