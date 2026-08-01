@@ -14,13 +14,11 @@
 
 </div>
 
----
-
 # 📝 **Description**
 
 <div align="center">
 
-***qrew*** is a production-grade **event ticketing platform** built as a native mobile app. Attendees buy and resell tickets. Organisers run events end to end. Entry staff scan QR codes at the gate.
+***QREW*** is a production-grade **event ticketing platform** built as a native mobile app. Attendees buy and resell tickets. Organisers run events end to end. Entry staff scan QR codes at the gate.
 
 One product. Three roles. Zero friction.
 
@@ -97,7 +95,7 @@ flowchart TB
 # 📁 **Project Structure**
 
 ```
-qrew/
+QREW/
 ├── README.md                          # You are here! ⬅️
 ├── ARCHITECTURE.md                    # System architecture deep-dive
 ├── CONTRIBUTING.md                    # Contribution guidelines
@@ -165,7 +163,7 @@ qrew/
 
 ```bash
 git clone https://github.com/cristiangilsanz/qrew.git
-cd qrew
+cd qrew  # the repo folder is lowercase
 
 # Copy env files and fill in your secrets
 cp apps/app/.env.example apps/app/.env
