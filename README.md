@@ -54,7 +54,7 @@ flowchart TB
     end
 
     phone -->|"HTTPS"| gw
-    gw    -->|"HTTP proxy"| identity & catalog & sales & entry
+    gw    -->|"HTTP Proxy"| identity & catalog & sales & entry
 
     identity & catalog & sales & entry -->|"Publish"| nats
     nats -->|"Subscribe"| ticketing & payments & audit
