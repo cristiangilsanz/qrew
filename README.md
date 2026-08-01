@@ -18,9 +18,9 @@
 
 <div align="center">
 
-***QREW*** is a production-grade **event ticketing platform** built as a native mobile app. Attendees buy and resell tickets. Organisers run events end to end. Entry staff scan QR codes at the gate.
+***QREW*** is a production-grade **event ticketing platform** built as a native mobile app. Built to make ticket fraud and speculation structurally impossible.
 
-One product. Three roles. Zero friction.
+Zero friction. One product. Three roles.
 
 </div>
 
