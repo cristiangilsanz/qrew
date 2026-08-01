@@ -143,10 +143,10 @@ QREW/
 |---|---|
 | ✅ Prerequisites | [PREREQUISITES.md](docs/development/PREREQUISITES.md) |
 | 🔑 Environment variables | [ENVIRONMENT-VARIABLES.md](docs/development/ENVIRONMENT-VARIABLES.md) |
-| 🖥️ Local (terminal) | [LOCAL-DEVELOPMENT.md](docs/development/LOCAL-DEVELOPMENT.md) |
-| 🐳 Local (containers) | [DOCKER.md](docs/development/DOCKER.md) |
-| 📱 Android emulator | [EMULATOR.md](docs/development/EMULATOR.md) |
-| 📲 Physical device (USB) | [DEVICE.md](docs/development/DEVICE.md) |
+| 🖥️ Local · Native | [LOCAL-DEVELOPMENT.md](docs/development/LOCAL-DEVELOPMENT.md) |
+| 🐳 Local · Docker | [DOCKER.md](docs/development/DOCKER.md) |
+| 📱 Android · Emulator | [EMULATOR.md](docs/development/EMULATOR.md) |
+| 📲 Android · USB | [DEVICE.md](docs/development/DEVICE.md) |
 
 ## ⚡ Quick Start
 
