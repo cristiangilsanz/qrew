@@ -115,11 +115,8 @@ QREW/
 │   ├── shared-python/                 # Shared Python utilities
 │   └── shared-ts/                     # Shared TypeScript types
 │
-├── architecture/
-│   ├── overview.md                    # System architecture deep-dive
-│   └── security.md                    # Threat model and defences
-│
 └── docs/
+    ├── architecture/                  # System architecture & security
     ├── app/                           # Frontend docs
     ├── api/                           # API & service docs
     └── development/                   # Local setup guides
@@ -138,8 +135,8 @@ QREW/
 
 | Environment | Guide |
 |---|---|
-| ✅ Prerequisites | [PREREQUISITES.md](docs/development/PREREQUISITES.md) |
-| 🔑 Environment variables | [ENVIRONMENT-VARIABLES.md](docs/development/ENVIRONMENT-VARIABLES.md) |
+| ✅ Prerequisites | [prerequisites.md](docs/development/prerequisites.md) |
+| 🔑 Environment variables | [environment-variables.md](docs/development/guides/environment-variables.md) |
 | 🖥️ Local · Native | [local-native.md](docs/development/setup/local-native.md) |
 | 🐳 Local · Docker | [local-docker.md](docs/development/setup/local-docker.md) |
 | 📱 Android · Emulator | [android-emulator.md](docs/development/setup/android-emulator.md) |
@@ -281,13 +278,13 @@ Once running, the following services will be available locally:
 
 | Topic | Link |
 |---|---|
-| 🏗️ Architecture overview | [architecture/overview.md](architecture/overview.md) |
-| 🔐 Security | [architecture/security.md](architecture/security.md) |
-| 🗺️ App routing | [docs/app/ROUTING.md](docs/app/ROUTING.md) |
-| 🧩 Components | [docs/app/COMPONENTS.md](docs/app/COMPONENTS.md) |
-| 🌍 Internationalisation | [docs/app/translations.md](docs/app/translations.md) |
-| 📦 State management | [docs/app/STATE-MANAGEMENT.md](docs/app/STATE-MANAGEMENT.md) |
-| 📱 Capacitor setup | [docs/app/CAPACITOR.md](docs/app/CAPACITOR.md) |
+| 🏗️ Architecture overview | [docs/architecture/overview.md](docs/architecture/overview.md) |
+| 🔐 Security | [docs/architecture/security.md](docs/architecture/security.md) |
+| 🗺️ App routing | [docs/app/ui/routing.md](docs/app/ui/routing.md) |
+| 🧩 Components | [docs/app/ui/components.md](docs/app/ui/components.md) |
+| 🌍 Internationalisation | [docs/app/core/translations.md](docs/app/core/translations.md) |
+| 📦 State management | [docs/app/core/state-management.md](docs/app/core/state-management.md) |
+| 📱 Capacitor setup | [docs/app/native/capacitor.md](docs/app/native/capacitor.md) |
 | 🔌 API services | [docs/api/](docs/api/) |
 | ⚡ NATS streams | [docs/api/messaging/streams.md](docs/api/messaging/streams.md) |
 | 🤝 Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
