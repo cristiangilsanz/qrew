@@ -150,18 +150,58 @@ QREW/
 
 ## ⚡ Quick Start
 
+**1. Clone the repository**
+
 ```bash
 git clone https://github.com/cristiangilsanz/qrew.git
-cd qrew  # the repo folder is lowercase
+cd qrew
+```
 
-# Copy env files and fill in your secrets
+**2. Set up the frontend environment**
+
+```bash
 cp apps/app/.env.example apps/app/.env
+```
 
-# Spin up the full stack
+Open `apps/app/.env` and fill in:
+
+| Variable | Description |
+|---|---|
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key (venue picker) |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (checkout) |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key (captcha) |
+| `VITE_API_URL` | Leave empty in local dev — Vite proxy handles it |
+| `VITE_GATEWAY_URL` | Leave empty in local dev — Vite proxy handles it |
+
+**3. Set up the backend config files**
+
+Each service has its own `local.yaml`. Copy all examples at once:
+
+```bash
+for f in $(find apps/api -name "local.yaml.example"); do cp "$f" "${f%.example}"; done
+```
+
+Then fill in the required secrets across the service configs:
+
+| Secret | Where | Description |
+|---|---|---|
+| `access_jwt_private_key` | gateway, all services | ES256 private key for token signing |
+| `pii_encryption_key` | identity, payments | Fernet key for PII encryption at rest |
+| `stripe_secret_key` | payments | Stripe secret key |
+| `stripe_webhook_signing_secret` | payments | Stripe webhook endpoint secret |
+| `twilio_account_sid` / `twilio_auth_token` | identity | SMS / OTP delivery (optional in dev) |
+| `captcha_secret_key` | identity | Cloudflare Turnstile secret (optional in dev) |
+| `storage_signing_key` | identity | Key for signed storage URLs |
+
+> Most secrets can be left empty for local dev — features that need them (SMS, captcha, storage signing) are disabled by default via their `*_enabled: false` flags.
+
+**4. Spin up the full stack**
+
+```bash
 docker compose up
 ```
 
-The app will be available at `http://localhost:5173`.
+The app will be available at `http://localhost:5173` and the API gateway at `http://localhost:8000`.
 
 ---
 
