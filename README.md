@@ -28,10 +28,16 @@
 
 ```mermaid
 flowchart TB
-    phone["📱 Your Phone"]:::app
+    subgraph "📱 Client"
+        phone["Your Phone"]:::app
+        scanner["Scanner Device"]:::app
+    end
 
-    subgraph "🌐 Backend"
-        gw["🔀 Gateway"]:::edge
+    subgraph "🔀 Edge"
+        gw["API Gateway\nJWT · Proxy · WebSocket"]:::edge
+    end
+
+    subgraph "⚙️ Services"
         identity["🔑 Identity"]:::svc
         catalog["📋 Catalog"]:::svc
         sales["💸 Sales"]:::svc
@@ -41,24 +47,30 @@ flowchart TB
         audit["📜 Audit"]:::svc
     end
 
-    subgraph "🗄️ Data"
-        pg[("🐘 Postgres")]:::infra
-        redis[("🔴 Redis")]:::infra
-        nats["⚡ NATS"]:::infra
-        stripe(["💳 Stripe"]):::infra
+    subgraph "🗄️ Infrastructure"
+        pg[("🐘 PostgreSQL")]:::db
+        redis[("🔴 Redis")]:::db
+        nats["⚡ NATS JetStream"]:::bus
+        stripe(["💳 Stripe"]):::ext
     end
 
-    phone -->|"HTTPS"| gw
-    gw --> identity & catalog & sales & entry
-    identity & catalog & sales & entry & ticketing & payments & audit <--> nats
-    identity & catalog & sales & ticketing & payments --> pg
+    phone   -->|"HTTPS"| gw
+    scanner -->|"HTTPS"| gw
+    gw      -->|"HTTP proxy"| identity & catalog & sales & entry
+
+    identity & catalog & sales & entry -->|"Publish"| nats
+    nats -->|"Subscribe"| ticketing & payments & audit
+
+    identity & catalog & sales & ticketing & payments & entry --> pg
     identity & sales --> redis
     payments <-->|"Webhooks"| stripe
 
-    classDef app fill:#1a1a2e,color:#fff,stroke:#4444ff,stroke-width:2px,font-weight:bold
-    classDef edge fill:#2d2d2d,color:#fff,stroke:#666,stroke-width:2px,font-weight:bold
-    classDef svc fill:#333,color:#fff,stroke:#555,stroke-width:1px
-    classDef infra fill:#111,color:#fff,stroke:#444,stroke-width:1px
+    classDef app  fill:#1a1a2e,color:#fff,stroke:#4455ff,stroke-width:2px,font-weight:bold
+    classDef edge fill:#2a2a2a,color:#fff,stroke:#888,stroke-width:2px,font-weight:bold
+    classDef svc  fill:#1a2a1a,color:#fff,stroke:#4a8a4a,stroke-width:1px
+    classDef db   fill:#0f172a,color:#fff,stroke:#334155,stroke-width:1px
+    classDef bus  fill:#1c1412,color:#fff,stroke:#78564e,stroke-width:1px
+    classDef ext  fill:#1a1a2e,color:#fff,stroke:#555588,stroke-width:1px
 ```
 
 </div>
@@ -150,8 +162,6 @@ Open `apps/app/.env` and fill in:
 | `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key (venue picker) |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (checkout) |
 | `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key (captcha) |
-| `VITE_API_URL` | Base URL for REST API calls (e.g. `https://api.qrew.app`) |
-| `VITE_GATEWAY_URL` | Gateway base URL for WebSocket connections (e.g. `wss://api.qrew.app`) |
 
 **3. Set up the backend environment**
 
