@@ -36,7 +36,7 @@ flowchart TB
         gw["API Gateway"]:::edge
     end
 
-    subgraph "⚙️ Services"
+    subgraph "⚙️ Domain"
         identity["🔑 Identity"]:::svc
         catalog["📋 Catalog"]:::svc
         sales["💸 Sales"]:::svc
