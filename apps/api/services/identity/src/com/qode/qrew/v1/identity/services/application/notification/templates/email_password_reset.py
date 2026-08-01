@@ -1,6 +1,6 @@
 from com.qode.qrew.v1.identity.services.application.notification.templates._base import (
-    _cta_button,
-    _fallback_link,
+    cta_button,
+    fallback_link,
     base_email,
 )
 
@@ -13,10 +13,10 @@ def forgot_password_email(
         f"                      <h1>Reset your password, {first}!</h1>\n"
         f"                      <p>You requested a password reset.</p>\n"
         f"                      <p>Click the button below to choose a new password.</p>\n\n"
-        f"{_cta_button(link, 'Reset password')}\n\n"
+        f"{cta_button(link, 'Reset password')}\n\n"
         f"                      <p>This link expires in <strong>{expire_hours} hours</strong>.</p>\n"
         f"                      <p>If you did not request a password reset, you can safely ignore this message.</p>\n\n"
-        f"{_fallback_link(link)}"
+        f"{fallback_link(link)}"
     )
     return base_email(
         title="Reset your Qrew password",

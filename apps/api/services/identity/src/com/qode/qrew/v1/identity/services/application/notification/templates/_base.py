@@ -1,4 +1,4 @@
-def _cta_button(url: str, label: str) -> str:
+def cta_button(url: str, label: str) -> str:
     return (
         f'      <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">\n'
         f"        <tr>\n"
@@ -16,7 +16,7 @@ def _cta_button(url: str, label: str) -> str:
     )
 
 
-def _fallback_link(url: str) -> str:
+def fallback_link(url: str) -> str:
     return (
         f'      <table class="body-sub" role="presentation">\n'
         f"        <tr>\n"

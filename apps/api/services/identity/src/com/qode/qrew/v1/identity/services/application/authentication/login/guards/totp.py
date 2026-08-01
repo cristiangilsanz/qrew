@@ -44,7 +44,7 @@ class TotpService:
         """
         secret = pyotp.random_base32()
         totp = pyotp.TOTP(secret)
-        uri = totp.provisioning_uri(name=user.email, issuer_name=issuer)
+        uri: str = totp.provisioning_uri(name=user.email, issuer_name=issuer)  # type: ignore[assignment]
         backup_codes = [secrets.token_hex(_BACKUP_LEN // 2) for _ in range(_BACKUP_COUNT)]
         return secret, uri, backup_codes
 

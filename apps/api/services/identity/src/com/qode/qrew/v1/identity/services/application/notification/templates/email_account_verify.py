@@ -1,6 +1,6 @@
 from com.qode.qrew.v1.identity.services.application.notification.templates._base import (
-    _cta_button,
-    _fallback_link,
+    cta_button,
+    fallback_link,
     base_email,
 )
 
@@ -13,10 +13,10 @@ def verification_link_email(
         f"                      <h1>Verify your email, {first}!</h1>\n"
         f"                      <p>Thanks for signing up.</p>\n"
         f"                      <p>Please confirm your email address by clicking the button below.</p>\n\n"
-        f"{_cta_button(link, 'Verify email address')}\n\n"
+        f"{cta_button(link, 'Verify email address')}\n\n"
         f"                      <p>This link expires in <strong>{expire_hours} hours</strong>.</p>\n"
         f"                      <p>If you did not create an account, you can safely ignore this message.</p>\n\n"
-        f"{_fallback_link(link)}"
+        f"{fallback_link(link)}"
     )
     return base_email(
         title="Verify your Qrew account",

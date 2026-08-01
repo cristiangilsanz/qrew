@@ -1,35 +1,10 @@
-import uuid
 from typing import Any
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
 from jobs import job
-from com.qode.qrew.v1.identity.repositories.user import UserRepository
-from com.qode.qrew.v1.identity.services.application.notification.sender import NotificationService
 
 logger = structlog.get_logger(__name__)
-
-
-async def _get_user(user_id_str: str) -> Any:
-    """Looks up a user record by identifier string and returns None if not found."""
-    try:
-        user_id = uuid.UUID(user_id_str)
-    except ValueError:
-        return None
-    async with AsyncSessionLocal() as session:
-        return await UserRepository(session).get_by_id(user_id)
-
-
-async def _send(template_key: str, user: Any, payload: dict[str, Any]) -> None:
-    if user is None:
-        await logger.awarning("notification_user_missing", template_key=template_key)
-        return
-    await NotificationService().send(
-        template_key=template_key,
-        payload={"full_name": user.full_name, **payload},
-        user=user,
-    )
 
 
 @job("notifications.payment_succeeded", max_attempts=3)
