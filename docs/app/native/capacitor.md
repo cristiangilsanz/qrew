@@ -1,6 +1,6 @@
 # Capacitor
 
-qrew is a web app wrapped in a native shell by Capacitor. The same React codebase runs in the browser and as a native Android and iOS app.
+QREW is a web app wrapped in a native shell by Capacitor. The same React codebase runs in the browser and as a native Android and iOS app.
 
 ---
 

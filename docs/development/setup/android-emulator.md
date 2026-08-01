@@ -1,6 +1,6 @@
 # Emulator and Simulator
 
-Run qrew on an Android emulator or iOS simulator for local development.
+Run QREW on an Android emulator or iOS simulator for local development.
 
 ---
 

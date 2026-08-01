@@ -1,6 +1,6 @@
 # Physical Device
 
-Run qrew on a real Android or iOS device connected via USB.
+Run QREW on a real Android or iOS device connected via USB.
 
 ---
 

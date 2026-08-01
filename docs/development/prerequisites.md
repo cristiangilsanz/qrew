@@ -1,6 +1,6 @@
 # Prerequisites
 
-Everything you need installed before running qrew locally.
+Everything you need installed before running QREW locally.
 
 ---
 

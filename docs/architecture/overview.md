@@ -1,6 +1,6 @@
 # Architecture
 
-qrew is a mobile-first event ticketing platform built as an event-driven microservice system with a Capacitor mobile frontend.
+QREW is a mobile-first event ticketing platform built as an event-driven microservice system with a Capacitor mobile frontend.
 
 ---
 
