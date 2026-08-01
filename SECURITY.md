@@ -14,7 +14,6 @@ Include in your report:
 
 We will acknowledge receipt within 48 hours and aim to resolve confirmed issues within 14 days.
 
----
 
 ## Scope
 
@@ -35,7 +34,6 @@ Out of scope:
 - Social engineering
 - Third-party services such as Stripe, Twilio, and Resend. Report those directly to the vendor.
 
----
 
 ## Security Model
 
@@ -46,7 +44,6 @@ Out of scope:
 - Organisation creation requires `is_admin` claim in the JWT
 - Ongoing events cannot be edited or have ticket types mutated via the API
 
----
 
 ## Supported Versions
 

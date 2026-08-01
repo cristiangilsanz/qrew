@@ -18,7 +18,6 @@ fix/QRW-310_scanner_auth_timeout
 docs/QRW-312_update_routing_guide
 ```
 
----
 
 ## Branches
 
@@ -32,7 +31,6 @@ docs/QRW-312_update_routing_guide
 
 Branch from `main`. Keep branches short-lived. Delete after merging.
 
----
 
 ## Commits
 
@@ -57,7 +55,6 @@ docs: add frontend routing guide
 - Keep the summary under 72 characters
 - Add a body when the why is not obvious from the title
 
----
 
 ## Pull Requests
 
@@ -71,7 +68,6 @@ docs: add frontend routing guide
 6. At least one approval required
 7. Squash merge to keep `main` history clean
 
----
 
 ## CI
 
@@ -86,7 +82,6 @@ docs: add frontend routing guide
 | `secret-scan` | Push / PR | Scans for accidentally committed secrets |
 | `api-release-versioning` | Push to `main` | Bumps service versions on release |
 
----
 
 ## Code Standards
 
@@ -116,13 +111,11 @@ npm run typecheck
 npm run test:run
 ```
 
----
 
 ## Local Setup
 
 See [docs/development/](docs/development/).
 
----
 
 ## Adding a New API Service
 

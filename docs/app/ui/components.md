@@ -5,7 +5,6 @@ Components live in two places:
 - `src/components/` for shared, domain-agnostic UI
 - `src/features/<name>/components/` for domain components used only within that feature
 
----
 
 ## Design System
 
@@ -32,7 +31,6 @@ These are the building blocks used throughout the app.
 | `StatusChip` | `status-chip.tsx` | Coloured chip for event/ticket status values |
 | `Tooltip` | radix-ui | Hover tooltip via Radix UI |
 
----
 
 ## Layout Components
 
@@ -42,7 +40,6 @@ Files live in `src/components/layout/`.
 |---|---|---|
 | `BottomDock` | `BottomDock.tsx` | Fixed bottom navigation bar with 5 tabs |
 
----
 
 ## Conventions
 
@@ -100,7 +97,6 @@ it('renders the status label', () => {
 })
 ```
 
----
 
 ## Feature Components
 
@@ -116,7 +112,6 @@ Examples:
 | `tickets` | `StripeCheckout` | Lazy-loaded Stripe Elements payment form |
 | `scanner` | `QrScanner` | Capacitor camera-based QR scanner |
 
----
 
 ## Radix UI Primitives
 

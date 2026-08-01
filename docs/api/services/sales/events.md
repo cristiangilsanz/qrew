@@ -2,7 +2,6 @@
 
 Published to stream `SALES`. All events wrap the [EventEnvelope](../README.md#eventenvelope).
 
----
 
 ## `sales.reservation.created.v1`
 
@@ -17,7 +16,6 @@ Emitted when a reservation is successfully placed. Ticketing pre-creates a ticke
 | `quantity` | int | Number of tickets |
 | `expires_at` | ISO 8601 | Reservation expiry time |
 
----
 
 ## `sales.reservation.paid.v1`
 
@@ -28,7 +26,6 @@ Emitted after Sales confirms a payment and marks the reservation as paid. Ticket
 | `reservation_id` | UUID | Paid reservation |
 | `payment_id` | UUID | Associated payment |
 
----
 
 ## `sales.reservation.cancelled.v1`
 

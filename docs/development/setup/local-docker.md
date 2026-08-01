@@ -2,7 +2,6 @@
 
 Run the entire stack in containers with a single command. No local language runtimes required.
 
----
 
 ## Start everything
 
@@ -24,7 +23,6 @@ Follow logs afterwards:
 docker compose logs -f
 ```
 
----
 
 ## Seed the database
 
@@ -36,7 +34,6 @@ just db-seed
 
 This is idempotent. Safe to run multiple times.
 
----
 
 ## Access points
 
@@ -48,7 +45,6 @@ This is idempotent. Safe to run multiple times.
 | `http://localhost:6379` | Redis |
 | `http://localhost:4222` | NATS |
 
----
 
 ## Rebuild after code changes
 
@@ -64,7 +60,6 @@ To rebuild a single service:
 docker compose up --build identity
 ```
 
----
 
 ## Tear down
 
@@ -86,7 +81,6 @@ Full teardown. Removes containers, images, and all data:
 just shutdown
 ```
 
----
 
 ## Logs for a specific service
 
@@ -96,7 +90,6 @@ docker compose logs -f gateway
 docker compose logs -f app
 ```
 
----
 
 ## Running only infrastructure
 
@@ -108,7 +101,6 @@ docker compose up postgres redis nats -d --wait
 
 Then follow the [LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md) guide.
 
----
 
 ## Configuring services for Docker
 

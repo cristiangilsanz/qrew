@@ -2,7 +2,6 @@
 
 Ticketing publishes to subjects not covered by a dedicated named stream. All events wrap the [EventEnvelope](../README.md#eventenvelope).
 
----
 
 ## `ticketing.ticket.state_changed`
 
@@ -17,7 +16,6 @@ Emitted on every ticket state transition. Entry maintains a local `ticket_contex
 | `bound_device_id` | UUID or null | Device bound to this ticket, if any |
 | `state` | string | New state: `reserved`, `issued`, `scanning`, `redeemed`, `on_sale`, `flagged`, `cancelled`, `expired` |
 
----
 
 ## `ticketing.ticket.restored`
 

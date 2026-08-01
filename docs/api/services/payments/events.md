@@ -2,7 +2,6 @@
 
 Published to stream `PAYMENTS`. All events wrap the [EventEnvelope](../README.md#eventenvelope).
 
----
 
 ## `payments.payment.initiated.v1`
 
@@ -16,7 +15,6 @@ Emitted when a Stripe PaymentIntent is created and the client secret is returned
 | `currency` | string | ISO 4217 currency code |
 | `stripe_intent_id` | string | Stripe PaymentIntent ID |
 
----
 
 ## `payments.payment.succeeded.v1`
 
@@ -29,7 +27,6 @@ Emitted when a Stripe webhook confirms payment. Sales confirms the reservation. 
 | `amount_cents` | int | Amount paid |
 | `currency` | string | ISO 4217 currency code |
 
----
 
 ## `payments.payment.failed.v1`
 
@@ -41,7 +38,6 @@ Emitted when Stripe reports a payment failure.
 | `reservation_id` | UUID | Associated reservation |
 | `reason` | string | Failure reason from Stripe |
 
----
 
 ## `payments.payment.refunded.v1`
 
@@ -53,7 +49,6 @@ Emitted when a refund is processed. Sales cancels or flags the associated reserv
 | `reservation_id` | UUID | Associated reservation |
 | `refund_cents` | int | Amount refunded |
 
----
 
 ## `payments.chargeback.opened.v1`
 
@@ -65,7 +60,6 @@ Emitted when Stripe notifies of a chargeback dispute.
 | `reservation_id` | UUID | Associated reservation |
 | `dispute_id` | string | Stripe dispute ID |
 
----
 
 ## `payments.chargeback.closed.v1`
 

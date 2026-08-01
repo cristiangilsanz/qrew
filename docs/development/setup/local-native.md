@@ -2,7 +2,6 @@
 
 Run services directly on your machine for the fastest feedback loop. All backend services hot-reload on save. The frontend uses Vite HMR.
 
----
 
 ## 1. Clone and set up
 
@@ -20,7 +19,6 @@ just setup
 4. Installs all backend dependencies with `uv sync`
 5. Applies all database migrations
 
----
 
 ## 2. Configure secrets
 
@@ -62,7 +60,6 @@ npm --prefix apps/app install
 
 In development `VITE_API_URL` can stay empty. Vite proxies `/api` and `/ws` to `localhost:8000`.
 
----
 
 ## 3. Start infrastructure
 
@@ -72,7 +69,6 @@ If you ran `just setup` infrastructure is already running. To resume it after a 
 just resume
 ```
 
----
 
 ## 4. Run backend services
 
@@ -103,7 +99,6 @@ just audit-worker
 
 Workers are only needed when testing flows that cross service boundaries, such as ticket issuance after payment.
 
----
 
 ## 5. Run the frontend
 
@@ -114,7 +109,6 @@ npm run dev
 
 App is available at `http://localhost:5173`.
 
----
 
 ## 6. Seed demo data
 
@@ -128,7 +122,6 @@ just db-seed
 | `user1@qrew.dev` | `Password123!` | Attendee, empty account |
 | `user2@qrew.dev` | `Password123!` | Attendee, empty account |
 
----
 
 ## Everyday commands
 
@@ -142,7 +135,6 @@ just db-seed
 | `just fix` | Auto-fix lint and format issues |
 | `just check` | Run all lint, type, and test checks |
 
----
 
 ## Database migrations
 
@@ -161,7 +153,6 @@ Apply pending migrations:
 just db-upgrade
 ```
 
----
 
 ## Stripe webhooks
 
@@ -173,7 +164,6 @@ just stripe-dev
 
 This requires the Stripe CLI to be installed and logged in. Copy the `whsec_` signing secret it prints into `apps/api/services/payments/config/local.yaml`.
 
----
 
 ## Troubleshooting
 

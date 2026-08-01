@@ -1,6 +1,5 @@
 # State Management
 
----
 
 ## Approach
 
@@ -13,7 +12,6 @@ State is split into two categories with separate tools:
 
 There is no global Redux store. Local component state handles everything that does not need to be shared.
 
----
 
 ## Server state with TanStack Query
 
@@ -72,7 +70,6 @@ Keys are arrays that go from general to specific:
 ['events', eventId, 'ticket-types']  // ticket types for an event
 ```
 
----
 
 ## Client state with Zustand
 
@@ -113,7 +110,6 @@ Only use Zustand for state that:
 
 For anything else, prefer local state or TanStack Query.
 
----
 
 ## Local state
 
@@ -121,7 +117,6 @@ Use `useState` and `useReducer` for state that is local to a component or a smal
 
 Do not lift local state into a global store just because it feels neater.
 
----
 
 ## Derived state
 

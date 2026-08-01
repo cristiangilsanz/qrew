@@ -2,7 +2,6 @@
 
 QREW is a web app wrapped in a native shell by Capacitor. The same React codebase runs in the browser and as a native Android and iOS app.
 
----
 
 ## Configuration
 
@@ -17,7 +16,6 @@ File: `apps/app/capacitor.config.ts`
 
 The `server.url` field in the config points to the production deployment. For local development, override this via `capacitor.config.ts` or by using the `--livereload` flag when running `npx cap run`.
 
----
 
 ## Plugins
 
@@ -34,7 +32,6 @@ The `server.url` field in the config points to the production deployment. For lo
 | StatusBar | `@capacitor/status-bar` | Controls status bar colour and style |
 | Passkeys | `@capawesome/capacitor-passkeys` | WebAuthn passkey registration and authentication |
 
----
 
 ## Web fallbacks
 
@@ -53,7 +50,6 @@ if (Capacitor.isNativePlatform()) {
 
 Use `Capacitor.isNativePlatform()` to branch logic that only makes sense on a device.
 
----
 
 ## Preferences vs localStorage
 
@@ -61,7 +57,6 @@ Use `@capacitor/preferences` for data that should persist across app reinstalls 
 
 The auth store uses `localStorage` for token persistence. Anything more sensitive should go through `Preferences`.
 
----
 
 ## Native project files
 
@@ -75,7 +70,6 @@ This copies the built web assets and installs the plugin's native code into `and
 
 Native project files under `android/` and `ios/` are committed to the repo. Do not manually edit files in `android/app/src/main/assets/`. They are overwritten by `cap sync`.
 
----
 
 ## SplashScreen
 
@@ -94,13 +88,11 @@ import { SplashScreen } from '@capacitor/splash-screen'
 await SplashScreen.hide()
 ```
 
----
 
 ## Push notifications
 
 Push notifications are enabled for the `badge`, `sound`, and `alert` presentation options. The registration token must be sent to the backend after the user grants permission. See the `PushNotifications` setup in the auth flow for the implementation.
 
----
 
 ## For setup and build steps
 

@@ -2,7 +2,6 @@
 
 Published to stream `CATALOG`. All events wrap the [EventEnvelope](../README.md#eventenvelope).
 
----
 
 ## `catalog.event.published.v1`
 
@@ -17,7 +16,6 @@ Emitted when an event moves from draft to published state.
 | `starts_at` | ISO 8601 | Event start time |
 | `ends_at` | ISO 8601 | Event end time |
 
----
 
 ## `catalog.event.cancelled.v1`
 
@@ -28,7 +26,6 @@ Emitted when an event is cancelled. Sales and Ticketing cancel pending reservati
 | `event_id` | UUID | Cancelled event |
 | `reason` | string | Cancellation reason |
 
----
 
 ## `catalog.event.updated.v1`
 
@@ -38,7 +35,6 @@ Emitted when a draft or published event's details are changed.
 |---|---|---|
 | `event_id` | UUID | Updated event |
 
----
 
 ## `catalog.event.ongoing.v1`
 
@@ -48,7 +44,6 @@ Emitted when an event is manually marked as started by an organiser.
 |---|---|---|
 | `event_id` | UUID | Event now in ongoing state |
 
----
 
 ## `catalog.venue.created.v1`
 
@@ -58,7 +53,6 @@ Emitted when a new venue is created. Ticketing builds a local venue projection f
 |---|---|---|
 | `venue_id` | UUID | Created venue |
 
----
 
 ## `catalog.ticket_type.created.v1`
 
@@ -73,7 +67,6 @@ Emitted when a ticket type is added to an event. Sales seeds its inventory proje
 | `currency` | string | ISO 4217 currency code |
 | `capacity` | int | Total available tickets |
 
----
 
 ## `catalog.ticket_type.updated.v1`
 

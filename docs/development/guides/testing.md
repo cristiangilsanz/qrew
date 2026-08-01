@@ -1,6 +1,5 @@
 # Testing
 
----
 
 ## Backend tests
 
@@ -52,7 +51,6 @@ Integration tests require a running database. The test suite uses a separate tes
 
 Use `pytest` fixtures for database sessions and NATS clients. Keep tests small and independent. Name tests `test_<what>_<when>_<expected>`.
 
----
 
 ## Frontend tests
 
@@ -118,7 +116,6 @@ it('renders published status', () => {
 })
 ```
 
----
 
 ## Type checking
 
@@ -142,7 +139,6 @@ cd apps/app
 npm run typecheck
 ```
 
----
 
 ## Linting
 
@@ -180,7 +176,6 @@ npm run lint
 npm run lint:fix
 ```
 
----
 
 ## Running all checks before pushing
 
@@ -197,7 +192,6 @@ cd apps/app
 npm run lint && npm run typecheck && npm run test:run
 ```
 
----
 
 ## CI
 

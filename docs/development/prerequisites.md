@@ -2,7 +2,6 @@
 
 Everything you need installed before running QREW locally.
 
----
 
 ## Required tools
 
@@ -17,7 +16,6 @@ Everything you need installed before running QREW locally.
 | just | Latest | Task runner |
 | git | Any | Version control |
 
----
 
 ## Installation
 
@@ -73,7 +71,6 @@ cargo install just
 # or download a binary from https://just.systems/
 ```
 
----
 
 ## Mobile development (optional)
 
@@ -85,7 +82,6 @@ Only needed if you plan to build or test the Android or iOS app. See [EMULATOR.m
 | Xcode (macOS only) | iOS SDK, simulator |
 | Java 17 | Gradle build system |
 
----
 
 ## Optional tools
 
@@ -102,7 +98,6 @@ brew install stripe/stripe-cli/stripe
 # or see https://stripe.com/docs/stripe-cli
 ```
 
----
 
 ## Checking versions
 

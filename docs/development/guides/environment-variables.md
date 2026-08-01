@@ -2,7 +2,6 @@
 
 All configuration lives in `config/local.yaml` per service, plus a `.env.local` file for the frontend.
 
----
 
 ## Frontend
 
@@ -16,7 +15,6 @@ File: `apps/app/.env.local`
 | `VITE_STRIPE_PUBLISHABLE_KEY` | `""` | Stripe payment element |
 | `VITE_TURNSTILE_SITE_KEY` | `""` | Cloudflare Turnstile CAPTCHA |
 
----
 
 ## Gateway
 
@@ -38,7 +36,6 @@ File: `apps/api/gateway/config/local.yaml`
 | `ticketing_url` | yes | Upstream ticketing service URL |
 | `entry_url` | yes | Upstream entry service URL |
 
----
 
 ## Identity service
 
@@ -119,7 +116,6 @@ File: `apps/api/services/identity/config/local.yaml`
 | `storage_root` | yes | Local directory for KYC document uploads |
 | `storage_signing_key` | yes | Key for signed storage URLs |
 
----
 
 ## Catalog service
 
@@ -134,7 +130,6 @@ File: `apps/api/services/catalog/config/local.yaml`
 | `access_jwt_private_key` | yes | ES256 public key for token verification |
 | `pii_encryption_key` | yes | Fernet key matching identity service |
 
----
 
 ## Sales service
 
@@ -147,7 +142,6 @@ File: `apps/api/services/sales/config/local.yaml`
 | `redis_url` | yes | Redis connection string |
 | `nats_url` | yes | NATS connection string |
 
----
 
 ## Payments service
 
@@ -164,7 +158,6 @@ File: `apps/api/services/payments/config/local.yaml`
 | `stripe_api_version` | yes | Stripe API version to pin |
 | `pii_encryption_key` | yes | Fernet key matching identity service |
 
----
 
 ## Ticketing service
 
@@ -178,7 +171,6 @@ File: `apps/api/services/ticketing/config/local.yaml`
 | `nats_url` | yes | NATS connection string |
 | `ticket_qr_jwt_private_key` | yes | Key for signing QR code tokens |
 
----
 
 ## Entry service
 
@@ -193,7 +185,6 @@ File: `apps/api/services/entry/config/local.yaml`
 | `scanner_jwt_private_key` | yes | Key for issuing scanner session tokens |
 | `ticket_qr_jwt_private_key` | yes | Key for verifying QR code tokens |
 
----
 
 ## Audit service
 
@@ -205,7 +196,6 @@ File: `apps/api/services/audit/config/local.yaml`
 | `database_url` | yes | PostgreSQL connection string |
 | `nats_url` | yes | NATS connection string |
 
----
 
 ## Shared settings
 
@@ -219,7 +209,6 @@ Every service shares the following optional settings:
 | `idempotency_enabled` | `true` | Enable idempotency key enforcement |
 | `ratelimit_enabled` | `true` | Enable rate limiting |
 
----
 
 ## Generating keys
 

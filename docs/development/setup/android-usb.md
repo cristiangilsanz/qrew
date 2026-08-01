@@ -2,7 +2,6 @@
 
 Run QREW on a real Android or iOS device connected via USB.
 
----
 
 ## Before you start
 
@@ -14,7 +13,6 @@ npm run build
 npx cap sync
 ```
 
----
 
 ## Android via USB
 
@@ -71,7 +69,6 @@ npx cap run android --livereload --external
 
 The device must be on the same Wi-Fi network as your machine. ADB reverse does not apply to live reload traffic.
 
----
 
 ## iOS via USB
 
@@ -114,7 +111,6 @@ cd apps/app
 npx cap run ios --livereload --external
 ```
 
----
 
 ## Troubleshooting
 

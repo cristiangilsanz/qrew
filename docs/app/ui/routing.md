@@ -2,7 +2,6 @@
 
 The app uses TanStack Router with file-based routing. Routes live in `src/routes/`.
 
----
 
 ## Route Tree
 
@@ -58,7 +57,6 @@ src/routes/
   $.tsx                   404 catch-all
 ```
 
----
 
 ## Layouts and Guards
 
@@ -74,7 +72,6 @@ All routes under `_app/` require the user to be authenticated. The layout's `bef
 
 Routes for unauthenticated users (login, register, password reset). If an authenticated user lands here, they are redirected to `/home`.
 
----
 
 ## Auth Flow
 
@@ -84,7 +81,6 @@ Routes for unauthenticated users (login, register, password reset). If an authen
 4. On 401, the interceptor silently refreshes the access token using the refresh token, then retries the original request
 5. On refresh failure, the user is signed out and redirected to `/login`
 
----
 
 ## Navigation
 
@@ -92,7 +88,6 @@ The app uses `<Link>` and `useNavigate()` from TanStack Router. Never use `<a hr
 
 The `BottomDock` drives top-level navigation between Home, Events, Tickets, Market, and Profile. Management routes are accessible from the Profile tab for org members.
 
----
 
 ## Route Parameters
 
@@ -104,7 +99,6 @@ The `BottomDock` drives top-level navigation between Home, Events, Tickets, Mark
 | `$orgId` | UUID | Organisation identifier |
 | `$listingId` | UUID | Market listing identifier |
 
----
 
 ## Search Parameters
 

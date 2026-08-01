@@ -2,7 +2,6 @@
 
 QREW is a mobile-first event ticketing platform built as an event-driven microservice system with a Capacitor mobile frontend.
 
----
 
 ## System Overview
 
@@ -43,7 +42,6 @@ flowchart TB
     payments <-->|"Webhooks"| stripe
 ```
 
----
 
 ## Layers
 
@@ -55,7 +53,6 @@ flowchart TB
 
 **Infrastructure layer.** PostgreSQL for persistence, NATS JetStream for at-least-once event delivery, Redis for distributed locks via Redlock, rate-limit counters, and background job queues via Arq.
 
----
 
 ## Communication Patterns
 
@@ -66,7 +63,6 @@ flowchart TB
 | Real-time push | WebSocket via gateway | Queue position updates, live notifications |
 | Background jobs | Redis + Arq | Scheduled tasks: email, cleanup, token rotation |
 
----
 
 ## Auth Model
 
@@ -75,7 +71,6 @@ flowchart TB
 - Access tokens carry an `adm` claim for admin users, propagated as `X-Authenticated-User-Is-Admin: 1`.
 - Scanner tokens are a separate token type issued by the entry service, validated independently by the gateway.
 
----
 
 ## Service Responsibilities
 
@@ -89,7 +84,6 @@ flowchart TB
 | **Entry** | Scanners, scan records | QR scanning only permitted for ongoing events. |
 | **Audit** | Immutable audit log | Write only. Consumes events from all other services. |
 
----
 
 ## Detailed Docs
 

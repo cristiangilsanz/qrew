@@ -1,6 +1,5 @@
 # Internationalisation
 
----
 
 ## Overview
 
@@ -8,13 +7,11 @@ The app uses `react-i18next` for translations. All user-facing strings live in J
 
 Supported languages: English (`en`), Spanish (`es`).
 
----
 
 ## Setup
 
 Initialised in `src/i18n/index.ts` and imported once at the app entry point. The saved language preference is read from `localStorage` under the key `qrew_lang`. If no preference exists, it falls back to English.
 
----
 
 ## Locale files
 
@@ -28,7 +25,6 @@ src/i18n/
 
 Both files must stay in sync. Every key present in `en.json` must also exist in `es.json`.
 
----
 
 ## Namespaces
 
@@ -47,7 +43,6 @@ All translations live in the default `translation` namespace. Keys are organised
 }
 ```
 
----
 
 ## Using translations in components
 
@@ -67,7 +62,6 @@ t('tickets.remaining', { count: 3 })
 // en.json: "remaining": "{{count}} tickets remaining"
 ```
 
----
 
 ## Changing language
 
@@ -87,7 +81,6 @@ function LanguageSwitcher() {
 }
 ```
 
----
 
 ## Adding a new string
 
@@ -97,7 +90,6 @@ function LanguageSwitcher() {
 
 Never hardcode user-visible text directly in JSX.
 
----
 
 ## Adding a new language
 

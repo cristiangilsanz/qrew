@@ -2,7 +2,6 @@
 
 Run QREW on an Android emulator or iOS simulator for local development.
 
----
 
 ## Before you start
 
@@ -14,7 +13,6 @@ npm run build
 npx cap sync
 ```
 
----
 
 ## Android emulator
 
@@ -60,7 +58,6 @@ npx cap run android --livereload --external
 
 This serves the app from the Vite dev server. The emulator must be able to reach your machine on the network.
 
----
 
 ## iOS simulator
 
@@ -102,7 +99,6 @@ cd apps/app
 npx cap run ios --livereload --external
 ```
 
----
 
 ## Troubleshooting
 
