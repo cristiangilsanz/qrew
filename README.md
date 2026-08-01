@@ -30,10 +30,10 @@ Zero friction. One product. Three roles.
 
 ```mermaid
 flowchart TB
-    app["📱 Mobile App\nReact + Capacitor"]:::nodeStyle
+    app["📱 Mobile App"]:::nodeStyle
 
     subgraph Edge
-        gw["🔀 API Gateway\nJWT validation + reverse proxy"]:::nodeStyle
+        gw["🔀 API Gateway\nReverse proxy + JWT validation"]:::nodeStyle
     end
 
     subgraph Services
@@ -47,7 +47,7 @@ flowchart TB
     end
 
     subgraph Infrastructure
-        pg[("🐘 PostgreSQL 16")]:::infraStyle
+        pg[("🐘 PostgreSQL")]:::infraStyle
         nats["⚡ NATS JetStream\nEvent bus"]:::infraStyle
         redis[("🔴 Redis\nCache · Locks · Jobs")]:::infraStyle
         stripe(["💳 Stripe"]):::infraStyle
@@ -61,9 +61,9 @@ flowchart TB
     catalog <-->|"Domain events"| nats
     sales <-->|"Domain events"| nats
     entry <-->|"Domain events"| nats
-    nats --> ticketing
-    nats --> payments
-    nats --> audit
+    nats -->|"Event bus"| ticketing
+    nats -->|"Event bus"| payments
+    nats -->|"Event bus"| audit
     identity --> pg
     catalog --> pg
     sales --> pg
