@@ -15,7 +15,6 @@
 </div>
 
 # 📝 **Description**
----
 
 <div align="center">
 
@@ -33,7 +32,6 @@ Zero friction. One product. Three roles.
 - ⚡ **Event-driven microservices.** Seven independent services communicate over NATS JetStream — no shared databases, no synchronous service calls, clean domain boundaries and at-least-once delivery.
 
 # 🏗️ **Architecture**
----
 
 <div align="center">
 
@@ -89,7 +87,6 @@ flowchart TB
 </div>
 
 # 📁 **Project Structure**
----
 
 ```
 QREW/
@@ -135,7 +132,6 @@ QREW/
 ```
 
 # 🔧 **Installation**
----
 
 ## 📋 Requirements
 
@@ -211,7 +207,6 @@ docker compose up
 The app will be available at `http://localhost:5173` and the API gateway at `http://localhost:8000`.
 
 # 📚 **Tech Stack**
----
 
 ## 🗣️ Languages
 
@@ -275,7 +270,6 @@ The app will be available at `http://localhost:5173` and the API gateway at `htt
 - **[Prettier](https://prettier.io/)** — TypeScript formatting
 
 # 📖 **Documentation**
----
 
 | Topic | Link |
 |---|---|
@@ -292,17 +286,14 @@ The app will be available at `http://localhost:5173` and the API gateway at `htt
 | 📋 Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
 # 🙏 **Credits & Thanks**
----
 
 Built with incredible open-source tools — thanks to the teams behind [FastAPI](https://fastapi.tiangolo.com/), [TanStack](https://tanstack.com/), [Capacitor](https://capacitorjs.com/), [NATS](https://nats.io/), and [Stripe](https://stripe.com/) for making a project like this possible.
 
 # 📄 **License**
----
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 # 📞 **Get Help & Connect**
----
 
 - 💬 [Start a discussion](https://github.com/cristiangilsanz/qrew/discussions)
 - 🐛 [Open an issue](https://github.com/cristiangilsanz/qrew/issues)
