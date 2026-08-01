@@ -24,11 +24,6 @@ Zero friction. One product. Three roles.
 
 </div>
 
-<br>
-
-
----
-
 # 🏗️ **Architecture**
 
 <div align="center">
@@ -52,9 +47,9 @@ flowchart TB
     end
 
     subgraph Infrastructure
-        pg[("🐘 PostgreSQL")]:::infraStyle
-        nats["⚡ NATS JetStream"]:::infraStyle
-        redis[("🔴 Redis")]:::infraStyle
+        pg[("🐘 PostgreSQL 16")]:::infraStyle
+        nats["⚡ NATS JetStream\nEvent bus"]:::infraStyle
+        redis[("🔴 Redis\nCache · Locks · Jobs")]:::infraStyle
         stripe(["💳 Stripe"]):::infraStyle
     end
 
