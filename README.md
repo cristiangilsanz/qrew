@@ -29,8 +29,7 @@
 ```mermaid
 flowchart TB
     subgraph "📱 Client"
-        phone["Your Phone"]:::app
-        scanner["Scanner Device"]:::app
+        phone["Your Phone\nAttendee · Scanner · Organiser"]:::app
     end
 
     subgraph "🔀 Edge"
@@ -54,9 +53,8 @@ flowchart TB
         stripe(["💳 Stripe"]):::ext
     end
 
-    phone   -->|"HTTPS"| gw
-    scanner -->|"HTTPS"| gw
-    gw      -->|"HTTP proxy"| identity & catalog & sales & entry
+    phone -->|"HTTPS"| gw
+    gw    -->|"HTTP proxy"| identity & catalog & sales & entry
 
     identity & catalog & sales & entry -->|"Publish"| nats
     nats -->|"Subscribe"| ticketing & payments & audit

@@ -8,8 +8,7 @@ QREW is a mobile-first event ticketing platform built as an event-driven microse
 ```mermaid
 flowchart TB
     subgraph Clients
-        app["Mobile App\nReact 19 + Capacitor"]:::client
-        scanner["Scanner Device\nEntry App"]:::client
+        app["Mobile App\nReact 19 + Capacitor\nAttendee, Scanner, Organiser roles"]:::client
     end
 
     subgraph Edge
@@ -48,8 +47,7 @@ flowchart TB
         maps(["Google Maps\nVenue geocoding"]):::ext
     end
 
-    app     -->|"HTTPS + WebSocket"| gw
-    scanner -->|"HTTPS, Scanner JWT"| gw
+    app -->|"HTTPS + WebSocket"| gw
 
     gw -->|"HTTP :8001"| identity
     gw -->|"HTTP :8002"| catalog
