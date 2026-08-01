@@ -59,7 +59,7 @@ flowchart TB
     identity & catalog & sales & entry -->|"Publish"| nats
     nats -->|"Subscribe"| ticketing & payments & audit
 
-    identity & catalog & sales & ticketing & payments & entry --> pg
+    identity & catalog & sales & ticketing & payments & entry -->|"Read/Write"| pg
     identity & sales --> redis
     payments <-->|"Webhooks"| stripe
 
