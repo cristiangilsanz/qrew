@@ -28,51 +28,37 @@
 
 ```mermaid
 flowchart TB
-    app["📱 Mobile App"]:::nodeStyle
+    phone["📱 Your Phone"]:::app
 
-    subgraph Edge
-        gw["🔀 API Gateway\nReverse proxy + JWT validation"]:::nodeStyle
+    subgraph "🌐 Backend"
+        gw["🔀 Gateway"]:::edge
+        identity["🔑 Identity"]:::svc
+        catalog["📋 Catalog"]:::svc
+        sales["💸 Sales"]:::svc
+        ticketing["🎟️ Ticketing"]:::svc
+        payments["💳 Payments"]:::svc
+        entry["🚪 Entry"]:::svc
+        audit["📜 Audit"]:::svc
     end
 
-    subgraph Services
-        identity["🔑 Identity"]:::nodeStyle
-        catalog["📋 Catalog"]:::nodeStyle
-        sales["💸 Sales"]:::nodeStyle
-        ticketing["🎟️ Ticketing"]:::nodeStyle
-        payments["💳 Payments"]:::nodeStyle
-        entry["🚪 Entry"]:::nodeStyle
-        audit["📜 Audit"]:::nodeStyle
+    subgraph "🗄️ Data"
+        pg[("🐘 Postgres")]:::infra
+        redis[("🔴 Redis")]:::infra
+        nats["⚡ NATS"]:::infra
+        stripe(["💳 Stripe"]):::infra
     end
 
-    subgraph Infrastructure
-        pg[("🐘 PostgreSQL")]:::infraStyle
-        nats["⚡ NATS JetStream\nEvent bus"]:::infraStyle
-        redis[("🔴 Redis\nCache · Locks · Jobs")]:::infraStyle
-        stripe(["💳 Stripe"]):::infraStyle
-    end
-
-    app -->|"HTTPS"| gw
-    gw -->|"HTTP proxy"| identity
-    gw -->|"HTTP proxy"| catalog
-    gw -->|"HTTP proxy"| sales
-    gw -->|"HTTP proxy"| entry
-    catalog <-->|"Domain events"| nats
-    sales <-->|"Domain events"| nats
-    entry <-->|"Domain events"| nats
-    nats -->|"Event bus"| ticketing
-    nats -->|"Event bus"| payments
-    nats -->|"Event bus"| audit
-    identity --> pg
-    catalog --> pg
-    sales --> pg
-    ticketing --> pg
-    payments --> pg
-    identity --> redis
-    sales --> redis
+    phone -->|"HTTPS"| gw
+    gw --> identity & catalog & sales & entry
+    identity & catalog & sales & entry & ticketing & payments & audit <--> nats
+    identity & catalog & sales & ticketing & payments --> pg
+    identity & sales --> redis
     payments <-->|"Webhooks"| stripe
 
-    classDef nodeStyle fill:#333333,color:#ffffff,stroke:#555555,stroke-width:2px,font-weight:bold
-    classDef infraStyle fill:#1a1a2e,color:#ffffff,stroke:#555555,stroke-width:2px,font-weight:bold
+    classDef app fill:#1a1a2e,color:#fff,stroke:#4444ff,stroke-width:2px,font-weight:bold
+    classDef edge fill:#2d2d2d,color:#fff,stroke:#666,stroke-width:2px,font-weight:bold
+    classDef svc fill:#333,color:#fff,stroke:#555,stroke-width:1px
+    classDef infra fill:#111,color:#fff,stroke:#444,stroke-width:1px
 ```
 
 </div>
@@ -102,11 +88,11 @@ QREW/
 │   └── api/
 │       ├── gateway/                   # FastAPI Gateway (:8000)
 │       └── services/
-│           ├── identity/              # Auth, Users, Passkeys, TOTP, KYC (:8001)
-│           ├── catalog/               # Events, Venues, Organisations (:8002)
-│           ├── sales/                 # Reservations, Resale Market, Queue (:8003)
-│           ├── ticketing/             # Tickets, QR Tokens (:8005)
-│           ├── payments/              # Stripe Webhooks + Disbursements (:8004)
+│           ├── identity/              # Identity Service (:8001)
+│           ├── catalog/               # Catalog Service (:8002)
+│           ├── sales/                 # Sales Service (:8003)
+│           ├── ticketing/             # Ticketing Service (:8005)
+│           ├── payments/              # Payments Service (:8004)
 │           ├── entry/                 # Scanner Auth, QR Validation (:8006)
 │           └── audit/                 # Immutable Audit Log (:8007)
 │
