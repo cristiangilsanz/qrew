@@ -150,8 +150,8 @@ Open `apps/app/.env` and fill in:
 | `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key (venue picker) |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (checkout) |
 | `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key (captcha) |
-| `VITE_API_URL` | Leave empty in local dev — Vite proxy handles it |
-| `VITE_GATEWAY_URL` | Leave empty in local dev — Vite proxy handles it |
+| `VITE_API_URL` | Base URL for REST API calls (e.g. `https://api.qrew.app`) |
+| `VITE_GATEWAY_URL` | Gateway base URL for WebSocket connections (e.g. `wss://api.qrew.app`) |
 
 **3. Set up the backend environment**
 
