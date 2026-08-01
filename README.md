@@ -18,18 +18,9 @@
 
 <div align="center">
 
-***QREW*** is a production-grade **event ticketing platform** built as a native mobile app. Built to make ticket fraud and speculation structurally impossible.
-
-Zero friction. One product. Three roles.
+***QREW*** is a production-grade **event ticketing platform** built as a native mobile app to make ticket fraud and speculation structurally impossible.
 
 </div>
-
-**What makes it different:**
-
-- 📱 **Native mobile, one codebase.** React and Capacitor deliver a true native experience on Android and iOS with hardware camera access for the built-in QR scanner.
-- 🔐 **Secure by design.** Passkey and TOTP authentication, ES256 JWT signing, PII encrypted at rest with Fernet, and a gateway that validates every request before it reaches a service.
-- 🎟️ **Live market and waitlists.** When an event sells out, buyers join an automated waitlist. When a ticket is listed for resale, the next person in line gets it first.
-- ⚡ **Event-driven microservices.** Seven independent services communicate over NATS JetStream — no shared databases, no synchronous service calls, clean domain boundaries and at-least-once delivery.
 
 # 🏗️ **Architecture**
 
@@ -91,7 +82,6 @@ flowchart TB
 ```
 QREW/
 ├── README.md                          # You are here! ⬅️
-├── ARCHITECTURE.md                    # System architecture deep-dive
 ├── CONTRIBUTING.md                    # Contribution guidelines
 ├── SECURITY.md                        # Security policy
 ├── CHANGELOG.md                       # Release history
@@ -125,6 +115,10 @@ QREW/
 │   ├── shared-python/                 # Shared Python utilities
 │   └── shared-ts/                     # Shared TypeScript types
 │
+├── architecture/
+│   ├── overview.md                    # System architecture deep-dive
+│   └── security.md                    # Threat model and defences
+│
 └── docs/
     ├── app/                           # Frontend docs
     ├── api/                           # API & service docs
@@ -146,10 +140,10 @@ QREW/
 |---|---|
 | ✅ Prerequisites | [PREREQUISITES.md](docs/development/PREREQUISITES.md) |
 | 🔑 Environment variables | [ENVIRONMENT-VARIABLES.md](docs/development/ENVIRONMENT-VARIABLES.md) |
-| 🖥️ Local · Native | [LOCAL-DEVELOPMENT.md](docs/development/LOCAL-DEVELOPMENT.md) |
-| 🐳 Local · Docker | [DOCKER.md](docs/development/DOCKER.md) |
-| 📱 Android · Emulator | [EMULATOR.md](docs/development/EMULATOR.md) |
-| 📲 Android · USB | [DEVICE.md](docs/development/DEVICE.md) |
+| 🖥️ Local · Native | [local-native.md](docs/development/setup/local-native.md) |
+| 🐳 Local · Docker | [local-docker.md](docs/development/setup/local-docker.md) |
+| 📱 Android · Emulator | [android-emulator.md](docs/development/setup/android-emulator.md) |
+| 📲 Android · USB | [android-usb.md](docs/development/setup/android-usb.md) |
 
 ## ⚡ Quick Start
 
@@ -254,14 +248,14 @@ Once running, the following services will be available locally:
 
 ## 🔐 Security & Auth
 
-- **[PyJWT](https://pyjwt.readthedocs.io/)** (ES256)
+- **[PyJWT](https://pyjwt.readthedocs.io/)**
 - **[WebAuthn](https://webauthn.io/)**
-- **[pyotp](https://pyauth.github.io/pyotp/)** (TOTP)
+- **[pyotp](https://pyauth.github.io/pyotp/)**
 - **[argon2-cffi](https://argon2-cffi.readthedocs.io/)**
-- **[cryptography](https://cryptography.io/)** (Fernet)
+- **[cryptography](https://cryptography.io/)**
 - **[simplewebauthn](https://simplewebauthn.dev/)**
 
-## 💳 Third-party Services
+## 💳 Third-Party Services
 
 - **[Stripe](https://stripe.com/docs)**
 - **[Twilio](https://www.twilio.com/docs)**
@@ -287,21 +281,22 @@ Once running, the following services will be available locally:
 
 | Topic | Link |
 |---|---|
-| 🏗️ Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| 🏗️ Architecture overview | [architecture/overview.md](architecture/overview.md) |
+| 🔐 Security | [architecture/security.md](architecture/security.md) |
 | 🗺️ App routing | [docs/app/ROUTING.md](docs/app/ROUTING.md) |
 | 🧩 Components | [docs/app/COMPONENTS.md](docs/app/COMPONENTS.md) |
-| 🌍 Internationalisation | [docs/app/I18N.md](docs/app/I18N.md) |
+| 🌍 Internationalisation | [docs/app/translations.md](docs/app/translations.md) |
 | 📦 State management | [docs/app/STATE-MANAGEMENT.md](docs/app/STATE-MANAGEMENT.md) |
 | 📱 Capacitor setup | [docs/app/CAPACITOR.md](docs/app/CAPACITOR.md) |
 | 🔌 API services | [docs/api/](docs/api/) |
-| ⚡ NATS streams | [docs/api/streams.md](docs/api/streams.md) |
+| ⚡ NATS streams | [docs/api/messaging/streams.md](docs/api/messaging/streams.md) |
 | 🤝 Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | 🔒 Security | [SECURITY.md](SECURITY.md) |
 | 📋 Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
 # 🙏 **Credits & Thanks**
 
-Built with incredible open-source tools — thanks to the teams behind [FastAPI](https://fastapi.tiangolo.com/), [TanStack](https://tanstack.com/), [Capacitor](https://capacitorjs.com/), [NATS](https://nats.io/), and [Stripe](https://stripe.com/) for making a project like this possible.
+Thanks to the teams behind [FastAPI](https://fastapi.tiangolo.com/), [TanStack](https://tanstack.com/), [Capacitor](https://capacitorjs.com/), [NATS](https://nats.io/), and [Stripe](https://stripe.com/) for making a project like this possible.
 
 # 📄 **License**
 

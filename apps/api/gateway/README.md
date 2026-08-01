@@ -1,13 +1,13 @@
 # Gateway
 
-> API gateway — the single entry point for all client traffic. Validates JWTs at the edge, proxies HTTP requests to upstream services, and maintains WebSocket connections for real-time push updates.
+> Single entry point for all client traffic. Validates JWTs at the edge, proxies HTTP requests to upstream services, and maintains WebSocket connections for real-time push updates.
 
 ## Responsibilities
 
-- **JWT validation** — verifies every Bearer token once (ES256, kid-based rotation) and injects `X-Authenticated-User-Id` into proxied requests so upstream services trust the identity without re-verifying.
-- **HTTP reverse proxy** — routes `/api/{service}/{path}` to the appropriate internal service (`identity`, `catalog`, `sales`, `payments`, `ticketing`, `entry`).
-- **WebSocket hub** — authenticates WebSocket connections, subscribes to NATS JetStream on behalf of the client, and forwards messages in real time.
-- **Network boundary** — the only service with a public port (`8000`). All domain services are isolated to the internal Docker network.
+- JWT validation (ES256, kid-based rotation) and user identity injection into proxied requests
+- HTTP reverse proxy routing `/api/{service}/{path}` to internal services
+- WebSocket hub for real-time push updates via NATS JetStream subscriptions
+- Network boundary — the only service with a public port (`8000`)
 
 ## Prerequisites
 
@@ -18,9 +18,7 @@
 
 ## Setup
 
-Copy the local configuration file and fill in the required values. Access and scanner JWT keys are required for authenticating connections.
-
-For local development, upstream service URLs default to `http://localhost:800{1-6}` and can be overridden in `config/local.yaml`.
+Copy the local configuration file and fill in the required values.
 
 ```bash
 cp config/local.yaml.example config/local.yaml
