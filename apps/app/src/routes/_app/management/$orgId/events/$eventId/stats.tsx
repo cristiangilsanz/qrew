@@ -3,7 +3,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
-import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 import { scannerApi } from '@/features/scanner/api'
 import { queryKeys } from '@/lib/queryKeys'
 
@@ -23,8 +22,6 @@ function StatCardSkeleton() {
 function EntryStatsPage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
-  const { data: eventsData } = useOrgEvents(orgId)
-  const event = eventsData?.items.find((e) => e.id === eventId)
 
   const { data: stats, isLoading } = useQuery({
     queryKey: queryKeys.entryStats.detail(eventId),
