@@ -51,9 +51,7 @@ export function ConfirmDialog({
                   destructive ? 'bg-red-500/10' : 'bg-white/10'
                 }`}
               >
-                <Trash2
-                  className={`h-5 w-5 ${destructive ? 'text-red-400' : 'text-white/70'}`}
-                />
+                <Trash2 className={`h-5 w-5 ${destructive ? 'text-red-400' : 'text-white/70'}`} />
               </div>
               <h3
                 className={`text-base font-semibold ${destructive ? 'text-red-400' : 'text-white'}`}
@@ -62,9 +60,7 @@ export function ConfirmDialog({
               </h3>
             </div>
 
-            {description && (
-              <p className="text-muted-foreground mb-5 text-sm">{description}</p>
-            )}
+            {description && <p className="text-muted-foreground mb-5 text-sm">{description}</p>}
 
             <div className="flex items-center justify-between pt-1">
               <button

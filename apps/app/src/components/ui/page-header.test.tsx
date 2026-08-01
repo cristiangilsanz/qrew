@@ -23,7 +23,11 @@ describe('PageHeader', () => {
   })
 
   it('renders children', () => {
-    render(<PageHeader title="Events"><span>Filter</span></PageHeader>)
+    render(
+      <PageHeader title="Events">
+        <span>Filter</span>
+      </PageHeader>,
+    )
     expect(screen.getByText('Filter')).toBeInTheDocument()
   })
 })

@@ -74,9 +74,7 @@ export const authApi = {
       .then((r) => r.data),
 
   register: (data: RegisterRequest) =>
-    apiClient
-      .post<RegisterResponse>('/v1/auth/registration/', data)
-      .then((r) => r.data),
+    apiClient.post<RegisterResponse>('/v1/auth/registration/', data).then((r) => r.data),
 
   passkeyAuthBegin: (email: string) =>
     apiClient.post('/v1/auth/passkeys/authenticate/begin', { email }).then((r) => r.data),
@@ -106,11 +104,9 @@ export const authApi = {
 }
 
 export const totpApi = {
-  status: () =>
-    apiClient.get<TotpStatusResponse>('/v1/auth/totp/status').then((r) => r.data),
+  status: () => apiClient.get<TotpStatusResponse>('/v1/auth/totp/status').then((r) => r.data),
 
-  setup: () =>
-    apiClient.post<TotpSetupResponse>('/v1/auth/totp/setup').then((r) => r.data),
+  setup: () => apiClient.post<TotpSetupResponse>('/v1/auth/totp/setup').then((r) => r.data),
 
   confirm: (secret: string, code: string, backupCodes: string[]) =>
     apiClient

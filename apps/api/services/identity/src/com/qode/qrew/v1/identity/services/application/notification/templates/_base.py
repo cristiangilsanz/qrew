@@ -2,10 +2,10 @@ def _cta_button(url: str, label: str) -> str:
     return (
         f'      <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">\n'
         f"        <tr>\n"
-        f"          <td align=\"center\">\n"
+        f'          <td align="center">\n'
         f'            <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">\n'
         f"              <tr>\n"
-        f"                <td align=\"center\">\n"
+        f'                <td align="center">\n'
         f'                  <a href="{url}" class="button" target="_blank">{label}</a>\n'
         f"                </td>\n"
         f"              </tr>\n"

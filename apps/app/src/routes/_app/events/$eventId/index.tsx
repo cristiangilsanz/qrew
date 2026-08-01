@@ -205,8 +205,8 @@ function EventDetailPage() {
       </div>
 
       {/* FAB */}
-      {!saleNotStarted && (
-        showResaleQueue ? (
+      {!saleNotStarted &&
+        (showResaleQueue ? (
           inQueue ? (
             <button
               onClick={() => setLeaveOpen(true)}
@@ -245,8 +245,7 @@ function EventDetailPage() {
             <Ticket className="h-5 w-5 shrink-0" />
             <span className="text-sm font-semibold">{t('tickets.checkout.buyButton')}</span>
           </button>
-        )
-      )}
+        ))}
 
       {/* Leave queue confirmation modal */}
       <AnimatePresence>

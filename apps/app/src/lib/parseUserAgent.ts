@@ -8,7 +8,13 @@ export interface ParsedUA {
 }
 
 export function parseUserAgent(ua: string | null): ParsedUA {
-  if (!ua) return { browser: 'Unknown browser', os: 'Unknown OS', deviceType: 'desktop', label: 'Unknown device' }
+  if (!ua)
+    return {
+      browser: 'Unknown browser',
+      os: 'Unknown OS',
+      deviceType: 'desktop',
+      label: 'Unknown device',
+    }
 
   const browser = detectBrowser(ua)
   const os = detectOS(ua)

@@ -58,7 +58,6 @@ export function EventDetailSkeleton() {
           <Skeleton className="mx-auto mb-2 h-3 w-28" />
           <Skeleton className="mx-auto h-8 w-36" />
         </div>
-
       </div>
     </div>
   )

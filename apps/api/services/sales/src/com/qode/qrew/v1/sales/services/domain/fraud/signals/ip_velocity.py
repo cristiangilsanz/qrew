@@ -17,7 +17,6 @@ return count
 
 
 class IpVelocitySignal:
-
     name = "ip_velocity"
 
     def __init__(self, redis: aioredis.Redis) -> None:  # type: ignore[type-arg]

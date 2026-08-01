@@ -14,9 +14,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute(
-        "ALTER TABLE catalog.events ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ"
-    )
+    op.execute("ALTER TABLE catalog.events ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ")
 
 
 def downgrade() -> None:

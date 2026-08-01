@@ -60,9 +60,7 @@ export function ProfileCard() {
           <span className="text-muted-foreground">
             {t('profile.memberSince', { date: '' }).trim()}
           </span>
-          <span className="font-medium">
-            {formatDate(profile.created_at, i18n.language)}
-          </span>
+          <span className="font-medium">{formatDate(profile.created_at, i18n.language)}</span>
         </div>
       </CardContent>
     </Card>

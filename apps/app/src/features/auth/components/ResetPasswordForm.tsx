@@ -45,7 +45,10 @@ export function ResetPasswordForm({ token }: Props) {
       navigate({ to: '/login' })
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(error.response?.data?.detail, t('auth.errors.resetFailed'))
+      const message = extractErrorMessage(
+        error.response?.data?.detail,
+        t('auth.errors.resetFailed'),
+      )
       toast.error(message)
     },
   })
@@ -56,10 +59,7 @@ export function ResetPasswordForm({ token }: Props) {
   })
 
   return (
-    <AuthLayout
-      title={t('auth.resetPasswordTitle')}
-      subtitle={t('auth.resetPasswordSubtitle')}
-    >
+    <AuthLayout title={t('auth.resetPasswordTitle')} subtitle={t('auth.resetPasswordSubtitle')}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
           <FormField

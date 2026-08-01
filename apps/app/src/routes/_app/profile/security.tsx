@@ -183,7 +183,9 @@ function DeviceList() {
                 }
                 destructive
                 isLoading={revoke.isPending}
-                onConfirm={() => revoke.mutate({ deviceId: device.id, isCurrent: device.is_current })}
+                onConfirm={() =>
+                  revoke.mutate({ deviceId: device.id, isCurrent: device.is_current })
+                }
               />
             )}
           </li>
@@ -358,13 +360,15 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
     }
     return (
       <div className="space-y-4">
-        <p className="text-muted-foreground text-sm">{t('profile.security.totp.scanInstruction')}</p>
+        <p className="text-muted-foreground text-sm">
+          {t('profile.security.totp.scanInstruction')}
+        </p>
         <div className="flex justify-center">
           <div className="rounded-xl bg-white p-3">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pendingUri)}`}
               alt="TOTP QR code"
-              className="h-[180px] w-[180px] block"
+              className="block h-[180px] w-[180px]"
             />
           </div>
         </div>
@@ -373,7 +377,7 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
             href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-white/70 flex items-center gap-1.5 text-xs transition-colors"
+            className="text-muted-foreground flex items-center gap-1.5 text-xs transition-colors hover:text-white/70"
           >
             <Info className="h-3.5 w-3.5 shrink-0" />
             <span>{t('profile.security.totp.getAuthApp')}</span>
@@ -383,7 +387,10 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
         <div>
           <p className="mb-1 text-xs text-white/50">{t('profile.security.totp.manualKey')}</p>
           <button
-            onClick={() => { void navigator.clipboard.writeText(pendingSecret); toast.success(t('common.copied')) }}
+            onClick={() => {
+              void navigator.clipboard.writeText(pendingSecret)
+              toast.success(t('common.copied'))
+            }}
             className="flex w-full items-center gap-2 rounded-lg bg-white/5 px-3 py-2 font-mono text-xs text-white/80"
           >
             <Copy className="h-3 w-3 shrink-0" />
@@ -391,7 +398,9 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
           </button>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">{t('profile.security.totp.confirmCode')}</label>
+          <label className="mb-1 block text-sm font-medium">
+            {t('profile.security.totp.confirmCode')}
+          </label>
           <input
             type="text"
             inputMode="numeric"
@@ -399,7 +408,7 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
             value={confirmCode}
             onChange={(e) => setConfirmCode(e.target.value)}
             placeholder="000000"
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-mono text-sm tracking-widest text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-mono text-sm tracking-widest text-white placeholder:text-white/30 focus:ring-1 focus:ring-white/20 focus:outline-none"
           />
         </div>
         <div className="flex gap-2">
@@ -428,11 +437,16 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
         <p className="text-muted-foreground text-sm">{t('profile.security.totp.backupTitle')}</p>
         <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-white/5 p-3">
           {pendingBackups.map((code) => (
-            <span key={code} className="font-mono text-xs text-white/80 text-center">{code}</span>
+            <span key={code} className="text-center font-mono text-xs text-white/80">
+              {code}
+            </span>
           ))}
         </div>
         <button
-          onClick={() => { void navigator.clipboard.writeText(pendingBackups.join('\n\n')); toast.success(t('common.copied')) }}
+          onClick={() => {
+            void navigator.clipboard.writeText(pendingBackups.join('\n\n'))
+            toast.success(t('common.copied'))
+          }}
           className="flex w-full items-center justify-center gap-2 rounded-full border border-white/10 py-2 text-sm font-medium text-white/60"
         >
           <Copy className="h-4 w-4" />
@@ -460,7 +474,7 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
           value={disableCode}
           onChange={(e) => setDisableCode(e.target.value)}
           placeholder="000000"
-          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-mono text-sm tracking-widest text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-mono text-sm tracking-widest text-white placeholder:text-white/30 focus:ring-1 focus:ring-white/20 focus:outline-none"
         />
         <div className="flex gap-2">
           <button
@@ -564,10 +578,7 @@ function SecurityPage() {
                 style={{ overflow: 'hidden' }}
               >
                 <div className="border-t border-white/10 bg-white/[0.03] px-4 pt-4 pb-4">
-                  <TotpSection
-                    initialStep={totpInitialStep}
-                    onClose={() => setExpanded(null)}
-                  />
+                  <TotpSection initialStep={totpInitialStep} onClose={() => setExpanded(null)} />
                 </div>
               </motion.div>
             )}

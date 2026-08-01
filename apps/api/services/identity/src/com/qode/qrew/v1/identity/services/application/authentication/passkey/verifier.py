@@ -158,7 +158,9 @@ class PasskeyAuthenticationService:
         if setup_complete:
             refresh_token = create_refresh_token(str(user.id))
             session_jti = extract_jti(refresh_token)
-            access_token = create_access_token(str(user.id), session_jti=session_jti, is_admin=user.is_admin)
+            access_token = create_access_token(
+                str(user.id), session_jti=session_jti, is_admin=user.is_admin
+            )
             await self._persist_session(
                 user.id, refresh_token, ip_address, user_agent, device_fingerprint
             )

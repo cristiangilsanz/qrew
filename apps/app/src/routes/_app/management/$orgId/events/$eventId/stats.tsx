@@ -11,7 +11,6 @@ export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/st
   component: EntryStatsPage,
 })
 
-
 function StatCardSkeleton() {
   return (
     <div className="px-4 py-5 text-center">
@@ -129,7 +128,6 @@ function EntryStatsPage() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   )

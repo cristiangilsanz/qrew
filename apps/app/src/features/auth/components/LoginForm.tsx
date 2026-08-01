@@ -120,7 +120,10 @@ export function LoginForm() {
           />
 
           <div className="flex justify-end">
-            <Link to="/forgot-password" className="text-muted-foreground hover:text-foreground text-xs">
+            <Link
+              to="/forgot-password"
+              className="text-muted-foreground hover:text-foreground text-xs"
+            >
               {t('auth.forgotPassword')}
             </Link>
           </div>

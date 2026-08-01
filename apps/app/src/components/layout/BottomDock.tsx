@@ -68,7 +68,8 @@ export function BottomDock() {
   const { data: pendingAssignment } = usePendingMarketAssignment()
 
   const stillLoading = profileLoading || orgsLoading
-  const showOrganiser = !stillLoading && (profile?.is_admin === true || (orgsData?.items.length ?? 0) > 0)
+  const showOrganiser =
+    !stillLoading && (profile?.is_admin === true || (orgsData?.items.length ?? 0) > 0)
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/25 bg-black/95 backdrop-blur-md">

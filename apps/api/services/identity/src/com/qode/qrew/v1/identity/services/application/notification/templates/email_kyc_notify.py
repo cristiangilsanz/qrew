@@ -6,7 +6,11 @@ def kyc_status_email(
 ) -> str:
     first = full_name.split(maxsplit=1)[0]
     approved = status == "approved"
-    heading = f"Your identity has been verified, {first}!" if approved else f"Your identity could not be verified, {first}."
+    heading = (
+        f"Your identity has been verified, {first}!"
+        if approved
+        else f"Your identity could not be verified, {first}."
+    )
     intro = (
         "Great news! Your KYC document has been reviewed and approved."
         if approved

@@ -32,7 +32,10 @@ function VerifyTotpPage() {
   }, [])
 
   const submit = async (code: string) => {
-    if (!totpToken) { void navigate({ to: '/login' }); return }
+    if (!totpToken) {
+      void navigate({ to: '/login' })
+      return
+    }
     setIsLoading(true)
     setHasError(false)
     try {
@@ -105,7 +108,9 @@ function VerifyTotpPage() {
           {digits.map((digit, i) => (
             <input
               key={i}
-              ref={(el) => { inputRefs.current[i] = el }}
+              ref={(el) => {
+                inputRefs.current[i] = el
+              }}
               type="text"
               inputMode="numeric"
               autoComplete={i === 0 ? 'one-time-code' : 'off'}
@@ -115,7 +120,7 @@ function VerifyTotpPage() {
               onKeyDown={(e) => handleKeyDown(i, e)}
               onFocus={(e) => e.target.select()}
               className={cn(
-                'h-14 w-11 rounded-xl border bg-white/5 text-center text-xl font-bold text-white caret-transparent transition-all focus:outline-none focus:ring-2',
+                'h-14 w-11 rounded-xl border bg-white/5 text-center text-xl font-bold text-white caret-transparent transition-all focus:ring-2 focus:outline-none',
                 hasError
                   ? 'border-red-500/60 focus:ring-red-500/40'
                   : digit
@@ -131,7 +136,9 @@ function VerifyTotpPage() {
         )}
 
         <Button
-          onClick={() => { if (code.length === DIGITS) void submit(code) }}
+          onClick={() => {
+            if (code.length === DIGITS) void submit(code)
+          }}
           disabled={code.length < DIGITS || isLoading}
           className="w-full rounded-full"
         >

@@ -16,7 +16,6 @@ class MarketRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-
     async def get_queue_entry(
         self, *, event_id: uuid.UUID, user_id: uuid.UUID
     ) -> MarketQueueEntry | None:
@@ -79,7 +78,6 @@ class MarketRepository:
         )
         assignment_count = int(pending_assignments.scalar_one() or 0)
         return ticket_count + assignment_count
-
 
     async def get_listing_by_id(self, listing_id: uuid.UUID) -> MarketListing | None:
         return await self._session.get(MarketListing, listing_id)
@@ -208,7 +206,6 @@ class MarketRepository:
             select(MarketListing).where(MarketListing.id.in_(ids))
         )
         return list(listings_result.scalars().all())
-
 
     async def get_assignment_by_id(self, assignment_id: uuid.UUID) -> MarketAssignment | None:
         return await self._session.get(MarketAssignment, assignment_id)

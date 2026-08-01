@@ -27,7 +27,9 @@ function ScanPage() {
   })
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void startScanning() }, [])
+  useEffect(() => {
+    void startScanning()
+  }, [])
 
   return (
     <div className="flex h-screen flex-col bg-black">
@@ -62,7 +64,9 @@ function ScanPage() {
         {phase === 'error' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-black/70 px-8">
             <XCircle className="h-12 w-12 text-red-400" />
-            <p className="text-center text-sm text-white/70">{t('organiser.scanner.notSupported')}</p>
+            <p className="text-center text-sm text-white/70">
+              {t('organiser.scanner.notSupported')}
+            </p>
             <button
               onClick={() =>
                 void navigate({

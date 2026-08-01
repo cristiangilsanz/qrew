@@ -72,8 +72,6 @@ def _market_error(exc: MarketError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": exc.message, "field": exc.field})
 
 
-
-
 @events_router.post(
     "/{event_id}/market/queue/join",
     response_model=MarketQueueJoinResponse,
@@ -139,8 +137,6 @@ async def market_queue_status(
     )
 
 
-
-
 @tickets_router.post(
     "/{ticket_id}/market/list",
     response_model=MarketListingResponse,
@@ -188,8 +184,6 @@ async def get_ticket_listing(
     return _listing_response(listing)
 
 
-
-
 @market_router.get(
     "/queues",
     response_model=list[MarketQueueEntryResponse],
@@ -206,8 +200,6 @@ async def get_my_queues(
     del request, db
     entries = await service.my_queues(user_id=current_user.id)
     return [MarketQueueEntryResponse(**e) for e in entries]
-
-
 
 
 @market_router.get(

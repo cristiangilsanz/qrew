@@ -10,7 +10,7 @@ function toDatePart(iso: string): string {
 
 function toTimePart(iso: string): string {
   if (!iso) return ''
-  
+
   const t = iso.slice(11, 16)
   return t.length === 5 ? t : ''
 }

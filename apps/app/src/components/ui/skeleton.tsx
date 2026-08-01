@@ -17,7 +17,7 @@ export {
   OrgCardSkeleton,
   TicketTypeListSkeleton,
 } from '@/features/organiser/components/OrganiserSkeletons'
-export { AccountSkeleton,ProfileSkeleton } from '@/features/profile/components/ProfileSkeletons'
+export { AccountSkeleton, ProfileSkeleton } from '@/features/profile/components/ProfileSkeletons'
 export {
   ReservationRowSkeleton,
   ReservationSkeleton,

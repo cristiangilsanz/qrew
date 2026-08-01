@@ -29,13 +29,18 @@ const mockedUseOrgEvents = vi.mocked(useOrgEvents)
 
 describe('OrgEventList', () => {
   it('shows skeleton while loading', () => {
-    mockedUseOrgEvents.mockReturnValue({ data: undefined, isLoading: true } as ReturnType<typeof useOrgEvents>)
+    mockedUseOrgEvents.mockReturnValue({ data: undefined, isLoading: true } as ReturnType<
+      typeof useOrgEvents
+    >)
     const { container } = render(<OrgEventList orgId="org-1" />)
     expect(container.firstChild).toBeInTheDocument()
   })
 
   it('shows empty message when no events', () => {
-    mockedUseOrgEvents.mockReturnValue({ data: { items: [], next_cursor: null }, isLoading: false } as ReturnType<typeof useOrgEvents>)
+    mockedUseOrgEvents.mockReturnValue({
+      data: { items: [], next_cursor: null },
+      isLoading: false,
+    } as ReturnType<typeof useOrgEvents>)
     render(<OrgEventList orgId="org-1" />)
     expect(screen.getByText('organiser.events.empty')).toBeInTheDocument()
   })
@@ -44,8 +49,20 @@ describe('OrgEventList', () => {
     mockedUseOrgEvents.mockReturnValue({
       data: {
         items: [
-          { id: 'e1', name: 'Event Alpha', status: 'published', starts_at: '2026-09-01T20:00:00Z', venue_city: 'Madrid' },
-          { id: 'e2', name: 'Event Beta', status: 'draft', starts_at: '2026-10-01T20:00:00Z', venue_city: 'Berlin' },
+          {
+            id: 'e1',
+            name: 'Event Alpha',
+            status: 'published',
+            starts_at: '2026-09-01T20:00:00Z',
+            venue_city: 'Madrid',
+          },
+          {
+            id: 'e2',
+            name: 'Event Beta',
+            status: 'draft',
+            starts_at: '2026-10-01T20:00:00Z',
+            venue_city: 'Berlin',
+          },
         ],
         next_cursor: null,
       },
@@ -57,7 +74,10 @@ describe('OrgEventList', () => {
   })
 
   it('renders create event link', () => {
-    mockedUseOrgEvents.mockReturnValue({ data: { items: [], next_cursor: null }, isLoading: false } as ReturnType<typeof useOrgEvents>)
+    mockedUseOrgEvents.mockReturnValue({
+      data: { items: [], next_cursor: null },
+      isLoading: false,
+    } as ReturnType<typeof useOrgEvents>)
     render(<OrgEventList orgId="org-1" />)
     expect(screen.getByText('organiser.events.create')).toBeInTheDocument()
   })

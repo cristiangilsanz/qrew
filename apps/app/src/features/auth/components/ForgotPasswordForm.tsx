@@ -54,10 +54,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <AuthLayout
-      title={t('auth.forgotPasswordTitle')}
-      subtitle={t('auth.forgotPasswordSubtitle')}
-    >
+    <AuthLayout title={t('auth.forgotPasswordTitle')} subtitle={t('auth.forgotPasswordSubtitle')}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
           <FormField

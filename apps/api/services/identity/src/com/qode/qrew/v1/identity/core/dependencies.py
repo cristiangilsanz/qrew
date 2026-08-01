@@ -113,7 +113,9 @@ from com.qode.qrew.v1.identity.services.application.authentication.registration.
     PhoneVerificationService,
 )
 from com.qode.qrew.v1.identity.services.application.authentication.session import SessionService
-from com.qode.qrew.v1.identity.services.application.authentication.login.guards.totp import TotpService
+from com.qode.qrew.v1.identity.services.application.authentication.login.guards.totp import (
+    TotpService,
+)
 
 logger = structlog.get_logger(__name__)
 

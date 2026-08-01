@@ -58,7 +58,6 @@ class MarketService:
         self._assignment_ttl = timedelta(hours=assignment_ttl_hours)
         self._listing_ttl = timedelta(days=listing_ttl_days)
 
-
     @traced("market.service.join_queue")
     async def join_queue(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> MarketQueueEntry:
         event_ctx = await self._event_ctx.get_by_event_id(event_id)
@@ -124,7 +123,6 @@ class MarketService:
         entries = await self._repo.get_active_queue_entries_for_user(user_id=user_id)
         return [{"event_id": e.event_id, "joined_at": e.joined_at} for e in entries]
 
-
     @traced("market.service.list_ticket")
     async def list_ticket(self, *, user_id: uuid.UUID, ticket_id: uuid.UUID) -> MarketListing:
         # Verify the ticket belongs to the caller and is in `issued` state
@@ -178,7 +176,6 @@ class MarketService:
         self, *, user_id: uuid.UUID, ticket_id: uuid.UUID
     ) -> MarketListing | None:
         return await self._repo.get_listing_by_ticket_id(ticket_id)
-
 
     @traced("market.service.get_assignment")
     async def get_assignment(
@@ -278,7 +275,6 @@ class MarketService:
 
         await self._record(_ASSIGNMENT_DECLINED, actor_id=user_id, entity_id=str(assignment_id))
 
-
     @traced("market.service.complete_assignment")
     async def complete_assignment(self, *, payment_intent_id: str) -> None:
         """Called when a market assignment payment succeeds (from payment webhook)."""
@@ -319,7 +315,6 @@ class MarketService:
             actor_id=assignment.buyer_user_id,
             entity_id=str(assignment.id),
         )
-
 
     async def _get_ticket_for_listing(
         self, user_id: uuid.UUID, ticket_id: uuid.UUID

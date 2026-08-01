@@ -51,9 +51,10 @@ describe('BottomDock', () => {
   })
 
   it('shows organiser tab for admins', () => {
-    vi.mocked(useProfile).mockReturnValueOnce(
-      { data: { is_admin: true }, isLoading: false } as ReturnType<typeof useProfile>,
-    )
+    vi.mocked(useProfile).mockReturnValueOnce({
+      data: { is_admin: true },
+      isLoading: false,
+    } as ReturnType<typeof useProfile>)
     render(<BottomDock />)
     expect(screen.getByText('nav.organiser')).toBeInTheDocument()
   })

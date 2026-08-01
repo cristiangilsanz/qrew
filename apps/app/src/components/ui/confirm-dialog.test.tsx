@@ -8,7 +8,17 @@ import { ConfirmDialog } from './confirm-dialog'
 vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
   motion: {
-    div: ({ children, onClick, className, style }: { children: ReactNode; onClick?: (e: MouseEvent) => void; className?: string; style?: CSSProperties }) => (
+    div: ({
+      children,
+      onClick,
+      className,
+      style,
+    }: {
+      children: ReactNode
+      onClick?: (e: MouseEvent) => void
+      className?: string
+      style?: CSSProperties
+    }) => (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       <div onClick={onClick} className={className} style={style}>
         {children}

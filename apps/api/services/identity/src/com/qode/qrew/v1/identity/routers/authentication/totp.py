@@ -121,7 +121,9 @@ async def totp_verify(
 
     refresh_token = create_refresh_token(str(totp_user.id))
     jti = extract_jti(refresh_token)
-    access_token = create_access_token(str(totp_user.id), session_jti=jti, is_admin=totp_user.is_admin)
+    access_token = create_access_token(
+        str(totp_user.id), session_jti=jti, is_admin=totp_user.is_admin
+    )
 
     if jti:
         session_repo = SessionRepository(db)
