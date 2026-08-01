@@ -28,47 +28,64 @@
 
 ```mermaid
 flowchart TB
-    subgraph "📱 Client"
+    subgraph Client["📱 Client"]
         phone["Your Phone"]:::app
     end
 
-    subgraph "🔀 Edge"
+    subgraph Edge["🔀 Edge"]
         gw["API Gateway"]:::edge
     end
 
-    subgraph "⚙️ Domain"
-        identity["🔑 Identity"]:::svc
-        catalog["📋 Catalog"]:::svc
-        sales["💸 Sales"]:::svc
-        ticketing["🎟️ Ticketing"]:::svc
-        payments["💳 Payments"]:::svc
-        entry["🚪 Entry"]:::svc
-        audit["📜 Audit"]:::svc
+    subgraph Domain["⚙️ Domain"]
+        subgraph id["🔑 Identity"]
+            identity[" "]:::svc
+        end
+        subgraph cat["📋 Catalog"]
+            catalog[" "]:::svc
+        end
+        subgraph sal["💸 Sales"]
+            sales[" "]:::svc
+        end
+        subgraph tick["🎟️ Ticketing"]
+            ticketing[" "]:::svc
+        end
+        subgraph pay["💳 Payments"]
+            payments[" "]:::svc
+        end
+        subgraph ent["🚪 Entry"]
+            entry[" "]:::svc
+        end
+        subgraph aud["📜 Audit"]
+            audit[" "]:::svc
+        end
     end
 
-    subgraph "🗄️ Infrastructure"
-        pg[("🐘 PostgreSQL")]:::db
-        redis[("🔴 Redis")]:::db
-        nats["⚡ NATS JetStream"]:::bus
-        stripe(["💳 Stripe"]):::ext
+    subgraph Infra["🗄️ Infrastructure"]
+        subgraph spg["🐘 PostgreSQL"]
+            pg[" "]:::db
+        end
+        subgraph sredis["🔴 Redis"]
+            redis[" "]:::db
+        end
+        subgraph snats["⚡ NATS JetStream"]
+            nats[" "]:::bus
+        end
+        subgraph sstripe["💳 Stripe"]
+            stripe[" "]:::ext
+        end
     end
 
-    phone -->|"HTTPS"| gw
-    gw    -->|"HTTP Proxy"| identity & catalog & sales & entry
+    phone  -->|"HTTPS"| Edge
+    Edge   -->|"HTTP Proxy"| Domain
+    Domain -->|"Read / Write / Publish"| Infra
+    Infra  -->|"Webhook"| Domain
 
-    identity & catalog & sales & entry -->|"Publish"| nats
-    nats -->|"Subscribe"| ticketing & payments & audit
-
-    identity & catalog & sales & ticketing & payments & entry -->|"Read/Write"| pg
-    identity & sales --> redis
-    payments <-->|"Webhooks"| stripe
-
-    classDef app  fill:#1a1a2e,color:#fff,stroke:#4455ff,stroke-width:2px,font-weight:bold
-    classDef edge fill:#2a2a2a,color:#fff,stroke:#888,stroke-width:2px,font-weight:bold
-    classDef svc  fill:#1a2a1a,color:#fff,stroke:#4a8a4a,stroke-width:1px
-    classDef db   fill:#0f172a,color:#fff,stroke:#334155,stroke-width:1px
-    classDef bus  fill:#1c1412,color:#fff,stroke:#78564e,stroke-width:1px
-    classDef ext  fill:#1a1a2e,color:#fff,stroke:#555588,stroke-width:1px
+    classDef app  fill:#111,color:#fff,stroke:#fff,stroke-width:2px,font-weight:bold
+    classDef edge fill:#222,color:#fff,stroke:#aaa,stroke-width:2px,font-weight:bold
+    classDef svc  fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:1px
+    classDef db   fill:#0a0a0a,color:#fff,stroke:#666,stroke-width:1px
+    classDef bus  fill:#111,color:#fff,stroke:#999,stroke-width:1px
+    classDef ext  fill:#222,color:#fff,stroke:#777,stroke-width:1px
 ```
 
 <div align="right">

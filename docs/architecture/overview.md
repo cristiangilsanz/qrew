@@ -6,6 +6,7 @@ QREW is a mobile-first event ticketing platform built as an event-driven microse
 ## System Overview
 
 ```mermaid
+%%{init: {"flowchart": {"rankSpacing": 80, "nodeSpacing": 20}}}%%
 flowchart TB
     subgraph Clients
         app["Mobile App\nReact 19 + Capacitor\nAttendee, Scanner, Organiser roles"]:::client
@@ -89,17 +90,23 @@ flowchart TB
     entry     -.-|"spawns"| entry_worker
     audit     -.-|"spawns"| audit_worker
 
-    payments <-->|"Webhooks"| stripe
+    payments <-->|"Webhook"| stripe
     id_worker  -->|"SMS, OTP"| twilio
     catalog    -->|"Geocode"| maps
 
-    classDef client fill:#1e293b,color:#f1f5f9,stroke:#475569,stroke-width:2px
-    classDef edge   fill:#1e1e1e,color:#f1f5f9,stroke:#6b7280,stroke-width:2px,font-weight:bold
-    classDef svc    fill:#14292c,color:#f1f5f9,stroke:#2d6a4f,stroke-width:1px
-    classDef worker fill:#2a1f1f,color:#f1f5f9,stroke:#7c3535,stroke-width:1px,stroke-dasharray:3
-    classDef db     fill:#0f172a,color:#f1f5f9,stroke:#334155,stroke-width:1px
-    classDef bus    fill:#1c1917,color:#f1f5f9,stroke:#57534e,stroke-width:1px
-    classDef ext    fill:#1a1a2e,color:#f1f5f9,stroke:#4a4a6a,stroke-width:1px
+    app ~~~ gw
+    gw ~~~ identity
+    identity ~~~ id_worker
+    id_worker ~~~ pg
+    pg ~~~ stripe
+
+    classDef client fill:#111,color:#fff,stroke:#fff,stroke-width:2px
+    classDef edge   fill:#222,color:#fff,stroke:#aaa,stroke-width:2px,font-weight:bold
+    classDef svc    fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:1px
+    classDef worker fill:#111,color:#fff,stroke:#666,stroke-width:1px,stroke-dasharray:3
+    classDef db     fill:#0a0a0a,color:#fff,stroke:#666,stroke-width:1px
+    classDef bus    fill:#111,color:#fff,stroke:#999,stroke-width:1px
+    classDef ext    fill:#222,color:#fff,stroke:#777,stroke-width:1px
 ```
 
 
