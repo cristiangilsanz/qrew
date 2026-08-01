@@ -15,6 +15,7 @@
 </div>
 
 # 📝 **Description**
+---
 
 <div align="center">
 
@@ -24,7 +25,15 @@ Zero friction. One product. Three roles.
 
 </div>
 
+**What makes it different:**
+
+- 📱 **Native mobile, one codebase.** React and Capacitor deliver a true native experience on Android and iOS with hardware camera access for the built-in QR scanner.
+- 🔐 **Secure by design.** Passkey and TOTP authentication, ES256 JWT signing, PII encrypted at rest with Fernet, and a gateway that validates every request before it reaches a service.
+- 🎟️ **Live market and waitlists.** When an event sells out, buyers join an automated waitlist. When a ticket is listed for resale, the next person in line gets it first.
+- ⚡ **Event-driven microservices.** Seven independent services communicate over NATS JetStream — no shared databases, no synchronous service calls, clean domain boundaries and at-least-once delivery.
+
 # 🏗️ **Architecture**
+---
 
 <div align="center">
 
@@ -79,9 +88,8 @@ flowchart TB
 
 </div>
 
----
-
 # 📁 **Project Structure**
+---
 
 ```
 QREW/
@@ -126,9 +134,8 @@ QREW/
     └── development/                   # Local setup guides
 ```
 
----
-
 # 🔧 **Installation**
+---
 
 ## 📋 Requirements
 
@@ -203,9 +210,8 @@ docker compose up
 
 The app will be available at `http://localhost:5173` and the API gateway at `http://localhost:8000`.
 
----
-
 # 📚 **Tech Stack**
+---
 
 ## 🗣️ Languages
 
@@ -268,9 +274,8 @@ The app will be available at `http://localhost:5173` and the API gateway at `htt
 - **[ESLint](https://eslint.org/)** — TypeScript linting
 - **[Prettier](https://prettier.io/)** — TypeScript formatting
 
----
-
 # 📖 **Documentation**
+---
 
 | Topic | Link |
 |---|---|
@@ -286,21 +291,18 @@ The app will be available at `http://localhost:5173` and the API gateway at `htt
 | 🔒 Security | [SECURITY.md](SECURITY.md) |
 | 📋 Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
----
-
 # 🙏 **Credits & Thanks**
+---
 
 Built with incredible open-source tools — thanks to the teams behind [FastAPI](https://fastapi.tiangolo.com/), [TanStack](https://tanstack.com/), [Capacitor](https://capacitorjs.com/), [NATS](https://nats.io/), and [Stripe](https://stripe.com/) for making a project like this possible.
 
----
-
 # 📄 **License**
+---
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
----
-
 # 📞 **Get Help & Connect**
+---
 
 - 💬 [Start a discussion](https://github.com/cristiangilsanz/qrew/discussions)
 - 🐛 [Open an issue](https://github.com/cristiangilsanz/qrew/issues)
