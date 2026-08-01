@@ -148,7 +148,7 @@ QREW/
 | 📱 Android emulator | [EMULATOR.md](docs/development/EMULATOR.md) |
 | 📲 Physical device (USB) | [DEVICE.md](docs/development/DEVICE.md) |
 
-## ⚡ Quick Start (Docker)
+## ⚡ Quick Start
 
 ```bash
 git clone https://github.com/cristiangilsanz/qrew.git
