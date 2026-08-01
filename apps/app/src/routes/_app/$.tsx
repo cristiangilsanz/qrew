@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { House } from 'lucide-react'
 
-import notFoundImg from '@/assets/illustrations/404.webp'
+import notFoundImg from '@/assets/images/illustrations/page-ghost.webp'
 
 export const Route = createFileRoute('/_app/$')({
   component: NotFoundPage,

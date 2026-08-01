@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { House } from 'lucide-react'
 
-import serverErrorImg from '@/assets/illustrations/server-error.webp'
+import serverErrorImg from '@/assets/images/illustrations/server-error.webp'
 
 export function ServerError() {
   return (
