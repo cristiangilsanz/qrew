@@ -39,12 +39,9 @@ function EntryStatsPage() {
 
   return (
     <div className="pb-28">
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/10 bg-[hsl(0,0%,10%)] px-4 py-4">
+      <div className="sticky top-0 z-10 bg-[hsl(0,0%,10%)] px-4 py-4">
         <BackButton to="/management/$orgId/events/$eventId" params={{ orgId, eventId }} />
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-semibold">{t('organiser.entryStats.title')}</h1>
-          {event && <p className="text-muted-foreground truncate text-xs">{event.name}</p>}
-        </div>
+        <h1 className="mt-2 text-2xl font-semibold">{t('organiser.entryStats.title')}</h1>
       </div>
 
       <div className="mx-auto max-w-2xl space-y-4 px-4 pt-4">

@@ -16,10 +16,7 @@ function EditTicketsPage() {
   const { data, isLoading } = useOrgEvents(orgId)
   const event = data?.items.find((e) => e.id === eventId)
 
-  const hasStarted = event
-    ? event.status === 'ongoing' || new Date(event.starts_at) <= new Date()
-    : false
-  const effectiveStatus = hasStarted ? 'cancelled' : event?.status
+  const effectiveStatus = event?.status
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">

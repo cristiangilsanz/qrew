@@ -12,7 +12,7 @@ import { CapacityEditTicketTypeForm, EditTicketTypeForm } from './EditTicketType
 
 interface Props {
   eventId: string
-  eventStatus?: 'draft' | 'published' | 'cancelled'
+  eventStatus?: 'draft' | 'published' | 'ongoing' | 'cancelled'
 }
 
 export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {

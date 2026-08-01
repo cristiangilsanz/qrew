@@ -17,9 +17,7 @@ function EditEventPage() {
   const { data, isLoading } = useOrgEvents(orgId)
   const event = data?.items.find((e) => e.id === eventId)
 
-  const hasStarted = event
-    ? event.status === 'ongoing' || new Date(event.starts_at) <= new Date()
-    : false
+  const hasStarted = event?.status === 'ongoing'
   const showCancel =
     event && !hasStarted && (event.status === 'draft' || event.status === 'published')
 

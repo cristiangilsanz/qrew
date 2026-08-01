@@ -3,6 +3,7 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { Toaster } from 'sonner'
 
+import { ServerError } from '@/components/ui/server-error'
 import { hapticLight } from '@/lib/haptics'
 
 interface RouterContext {
@@ -11,6 +12,7 @@ interface RouterContext {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: Root,
+  errorComponent: ServerError,
 })
 
 function Root() {
