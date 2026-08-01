@@ -81,45 +81,45 @@ flowchart TB
 
 ```
 QREW/
-├── README.md                          # You are here! ⬅️
-├── CONTRIBUTING.md                    # Contribution guidelines
-├── SECURITY.md                        # Security policy
-├── CHANGELOG.md                       # Release history
+├── README.md                          # You Are Here! ⬅️
+├── CONTRIBUTING.md                    # Contribution Guidelines
+├── SECURITY.md                        # Security Policy
+├── CHANGELOG.md                       # Release History
 ├── LICENSE                            # MIT License
-├── docker-compose.yml                 # Full local stack
-├── Justfile                           # Dev task runner
+├── docker-compose.yml                 # Full Local Stack
+├── Justfile                           # Dev Task Runner
 │
 ├── apps/
-│   ├── app/                           # React + Capacitor mobile app
+│   ├── app/                           # React + Capacitor Mobile App
 │   │   ├── src/
-│   │   │   ├── routes/                # TanStack Router pages
-│   │   │   ├── features/              # Feature modules (organiser, scanner…)
-│   │   │   ├── components/            # Shared UI components
-│   │   │   └── lib/                   # Utilities, query keys, i18n
-│   │   ├── android/                   # Android native project
-│   │   └── ios/                       # iOS native project
+│   │   │   ├── routes/                # TanStack Router Pages
+│   │   │   ├── features/              # Feature Modules (Organiser, Scanner…)
+│   │   │   ├── components/            # Shared UI Components
+│   │   │   └── lib/                   # Utilities, Query Keys, I18n
+│   │   ├── android/                   # Android Native Project
+│   │   └── ios/                       # iOS Native Project
 │   │
 │   └── api/
-│       ├── gateway/                   # Starlette API gateway (:8000)
+│       ├── gateway/                   # FastAPI Gateway (:8000)
 │       └── services/
-│           ├── identity/              # Auth, users, passkeys, TOTP, KYC
-│           ├── catalog/               # Events, venues, organisations
-│           ├── sales/                 # Reservations, resale market, queue
-│           ├── ticketing/             # Tickets, QR tokens
-│           ├── payments/              # Stripe webhooks + disbursements
-│           ├── entry/                 # Scanner auth, QR validation
-│           └── audit/                 # Immutable audit log
+│           ├── identity/              # Auth, Users, Passkeys, TOTP, KYC
+│           ├── catalog/               # Events, Venues, Organisations
+│           ├── sales/                 # Reservations, Resale Market, Queue
+│           ├── ticketing/             # Tickets, QR Tokens
+│           ├── payments/              # Stripe Webhooks + Disbursements
+│           ├── entry/                 # Scanner Auth, QR Validation
+│           └── audit/                 # Immutable Audit Log
 │
 ├── packages/
-│   ├── contracts/                     # Shared API contracts (OpenAPI)
-│   ├── shared-python/                 # Shared Python utilities
-│   └── shared-ts/                     # Shared TypeScript types
+│   ├── contracts/                     # Shared API Contracts (OpenAPI)
+│   ├── shared-python/                 # Shared Python Utilities
+│   └── shared-ts/                     # Shared TypeScript Types
 │
 └── docs/
-    ├── architecture/                  # System architecture & security
-    ├── app/                           # Frontend docs
-    ├── api/                           # API & service docs
-    └── development/                   # Local setup guides
+    ├── architecture/                  # System Architecture & Security
+    ├── app/                           # Frontend Docs
+    ├── api/                           # API & Service Docs
+    └── development/                   # Local Setup Guides
 ```
 
 # 🔧 **Installation**
@@ -201,8 +201,8 @@ Once running, the following services will be available locally:
 
 | Service | URL |
 |---|---|
-| Mobile app | `http://localhost:5173` |
-| API gateway | `http://localhost:8000` |
+| App | `http://localhost:5173` |
+| API Gateway | `http://localhost:8000` |
 
 # 📚 **Tech Stack**
 
@@ -273,23 +273,6 @@ Once running, the following services will be available locally:
 - **[Pyright](https://github.com/microsoft/pyright)**
 - **[ESLint](https://eslint.org/)**
 - **[Prettier](https://prettier.io/)**
-
-# 📖 **Documentation**
-
-| Topic | Link |
-|---|---|
-| 🏗️ Architecture overview | [docs/architecture/overview.md](docs/architecture/overview.md) |
-| 🔐 Security | [docs/architecture/security.md](docs/architecture/security.md) |
-| 🗺️ App routing | [docs/app/ui/routing.md](docs/app/ui/routing.md) |
-| 🧩 Components | [docs/app/ui/components.md](docs/app/ui/components.md) |
-| 🌍 Internationalisation | [docs/app/core/translations.md](docs/app/core/translations.md) |
-| 📦 State management | [docs/app/core/state-management.md](docs/app/core/state-management.md) |
-| 📱 Capacitor setup | [docs/app/native/capacitor.md](docs/app/native/capacitor.md) |
-| 🔌 API services | [docs/api/](docs/api/) |
-| ⚡ NATS streams | [docs/api/messaging/streams.md](docs/api/messaging/streams.md) |
-| 🤝 Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| 🔒 Security | [SECURITY.md](SECURITY.md) |
-| 📋 Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
 # 🙏 **Credits & Thanks**
 
