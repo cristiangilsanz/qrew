@@ -26,12 +26,6 @@ Zero friction. One product. Three roles.
 
 <br>
 
-**What makes it different:**
-
-- 📱 **Native mobile, one codebase.** React and Capacitor deliver a true native experience on Android and iOS with hardware camera access for the built-in QR scanner.
-- 🔐 **Secure by design.** Passkey and TOTP authentication, ES256 JWT signing, PII encrypted at rest with Fernet, and a gateway that validates every request before it reaches a service.
-- 🎟️ **Live market and waitlists.** When an event sells out, buyers join an automated waitlist. When a ticket is listed for resale, the next person in line gets it first.
-- ⚡ **Event-driven microservices.** Seven independent services communicate over NATS JetStream — no shared databases, no synchronous service calls, clean domain boundaries and at-least-once delivery.
 
 ---
 
@@ -48,19 +42,19 @@ flowchart TB
     end
 
     subgraph Services
-        identity["🔑 Identity\nAuth · Passkeys · TOTP"]:::nodeStyle
-        catalog["📋 Catalog\nEvents · Venues · Orgs"]:::nodeStyle
-        sales["💸 Sales\nReservations · Market"]:::nodeStyle
-        ticketing["🎟️ Ticketing\nTickets · QR codes"]:::nodeStyle
-        payments["💳 Payments\nStripe"]:::nodeStyle
-        entry["🚪 Entry\nScanners · QR scan"]:::nodeStyle
-        audit["📜 Audit\nImmutable log"]:::nodeStyle
+        identity["🔑 Identity"]:::nodeStyle
+        catalog["📋 Catalog"]:::nodeStyle
+        sales["💸 Sales"]:::nodeStyle
+        ticketing["🎟️ Ticketing"]:::nodeStyle
+        payments["💳 Payments"]:::nodeStyle
+        entry["🚪 Entry"]:::nodeStyle
+        audit["📜 Audit"]:::nodeStyle
     end
 
     subgraph Infrastructure
-        pg[("🐘 PostgreSQL 16")]:::infraStyle
-        nats["⚡ NATS JetStream\nEvent bus"]:::infraStyle
-        redis[("🔴 Redis\nCache · Locks · Jobs")]:::infraStyle
+        pg[("🐘 PostgreSQL")]:::infraStyle
+        nats["⚡ NATS JetStream"]:::infraStyle
+        redis[("🔴 Redis")]:::infraStyle
         stripe(["💳 Stripe"]):::infraStyle
     end
 
