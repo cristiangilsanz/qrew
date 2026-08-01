@@ -48,7 +48,7 @@ flowchart TB
     end
 
     subgraph Services
-        identity["🪪 Identity\nAuth · Passkeys · TOTP"]:::nodeStyle
+        identity["🔑 Identity\nAuth · Passkeys · TOTP"]:::nodeStyle
         catalog["📋 Catalog\nEvents · Venues · Orgs"]:::nodeStyle
         sales["💸 Sales\nReservations · Market"]:::nodeStyle
         ticketing["🎟️ Ticketing\nTickets · QR codes"]:::nodeStyle
