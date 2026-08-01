@@ -1,141 +1,109 @@
 # Security
 
-A reference for every threat surface QREW defends against and the specific controls in place.
-
----
+Every threat surface QREW defends against, the attack it prevents, and the control in place.
 
 ## Authentication
 
-### Password security
+| Threat | Attack | Control |
+|---|---|---|
+| Weak passwords | Account takeover via guessing or credential stuffing | zxcvbn strength estimation rejects weak passwords at registration |
+| Leaked credentials | Login with passwords from known data breaches | HIBP k-anonymity API checked on registration and every login |
+| Password storage breach | Plaintext or reversible passwords exposed if DB is dumped | Argon2id hashing via argon2-cffi before any password is stored |
+| Missing second factor | Single-factor accounts vulnerable to phishing | Passkeys (WebAuthn) as primary factor plus TOTP as second factor |
+| Token forgery | Attacker crafts or modifies a JWT to impersonate a user | ES256 asymmetric signing — private key held only by identity service; all other services verify with public key only |
+| Token replay after rotation | Stolen old tokens remain valid after key rotation | kid header in JWT allows rolling key rotation without invalidating live tokens |
+| Long-lived token exposure | Stolen access token grants indefinite access | Short-lived access tokens combined with refresh token rotation |
+| Session proliferation | Attacker maintains many active sessions to persist access | Hard cap of 5 concurrent sessions per user; new login evicts the oldest |
+| Refresh token reuse | Stolen refresh token reused after rotation | Each token refresh invalidates the previous refresh token |
+| Cross-device token use | Token extracted from one device used on another | Sessions bound to the registered device UUID |
+| Brute force login | Repeated login attempts against one account | Exponential lockout starting at 5 minutes per account; admin unlock endpoint |
+| Automated account creation | Bots registering bulk fake accounts | Cloudflare Turnstile CAPTCHA on registration |
 
-- **Argon2id hashing** — all passwords hashed with argon2-cffi before storage
-- **zxcvbn strength estimation** — weak passwords rejected at registration
-- **HIBP breach check** — passwords checked against Have I Been Pwned k-anonymity API on registration and login; compromised passwords are blocked and audited
+## Device
 
-### Multi-factor authentication
+| Threat | Attack | Control |
+|---|---|---|
+| Tampered Android app | Modified APK bypasses business logic or fakes attendance | Play Integrity API attestation validated server-side before any QR token is minted |
+| Multi-account abuse from one device | Single device used to hold tickets across many fake accounts | Device fingerprint registered per UUID; accounts per device threshold blocks registration |
 
-- **Passkeys (WebAuthn)** — primary authentication method via device-bound credentials (simplewebauthn on client, py_webauthn on server)
-- **TOTP** — time-based one-time passwords via pyotp as second factor
+## Anomaly Detection
 
-### Token model
+| Threat | Attack | Control |
+|---|---|---|
+| Account takeover from stolen credentials | Login from a geographically impossible location after a recent login elsewhere | GeoIP2 resolves login IP to coordinates; haversine distance check flags impossible travel as `LOGIN_ANOMALY_DETECTED` and audits the event |
 
-- **ES256 asymmetric JWTs** — access tokens signed with ES256 private key held only by the identity service; all other services and the gateway verify with the public key only; private key never leaves the identity service
-- **kid-based rotation** — JWT header carries a key ID allowing key rotation without invalidating all active tokens
-- **Short-lived access tokens** — short expiry combined with refresh token rotation limits replay window
+## Ticket Fraud
 
-### Session management
+| Threat | Attack | Control |
+|---|---|---|
+| QR forgery | Attacker generates a fake QR code to gain entry | QR tokens are short-lived JWTs signed with a dedicated scanner ES256 key; entry service validates signature before admitting |
+| QR sharing | One ticket holder shares their QR with multiple people | Gate evaluates ticket state — only `issued` or `scanning` tickets mint a QR; state transitions on first scan prevent reuse |
+| QR theft from tampered device | Attacker extracts QR from a rooted or modified device | Attestation failure at QR mint time blocks issuance on untrusted devices |
+| Out-of-area QR use | QR generated and used outside the venue geofence | Optional venue geofence check enforced at QR mint time |
+| Early QR generation | QR minted days before the event and distributed | Time window check blocks minting outside the configured window before the event |
+| Scalping | Bulk purchasing of tickets for resale at inflated prices | Per-event `max_tickets_per_user` cap enforced at reservation and on the resale market |
+| Grey-market resale | Tickets sold outside the platform at arbitrary prices | Resale only through the platform internal resale queue; no external transfer mechanism |
 
-- **Session cap** — maximum 5 active sessions per user (configurable); new login beyond cap evicts the oldest session
-- **Refresh token rotation** — each token refresh invalidates the previous refresh token
-- **Device binding** — sessions are bound to a registered device; cross-device token use is detected
+## API Surface
 
----
+| Threat | Attack | Control |
+|---|---|---|
+| Unauthenticated access | Requests without a token reach protected endpoints | AuthMiddleware at gateway validates JWT on every non-public route before proxying |
+| Public route bypass | Attacker crafts a path that looks public but reaches protected data | Public route list uses compiled regex patterns matched against full method and path |
+| WebSocket hijacking | Unauthenticated WebSocket connection subscribes to private channels | JWT validated at WebSocket handshake; connection closed with 4401 on failure |
+| Rate abuse | High-frequency requests to exhaust resources or brute-force | slowapi per-IP rate limiting at the gateway; individual upload endpoints additionally limited at 30 per minute |
+| Duplicate requests | Retry storms cause double charges or double reservations | IdempotencyMiddleware caches responses in Redis by `Idempotency-Key` and replays cached response on duplicate |
+| Cross-origin requests | Malicious browser page calls the API using a victim's cookies | Strict CORS origin allowlist in gateway config; wildcard origins not permitted |
+| Clickjacking and MIME sniffing | Framing the app or exploiting browser content-type inference | SecurityHeadersMiddleware adds `X-Frame-Options`, `X-Content-Type-Options` and related headers on every response |
+| Open redirect via proxy | Attacker tricks the gateway into following a redirect to an external host | Gateway proxy sets `follow_redirects=False` |
+| Oversized WebSocket messages | Flood the hub with large frames to exhaust memory | WebSocket messages capped at 4 096 bytes per frame |
 
-## Device security
+## File Uploads
 
-### Device fingerprinting
+| Threat | Attack | Control |
+|---|---|---|
+| Arbitrary file upload | Upload a script or binary disguised as an image | Allowed MIME types validated against a per-kind allowlist before a signed URL is issued |
+| Oversized upload | Upload an extremely large file to exhaust storage or bandwidth | `max_size_bytes` enforced per upload kind before the signed URL is issued |
+| Unsigned upload | Direct write to storage without going through the signed URL flow | PUT and GET to local storage require a valid HMAC signature and an unexpired `expires_at` timestamp |
+| Path traversal via upload key | Craft a key with `../` sequences to escape the storage prefix | `is_valid_key` rejects any key that does not match the expected path structure |
+| Public access to private uploads | Serve a non-public object through the public image endpoint | Public image endpoint checks that the storage kind for the key is `event_image` before serving |
 
-- **Device registration** — each device receives a persistent UUID stored server-side; requests carry the device ID header
-- **Multi-account threshold** — a single device fingerprint registering beyond the allowed number of accounts is flagged and blocked
+## Data
 
-### Android attestation
-
-- **Play Integrity API** — Android devices submit attestation tokens validated server-side; devices that fail attestation cannot issue QR tokens
-- **Bypass UUID** — the nil UUID (`000...000`) skips attestation in dev/test environments only
-
----
-
-## Anomaly detection
-
-### Impossible travel
-
-- **GeoIP resolution** — login requests are resolved to a latitude/longitude via GeoIP2 MaxMind database
-- **Haversine distance check** — if a new login comes from a location that would require physically impossible travel speed from the previous login, the session is flagged as `LOGIN_ANOMALY_DETECTED` and audited
-
----
-
-## Anti-fraud at the ticket layer
-
-### QR token integrity
-
-- **JWT-signed QR codes** — QR tokens are short-lived JWTs signed with a dedicated scanner ES256 key; the entry service validates the signature before admitting a holder
-- **Gate policy evaluation** — before minting a QR, the ticketing service evaluates:
-  - Ownership — ticket must belong to the requesting user
-  - Ticket state — only `issued` or `scanning` tickets can generate a QR
-  - Device attestation — attestation failure blocks QR issuance
-  - Geofence — optional venue geofence check
-  - Time window — QR minting only allowed within the configured window before the event
-
-### Anti-scalping
-
-- **Per-user ticket cap** — `max_tickets_per_user` enforced at reservation time and on the resale market; configurable per event (default 10)
-- **Controlled resale market** — tickets can only be resold through the platform's internal resale queue, preventing external grey-market resale
-
----
-
-## API protection
-
-### Rate limiting
-
-- **slowapi** — per-IP rate limiting applied at the gateway; limits are configurable and can be disabled for local dev
-
-### Idempotency
-
-- **IdempotencyMiddleware** — clients send an `Idempotency-Key` header; the gateway caches responses in Redis and replays them for duplicate requests, preventing double-charges or double-reservations from retries
-
-### CORS
-
-- **Strict origin allowlist** — `cors_origins` in gateway config; wildcard origins are not permitted in production
-
-### Security headers
-
-- **SecurityHeadersMiddleware** — applies `X-Content-Type-Options`, `X-Frame-Options`, and other defensive headers on every response
-
-### Request tracing
-
-- **RequestIDMiddleware** — every request receives a unique `X-Request-ID` for log correlation across services
-
----
-
-## Data protection
-
-### PII encryption at rest
-
-- **Fernet symmetric encryption** — personally identifiable information (names, national ID, date of birth, address) encrypted with a Fernet key before being written to the database by the identity and payments services
-
-### Input validation
-
-- **Pydantic schemas on all endpoints** — all request bodies validated against strict Pydantic models before reaching service logic; no raw dict access in handlers
-
----
-
-## Captcha
-
-- **Cloudflare Turnstile** — CAPTCHA verification on registration to block automated account creation; configurable and can be disabled for local dev
-
----
-
-## Audit trail
-
-- **Immutable audit log** — every security-relevant event (`login`, `login_failed`, `login_locked`, `login_anomaly_detected`, `device_attested`, `device_attestation_failed`, `device_bind`, `device_revoke`, `password_changed`, `login_compromised_password`) is written to the audit service via NATS and stored append-only
-
----
+| Threat | Attack | Control |
+|---|---|---|
+| PII breach from DB dump | Raw personal data exposed if the database is compromised | Names, national ID, date of birth and address encrypted at rest with Fernet symmetric encryption |
+| SQL injection | Attacker injects SQL through request parameters | All DB access via SQLAlchemy ORM with parameterized queries; no raw string interpolation in queries |
+| Unvalidated input | Malformed or oversized payloads crash or manipulate service logic | Pydantic schemas validate every request body and query parameter at the handler boundary |
 
 ## Payments
 
-- **Stripe webhook signature verification** — all incoming Stripe webhooks verified with the signing secret before processing
-- **Idempotent payment events** — payment intent IDs and idempotency keys prevent double-processing
+| Threat | Attack | Control |
+|---|---|---|
+| Fake Stripe webhook | Attacker POST a forged payment event to credit an account | Every incoming Stripe webhook verified with the webhook signing secret before processing |
+| Double payment processing | Retry from Stripe or network causes duplicate credit | Payment intent IDs treated as idempotency keys; duplicate events are ignored |
 
----
+## Infrastructure
 
-## Infrastructure boundary
+| Threat | Attack | Control |
+|---|---|---|
+| Direct access to internal services | Attacker bypasses the gateway and calls a domain service directly | Only the gateway exposes a public port (8000); all domain services are on the internal Docker network |
+| Unauthenticated service-to-service calls | A compromised service calls another without credentials | Internal API keys required for service-to-service calls |
+| Secrets committed to version control | JWT private keys or API keys accidentally pushed to the repo | All `config/local.yaml` files excluded by `.gitignore`; `secret-scan` CI workflow scans every push |
 
-- **Single public port** — only the gateway exposes a public port (`8000`); all domain services run on the internal Docker network and are unreachable from outside
-- **Internal service keys** — service-to-service calls use internal API keys; domain services reject unauthenticated internal requests
+## Audit
 
----
-
-## Secrets management
-
-- **Local secrets in `config/local.yaml`** — never committed; excluded by `.gitignore` (`**/config/local.yaml`)
-- **Required secrets**: ES256 JWT private key, Fernet PII encryption key, Stripe secret key and webhook signing secret, Twilio credentials (SMS/OTP), Cloudflare Turnstile secret, storage signing key
+| Event | Recorded when |
+|---|---|
+| `login` | Successful login |
+| `login_failed` | Failed login attempt |
+| `login_locked` | Account locked after repeated failures |
+| `login_unlocked` | Admin clears a lockout |
+| `login_compromised_password` | HIBP check finds the password in breach data |
+| `login_anomaly_detected` | Impossible travel detected |
+| `device_attested` | Device passes Play Integrity attestation |
+| `device_attestation_failed` | Device fails attestation |
+| `device_bind` | New device registered to an account |
+| `device_revoke` | Single device removed from an account |
+| `device_revoke_all` | All devices removed from an account |
+| `password_changed` | Account password updated |
