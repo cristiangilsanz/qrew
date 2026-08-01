@@ -10,7 +10,7 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
-*Event ticketing reinvented for mobile.*
+*Your event, your ticket, your phone.*
 
 </div>
 
