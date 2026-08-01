@@ -206,6 +206,8 @@ Fill in the required secrets across all the service configuration files:
 docker compose up
 ```
 
+Once running, the following services will be available locally:
+
 | Service | URL |
 |---|---|
 | Mobile app | `http://localhost:5173` |
