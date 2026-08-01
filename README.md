@@ -209,80 +209,64 @@ The app will be available at `http://localhost:5173` and the API gateway at `htt
 
 ## 🗣️ Languages
 
-| | |
-|---|---|
-| [Python 3.12](https://www.python.org/) | Backend services · API gateway |
-| [TypeScript 5](https://www.typescriptlang.org/) | Mobile app |
+- **[Python 3.12](https://www.python.org/)** — Backend services · API gateway
+- **[TypeScript 5](https://www.typescriptlang.org/)** — Mobile app
 
 ## 🧩 Frameworks & Libraries
 
-| | |
-|---|---|
-| [React](https://react.dev/) | UI framework |
-| [FastAPI](https://fastapi.tiangolo.com/) | Backend REST services |
-| [Starlette](https://www.starlette.io/) | API gateway |
-| [Capacitor](https://capacitorjs.com/) | Native mobile runtime (Android · iOS) |
-| [TanStack Router](https://tanstack.com/router) | Client-side routing |
-| [TanStack Query](https://tanstack.com/query) | Server state & data fetching |
-| [SQLAlchemy](https://docs.sqlalchemy.org/) | ORM |
-| [Alembic](https://alembic.sqlalchemy.org/) | Database migrations |
-| [Tailwind CSS](https://tailwindcss.com/) | Utility-first styling |
-| [shadcn/ui](https://ui.shadcn.com/) | Component library |
-| [Framer Motion](https://www.framer.com/motion/) | Animations |
-| [react-i18next](https://react.i18next.com/) | Internationalisation |
+- **[React](https://react.dev/)** — UI framework
+- **[FastAPI](https://fastapi.tiangolo.com/)** — Backend REST services
+- **[Starlette](https://www.starlette.io/)** — API gateway
+- **[Capacitor](https://capacitorjs.com/)** — Native mobile runtime (Android · iOS)
+- **[TanStack Router](https://tanstack.com/router)** — Client-side routing
+- **[TanStack Query](https://tanstack.com/query)** — Server state & data fetching
+- **[SQLAlchemy](https://docs.sqlalchemy.org/)** — ORM
+- **[Alembic](https://alembic.sqlalchemy.org/)** — Database migrations
+- **[Tailwind CSS](https://tailwindcss.com/)** — Utility-first styling
+- **[shadcn/ui](https://ui.shadcn.com/)** — Component library
+- **[Framer Motion](https://www.framer.com/motion/)** — Animations
+- **[react-i18next](https://react.i18next.com/)** — Internationalisation
 
 ## 🗄️ Databases & Storage
 
-| | |
-|---|---|
-| [PostgreSQL](https://www.postgresql.org/) | Primary relational database |
-| [Redis](https://redis.io/) | Cache · distributed locks · job queues |
-| [Cloudflare R2](https://developers.cloudflare.com/r2/) | Object storage |
+- **[PostgreSQL](https://www.postgresql.org/)** — Primary relational database
+- **[Redis](https://redis.io/)** — Cache · distributed locks · job queues
+- **[Cloudflare R2](https://developers.cloudflare.com/r2/)** — Object storage
 
 ## ⚡ Messaging & Background Jobs
 
-| | |
-|---|---|
-| [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream) | Event bus · at-least-once delivery |
-| [Arq](https://arq-docs.helpmanual.io/) | Async background job runner |
-| [Redlock](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/) | Distributed locking |
+- **[NATS JetStream](https://docs.nats.io/nats-concepts/jetstream)** — Event bus · at-least-once delivery
+- **[Arq](https://arq-docs.helpmanual.io/)** — Async background job runner
+- **[Redlock](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)** — Distributed locking
 
 ## 🔐 Security & Auth
 
-| | |
-|---|---|
-| JWT ES256 | Asymmetric token signing |
-| [WebAuthn](https://webauthn.io/) | Passkey authentication |
-| TOTP | Two-factor authentication |
-| Argon2 | Password hashing |
-| Fernet | PII encryption at rest |
+- **JWT ES256** — Asymmetric token signing
+- **[WebAuthn](https://webauthn.io/)** — Passkey authentication
+- **TOTP** — Two-factor authentication
+- **Argon2** — Password hashing
+- **Fernet** — PII encryption at rest
 
 ## 💳 Third-party Services
 
-| | |
-|---|---|
-| [Stripe](https://stripe.com/docs) | Payments & webhooks |
-| [Resend](https://resend.com/docs) | Transactional email |
-| [Twilio](https://www.twilio.com/docs) | SMS · OTP delivery |
-| [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) | Bot protection |
+- **[Stripe](https://stripe.com/docs)** — Payments & webhooks
+- **[Resend](https://resend.com/docs)** — Transactional email
+- **[Twilio](https://www.twilio.com/docs)** — SMS · OTP delivery
+- **[Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/)** — Bot protection
 
 ## 🧪 Testing
 
-| | |
-|---|---|
-| [Vitest](https://vitest.dev/) | Frontend unit testing |
-| [React Testing Library](https://testing-library.com/) | Component testing |
-| [pytest](https://docs.pytest.org/) | Backend unit & integration testing |
-| [MSW](https://mswjs.io/) | API mocking |
+- **[Vitest](https://vitest.dev/)** — Frontend unit testing
+- **[React Testing Library](https://testing-library.com/)** — Component testing
+- **[pytest](https://docs.pytest.org/)** — Backend unit & integration testing
+- **[MSW](https://mswjs.io/)** — API mocking
 
 ## 🔍 Code Quality
 
-| | |
-|---|---|
-| [ruff](https://docs.astral.sh/ruff/) | Python linting + formatting |
-| [pyright](https://github.com/microsoft/pyright) | Python type checking |
-| [eslint](https://eslint.org/) | TypeScript linting |
-| [prettier](https://prettier.io/) | TypeScript formatting |
+- **[Ruff](https://docs.astral.sh/ruff/)** — Python linting + formatting
+- **[Pyright](https://github.com/microsoft/pyright)** — Python type checking
+- **[ESLint](https://eslint.org/)** — TypeScript linting
+- **[Prettier](https://prettier.io/)** — TypeScript formatting
 
 ---
 
