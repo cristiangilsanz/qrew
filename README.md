@@ -144,11 +144,15 @@ cp apps/app/.env.example apps/app/.env
 
 Open `apps/app/.env` and fill in:
 
+<div align="center">
+
 | Variable | Description |
 |---|---|
-| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key (venue picker) |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (checkout) |
-| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key (captcha) |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key |
+
+</div>
 
 **3. Set up the backend environment**
 
@@ -162,6 +166,8 @@ for f in $(find apps/api -name "local.yaml.example"); do cp "$f" "${f%.example}"
 
 Fill in the required secrets across all the service configuration files:
 
+<div align="center">
+
 | Secret |
 |---|
 | `access_jwt_private_key` |
@@ -171,6 +177,8 @@ Fill in the required secrets across all the service configuration files:
 | `twilio_account_sid` / `twilio_auth_token` |
 | `captcha_secret_key` |
 | `storage_signing_key` |
+
+</div>
 
 > [!NOTE]
 > Most secrets can be left empty for local dev. Features that need them are disabled by default via their `*_enabled: false` flags.
