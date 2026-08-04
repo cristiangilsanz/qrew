@@ -19,6 +19,7 @@
     "format": "npm run format -w apps/app",
     "format:check": "npm run format:check -w apps/app",
     "test": "npm run test -w apps/app",
+    "test:run": "npm run test:run -w apps/app",
     "test:file": "npm run test:file -w apps/app --",
     "test:name": "npm run test:name -w apps/app --",
     "test:coverage": "npm run test:coverage -w apps/app",
