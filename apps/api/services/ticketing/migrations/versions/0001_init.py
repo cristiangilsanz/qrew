@@ -16,7 +16,6 @@ Squashes:
 
 from typing import Sequence, Union
 
-import sqlalchemy as sa
 from alembic import op
 
 revision: str = "0001_ticketing_init"

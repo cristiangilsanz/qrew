@@ -18,7 +18,10 @@ export const Route = createFileRoute('/_app/market/my-listings/')({
 
 function ListingCard({ ticket }: { ticket: Ticket }) {
   const { t } = useTranslation()
-  const { data: event } = useEvent(ticket.event_id)
+  const { data: event, isLoading: eventLoading } = useEvent(ticket.event_id)
+
+  if (eventLoading) return <EventCardSkeleton />
+
   const imageUrl = getEventImageUrl(event?.image_url)
   const eventName = event?.name ?? t('market.resaleMarket')
 
