@@ -148,9 +148,9 @@ Open `apps/app/.env` and fill in:
 
 | Variable | Description |
 |---|---|
-| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
-| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API Key |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe Publishable Key |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile Site Key |
 
 </div>
 
