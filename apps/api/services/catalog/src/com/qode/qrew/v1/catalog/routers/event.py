@@ -385,7 +385,10 @@ async def search_events(
 ) -> Page[EventSearchResult]:
     del request
     if len(cities) > 20:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="cities list exceeds maximum of 20 items")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="cities list exceeds maximum of 20 items",
+        )
     page_limit = clamp_limit(limit, default=settings.search_default_limit)
     page_limit = min(page_limit, settings.search_max_limit)
     return await _search_service.search_events(

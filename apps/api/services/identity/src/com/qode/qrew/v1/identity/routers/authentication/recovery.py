@@ -23,9 +23,9 @@ router = APIRouter(prefix="/recovery")
 
 _MAX_FILE_BYTES = 10 * 1024 * 1024
 _ALLOWED_MAGIC = [
-    b"\xff\xd8\xff",       # JPEG
+    b"\xff\xd8\xff",  # JPEG
     b"\x89PNG\r\n\x1a\n",  # PNG
-    b"%PDF-",               # PDF
+    b"%PDF-",  # PDF
 ]
 
 
@@ -49,9 +49,13 @@ async def recovery_begin(
     """Begin account recovery."""
     content = await document.read()
     if len(content) > _MAX_FILE_BYTES:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="File too large")
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="File too large"
+        )
     if not _is_allowed_file(content):
-        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Unsupported file type")
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Unsupported file type"
+        )
     recovery_token, passkey_options = await service.begin(email, content)
     if recovery_token is None:
         return RecoveryBeginResponse(

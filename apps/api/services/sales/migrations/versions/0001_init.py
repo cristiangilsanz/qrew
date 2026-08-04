@@ -320,12 +320,8 @@ def downgrade() -> None:
     op.drop_index(
         "ix_market_listings_expires_at_state", table_name="market_listings", schema="sales"
     )
-    op.drop_index(
-        "ix_market_listings_seller_user_id", table_name="market_listings", schema="sales"
-    )
-    op.drop_index(
-        "ix_market_listings_event_id_state", table_name="market_listings", schema="sales"
-    )
+    op.drop_index("ix_market_listings_seller_user_id", table_name="market_listings", schema="sales")
+    op.drop_index("ix_market_listings_event_id_state", table_name="market_listings", schema="sales")
     op.drop_table("market_listings", schema="sales")
 
     op.execute("DROP INDEX IF EXISTS sales.uq_market_queue_entries_active_event_user")

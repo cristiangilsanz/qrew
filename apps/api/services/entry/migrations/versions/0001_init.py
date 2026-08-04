@@ -90,9 +90,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         schema="entry",
     )
-    op.create_index(
-        "ix_entry_scans_event_id", "scans", ["event_id"], schema="entry"
-    )
+    op.create_index("ix_entry_scans_event_id", "scans", ["event_id"], schema="entry")
     op.create_index(
         "ix_entry_scans_event_scanned_at",
         "scans",
@@ -118,12 +116,8 @@ def downgrade() -> None:
     )
     op.drop_table("ticket_contexts", schema="entry")
 
-    op.drop_index(
-        "ix_entry_scanners_created_by", table_name="scanners", schema="entry"
-    )
-    op.drop_index(
-        "ix_entry_scanners_venue_id", table_name="scanners", schema="entry"
-    )
+    op.drop_index("ix_entry_scanners_created_by", table_name="scanners", schema="entry")
+    op.drop_index("ix_entry_scanners_venue_id", table_name="scanners", schema="entry")
     op.drop_table("scanners", schema="entry")
 
     op.execute("DROP SCHEMA IF EXISTS entry")

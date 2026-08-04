@@ -143,9 +143,7 @@ def upgrade() -> None:
         sa.Column("email_verified", sa.Boolean(), nullable=False),
         sa.Column("phone_number_verified", sa.Boolean(), nullable=False),
         sa.Column("email_verification_token", sa.String(length=255), nullable=True),
-        sa.Column(
-            "email_verification_token_expires_at", sa.DateTime(timezone=True), nullable=True
-        ),
+        sa.Column("email_verification_token_expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("phone_number_otp", sa.String(length=10), nullable=True),
         sa.Column("phone_number_otp_expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("pending_phone_number_ciphertext", sa.LargeBinary(), nullable=True),
@@ -191,9 +189,7 @@ def upgrade() -> None:
         ),
         sa.Column("totp_backup_codes_json", sa.Text(), nullable=True),
         sa.Column("password_reset_token", sa.String(length=255), nullable=True),
-        sa.Column(
-            "password_reset_token_expires_at", sa.DateTime(timezone=True), nullable=True
-        ),
+        sa.Column("password_reset_token_expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         schema="identity",
     )
@@ -485,9 +481,7 @@ def downgrade() -> None:
     )
     op.drop_table("device_fingerprints", schema="identity")
 
-    op.drop_index(
-        "ix_identity_users_password_reset_token", table_name="users", schema="identity"
-    )
+    op.drop_index("ix_identity_users_password_reset_token", table_name="users", schema="identity")
     op.drop_index(
         op.f("ix_identity_users_phone_number_hash"), table_name="users", schema="identity"
     )
@@ -504,9 +498,7 @@ def downgrade() -> None:
     op.drop_index(
         op.f("ix_identity_users_pending_email_hash"), table_name="users", schema="identity"
     )
-    op.drop_index(
-        op.f("ix_identity_users_national_id_hash"), table_name="users", schema="identity"
-    )
+    op.drop_index(op.f("ix_identity_users_national_id_hash"), table_name="users", schema="identity")
     op.drop_index(
         op.f("ix_identity_users_email_verification_token"),
         table_name="users",
@@ -538,9 +530,7 @@ def downgrade() -> None:
     op.drop_index(
         op.f("ix_audit_audit_events_created_at"), table_name="audit_events", schema="audit"
     )
-    op.drop_index(
-        op.f("ix_audit_audit_events_actor_id"), table_name="audit_events", schema="audit"
-    )
+    op.drop_index(op.f("ix_audit_audit_events_actor_id"), table_name="audit_events", schema="audit")
     op.drop_index(op.f("ix_audit_audit_events_action"), table_name="audit_events", schema="audit")
     op.drop_table("audit_events", schema="audit")
 
