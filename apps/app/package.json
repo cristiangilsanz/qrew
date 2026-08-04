@@ -19,6 +19,7 @@
     "test:file": "vitest run",
     "test:name": "vitest run -t",
     "test:coverage": "vitest run --coverage",
+    "type:check": "tsc --noEmit",
     "prepare": "husky"
   },
   "dependencies": {

@@ -23,6 +23,6 @@
     "test:file": "npm run test:file -w apps/app --",
     "test:name": "npm run test:name -w apps/app --",
     "test:coverage": "npm run test:coverage -w apps/app",
-    "type:check": "tsc --noEmit -p apps/app/tsconfig.json"
+    "type:check": "npm run type:check -w apps/app"
   }
 }
