@@ -168,7 +168,8 @@ Fill in the required secrets across all the service configuration files:
 | `pii_encryption_key` |
 | `stripe_secret_key` |
 | `stripe_webhook_signing_secret` |
-| `twilio_account_sid` / `twilio_auth_token` |
+| `twilio_account_sid` |
+| `twilio_auth_token` |
 | `captcha_secret_key` |
 | `storage_signing_key` |
 
