@@ -186,12 +186,12 @@ docker compose up
 
 # 📚 **Tech Stack**
 
-## Languages
+## 🗣️ Languages
 
 - [Python](https://www.python.org/)
 - [TypeScript](https://www.typescriptlang.org/)
 
-## Frameworks & Libraries
+## 🧩 Frameworks & Libraries
 
 - [React](https://react.dev/)
 - [Vite](https://vitejs.dev/)
@@ -222,23 +222,23 @@ docker compose up
 - [Sonner](https://sonner.emilkowal.ski/)
 - [date-fns](https://date-fns.org/)
 
-## Databases
+## 🗄️ Databases
 
 - [PostgreSQL](https://www.postgresql.org/)
 - [Redis](https://redis.io/)
 
-## Infrastructure
+## 🐳 Infrastructure
 
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
 - [Jaeger](https://www.jaegertracing.io/)
 
-## Messaging & Background Jobs
+## ⚡ Messaging & Background Jobs
 
 - [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream)
 - [Arq](https://arq-docs.helpmanual.io/)
 
-## Security & Auth
+## 🔐 Security & Auth
 
 - [cryptography](https://cryptography.io/)
 - [Passlib](https://passlib.readthedocs.io/)
@@ -247,7 +247,7 @@ docker compose up
 - [SimpleWebAuthn](https://simplewebauthn.dev/)
 - [pyotp](https://pyauth.github.io/pyotp/)
 
-## Third-Party Services
+## 💳 Third-Party Services
 
 - [Stripe](https://stripe.com/docs)
 - [Twilio](https://www.twilio.com/docs)
@@ -255,7 +255,7 @@ docker compose up
 - [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/)
 - [HIBP](https://haveibeenpwned.com/API/v3)
 
-## Testing
+## 🧪 Testing
 
 - [pytest](https://docs.pytest.org/)
 - [Vitest](https://vitest.dev/)
@@ -263,14 +263,14 @@ docker compose up
 - [Testcontainers](https://testcontainers.com/)
 - [MSW](https://mswjs.io/)
 
-## Code Quality
+## 🔍 Code Quality
 
 - [Pyright](https://github.com/microsoft/pyright)
 - [ESLint](https://eslint.org/)
 - [Ruff](https://docs.astral.sh/ruff/)
 - [Prettier](https://prettier.io/)
 
-## Tooling
+## 🔧 Tooling
 
 - [GitHub Actions](https://docs.github.com/en/actions)
 - [just](https://just.systems/)
