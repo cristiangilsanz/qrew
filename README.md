@@ -286,7 +286,7 @@ Thanks to the teams behind [FastAPI](https://fastapi.tiangolo.com/), [TanStack](
 
 # 📄 **License**
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 # 📞 **Get Help & Connect**
 
