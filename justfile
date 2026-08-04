@@ -56,7 +56,7 @@ up:
 shutdown:
     docker compose down --volumes --rmi local --remove-orphans
 
-# Seed database with test users, events, tickets (truncates existing data)
+# Seed database
 db-seed:
     cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py
 
@@ -123,7 +123,7 @@ format-check:
 format-fix:
     uv run ruff format .
 
-# Verify type consistency (all services)
+# Verify type consistency
 type-check:
     cd {{IDENTITY}} && uv run pyright
     cd {{ENTRY}} && uv run pyright
@@ -134,7 +134,7 @@ type-check:
     cd {{AUDIT}} && uv run pyright
     cd {{GATEWAY}} && uv run pyright
 
-# Run test suite (all services and packages)
+# Run unit tests suite
 test:
     #!/usr/bin/env bash
     set -e
@@ -158,6 +158,52 @@ test:
     _run {{PKG_PROBES}}
     _run {{PKG_SECURITY}}
     _run {{PKG_AUDITOR}}
+
+# Run unit tests for a single service
+test-service service:
+    cd apps/api/services/{{service}} && uv run pytest tests/unit/ -v
+
+# Run a single test file within a service
+test-file service file:
+    cd apps/api/services/{{service}} && uv run pytest {{file}} -v
+
+# Run a single test by name within a service
+test-name service name:
+    cd apps/api/services/{{service}} && uv run pytest tests/unit/ -k "{{name}}" -v
+
+# Run all tests across all services
+test-all:
+    #!/usr/bin/env bash
+    set -e
+    _run() { cd "$1" && uv run pytest tests/ -v; cd - > /dev/null; }
+    _run {{AUDIT}}
+    _run {{CATALOG}}
+    _run {{ENTRY}}
+    _run {{PAYMENTS}}
+    _run {{SALES}}
+    _run {{TICKETING}}
+    _run {{IDENTITY}}
+
+# Run integration tests across all services
+test-integration:
+    #!/usr/bin/env bash
+    set -e
+    _run() { cd "$1" && uv run pytest tests/integration/ -v; cd - > /dev/null; }
+    _run {{AUDIT}}
+    _run {{CATALOG}}
+    _run {{ENTRY}}
+    _run {{PAYMENTS}}
+    _run {{SALES}}
+    _run {{TICKETING}}
+    _run {{IDENTITY}}
+
+# Run integration tests for a single service
+test-integration-service service:
+    cd apps/api/services/{{service}} && uv run pytest tests/integration/ -v
+
+# Run unit tests with coverage for a single service
+test-coverage service:
+    cd apps/api/services/{{service}} && uv run pytest tests/unit/ --cov=src --cov-report=html
 
 # Auto-fix all issues
 fix: lint-fix format-fix

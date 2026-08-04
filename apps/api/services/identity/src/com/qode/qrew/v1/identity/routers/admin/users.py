@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pagination import Page, clamp_limit
@@ -31,7 +31,7 @@ _DEFAULT_LIMIT = 20
 @limiter.limit("60/minute")  # type: ignore[misc]
 async def search_users(
     request: Request,
-    q: str,
+    q: str = Query(min_length=1, max_length=128),
     _admin: User = Depends(get_admin_user),
     repo: UserRepository = Depends(get_user_repository),
 ) -> list[UserSearchResult]:
@@ -51,7 +51,7 @@ async def list_users(
     request: Request,
     cursor: str | None = None,
     limit: int = _DEFAULT_LIMIT,
-    search: str | None = None,
+    search: str | None = Query(default=None, max_length=128),
     kyc_status: KycStatus | None = None,
     _admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),

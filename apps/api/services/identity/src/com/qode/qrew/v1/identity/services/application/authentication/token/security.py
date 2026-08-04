@@ -13,7 +13,7 @@ from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
-_pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
+_pwd_context = CryptContext(schemes=["argon2"])
 
 
 def hash_password(password: str) -> str:

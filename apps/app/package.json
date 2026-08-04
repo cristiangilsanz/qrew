@@ -14,9 +14,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
     "test": "vitest",
-    "test:run": "vitest run",
+    "test:file": "vitest run",
+    "test:name": "vitest run -t",
     "test:coverage": "vitest run --coverage",
     "prepare": "husky"
   },

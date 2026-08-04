@@ -91,16 +91,29 @@ class UserRepository:
         return list(result.scalars().all())
 
     async def search_by_email_partial(self, q: str, *, limit: int = 50) -> list[User]:
-        """Return users whose decrypted email/name contains q; all users when q is empty."""
-        result = await self._session.execute(select(User))
+        """Return up to `limit` users whose decrypted email or name contains q.
+
+        Email is Fernet-encrypted so filtering must happen in Python after decryption.
+        The query fetches rows in batches to avoid loading the entire table at once.
+        """
         pattern = q.strip().lower()
-        if not pattern:
-            return list(result.scalars())[:limit]
-        return [
-            u
-            for u in result.scalars()
-            if pattern in u.email.lower() or pattern in u.full_name.lower()
-        ][:limit]
+        matches: list[User] = []
+        batch_size = 500
+        offset = 0
+        while len(matches) < limit:
+            result = await self._session.execute(
+                select(User).order_by(User.created_at.desc()).limit(batch_size).offset(offset)
+            )
+            batch = list(result.scalars())
+            if not batch:
+                break
+            for u in batch:
+                if pattern in u.email.lower() or pattern in u.full_name.lower():
+                    matches.append(u)
+                    if len(matches) >= limit:
+                        break
+            offset += batch_size
+        return matches
 
     async def save(self, user: User) -> User:
         """Persist pending changes for an already-tracked user."""

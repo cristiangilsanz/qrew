@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pagination import Page, clamp_limit
@@ -77,7 +77,7 @@ async def get_onboarding_status(
 @limiter.limit("60/minute")  # type: ignore[misc]
 async def list_user_audit(
     request: Request,
-    action: str | None = None,
+    action: str | None = Query(default=None, max_length=64),
     since: datetime | None = None,
     cursor: str | None = None,
     limit: int = _AUDIT_PAGE_SIZE,

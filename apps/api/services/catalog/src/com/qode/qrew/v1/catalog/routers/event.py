@@ -375,7 +375,7 @@ async def search_events(
     request: Request,
     q: str | None = Query(default=None, max_length=256),
     city: str | None = Query(default=None, max_length=128),
-    cities: list[str] = Query(default=[]),
+    cities: list[str] = Query(default=[], max_length=64),
     category: str | None = Query(default=None, max_length=64),
     from_: datetime | None = Query(default=None, alias="from"),
     to: datetime | None = Query(default=None, alias="to"),
@@ -384,6 +384,8 @@ async def search_events(
     db: AsyncSession = Depends(get_db),
 ) -> Page[EventSearchResult]:
     del request
+    if len(cities) > 20:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="cities list exceeds maximum of 20 items")
     page_limit = clamp_limit(limit, default=settings.search_default_limit)
     page_limit = min(page_limit, settings.search_max_limit)
     return await _search_service.search_events(

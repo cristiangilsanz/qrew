@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Path, Request, status
 
 from pagination import Page
 from com.qode.qrew.v1.identity.core.dependencies import get_current_session, get_current_user
@@ -45,7 +45,7 @@ async def list_sessions(
 @limiter.limit("20/minute")  # type: ignore[misc]
 async def revoke_session(
     request: Request,
-    jti: str,
+    jti: str = Path(..., min_length=1, max_length=256),
     current_user: User = Depends(get_current_user),
     service: SessionService = Depends(get_session_service),
 ) -> None:

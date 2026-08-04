@@ -99,6 +99,15 @@ async def local_upload(
             detail={"message": str(exc), "field": "sig"},
         ) from exc
     body = await request.body()
+    try:
+        constraint = constraint_for(storage_kind_for_key(key))
+        if len(body) > constraint.max_size_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail={"message": "payload exceeds the per-kind size limit"},
+            )
+    except ValueError:
+        pass
     await storage.store_at(key, body, content_type)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

@@ -1,118 +1,48 @@
-# Docker
+# Local · Docker
 
-Run the entire stack in containers with a single command. No local language runtimes required.
+Runs the entire stack in containers.
 
+## Prerequisites
 
-## Start everything
+Before continuing, complete:
 
-```bash
-docker compose up
-```
+1. [Prerequisites](../prerequisites.md) — Required tools installed
+2. [Configuration](../configuration.md) — Example files copied and secrets filled in
 
-This builds all service images and starts them along with PostgreSQL, Redis, and NATS. Watch the logs until all healthchecks pass.
+## Setup
 
-To run in the background:
-
-```bash
-docker compose up -d
-```
-
-Follow logs afterwards:
+**1. Clone**
 
 ```bash
-docker compose logs -f
+git clone https://github.com/cristiangilsanz/qrew.git
+cd qrew
 ```
 
+**2. Start**
 
-## Seed the database
+```bash
+just up
+```
 
-Once services are healthy, load demo data:
+**3. Seed**
 
 ```bash
 just db-seed
 ```
 
-This is idempotent. Safe to run multiple times.
+## Ports
 
-
-## Access points
-
-| URL | Service |
+| Service | Port |
 |---|---|
-| `http://localhost:3000` | Frontend app |
-| `http://localhost:8000` | API gateway |
-| `http://localhost:5432` | PostgreSQL |
-| `http://localhost:6379` | Redis |
-| `http://localhost:4222` | NATS |
-
-
-## Rebuild after code changes
-
-Services do not hot-reload in Docker mode. Rebuild after making changes:
-
-```bash
-docker compose up --build
-```
-
-To rebuild a single service:
-
-```bash
-docker compose up --build identity
-```
-
-
-## Tear down
-
-Stop all containers but preserve data volumes:
-
-```bash
-docker compose stop
-```
-
-Resume later:
-
-```bash
-docker compose start
-```
-
-Full teardown. Removes containers, images, and all data:
-
-```bash
-just shutdown
-```
-
-
-## Logs for a specific service
-
-```bash
-docker compose logs -f identity
-docker compose logs -f gateway
-docker compose logs -f app
-```
-
-
-## Running only infrastructure
-
-If you want to run application code locally but use Docker for PostgreSQL, Redis, and NATS:
-
-```bash
-docker compose up postgres redis nats -d --wait
-```
-
-Then follow the [LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md) guide.
-
-
-## Configuring services for Docker
-
-In Docker mode each service reads from `config/local.yaml`. The `docker-compose.yml` mounts these files at container startup. If a `local.yaml` does not exist, the service will use defaults defined in `config/default.yaml`. This is fine for infrastructure settings but third-party keys such as Stripe must be filled in manually before the relevant service will work.
-
-Copy the examples once:
-
-```bash
-for svc in identity catalog sales ticketing payments entry audit; do
-  cp apps/api/services/$svc/config/local.yaml.example apps/api/services/$svc/config/local.yaml
-done
-cp apps/api/gateway/config/local.yaml.example apps/api/gateway/config/local.yaml
-```
-
-**Never commit `local.yaml` files.** They are gitignored.
+| Frontend | `3000` |
+| Gateway | `8000` |
+| Identity | `8001` |
+| Catalog | `8002` |
+| Sales | `8003` |
+| Payments | `8004` |
+| Ticketing | `8005` |
+| Entry | `8006` |
+| Audit | `8007` |
+| PostgreSQL | `5432` |
+| Redis | `6379` |
+| NATS | `4222` |

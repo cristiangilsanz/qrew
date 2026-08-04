@@ -1,121 +1,49 @@
-# Physical Device
+# Android · USB
 
-Run QREW on a real Android or iOS device connected via USB.
+Runs the app on a physical device connected via USB.
 
+> [!NOTE]
+> Requires the native stack already running. See [local-native.md](local-native.md).
 
-## Before you start
+## Steps
 
-Build the web bundle and sync it:
-
-```bash
-cd apps/app
-npm run build
-npx cap sync
-```
-
-
-## Android via USB
-
-### Prerequisites
-
-- USB debugging enabled on the device: Settings > Developer Options > USB Debugging
-- Device authorized on first connection when prompted
-- Android Studio installed with ADB in your PATH
-
-Verify ADB sees the device:
+**1. Start the frontend**
 
 ```bash
-adb devices
+npm run dev
 ```
 
-### Run
-
-Connect the device, then from Android Studio select it in the toolbar and click Run.
-
-Or from the terminal:
+**2. Start the tunnel**
 
 ```bash
-npx cap run android
+npm run dev:tunnel
 ```
 
-### Connect to the local backend
+> [!WARNING]
+> To use your own, create a tunnel via `cloudflared tunnel create <name>` and update `TUNNEL_URL` and `TUNNEL_HOST` in `scripts/tunnel.sh`.
 
-The device must be on the same network as your machine, or you can use USB port forwarding.
-
-USB forwarding via ADB:
+**3. Deploy to device**
 
 ```bash
-adb reverse tcp:8000 tcp:8000
+npm run deploy:android-phone
 ```
 
-Then in `apps/app/.env.local`:
+## Ports
 
-```
-VITE_API_URL=http://localhost:8000
-```
+| Service | Port |
+|---|---|
+| Frontend | `5173` |
+| Gateway | `8000` |
+| Identity | `8001` |
+| Catalog | `8002` |
+| Sales | `8003` |
+| Payments | `8004` |
+| Ticketing | `8005` |
+| Entry | `8006` |
+| Audit | `8007` |
+| PostgreSQL | `5432` |
+| Redis | `6379` |
+| NATS | `4222` |
 
-Alternatively, use your machine's local IP:
-
-```
-VITE_API_URL=http://192.168.1.x:8000
-```
-
-### Live reload
-
-```bash
-cd apps/app
-npx cap run android --livereload --external
-```
-
-The device must be on the same Wi-Fi network as your machine. ADB reverse does not apply to live reload traffic.
-
-
-## iOS via USB
-
-### Prerequisites
-
-macOS only. Trust the device in Xcode when prompted. A valid Apple Developer account may be required for deployment to a physical device.
-
-### Run
-
-Connect the device. In Xcode, select it as the run target and click Run.
-
-Or from the terminal:
-
-```bash
-npx cap run ios
-```
-
-### Connect to the local backend
-
-Use your machine's local IP address. iOS devices cannot use `localhost` to reach the host machine.
-
-In `apps/app/.env.local`:
-
-```
-VITE_API_URL=http://192.168.1.x:8000
-```
-
-Find your local IP:
-
-```bash
-ipconfig getifaddr en0
-```
-
-The device and your machine must be on the same network.
-
-### Live reload
-
-```bash
-cd apps/app
-npx cap run ios --livereload --external
-```
-
-
-## Troubleshooting
-
-**ADB device not found.** Check USB debugging is enabled and the device is authorized. Try `adb kill-server && adb start-server`.
-
-**Network calls fail.** Confirm `VITE_API_URL` points to the machine IP, not `localhost`. Verify both are on the same network.
-
-**iOS code signing error.** Open Xcode, go to Signing and Capabilities, and select your development team.
+> [!NOTE]
+> When the tunnel is active, the app is also reachable at `https://qrew-dev.uk`.
