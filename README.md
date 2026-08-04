@@ -15,9 +15,6 @@
 
 # 🏗️ **Architecture**
 
-> [!WARNING]
-> This is a picture of the system. The full dive into the topic is in [OVERVIEW.md](docs/architecture/overview.md).
-
 <div align="center">
 
 ```mermaid
@@ -70,13 +67,10 @@ flowchart TB
     classDef ext  fill:#222,color:#fff,stroke:#777,stroke-width:1px
 ```
 
-<div align="right">
-
-→ [Full Architecture View](docs/architecture/overview.md)
-
 </div>
 
-</div>
+> [!NOTE]
+> This is a simple picture of the system. The full dive into the topic is in [ARCHITECTURE.md](docs/architecture/overview.md).
 
 # 📁 **Project Structure**
 
