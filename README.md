@@ -124,7 +124,7 @@ QREW/
 - 🔑 [Environment Variables](docs/development/configuration.md)
 - 🖥️ [Local · Native](docs/development/setup/local-native.md)
 - 🐳 [Local · Docker](docs/development/setup/local-docker.md)
-- 📲 [Android · USB](docs/development/setup/android-usb.md)
+- 🔌 [Android · USB](docs/development/setup/android-usb.md)
 - 📱 [Android · Emulator](docs/development/setup/android-emulator.md)
 
 ## ⚡ Quick Start
