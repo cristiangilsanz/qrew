@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Eye, EyeOff, KeyRound, Lock, Mail } from 'lucide-react'
+import { Eye, EyeOff, KeyRound, Lock, LogIn, Mail } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -42,7 +42,11 @@ export function LoginForm() {
 
   const onSubmit = (values: LoginFormValues) => {
     login.mutate(values, {
-      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/events' }),
+      onSuccess: (data) => {
+        if (data.setup_required) navigate({ to: '/setup' })
+        else if (data.totp_required) navigate({ to: '/verify-totp' })
+        else navigate({ to: '/home' })
+      },
     })
   }
 
@@ -53,7 +57,7 @@ export function LoginForm() {
       return
     }
     passkeyLogin.mutate(email, {
-      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/events' }),
+      onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/home' }),
     })
   }
 
@@ -115,7 +119,17 @@ export function LoginForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" isLoading={login.isPending}>
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="text-muted-foreground hover:text-foreground text-xs"
+            >
+              {t('auth.forgotPassword')}
+            </Link>
+          </div>
+
+          <Button type="submit" className="w-full rounded-full" isLoading={login.isPending}>
+            <LogIn className="mr-2 h-4 w-4" />
             {t('auth.login')}
           </Button>
         </form>

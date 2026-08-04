@@ -13,7 +13,7 @@ from com.qode.qrew.v1.identity.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
-_pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
+_pwd_context = CryptContext(schemes=["argon2"])
 
 
 def hash_password(password: str) -> str:
@@ -74,6 +74,7 @@ def create_access_token(
     subject: str,
     device_id: str | None = None,
     session_jti: str | None = None,
+    is_admin: bool = False,
 ) -> str:
     """Mint a signed access token."""
     now = datetime.now(UTC)
@@ -84,6 +85,8 @@ def create_access_token(
         "iat": now,
         "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
     }
+    if is_admin:
+        payload["adm"] = True
     if device_id is not None:
         payload["device_id"] = device_id
     if session_jti is not None:
@@ -133,6 +136,19 @@ def create_refresh_token(subject: str) -> str:
 def decode_refresh_token(token: str) -> dict[str, object]:
     """Decode and validate a refresh token."""
     return jwt_keys.verify(jwt_keys.REFRESH, token)
+
+
+def create_totp_token(subject: str) -> str:
+    """Mint a short-lived token for the TOTP verification step after login."""
+    now = datetime.now(UTC)
+    payload: dict[str, object] = {
+        "sub": subject,
+        "type": "access",
+        "scope": "totp",
+        "iat": now,
+        "exp": now + timedelta(minutes=settings.totp_token_expire_minutes),
+    }
+    return jwt_keys.sign(jwt_keys.TOTP, payload)
 
 
 def extract_jti(token: str) -> str | None:

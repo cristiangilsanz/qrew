@@ -66,7 +66,7 @@ describe('LoginForm', () => {
     })
   })
 
-  it('navigates to /events on successful login', async () => {
+  it('navigates to /home on successful login', async () => {
     renderLoginForm()
 
     await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com')
@@ -74,13 +74,13 @@ describe('LoginForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/events' })
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/home' })
     })
   })
 
   it('navigates to /setup when setup_required is true', async () => {
     server.use(
-      http.post('http://localhost:8001/v1/auth/login', () =>
+      http.post('http://localhost:8000/api/identity/v1/auth/login', () =>
         HttpResponse.json({
           access_token: 'mock-setup-token',
           refresh_token: null,
@@ -105,7 +105,7 @@ describe('LoginForm', () => {
   it('calls toast.error when login fails', async () => {
     const { toast } = await import('sonner')
     server.use(
-      http.post('http://localhost:8001/v1/auth/login', () =>
+      http.post('http://localhost:8000/api/identity/v1/auth/login', () =>
         HttpResponse.json({ detail: 'Invalid credentials' }, { status: 401 }),
       ),
     )
@@ -121,14 +121,14 @@ describe('LoginForm', () => {
     })
   })
 
-  it('navigates to /events after passkey sign-in', async () => {
+  it('navigates to /home after passkey sign-in', async () => {
     renderLoginForm()
 
     await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com')
     await userEvent.click(screen.getByRole('button', { name: /sign in with passkey/i }))
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/events' })
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/home' })
     })
   })
 

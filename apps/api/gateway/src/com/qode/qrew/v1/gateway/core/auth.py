@@ -36,7 +36,7 @@ def _load_public_pem(private_pem: str) -> str:
 
 
 @functools.cache
-def _access_public_keys() -> list[str]:
+def access_public_keys() -> list[str]:
     """Derived once from settings; cached for the lifetime of the process."""
     keys: list[str] = []
     if settings.access_jwt_private_key:
@@ -49,7 +49,7 @@ def _access_public_keys() -> list[str]:
 
 
 @functools.cache
-def _scanner_public_keys() -> list[str]:
+def scanner_public_keys() -> list[str]:
     """Derived once from settings; cached for the lifetime of the process."""
     if settings.scanner_jwt_private_key:
         return [_load_public_pem(settings.scanner_jwt_private_key)]
@@ -68,7 +68,7 @@ def _extract_token(websocket: WebSocket) -> tuple[str, str | None] | None:
     return None
 
 
-def _try_verify(token: str, public_keys: list[str]) -> dict[str, object] | None:
+def try_verify(token: str, public_keys: list[str]) -> dict[str, object] | None:
     audience = settings.jwt_audience or None
     issuer = settings.jwt_issuer or None
     for public_pem in public_keys:
@@ -91,15 +91,15 @@ def authenticate(websocket: WebSocket) -> WebSocketIdentity:
         raise WebSocketAuthError("missing token")
     token, protocol_value = extracted
 
-    claims = _try_verify(token, _access_public_keys())
+    claims = try_verify(token, access_public_keys())
     if claims is not None:
         if claims.get("type") != "access":
             raise WebSocketAuthError("invalid token type")
         return WebSocketIdentity(claims=claims, accepted_subprotocol=protocol_value)
 
-    scanner_keys = _scanner_public_keys()
+    scanner_keys = scanner_public_keys()
     if scanner_keys:
-        claims = _try_verify(token, scanner_keys)
+        claims = try_verify(token, scanner_keys)
         if claims is not None and claims.get("type") == "scanner":
             return WebSocketIdentity(claims=claims, accepted_subprotocol=protocol_value)
 

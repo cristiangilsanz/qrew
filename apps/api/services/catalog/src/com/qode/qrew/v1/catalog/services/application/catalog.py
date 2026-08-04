@@ -20,11 +20,13 @@ class PublicCatalogService:
         self._venue_repo = VenueRepository(session)
         self._ticket_type_repo = TicketTypeRepository(session)
 
+    _VISIBLE_STATUSES = {EventStatus.published, EventStatus.ongoing}
+
     async def get_published_event(
         self, event_id: uuid.UUID
     ) -> tuple[Event, Organisation, Venue] | None:
         event = await self._event_repo.get_by_id(event_id)
-        if event is None or event.status != EventStatus.published:
+        if event is None or event.status not in self._VISIBLE_STATUSES:
             return None
         org = await self._org_repo.get_by_id(event.organisation_id)
         venue = await self._venue_repo.get_by_id(event.venue_id)
@@ -41,7 +43,7 @@ class PublicCatalogService:
         self, event_id: uuid.UUID
     ) -> tuple[Event, list[TicketType]] | None:
         event = await self._event_repo.get_by_id(event_id)
-        if event is None or event.status != EventStatus.published:
+        if event is None or event.status not in self._VISIBLE_STATUSES:
             return None
         tiers = await self.get_ticket_types(event_id)
         return event, tiers

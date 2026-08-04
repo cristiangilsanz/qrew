@@ -1,6 +1,7 @@
 from com.qode.qrew.v1.identity.core.dependencies import (
     domain_error,
     get_deletion_service,
+    get_forgot_password_service,
     get_captcha_service,
     get_complete_setup_service,
     get_device_attestation_service,
@@ -34,6 +35,7 @@ from com.qode.qrew.v1.identity.core.dependencies import (
 __all__ = [
     "domain_error",
     "get_deletion_service",
+    "get_forgot_password_service",
     "get_captcha_service",
     "get_complete_setup_service",
     "get_device_attestation_service",

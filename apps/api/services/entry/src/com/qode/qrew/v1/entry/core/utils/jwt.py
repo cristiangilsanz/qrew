@@ -34,6 +34,7 @@ def _resolve_keys() -> tuple[str, str]:
 
 
 _PRIVATE_KEY, _PUBLIC_KEY = _resolve_keys()
+_ALGORITHM = settings.scanner_jwt_algorithm
 
 SCANNER_AUDIENCE = "qrew.scan"
 
@@ -59,14 +60,14 @@ def create_scanner_token(
         "iat": now,
         "exp": now + timedelta(hours=settings.scanner_token_expire_hours),
     }
-    return jwt.encode(payload, _PRIVATE_KEY, algorithm="RS256")
+    return jwt.encode(payload, _PRIVATE_KEY, algorithm=_ALGORITHM)
 
 
 def decode_scanner_token(token: str) -> dict[str, object]:
     return _sec_jwt.decode_token(  # type: ignore[no-any-return]
         token,
         _PUBLIC_KEY,
-        algorithms=["RS256"],
+        algorithms=[_ALGORITHM],
         audience=SCANNER_AUDIENCE,
     )
 
@@ -75,6 +76,6 @@ def decode_scanner_token_for_refresh(token: str) -> dict[str, object]:
     return jwt.decode(  # type: ignore[no-any-return]
         token,
         _PUBLIC_KEY,
-        algorithms=["RS256"],
+        algorithms=[_ALGORITHM],
         options={"verify_exp": False, "verify_aud": False},
     )

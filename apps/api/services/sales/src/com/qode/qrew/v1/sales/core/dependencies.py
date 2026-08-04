@@ -8,12 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.core.database import get_db
+from com.qode.qrew.v1.sales.repositories.market import MarketRepository
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
     TicketTypeInventoryRepository,
 )
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 from com.qode.qrew.v1.sales.services.application.audit import AuditService
+from com.qode.qrew.v1.sales.services.application.market.service import MarketService
 from com.qode.qrew.v1.sales.services.application.queue.service import QueueService
 from com.qode.qrew.v1.sales.services.application.reservation import ReservationService
 
@@ -49,3 +51,14 @@ def get_reservation_service(db: AsyncSession = Depends(get_db)) -> ReservationSe
 
 def get_queue_service(db: AsyncSession = Depends(get_db)) -> QueueService:
     return QueueService(EventContextRepository(db), AuditService())
+
+
+def get_market_service(db: AsyncSession = Depends(get_db)) -> MarketService:
+    return MarketService(
+        MarketRepository(db),
+        EventContextRepository(db),
+        TicketTypeInventoryRepository(db),
+        AuditService(),
+        assignment_ttl_hours=settings.market_assignment_ttl_hours,
+        listing_ttl_days=settings.market_listing_ttl_days,
+    )

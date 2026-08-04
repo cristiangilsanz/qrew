@@ -18,7 +18,8 @@ RECOVERY: Final = "recovery"
 REFRESH: Final = "refresh"
 QUEUE: Final = "queue"
 TICKET_QR: Final = "ticket_qr"  # noqa: S105
-PURPOSES: Final = (ACCESS, SETUP, RECOVERY, REFRESH, QUEUE, TICKET_QR)
+TOTP: Final = "totp"
+PURPOSES: Final = (ACCESS, SETUP, RECOVERY, REFRESH, QUEUE, TICKET_QR, TOTP)
 
 
 @dataclass(frozen=True)

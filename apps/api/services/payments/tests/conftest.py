@@ -19,8 +19,9 @@ def reservation_id() -> uuid.UUID:
 
 def make_payment(
     *,
-    reservation_id: uuid.UUID,
+    reservation_id: uuid.UUID | None = None,
     user_id: uuid.UUID | None = None,
+    market_assignment_id: uuid.UUID | None = None,
     status: PaymentStatus = PaymentStatus.requires_action,
     intent_id: str | None = "pi_test_123",
     client_secret_ciphertext: bytes | None = b"encrypted",
@@ -33,6 +34,7 @@ def make_payment(
         id=uuid.uuid4(),
         reservation_id=reservation_id,
         user_id=user_id or uuid.uuid4(),
+        market_assignment_id=market_assignment_id,
         status=status,
         provider_payment_intent_id=intent_id,
         client_secret_ciphertext=client_secret_ciphertext,

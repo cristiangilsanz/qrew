@@ -9,7 +9,17 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 
 export default [
-  { ignores: ['dist', 'src/routeTree.gen.ts', 'coverage', 'playwright-report', 'node_modules'] },
+  {
+    ignores: [
+      'dist',
+      'src/routeTree.gen.ts',
+      'coverage',
+      'playwright-report',
+      'node_modules',
+      'android',
+      'ios',
+    ],
+  },
   js.configs.recommended,
   // Type-aware rules scoped to src only (uses tsconfig.app.json)
   {

@@ -24,6 +24,18 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   }
 })
 
+vi.mock('@marsidev/react-turnstile', async () => {
+  const { useEffect } = await import('react')
+  return {
+    Turnstile: ({ onSuccess }: { onSuccess: (token: string) => void }) => {
+      useEffect(() => {
+        onSuccess('mock-captcha-token')
+      }, [])
+      return null
+    },
+  }
+})
+
 function renderRegisterForm() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -56,6 +68,9 @@ describe('RegisterForm', () => {
 
   it('shows validation errors on empty submit', async () => {
     renderRegisterForm()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /create account/i })).not.toBeDisabled()
+    })
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
     await waitFor(() => {
       expect(document.querySelectorAll('[id$="-form-item-message"]').length).toBeGreaterThan(0)
@@ -65,6 +80,9 @@ describe('RegisterForm', () => {
   it('shows toast and navigates to /login on success', async () => {
     const { toast } = await import('sonner')
     renderRegisterForm()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /create account/i })).not.toBeDisabled()
+    })
     await fillValidForm()
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
@@ -77,12 +95,15 @@ describe('RegisterForm', () => {
   it('calls toast.error when registration fails', async () => {
     const { toast } = await import('sonner')
     server.use(
-      http.post('http://localhost:8001/v1/auth/registration/', () =>
+      http.post('http://localhost:8000/api/identity/v1/auth/registration/', () =>
         HttpResponse.json({ detail: 'Email already registered' }, { status: 409 }),
       ),
     )
 
     renderRegisterForm()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /create account/i })).not.toBeDisabled()
+    })
     await fillValidForm()
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 

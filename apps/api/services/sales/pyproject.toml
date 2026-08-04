@@ -25,23 +25,29 @@ dependencies = [
     "opentelemetry-instrumentation-sqlalchemy>=0.45b0",
     "cryptography>=42",
     "nats-py>=2.6",
+    "exceptions",
     "idempotency",
+    "middleware",
     "locking",
     "messaging",
     "worker",
     "observability",
     "contracts",
     "security",
+    "probes",
 ]
 
 [tool.uv.sources]
+exceptions = { workspace = true }
 idempotency = { workspace = true }
+middleware = { workspace = true }
 locking = { workspace = true }
 messaging = { workspace = true }
 worker = { workspace = true }
 observability = { workspace = true }
 contracts = { workspace = true }
 security = { workspace = true }
+probes = { workspace = true }
 
 [project.scripts]
 sales-dev = "com.qode.qrew.v1.sales.__main__:main"

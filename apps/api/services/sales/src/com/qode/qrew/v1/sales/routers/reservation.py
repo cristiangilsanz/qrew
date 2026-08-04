@@ -11,10 +11,16 @@ from com.qode.qrew.v1.sales.core.database import get_db
 from com.qode.qrew.v1.sales.core.dependencies import get_reservation_service, limiter
 from locking import LockUnavailableError
 from com.qode.qrew.v1.sales.models.reservation import Reservation
+from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
+from com.qode.qrew.v1.sales.models.reservation_holder import ReservationHolder
+from com.qode.qrew.v1.sales.repositories.reservation_holder import ReservationHolderRepository
 from com.qode.qrew.v1.sales.schemas.reservation import (
+    HolderResponse,
     ReservationCreateRequest,
     ReservationResponse,
+    SetHoldersRequest,
 )
+from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 from com.qode.qrew.v1.sales.services.application.reservation import (
     FraudBlockedError,
     ReservationError,
@@ -174,3 +180,57 @@ async def get_reservation(
     except ReservationError as exc:
         raise _bad_request(exc) from exc
     return _to_response(reservation)
+
+
+@router.put(
+    "/{reservation_id}/holders",
+    response_model=list[HolderResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Set holder info (name + DNI) for each ticket slot in a reservation",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def set_holders(
+    request: Request,
+    reservation_id: uuid.UUID,
+    body: SetHoldersRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[HolderResponse]:
+    del request
+    reservation = await ReservationRepository(db).get_by_id(reservation_id)
+    if reservation is None or reservation.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Reservation not found", "field": "reservation_id"},
+        )
+    if reservation.status != ReservationStatus.reserved:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": "Reservation is no longer modifiable", "field": "status"},
+        )
+    if len(body.holders) != reservation.quantity:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"message": f"Expected {reservation.quantity} holder(s)", "field": "holders"},
+        )
+    positions = sorted(h.position for h in body.holders)
+    if positions != list(range(1, reservation.quantity + 1)):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"message": "Positions must be 1..quantity with no gaps", "field": "holders"},
+        )
+    holder_models = [
+        ReservationHolder(
+            reservation_id=reservation_id,
+            position=h.position,
+            holder_name=h.holder_name,
+            holder_dni=h.holder_dni,
+        )
+        for h in body.holders
+    ]
+    await ReservationHolderRepository(db).upsert_all(reservation_id, holder_models)
+    await db.commit()
+    return [
+        HolderResponse(position=h.position, holder_name=h.holder_name, holder_dni=h.holder_dni)
+        for h in body.holders
+    ]

@@ -85,9 +85,10 @@ class LoginAnomalyService:
                     "anomaly_session_kill_failed", user_id=str(user.id), error=repr(exc)
                 )
 
+        location = self._geoip.locate_label(ip_address) if ip_address else None
         try:
             await self._notifier.send_login_anomaly_alert(
-                user.email, user.full_name, reason_str, ip_address
+                user.email, user.full_name, ip_address, location
             )
         except Exception as exc:
             await logger.awarning(

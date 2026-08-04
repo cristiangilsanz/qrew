@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Plus } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
@@ -93,9 +94,12 @@ export function CreateOrganisationForm({ onSuccess }: Props) {
             </FormItem>
           )}
         />
-        <Button type="submit" isLoading={createOrg.isPending}>
-          {t('organiser.org.create')}
-        </Button>
+        <div className="flex justify-end">
+          <Button type="submit" isLoading={createOrg.isPending} className="rounded-full px-6">
+            <Plus className="h-4 w-4" />
+            {t('organiser.org.create')}
+          </Button>
+        </div>
       </form>
     </Form>
   )

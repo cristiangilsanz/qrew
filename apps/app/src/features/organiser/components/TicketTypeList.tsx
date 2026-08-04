@@ -1,258 +1,21 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Pencil, Trash2 } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { z } from 'zod'
 
-import { Button } from '@/components/ui/button'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+import { TicketTypeListSkeleton } from '@/components/ui/skeleton'
 
-import { useCreateTicketType } from '../hooks/useCreateTicketType'
 import { useDeleteTicketType } from '../hooks/useDeleteTicketType'
 import { useOrgTicketTypes } from '../hooks/useOrgTicketTypes'
-import { useUpdateTicketType } from '../hooks/useUpdateTicketType'
-
-const createSchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .max(32)
-    .transform((v) => v.toLowerCase())
-    .pipe(
-      z
-        .string()
-        .regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars'),
-    ),
-  description: z.string().optional(),
-  capacity: z.coerce.number().int().min(1).max(100000),
-  price_cents: z.coerce.number().int().min(0).max(10000000),
-  currency: z.enum(['EUR', 'USD', 'GBP']),
-  position: z.coerce.number().int().optional(),
-})
-
-const editSchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .max(32)
-    .transform((v) => v.toLowerCase())
-    .pipe(
-      z
-        .string()
-        .regex(/^[a-z][a-z0-9_]{0,31}$/, 'Must start with a letter, no spaces or special chars'),
-    ),
-  description: z.string().optional(),
-  capacity: z.coerce.number().int().min(1).max(100000),
-  price_cents: z.coerce.number().int().min(0).max(10000000),
-  position: z.coerce.number().int().optional(),
-})
-
-type CreateValues = z.infer<typeof createSchema>
-type EditValues = z.infer<typeof editSchema>
-
-interface EditRowProps {
-  ttId: string
-  eventId: string
-  defaultValues: EditValues
-  onClose: () => void
-}
-
-function EditRow({ ttId, eventId, defaultValues, onClose }: EditRowProps) {
-  const { t } = useTranslation()
-  const updateTt = useUpdateTicketType(eventId)
-  const form = useForm<EditValues>({
-    resolver: zodResolver(editSchema),
-    defaultValues,
-  })
-
-  return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((v) => {
-          updateTt.mutate({ ttId, data: v })
-          onClose()
-        })}
-        className="space-y-2 rounded-md border p-3"
-      >
-        <div className="grid grid-cols-2 gap-2">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">{t('organiser.ticketTypes.nameLabel')}</FormLabel>
-                <FormControl>
-                  <Input className="h-8 text-sm" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="capacity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">
-                  {t('organiser.ticketTypes.capacityLabel')}
-                </FormLabel>
-                <FormControl>
-                  <Input type="number" className="h-8 text-sm" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="price_cents"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">{t('organiser.ticketTypes.priceLabel')}</FormLabel>
-                <FormControl>
-                  <Input type="number" className="h-8 text-sm" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="position"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">
-                  {t('organiser.ticketTypes.positionLabel')}
-                </FormLabel>
-                <FormControl>
-                  <Input type="number" className="h-8 text-sm" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button type="submit" size="sm" isLoading={updateTt.isPending}>
-            {t('common.save')}
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  )
-}
-
-interface AddFormProps {
-  eventId: string
-  onClose: () => void
-}
-
-function AddForm({ eventId, onClose }: AddFormProps) {
-  const { t } = useTranslation()
-  const createTt = useCreateTicketType(eventId)
-  const form = useForm<CreateValues>({
-    resolver: zodResolver(createSchema),
-    defaultValues: { name: '', description: '', capacity: 100, price_cents: 0, currency: 'EUR' },
-  })
-
-  return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((v) => {
-          createTt.mutate(v)
-          form.reset()
-          onClose()
-        })}
-        className="space-y-2 rounded-md border p-3"
-      >
-        <div className="grid grid-cols-2 gap-2">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">{t('organiser.ticketTypes.nameLabel')}</FormLabel>
-                <FormControl>
-                  <Input className="h-8 text-sm" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="capacity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">
-                  {t('organiser.ticketTypes.capacityLabel')}
-                </FormLabel>
-                <FormControl>
-                  <Input type="number" className="h-8 text-sm" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="price_cents"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">{t('organiser.ticketTypes.priceLabel')}</FormLabel>
-                <FormControl>
-                  <Input type="number" className="h-8 text-sm" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="currency"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">
-                  {t('organiser.ticketTypes.currencyLabel')}
-                </FormLabel>
-                <FormControl>
-                  <Input className="h-8 text-sm" maxLength={3} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button type="submit" size="sm" isLoading={createTt.isPending}>
-            {t('common.save')}
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  )
-}
+import { AddTicketTypeForm } from './AddTicketTypeForm'
+import { CapacityEditTicketTypeForm, EditTicketTypeForm } from './EditTicketTypeForm'
 
 interface Props {
   eventId: string
+  eventStatus?: 'draft' | 'published' | 'ongoing' | 'cancelled'
 }
 
-export function TicketTypeList({ eventId }: Props) {
+export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
   const { t } = useTranslation()
   const { data, isLoading } = useOrgTicketTypes(eventId)
   const deleteTt = useDeleteTicketType(eventId)
@@ -261,19 +24,19 @@ export function TicketTypeList({ eventId }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const ticketTypes = data?.items ?? []
 
+  const canEdit = eventStatus === 'draft'
+  const canEditCapacity = eventStatus === 'published'
+  const canAdd = eventStatus === 'draft' || eventStatus === 'published'
+
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-4">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
-    )
+    return <TicketTypeListSkeleton />
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {ticketTypes.map((tt) =>
-        editingId === tt.id ? (
-          <EditRow
+        canEdit && editingId === tt.id ? (
+          <EditTicketTypeForm
             key={tt.id}
             ttId={tt.id}
             eventId={eventId}
@@ -281,73 +44,160 @@ export function TicketTypeList({ eventId }: Props) {
               name: tt.name,
               description: tt.description ?? '',
               capacity: tt.capacity,
-              price_cents: tt.price_cents,
+              price_cents: tt.price_cents / 100,
               position: tt.position,
             }}
             onClose={() => setEditingId(null)}
           />
+        ) : canEditCapacity && editingId === tt.id ? (
+          <CapacityEditTicketTypeForm
+            key={tt.id}
+            ttId={tt.id}
+            eventId={eventId}
+            currentCapacity={tt.capacity}
+            onClose={() => setEditingId(null)}
+          />
         ) : (
-          <div key={tt.id} className="flex items-center justify-between rounded-md border p-3">
-            <div>
-              <p className="font-medium capitalize">{tt.name}</p>
-              <p className="text-muted-foreground text-xs">
-                {(tt.price_cents / 100).toFixed(2)} {tt.currency} · {tt.available}/{tt.capacity}{' '}
-                available
-              </p>
+          /* Ticket-shaped card — white background with top/bottom notch semicircles */
+          <div
+            key={tt.id}
+            className="relative flex overflow-hidden rounded-2xl bg-white text-gray-900 shadow-sm"
+          >
+            {/* Notch semicircles */}
+            <div
+              className="absolute top-0 z-10 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ left: 'calc(100% - 5rem)', backgroundColor: 'hsl(0, 0%, 10%)' }}
+            />
+            <div
+              className="absolute bottom-0 z-10 h-6 w-6 -translate-x-1/2 translate-y-1/2 rounded-full"
+              style={{ left: 'calc(100% - 5rem)', backgroundColor: 'hsl(0, 0%, 10%)' }}
+            />
+
+            {/* Left section: info + action buttons */}
+            <div className="flex min-w-0 flex-1 items-center gap-2 py-6 pr-3 pl-5">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold capitalize">{tt.name}</p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {t('organiser.ticketTypes.available', {
+                    available: tt.available,
+                    capacity: tt.capacity,
+                  })}
+                </p>
+              </div>
+              {(canEdit || canEditCapacity) && (
+                <div className="flex shrink-0 items-center gap-0.5">
+                  <button
+                    onClick={() => setEditingId(tt.id)}
+                    className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => setConfirmDeleteId(tt.id)}
+                      className="rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="flex gap-1">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8"
-                onClick={() => setEditingId(tt.id)}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              {confirmDeleteId === tt.id ? (
-                <>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="h-8"
-                    onClick={() => {
-                      deleteTt.mutate(tt.id)
-                      setConfirmDeleteId(null)
-                    }}
-                    isLoading={deleteTt.isPending}
-                  >
-                    {t('common.save')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8"
-                    onClick={() => setConfirmDeleteId(null)}
-                  >
-                    {t('common.cancel')}
-                  </Button>
-                </>
+
+            {/* Dashed vertical separator */}
+            <div className="my-4 border-l border-dashed border-gray-400" />
+
+            {/* Price column */}
+            <div className="flex w-20 shrink-0 flex-col items-center justify-center px-2 py-6">
+              {tt.price_cents === 0 ? (
+                <p className="text-xs font-semibold text-green-600">
+                  {t('organiser.ticketTypes.free')}
+                </p>
               ) : (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8"
-                  onClick={() => setConfirmDeleteId(tt.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <>
+                  <p className="text-sm font-bold tabular-nums">
+                    {(tt.price_cents / 100).toFixed(2)}
+                  </p>
+                  <p className="text-[10px] tracking-wide text-gray-500 uppercase">{tt.currency}</p>
+                </>
               )}
             </div>
           </div>
         ),
       )}
-      {showAdd ? (
-        <AddForm eventId={eventId} onClose={() => setShowAdd(false)} />
-      ) : (
-        <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}>
-          {t('organiser.ticketTypes.addButton')}
-        </Button>
-      )}
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {confirmDeleteId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
+            onClick={(e) => e.target === e.currentTarget && setConfirmDeleteId(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-[#111] p-6"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
+                  <Trash2 className="h-5 w-5 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-red-400">
+                    {t('organiser.ticketTypes.deleteTitle')}
+                  </h3>
+                  <p className="text-muted-foreground text-xs capitalize">
+                    {ticketTypes.find((tt) => tt.id === confirmDeleteId)?.name ?? '—'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
+                  onClick={() => setConfirmDeleteId(null)}
+                >
+                  {t('common.goBack')}
+                </button>
+                <button
+                  onClick={() => {
+                    deleteTt.mutate(confirmDeleteId)
+                    setConfirmDeleteId(null)
+                  }}
+                  disabled={deleteTt.isPending}
+                  className="flex h-10 items-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {t('organiser.ticketTypes.deleteConfirm')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add ticket type */}
+      {canAdd &&
+        (showAdd ? (
+          <AddTicketTypeForm eventId={eventId} onClose={() => setShowAdd(false)} />
+        ) : (
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowAdd(true)}
+              className="bg-primary hover:bg-primary/90 flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              {t('organiser.ticketTypes.addButton')}
+            </button>
+          </div>
+        ))}
     </div>
   )
 }

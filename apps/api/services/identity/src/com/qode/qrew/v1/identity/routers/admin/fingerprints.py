@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Path, Request, status
 
 from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/fingerprints")
 @limiter.limit("60/minute")  # type: ignore[misc]
 async def get_fingerprint(
     request: Request,
-    fingerprint_hash: str,
+    fingerprint_hash: str = Path(..., pattern=r"^[0-9a-fA-F]{32,128}$"),
     _admin: User = Depends(get_admin_user),
     service: FingerprintService = Depends(get_fingerprint_service),
 ) -> FingerprintAdminResponse:

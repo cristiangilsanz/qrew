@@ -82,7 +82,7 @@ describe('CheckoutForm', () => {
   it('shows error toast when reservation fails', async () => {
     const { toast } = await import('sonner')
     server.use(
-      http.post('http://localhost:8003/v1/events/:eventId/reserve', () =>
+      http.post('http://localhost:8000/api/sales/v1/events/:eventId/reserve', () =>
         HttpResponse.json({ detail: 'No availability' }, { status: 409 }),
       ),
     )

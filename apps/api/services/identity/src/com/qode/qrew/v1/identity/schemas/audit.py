@@ -12,7 +12,7 @@ _SUMMARIES: dict[str, str] = {
     AuditAction.LOGIN_LOCKED: "Account temporarily locked",
     AuditAction.LOGIN_UNLOCKED: "Account unlocked by support",
     AuditAction.LOGIN_COMPROMISED_PASSWORD: ("Sign-in with a password found in a breach database"),
-    AuditAction.SESSION_EVICTED: "Older session evicted (session cap)",
+    AuditAction.SESSION_EVICTED: "Older session evicted",
     AuditAction.ACCOUNT_DELETED: "Account deleted",
     AuditAction.LOGOUT: "Signed out",
     AuditAction.VERIFY_EMAIL: "Email address verified",
@@ -46,11 +46,16 @@ _SUMMARIES: dict[str, str] = {
     AuditAction.SCANNER_DEACTIVATED: "Scanner deactivated",
     AuditAction.FINGERPRINT_MULTI_ACCOUNT_FLAG: "Device flagged: multiple accounts",
     AuditAction.FINGERPRINT_HEADLESS_FLAG: "Device flagged: automation detected",
+    AuditAction.TOTP_ENABLED: "Two-factor authentication enabled",
+    AuditAction.TOTP_DISABLED: "Two-factor authentication disabled",
+    AuditAction.TOTP_VERIFIED: "Signed in with two-factor authentication",
+    AuditAction.TOTP_VERIFY_FAILED: "Two-factor authentication attempt failed",
+    AuditAction.TOTP_BACKUP_USED: "Signed in using a backup code",
 }
 
 
 def summarize(action: str) -> str:
-    return _SUMMARIES.get(action, action.replace("_", " ").capitalize())
+    return _SUMMARIES.get(action, action.replace("_", " ").title())
 
 
 class UserAuditEventResponse(BaseModel):

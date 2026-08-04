@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pagination import Page, clamp_limit
@@ -97,8 +97,8 @@ async def create_venue(
 @limiter.limit("120/minute")  # type: ignore[misc]
 async def list_venues(
     request: Request,
-    city: str | None = None,
-    country: str | None = None,
+    city: str | None = Query(default=None, max_length=64),
+    country: str | None = Query(default=None, max_length=64),
     cursor: str | None = None,
     limit: int = 20,
     svc: VenueService = Depends(get_venue_service),

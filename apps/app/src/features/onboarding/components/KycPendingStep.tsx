@@ -15,7 +15,7 @@ export function KycPendingStep({ onRetry }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: status } = useOnboardingStatus(10_000)
-  const completeSetup = useCompleteSetup(() => navigate({ to: '/events' }))
+  const completeSetup = useCompleteSetup(() => navigate({ to: '/home' }))
 
   if (status?.is_complete) {
     return (
@@ -23,9 +23,6 @@ export function KycPendingStep({ onRetry }: Props) {
         <CheckCircle className="text-primary mx-auto h-12 w-12" />
         <div>
           <p className="font-semibold">{t('onboarding.pending.approved')}</p>
-          <p className="text-muted-foreground text-sm">
-            {t('onboarding.pending.approvedDescription')}
-          </p>
         </div>
         <Button
           className="w-full"

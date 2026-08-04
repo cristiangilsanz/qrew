@@ -67,7 +67,7 @@ class CompleteSetupService:
             )
             raise SetupError("Passkey has not been registered", field="passkey")
 
-        access_token = create_access_token(str(user.id))
+        access_token = create_access_token(str(user.id), is_admin=user.is_admin)
         refresh_token = create_refresh_token(str(user.id))
 
         await self._persist_session(

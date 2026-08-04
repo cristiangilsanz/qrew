@@ -140,8 +140,8 @@ class PasskeyAuthenticationService:
         stored: PasskeyCredential,
     ) -> VerifiedAuthentication:
         """Run the WebAuthn verification or raise on failure."""
-        credential = build_assertion_credential(request)
         try:
+            credential = build_assertion_credential(request)
             return verify_assertion_response(credential, raw_challenge, stored)
         except Exception as exc:
             raise PasskeyError(assertion_error_message(exc, "authentication")) from exc
@@ -158,7 +158,9 @@ class PasskeyAuthenticationService:
         if setup_complete:
             refresh_token = create_refresh_token(str(user.id))
             session_jti = extract_jti(refresh_token)
-            access_token = create_access_token(str(user.id), session_jti=session_jti)
+            access_token = create_access_token(
+                str(user.id), session_jti=session_jti, is_admin=user.is_admin
+            )
             await self._persist_session(
                 user.id, refresh_token, ip_address, user_agent, device_fingerprint
             )

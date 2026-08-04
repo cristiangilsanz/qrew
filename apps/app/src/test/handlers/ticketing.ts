@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-const TICKETING_URL = 'http://localhost:8005'
+const TICKETING_URL = 'http://localhost:8000/api/ticketing'
 
 export const TICKET_1 = {
   id: 'ticket-1',

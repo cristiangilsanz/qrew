@@ -12,6 +12,7 @@ class OutboxEvent(Base):
     """One pending side effect to enqueue once the surrounding transaction commits."""
 
     __tablename__ = "outbox"
+    __table_args__ = {"schema": "identity"}
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     aggregate_type: Mapped[str] = mapped_column(String(64), nullable=False)

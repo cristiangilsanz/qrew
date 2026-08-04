@@ -6,9 +6,7 @@ from com.qode.qrew.v1.sales.core.config import settings
 
 _IP_KEY = "fraud:ip:{ip}:purchases"
 
-# Atomic INCR + conditional EXPIRE: TTL is set only on first creation so the window
-# is fixed from first hit, not reset on every request. Non-atomic INCR+EXPIRE would
-# leave keys without a TTL if the second call fails.
+# TTL is set only on first INCR so the window is fixed from first hit
 _INCR_WITH_TTL = """
 local count = redis.call('INCR', KEYS[1])
 if count == 1 then
@@ -19,8 +17,6 @@ return count
 
 
 class IpVelocitySignal:
-    """Score high-volume purchase attempts from a single IP."""
-
     name = "ip_velocity"
 
     def __init__(self, redis: aioredis.Redis) -> None:  # type: ignore[type-arg]

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-const API_URL = 'http://localhost:8001'
+const API_URL = 'http://localhost:8000/api/identity'
 
 export const authHandlers = [
   http.post(`${API_URL}/v1/auth/login`, () => {
@@ -95,10 +95,12 @@ export const authHandlers = [
           id: 'session-1',
           jti: 'jti-1',
           ip_address: '192.168.1.1',
-          user_agent: 'Mozilla/5.0 Chrome/120',
+          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0',
           device_fingerprint: null,
           created_at: '2026-07-01T10:00:00Z',
           last_used_at: '2026-07-06T10:00:00Z',
+          is_current: false,
+          location: null,
         },
       ],
       next_cursor: null,

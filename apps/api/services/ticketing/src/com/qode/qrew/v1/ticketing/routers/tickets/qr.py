@@ -35,6 +35,7 @@ _REASON_TO_STATUS: dict[DenialReason, int] = {
     DenialReason.reassertion: status.HTTP_403_FORBIDDEN,
     DenialReason.attestation: status.HTTP_403_FORBIDDEN,
     DenialReason.geofence: status.HTTP_403_FORBIDDEN,
+    DenialReason.time_window: status.HTTP_403_FORBIDDEN,
 }
 
 
@@ -54,7 +55,7 @@ async def _resolve_or_deny_bypass(
     ticket = await db.get(Ticket, ticket_id)
     if ticket is None or ticket.owner_user_id != current_user.id:
         raise _denied_exception(DenialReason.not_found)
-    if ticket.state not in {TicketState.issued, TicketState.entry_pending}:
+    if ticket.state not in {TicketState.issued, TicketState.scanning}:
         raise _denied_exception(DenialReason.state)
     event_ctx = await db.get(EventVenueContext, ticket.event_id)
     if event_ctx is None:

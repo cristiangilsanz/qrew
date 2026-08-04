@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core'
+import { Passkeys } from '@capawesome/capacitor-passkeys'
 import { startRegistration } from '@simplewebauthn/browser'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +12,18 @@ export function useRegisterPasskey(onSuccess?: () => void) {
   return useMutation({
     mutationFn: async () => {
       const options = await onboardingApi.passkeyRegisterBegin()
-      const credential = await startRegistration({ optionsJSON: options })
+      const credential = Capacitor.isNativePlatform()
+        ? await Passkeys.createPasskey({
+            challenge: options.challenge,
+            rp: options.rp,
+            user: options.user,
+            pubKeyCredParams: options.pubKeyCredParams,
+            authenticatorSelection: options.authenticatorSelection,
+            timeout: options.timeout,
+            attestation: options.attestation,
+            excludeCredentials: options.excludeCredentials,
+          })
+        : await startRegistration({ optionsJSON: options })
       return onboardingApi.passkeyRegisterComplete(credential)
     },
     onSuccess: () => {

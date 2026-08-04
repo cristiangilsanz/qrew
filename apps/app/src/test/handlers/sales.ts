@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-const SALES_URL = 'http://localhost:8003'
+const SALES_URL = 'http://localhost:8000/api/sales'
 
 const RESERVATION = {
   id: 'res-1',

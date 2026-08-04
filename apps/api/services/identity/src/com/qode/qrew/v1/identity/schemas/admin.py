@@ -36,3 +36,9 @@ class UserSummaryResponse(BaseModel):
     phone_verified: bool
     is_admin: bool
     created_at: datetime
+
+
+class UserSearchResult(BaseModel):
+    id: uuid.UUID
+    email: str
+    full_name: str

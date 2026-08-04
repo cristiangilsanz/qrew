@@ -22,6 +22,8 @@ class EventVenueContext(Base):
     longitude: Mapped[Decimal] = mapped_column(Numeric(9, 6), nullable=False, server_default="0")
     geofence_radius_m: Mapped[int] = mapped_column(Integer, nullable=False, server_default="200")
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, server_default="UTC")
+    starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

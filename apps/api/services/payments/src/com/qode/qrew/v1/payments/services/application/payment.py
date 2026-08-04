@@ -40,6 +40,35 @@ class _ReservationContext:
     error_code: str | None = None
 
 
+async def _get_assignment_context(
+    assignment_id: uuid.UUID, user_id: uuid.UUID
+) -> _ReservationContext:
+    async with httpx.AsyncClient(base_url=settings.sales_url) as client:
+        resp = await client.post(
+            f"/v1/billing/market-assignments/{assignment_id}/charge",
+            json={"user_id": str(user_id)},
+            headers={"X-Internal-Key": settings.internal_api_key},
+            timeout=5.0,
+        )
+    if resp.status_code == 200:  # noqa: PLR2004
+        data = resp.json()
+        return _ReservationContext(
+            amount_cents=data["amount_cents"],
+            currency=data["currency"],
+            is_valid=True,
+        )
+    if resp.status_code in (400, 404, 410):
+        data = resp.json()
+        return _ReservationContext(
+            amount_cents=0,
+            currency="",
+            is_valid=False,
+            error_code=data.get("error_code") or str(resp.status_code),
+        )
+    resp.raise_for_status()
+    return _ReservationContext(amount_cents=0, currency="", is_valid=False, error_code="unknown")
+
+
 async def _get_reservation_context(
     reservation_id: uuid.UUID, user_id: uuid.UUID
 ) -> _ReservationContext:
@@ -98,6 +127,56 @@ class PaymentService:
         self._session = session
         self._repo = repo
         self._stripe = stripe
+
+    @traced("payment.initiate_for_assignment")
+    async def initiate_for_assignment(
+        self, *, actor_id: uuid.UUID, assignment_id: uuid.UUID
+    ) -> Payment:
+        ctx = await _get_assignment_context(assignment_id, actor_id)
+        if not ctx.is_valid:
+            if ctx.error_code in ("410", "expires_at"):
+                raise PaymentExpiredError("Assignment has expired", field="expires_at")
+            if ctx.error_code in ("404", "assignment_id"):
+                raise PaymentError("Assignment not found", field="assignment_id")
+            raise PaymentError("Assignment is not ready for payment", field="state")
+
+        existing = await self._repo.get_by_assignment_id(assignment_id)
+        if existing is not None and existing.provider_payment_intent_id:
+            return existing
+
+        intent = await self._stripe.create_payment_intent(
+            amount_cents=ctx.amount_cents,
+            currency=ctx.currency,
+            idempotency_key=f"market_assignment:{assignment_id}",
+            metadata={"market_assignment_id": str(assignment_id)},
+        )
+        payment = existing or Payment(
+            reservation_id=None,
+            market_assignment_id=assignment_id,
+            user_id=actor_id,
+            amount_cents=ctx.amount_cents,
+            currency=ctx.currency,
+        )
+        payment.provider_payment_intent_id = intent.intent_id
+        payment.client_secret_ciphertext = pii_crypto.encrypt(intent.client_secret)
+        payment.status = _map_intent_status(intent.status)
+        if existing is None:
+            payment = await self._repo.insert(payment)
+        else:
+            await self._repo.flush()
+
+        await _publish_event(
+            "payments.payment.initiated.v1",
+            {
+                "payment_id": str(payment.id),
+                "market_assignment_id": str(assignment_id),
+                "user_id": str(actor_id),
+                "amount_cents": ctx.amount_cents,
+                "currency": ctx.currency,
+            },
+            actor_id=actor_id,
+        )
+        return payment
 
     @traced("payment.initiate")
     async def initiate(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Payment:
@@ -159,14 +238,26 @@ class PaymentService:
             return
         payment.status = PaymentStatus.succeeded
         await self._repo.flush()
-        await _publish_event(
-            "payments.payment.succeeded.v1",
-            {
-                "payment_id": str(payment.id),
-                "reservation_id": str(payment.reservation_id),
-                "user_id": str(payment.user_id) if payment.user_id else "",
-            },
-        )
+
+        if payment.market_assignment_id is not None:
+            await _publish_event(
+                "payments.payment.succeeded.v1",
+                {
+                    "payment_id": str(payment.id),
+                    "market_assignment_id": str(payment.market_assignment_id),
+                    "payment_intent_id": intent_id,
+                    "user_id": str(payment.user_id) if payment.user_id else "",
+                },
+            )
+        else:
+            await _publish_event(
+                "payments.payment.succeeded.v1",
+                {
+                    "payment_id": str(payment.id),
+                    "reservation_id": str(payment.reservation_id),
+                    "user_id": str(payment.user_id) if payment.user_id else "",
+                },
+            )
 
     @traced("payment.apply_failed")
     async def apply_failed(

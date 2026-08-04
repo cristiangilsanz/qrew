@@ -316,7 +316,7 @@ class TestValidateEntryContextChecks:
             )
         )
         tc = make_ticket_ctx(
-            ticket_id=ticket_id, event_id=event_id, state=TicketState.used.value
+            ticket_id=ticket_id, event_id=event_id, state=TicketState.redeemed.value
         )
         outcome = await _run(
             mock_jwt=mock_jwt,
@@ -441,7 +441,7 @@ class TestValidateEntryHappyPath:
         tc = make_ticket_ctx(
             ticket_id=ticket_id,
             event_id=event_id,
-            state=TicketState.entry_pending.value,
+            state=TicketState.scanning.value,
         )
         outcome = await _run(
             mock_jwt=mock_jwt,

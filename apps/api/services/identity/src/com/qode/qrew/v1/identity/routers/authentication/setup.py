@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 
 from com.qode.qrew.v1.identity.core.dependencies import get_setup_or_full_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
@@ -24,6 +24,17 @@ from ._deps import (
 
 router = APIRouter(prefix="/setup")
 
+_MAX_FILE_BYTES = 10 * 1024 * 1024
+_ALLOWED_MAGIC = [
+    b"\xff\xd8\xff",  # JPEG
+    b"\x89PNG\r\n\x1a\n",  # PNG
+    b"%PDF-",  # PDF
+]
+
+
+def _is_allowed_file(content: bytes) -> bool:
+    return any(content.startswith(magic) for magic in _ALLOWED_MAGIC)
+
 
 @router.post(
     "/kyc/upload",
@@ -40,6 +51,14 @@ async def kyc_upload(
 ) -> KycUploadResponse:
     """Submit a national ID document for KYC verification."""
     content = await document.read()
+    if len(content) > _MAX_FILE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="File too large"
+        )
+    if not _is_allowed_file(content):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Unsupported file type"
+        )
     try:
         final_status = await service.upload(current_user, content)
         return KycUploadResponse(

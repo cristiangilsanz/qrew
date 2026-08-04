@@ -15,7 +15,7 @@ export function useCancelEvent(orgId: string, eventId: string) {
     mutationFn: () => organiserApi.cancelEvent(eventId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['org-events', orgId] })
-      void queryClient.invalidateQueries({ queryKey: ['event', eventId] })
+      void queryClient.invalidateQueries({ queryKey: ['events', eventId] })
       toast.success(t('organiser.events.cancelSuccess'))
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {

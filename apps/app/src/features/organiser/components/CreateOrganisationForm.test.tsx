@@ -34,7 +34,7 @@ describe('CreateOrganisationForm', () => {
     renderForm()
     expect(screen.getByLabelText(/slug/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^name/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /new organisation/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /create organisation/i })).toBeInTheDocument()
   })
 
   it('shows toast.success on successful create', async () => {
@@ -43,7 +43,7 @@ describe('CreateOrganisationForm', () => {
 
     await userEvent.type(screen.getByLabelText(/slug/i), 'my-org')
     await userEvent.type(screen.getByLabelText(/^name/i), 'My Org')
-    await userEvent.click(screen.getByRole('button', { name: /new organisation/i }))
+    await userEvent.click(screen.getByRole('button', { name: /create organisation/i }))
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith('Organisation created.')
@@ -53,7 +53,7 @@ describe('CreateOrganisationForm', () => {
   it('shows toast.error on slug conflict (409)', async () => {
     const { toast } = await import('sonner')
     server.use(
-      http.post('http://localhost:8002/v1/organisations', () =>
+      http.post('http://localhost:8000/api/catalog/v1/organisations', () =>
         HttpResponse.json({ detail: 'Slug already taken' }, { status: 409 }),
       ),
     )
@@ -62,7 +62,7 @@ describe('CreateOrganisationForm', () => {
 
     await userEvent.type(screen.getByLabelText(/slug/i), 'taken-org')
     await userEvent.type(screen.getByLabelText(/^name/i), 'Taken Org')
-    await userEvent.click(screen.getByRole('button', { name: /new organisation/i }))
+    await userEvent.click(screen.getByRole('button', { name: /create organisation/i }))
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('Slug already taken')

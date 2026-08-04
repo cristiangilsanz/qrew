@@ -40,5 +40,16 @@ class TicketRepository:
         )
         return list(result.scalars().all())
 
+    async def list_active_by_event(self, event_id: uuid.UUID) -> list[Ticket]:
+        """Return all non-terminal tickets for an event (issued, reserved, frozen, etc.)."""
+        terminal = {TicketState.cancelled, TicketState.redeemed, TicketState.expired}
+        result = await self._session.execute(
+            select(Ticket).where(
+                Ticket.event_id == event_id,
+                Ticket.state.not_in(terminal),
+            )
+        )
+        return list(result.scalars().all())
+
     async def flush(self) -> None:
         await self._session.flush()

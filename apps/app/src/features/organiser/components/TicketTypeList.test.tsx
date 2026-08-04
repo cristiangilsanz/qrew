@@ -27,7 +27,8 @@ describe('TicketTypeList', () => {
     await waitFor(() => {
       expect(screen.getByText('General')).toBeInTheDocument()
     })
-    expect(screen.getByText(/15\.00 EUR/)).toBeInTheDocument()
+    expect(screen.getByText('15.00')).toBeInTheDocument()
+    expect(screen.getByText('EUR')).toBeInTheDocument()
   })
 
   it('shows the create form when "Add ticket type" is clicked', async () => {

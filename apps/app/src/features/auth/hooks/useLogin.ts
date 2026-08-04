@@ -9,16 +9,19 @@ import { type ApiErrorDetail, authApi, extractErrorMessage, type LoginRequest } 
 
 export function useLogin() {
   const { t } = useTranslation()
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
+  const setTokens = useAuthStore((s) => s.setTokens)
   const setSetupToken = useAuthStore((s) => s.setSetupToken)
+  const setTotpToken = useAuthStore((s) => s.setTotpToken)
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
     onSuccess: (data) => {
       if (data.setup_required) {
         setSetupToken(data.access_token)
+      } else if (data.totp_required) {
+        setTotpToken(data.access_token)
       } else {
-        setAccessToken(data.access_token)
+        setTokens(data.access_token, data.refresh_token ?? '')
       }
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {

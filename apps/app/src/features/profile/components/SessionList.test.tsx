@@ -28,24 +28,26 @@ describe('SessionList', () => {
   it('renders session user_agent', async () => {
     renderList()
     await waitFor(() => {
-      expect(screen.getByText('Mozilla/5.0 Chrome/120')).toBeInTheDocument()
+      expect(screen.getByText('Chrome on Windows')).toBeInTheDocument()
     })
   })
 
   it('calls revoke endpoint when revoke button is clicked', async () => {
     let revokeCalled = false
     server.use(
-      http.delete('http://localhost:8001/v1/auth/sessions/:jti', () => {
+      http.delete('http://localhost:8000/api/identity/v1/auth/sessions/:jti', () => {
         revokeCalled = true
         return new HttpResponse(null, { status: 204 })
       }),
     )
 
     renderList()
-    await waitFor(() => screen.getByText('Mozilla/5.0 Chrome/120'))
+    await waitFor(() => screen.getByText('Chrome on Windows'))
 
-    const revokeBtn = screen.getByRole('button')
-    await userEvent.click(revokeBtn)
+    await userEvent.click(screen.getAllByRole('button')[0])
+
+    await waitFor(() => screen.getByText('Revoke'))
+    await userEvent.click(screen.getByText('Revoke'))
 
     await waitFor(() => {
       expect(revokeCalled).toBe(true)

@@ -11,6 +11,7 @@ from com.qode.qrew.v1.gateway.channels import me as _me_channel  # noqa: F401  #
 from com.qode.qrew.v1.gateway.core.config import settings
 from com.qode.qrew.v1.gateway.core.lifespan import lifespan
 from com.qode.qrew.v1.gateway.middleware.register import register_middleware
+from com.qode.qrew.v1.gateway.proxy.router import router as proxy_router
 from com.qode.qrew.v1.gateway.routers.health import router as probes_router
 from com.qode.qrew.v1.gateway.routers.ws import router as ws_router
 
@@ -41,3 +42,4 @@ register_middleware(app)
 
 app.include_router(probes_router)
 app.include_router(ws_router)
+app.include_router(proxy_router)

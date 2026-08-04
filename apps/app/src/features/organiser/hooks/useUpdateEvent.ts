@@ -15,7 +15,7 @@ export function useUpdateEvent(orgId: string, eventId: string) {
     mutationFn: (data: UpdateEventData) => organiserApi.updateEvent(eventId, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['org-events', orgId] })
-      void queryClient.invalidateQueries({ queryKey: ['event', eventId] })
+      void queryClient.invalidateQueries({ queryKey: ['events', eventId] })
       toast.success(t('organiser.events.updateSuccess'))
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {

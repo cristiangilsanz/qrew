@@ -1231,6 +1231,7 @@ dependencies = [
     { name = "cryptography" },
     { name = "exceptions" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "idempotency" },
     { name = "middleware" },
     { name = "nats-py" },
@@ -1248,7 +1249,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "anyio" },
-    { name = "httpx" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -1261,6 +1261,7 @@ requires-dist = [
     { name = "cryptography", specifier = ">=42" },
     { name = "exceptions", editable = "packages/shared-python/exceptions" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", specifier = ">=0.27" },
     { name = "idempotency", editable = "packages/shared-python/idempotency" },
     { name = "middleware", editable = "packages/shared-python/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
@@ -1278,7 +1279,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "anyio", specifier = ">=4.0" },
-    { name = "httpx", specifier = ">=0.27" },
     { name = "pyright", specifier = ">=1.1" },
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
@@ -1668,8 +1668,10 @@ dependencies = [
     { name = "probes" },
     { name = "pydantic-settings", extra = ["yaml"] },
     { name = "pyjwt", extra = ["crypto"] },
+    { name = "pyotp" },
     { name = "pytesseract" },
     { name = "python-multipart" },
+    { name = "qrcode", extra = ["pil"] },
     { name = "ratelimit" },
     { name = "redis", extra = ["hiredis"] },
     { name = "security" },
@@ -1738,8 +1740,10 @@ requires-dist = [
     { name = "probes", editable = "packages/shared-python/probes" },
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.4" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.8" },
+    { name = "pyotp", specifier = ">=2.9" },
     { name = "pytesseract", specifier = ">=0.3" },
     { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "qrcode", extras = ["pil"], specifier = ">=7.4" },
     { name = "ratelimit", editable = "packages/shared-python/ratelimit" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
     { name = "security", editable = "packages/shared-python/security" },
@@ -3091,6 +3095,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pyotp"
+version = "2.10.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/c6/c5d96a86fd0bf6fa1bbb5c5c341ff3208638b692727a683c8289068d9a11/pyotp-2.10.0.tar.gz", hash = "sha256:d01e9703443616b03c57c700b5cbffd56a1f929c1b0f8f03131bc78c1fca9d3f", size = 18625, upload-time = "2026-06-14T03:48:49.221Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/33/7b83bde70eddaaaaef487751a9c3a5cc0c0be54620ded0e120ebdc401ff9/pyotp-2.10.0-py3-none-any.whl", hash = "sha256:1df2f6a1bcc3bb0716172a5215ddc2f8c7c7fd26a13df9927d52e1746934836c", size = 13768, upload-time = "2026-06-14T03:48:47.831Z" },
+]
+
+[[package]]
 name = "pyright"
 version = "1.1.410"
 source = { registry = "https://pypi.org/simple" }
@@ -3256,6 +3269,23 @@ wheels = [
 ]
 
 [[package]]
+name = "qrcode"
+version = "8.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8f/b2/7fc2931bfae0af02d5f53b174e9cf701adbb35f39d69c2af63d4a39f81a9/qrcode-8.2.tar.gz", hash = "sha256:35c3f2a4172b33136ab9f6b3ef1c00260dd2f66f858f24d88418a015f446506c", size = 43317, upload-time = "2025-05-01T15:44:24.726Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dd/b8/d2d6d731733f51684bbf76bf34dab3b70a9148e8f2cef2bb544fccec681a/qrcode-8.2-py3-none-any.whl", hash = "sha256:16e64e0716c14960108e85d853062c9e8bba5ca8252c0b4d0231b9df4060ff4f", size = 45986, upload-time = "2025-05-01T15:44:22.781Z" },
+]
+
+[package.optional-dependencies]
+pil = [
+    { name = "pillow" },
+]
+
+[[package]]
 name = "qrew-workspace"
 version = "1.1.1"
 source = { virtual = "." }
@@ -3381,16 +3411,19 @@ dependencies = [
     { name = "asyncpg" },
     { name = "contracts" },
     { name = "cryptography" },
+    { name = "exceptions" },
     { name = "fastapi" },
     { name = "idempotency" },
     { name = "locking" },
     { name = "messaging" },
+    { name = "middleware" },
     { name = "nats-py" },
     { name = "observability" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-sdk" },
+    { name = "probes" },
     { name = "pydantic-settings", extra = ["yaml"] },
     { name = "pyjwt" },
     { name = "redis", extra = ["hiredis"] },
@@ -3420,16 +3453,19 @@ requires-dist = [
     { name = "asyncpg", specifier = ">=0.29" },
     { name = "contracts", editable = "packages/contracts" },
     { name = "cryptography", specifier = ">=42" },
+    { name = "exceptions", editable = "packages/shared-python/exceptions" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "idempotency", editable = "packages/shared-python/idempotency" },
     { name = "locking", editable = "packages/shared-python/locking" },
     { name = "messaging", editable = "packages/shared-python/messaging" },
+    { name = "middleware", editable = "packages/shared-python/middleware" },
     { name = "nats-py", specifier = ">=2.6" },
     { name = "observability", editable = "packages/shared-python/observability" },
     { name = "opentelemetry-api", specifier = ">=1.24" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24" },
+    { name = "probes", editable = "packages/shared-python/probes" },
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.0" },
     { name = "pyjwt", specifier = ">=2.8" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },

@@ -15,7 +15,7 @@ export function usePublishEvent(orgId: string, eventId: string) {
     mutationFn: () => organiserApi.publishEvent(eventId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['org-events', orgId] })
-      void queryClient.invalidateQueries({ queryKey: ['event', eventId] })
+      void queryClient.invalidateQueries({ queryKey: ['events', eventId] })
       toast.success(t('organiser.events.publishSuccess'))
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {

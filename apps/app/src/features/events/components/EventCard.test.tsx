@@ -41,7 +41,7 @@ describe('EventCard', () => {
 
   it('renders event date', () => {
     render(<EventCard event={mockEvent} />)
-    expect(screen.getByText(/2026/)).toBeInTheDocument()
+    expect(screen.getByText(/Aug/i)).toBeInTheDocument()
   })
 
   it('calls onClick when clicked', () => {

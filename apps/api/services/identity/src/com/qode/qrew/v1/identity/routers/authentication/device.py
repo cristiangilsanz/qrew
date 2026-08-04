@@ -4,8 +4,9 @@ import uuid
 from fastapi import APIRouter, Depends, Request, status
 
 from pagination import Page
-from com.qode.qrew.v1.identity.core.dependencies import get_current_user
+from com.qode.qrew.v1.identity.core.dependencies import get_current_session, get_current_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
+from com.qode.qrew.v1.identity.models.session import Session
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.schemas.device import (
     DeviceAttestRequest,
@@ -144,6 +145,7 @@ async def device_attest(
 async def list_devices(
     request: Request,
     current_user: User = Depends(get_current_user),
+    current_session: Session = Depends(get_current_session),
     service: DeviceService = Depends(get_device_service),
 ) -> Page[DeviceResponse]:
     """List the current user's bound devices."""
@@ -154,6 +156,7 @@ async def list_devices(
             name=d.name,
             created_at=d.created_at,
             last_seen_at=d.last_seen_at,
+            is_current=current_session.device_id is not None and d.id == current_session.device_id,
         )
         for d in devices
     ]

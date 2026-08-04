@@ -1,12 +1,12 @@
 import hashlib
 import uuid
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, Optional
 
 import security.jwt as _sec_jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 
@@ -18,12 +18,13 @@ ALGORITHM: Final = "ES256"
 ACCESS: Final = "access"
 _PURPOSES: Final = (ACCESS,)
 
-_bearer = HTTPBearer(auto_error=True)
+_bearer = HTTPBearer(auto_error=False)
 
 
 @dataclass(frozen=True)
 class AuthenticatedUser:
     id: uuid.UUID
+    is_admin: bool = False
 
 
 @dataclass(frozen=True)
@@ -106,8 +107,18 @@ def verify(purpose: str, token: str) -> dict[str, object]:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(_bearer),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
 ) -> AuthenticatedUser:
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    if user_id_str:
+        try:
+            is_admin = request.headers.get("x-authenticated-user-is-admin") == "1"
+            return AuthenticatedUser(id=uuid.UUID(user_id_str), is_admin=is_admin)
+        except ValueError:
+            raise credentials_exception()
+    if credentials is None:
+        raise credentials_exception()
     try:
         payload = verify(ACCESS, credentials.credentials)
     except Exception:
@@ -118,4 +129,4 @@ async def get_current_user(
         user_id = uuid.UUID(str(payload["sub"]))
     except (KeyError, ValueError):
         raise credentials_exception()
-    return AuthenticatedUser(id=user_id)
+    return AuthenticatedUser(id=user_id, is_admin=payload.get("adm") is True)

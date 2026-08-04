@@ -1,5 +1,7 @@
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any, Callable, Coroutine
 
 import structlog
 from fastapi import FastAPI
@@ -11,6 +13,15 @@ from com.qode.qrew.v1.ticketing.core.config import settings
 from com.qode.qrew.v1.ticketing.core.database import engine
 
 logger = structlog.get_logger(__name__)
+
+
+async def _run_periodic(fn: Callable[[], Coroutine[Any, Any, Any]], interval_seconds: int) -> None:
+    while True:
+        try:
+            await fn()
+        except Exception as exc:
+            await logger.awarning("periodic_job_failed", fn=str(fn), error=repr(exc))
+        await asyncio.sleep(interval_seconds)
 
 
 @asynccontextmanager
@@ -32,7 +43,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             await logger.ainfo("ticketing.nats_connected")
         except Exception as exc:
             await logger.awarning("ticketing.nats_unavailable", error=repr(exc))
+
+    from com.qode.qrew.v1.ticketing.worker.jobs.expired_ticket_purger import purge_expired
+
+    purge_task = asyncio.create_task(_run_periodic(purge_expired, 60))
+
     yield
+
+    purge_task.cancel()
+    try:
+        await purge_task
+    except asyncio.CancelledError:
+        pass
+
     await engine.dispose()
     await close_idempotency_store()
     await close_locking()

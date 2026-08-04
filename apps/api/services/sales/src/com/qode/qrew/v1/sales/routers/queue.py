@@ -65,8 +65,8 @@ async def queue_position(
     service: QueueService = Depends(get_queue_service),
 ) -> QueuePositionResponse:
     del request
-    position = await service.position(user_id=current_user.id, event_id=event_id)
-    return QueuePositionResponse(position=position)
+    position, redeem_token = await service.position(user_id=current_user.id, event_id=event_id)
+    return QueuePositionResponse(position=position, redeem_token=redeem_token)
 
 
 @router.post(

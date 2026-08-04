@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,9 +48,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 _search_service = SearchService()
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 
 def _event_response(event: Event) -> EventResponse:
@@ -60,6 +58,7 @@ def _event_response(event: Event) -> EventResponse:
         venue_id=event.venue_id,
         name=event.name,
         description=event.description,
+        image_url=event.image_url,
         starts_at=event.starts_at,
         ends_at=event.ends_at,
         sale_starts_at=event.sale_starts_at,
@@ -72,6 +71,7 @@ def _event_response(event: Event) -> EventResponse:
         queue_admit_rate_per_minute=event.queue_admit_rate_per_minute,
         created_at=event.created_at,
         published_at=event.published_at,
+        started_at=event.started_at,
         cancelled_at=event.cancelled_at,
     )
 
@@ -112,9 +112,7 @@ def _ticket_type_error(error: TicketTypeError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
-# ---------------------------------------------------------------------------
-# Event management (auth-gated)
-# ---------------------------------------------------------------------------
+# Event management
 
 
 @router.patch(
@@ -168,6 +166,33 @@ async def publish_event(
 
 
 @router.post(
+    "/{event_id}/start",
+    response_model=EventResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Mark a published event as ongoing",
+)
+@limiter.limit("60/hour")  # type: ignore[misc]
+@idempotent(scope="user", ttl_seconds=300)
+async def start_event(
+    request: Request,
+    event_id: uuid.UUID,
+    actor: OrganisationMember = Depends(get_event_member(OrganisationRole.manager)),
+    svc: EventService = Depends(get_event_service),
+) -> EventResponse:
+    del request
+    try:
+        event = await svc.start_event(actor_id=actor.user_id, event_id=event_id)
+    except EventError as exc:
+        raise _event_error(exc) from exc
+    except LockUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": "Another lifecycle change is in progress", "field": None},
+        ) from exc
+    return _event_response(event)
+
+
+@router.post(
     "/{event_id}/cancel",
     response_model=EventResponse,
     status_code=status.HTTP_200_OK,
@@ -194,9 +219,7 @@ async def cancel_event(
     return _event_response(event)
 
 
-# ---------------------------------------------------------------------------
-# Ticket types (auth-gated, nested under events)
-# ---------------------------------------------------------------------------
+# Ticket types
 
 
 @router.post(
@@ -331,9 +354,7 @@ async def delete_ticket_type(
         ) from exc
 
 
-# ---------------------------------------------------------------------------
-# Public catalog (no auth)
-# ---------------------------------------------------------------------------
+# Public catalog
 
 
 @router.get(
@@ -354,6 +375,7 @@ async def search_events(
     request: Request,
     q: str | None = Query(default=None, max_length=256),
     city: str | None = Query(default=None, max_length=128),
+    cities: list[str] = Query(default=[], max_length=64),
     category: str | None = Query(default=None, max_length=64),
     from_: datetime | None = Query(default=None, alias="from"),
     to: datetime | None = Query(default=None, alias="to"),
@@ -362,12 +384,18 @@ async def search_events(
     db: AsyncSession = Depends(get_db),
 ) -> Page[EventSearchResult]:
     del request
+    if len(cities) > 20:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="cities list exceeds maximum of 20 items",
+        )
     page_limit = clamp_limit(limit, default=settings.search_default_limit)
     page_limit = min(page_limit, settings.search_max_limit)
     return await _search_service.search_events(
         db,
         q=q,
         city=city,
+        cities=cities or None,
         category=category,
         from_=from_,
         to=to,
@@ -398,10 +426,21 @@ async def get_public_event(
         )
     event, org, venue = result
     tiers = await svc.get_ticket_types(event_id)
+    now = datetime.now(UTC)
+    all_sold_out = all(tier.capacity - tier.reserved_count <= 0 for tier in tiers)
+    if now < event.sale_starts_at:
+        availability_status = "not_started"
+    elif now > event.sale_ends_at:
+        availability_status = "ended"
+    elif all_sold_out:
+        availability_status = "sold_out"
+    else:
+        availability_status = "open"
     return PublicEventDetailResponse(
         id=event.id,
         name=event.name,
         description=event.description,
+        image_url=event.image_url,
         starts_at=event.starts_at,
         ends_at=event.ends_at,
         sale_starts_at=event.sale_starts_at,
@@ -409,6 +448,7 @@ async def get_public_event(
         max_tickets_per_user=event.max_tickets_per_user,
         queue_required=event.queue_required,
         published_at=event.published_at,
+        availability_status=availability_status,
         organisation=OrganisationPublicResponse(
             id=org.id, slug=org.slug, name=org.name, description=org.description
         ),

@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from ._deps import (
     get_deletion_service,
+    get_forgot_password_service,
     get_complete_setup_service,
     get_device_attestation_service,
     get_device_binding_service,
@@ -36,6 +37,7 @@ from .recovery import router as recovery_router
 from .registration import router as registration_router
 from .session import router as session_router
 from .setup import router as setup_router
+from .totp import router as totp_router
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 router.include_router(registration_router)
@@ -47,9 +49,11 @@ router.include_router(account_router)
 router.include_router(device_router)
 router.include_router(recovery_router)
 router.include_router(profile_router)
+router.include_router(totp_router)
 
 __all__ = [
     "get_deletion_service",
+    "get_forgot_password_service",
     "get_complete_setup_service",
     "get_device_attestation_service",
     "get_device_binding_service",

@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -22,6 +23,10 @@ async def handle_event_published(raw: bytes) -> None:
     try:
         event_id = uuid.UUID(str(data["data"]["event_id"]))
         venue_id = uuid.UUID(str(data["data"]["venue_id"]))
+        starts_at_raw = data["data"].get("starts_at")
+        ends_at_raw = data["data"].get("ends_at")
+        starts_at = datetime.fromisoformat(starts_at_raw) if starts_at_raw else None
+        ends_at = datetime.fromisoformat(ends_at_raw) if ends_at_raw else None
     except (KeyError, ValueError):
         await logger.awarning("catalog_events.event_published.bad_payload")
         return
@@ -30,6 +35,8 @@ async def handle_event_published(raw: bytes) -> None:
             event_id=event_id,
             venue_id=venue_id,
             event_status="published",
+            starts_at=starts_at,
+            ends_at=ends_at,
         )
         await session.commit()
     await logger.ainfo("catalog_events.event_published", event_id=str(event_id))
@@ -41,18 +48,45 @@ async def handle_event_cancelled(raw: bytes) -> None:
         return
     try:
         event_id = uuid.UUID(str(data["data"]["event_id"]))
-        venue_id = uuid.UUID(str(data["data"]["venue_id"]))
     except (KeyError, ValueError):
         await logger.awarning("catalog_events.event_cancelled.bad_payload")
         return
+
+    from com.qode.qrew.v1.ticketing.repositories.ticket import TicketRepository
+    from com.qode.qrew.v1.ticketing.services.domain.tickets.lifecycle import (
+        TicketTransitionError,
+        transition_ticket,
+    )
+    from com.qode.qrew.v1.ticketing.models.ticket import TicketState
+
+    SYSTEM_ACTOR = uuid.UUID("00000000-0000-0000-0000-000000000000")
+
     async with AsyncSessionLocal() as session:
-        await EventVenueContextRepository(session).upsert_event(
-            event_id=event_id,
-            venue_id=venue_id,
-            event_status="cancelled",
-        )
+        tickets = await TicketRepository(session).list_active_by_event(event_id)
+        cancelled = 0
+        for ticket in tickets:
+            try:
+                await transition_ticket(
+                    session,
+                    ticket_id=ticket.id,
+                    to_state=TicketState.cancelled,
+                    reason="event_cancelled",
+                    actor_id=SYSTEM_ACTOR,
+                )
+                cancelled += 1
+            except (TicketTransitionError, Exception) as exc:
+                await logger.awarning(
+                    "catalog_events.event_cancelled.ticket_cancel_failed",
+                    ticket_id=str(ticket.id),
+                    error=repr(exc),
+                )
         await session.commit()
-    await logger.ainfo("catalog_events.event_cancelled", event_id=str(event_id))
+
+    await logger.ainfo(
+        "catalog_events.event_cancelled",
+        event_id=str(event_id),
+        tickets_cancelled=cancelled,
+    )
 
 
 async def handle_event_draft(raw: bytes) -> None:
@@ -62,6 +96,10 @@ async def handle_event_draft(raw: bytes) -> None:
     try:
         event_id = uuid.UUID(str(data["data"]["event_id"]))
         venue_id = uuid.UUID(str(data["data"]["venue_id"]))
+        starts_at_raw = data["data"].get("starts_at")
+        ends_at_raw = data["data"].get("ends_at")
+        starts_at = datetime.fromisoformat(starts_at_raw) if starts_at_raw else None
+        ends_at = datetime.fromisoformat(ends_at_raw) if ends_at_raw else None
     except (KeyError, ValueError):
         await logger.awarning("catalog_events.event_draft.bad_payload")
         return
@@ -70,6 +108,8 @@ async def handle_event_draft(raw: bytes) -> None:
             event_id=event_id,
             venue_id=venue_id,
             event_status="draft",
+            starts_at=starts_at,
+            ends_at=ends_at,
         )
         await session.commit()
 
@@ -104,8 +144,35 @@ async def handle_venue_created(raw: bytes) -> None:
     await logger.ainfo("catalog_events.venue_created", venue_id=str(venue_id))
 
 
+async def handle_event_ongoing(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        event_id = uuid.UUID(str(data["data"]["event_id"]))
+        venue_id = uuid.UUID(str(data["data"]["venue_id"]))
+        starts_at_raw = data["data"].get("starts_at")
+        ends_at_raw = data["data"].get("ends_at")
+        starts_at = datetime.fromisoformat(starts_at_raw) if starts_at_raw else None
+        ends_at = datetime.fromisoformat(ends_at_raw) if ends_at_raw else None
+    except (KeyError, ValueError):
+        await logger.awarning("catalog_events.event_ongoing.bad_payload")
+        return
+    async with AsyncSessionLocal() as session:
+        await EventVenueContextRepository(session).upsert_event(
+            event_id=event_id,
+            venue_id=venue_id,
+            event_status="ongoing",
+            starts_at=starts_at,
+            ends_at=ends_at,
+        )
+        await session.commit()
+    await logger.ainfo("catalog_events.event_ongoing", event_id=str(event_id))
+
+
 _HANDLERS = {
     "catalog.event.published.v1": handle_event_published,
+    "catalog.event.ongoing.v1": handle_event_ongoing,
     "catalog.event.cancelled.v1": handle_event_cancelled,
     "catalog.event.draft.v1": handle_event_draft,
     "catalog.venue.created.v1": handle_venue_created,

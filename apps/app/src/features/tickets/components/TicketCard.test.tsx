@@ -21,6 +21,24 @@ vi.mock('@tanstack/react-router', () => ({
   },
 }))
 
+const MOCK_EVENT = {
+  id: 'event-1',
+  name: 'Test Event',
+  starts_at: '2026-07-01T20:00:00Z',
+  image_url: null,
+  organisation: { name: 'Qrew' },
+  venue: { city: 'Madrid' },
+  ticket_types: [],
+}
+
+vi.mock('@/features/events/hooks/useEvent', () => ({
+  useEvent: () => ({ data: MOCK_EVENT }),
+}))
+
+vi.mock('../hooks/useReservation', () => ({
+  useReservation: () => ({ data: undefined, isLoading: false }),
+}))
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: Record<string, unknown>) => {
@@ -44,13 +62,13 @@ const BASE_TICKET = {
 describe('TicketCard', () => {
   it('renders ticket id and state badge', () => {
     render(<TicketCard ticket={BASE_TICKET} />)
-    expect(screen.getByText(/Ticket #abc12345/i)).toBeInTheDocument()
+    expect(screen.getByText(/ABC12345/)).toBeInTheDocument()
     expect(screen.getByText('issued')).toBeInTheDocument()
   })
 
-  it('renders created date', () => {
+  it('renders event name', () => {
     render(<TicketCard ticket={BASE_TICKET} />)
-    expect(screen.getByText(/2026/)).toBeInTheDocument()
+    expect(screen.getByText('Test Event')).toBeInTheDocument()
   })
 
   it('links to ticket detail page', () => {
@@ -59,12 +77,12 @@ describe('TicketCard', () => {
     expect(link).toHaveAttribute('href', '/tickets/abc12345-0000-0000-0000-000000000000')
   })
 
-  it('shows destructive badge for cancelled state', () => {
+  it('shows badge for cancelled state', () => {
     render(<TicketCard ticket={{ ...BASE_TICKET, state: 'cancelled' }} />)
     expect(screen.getByText('cancelled')).toBeInTheDocument()
   })
 
-  it('shows secondary badge for reserved state', () => {
+  it('shows badge for reserved state', () => {
     render(<TicketCard ticket={{ ...BASE_TICKET, state: 'reserved' }} />)
     expect(screen.getByText('reserved')).toBeInTheDocument()
   })

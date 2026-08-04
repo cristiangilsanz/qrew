@@ -1,7 +1,7 @@
 # ── app ──────────────────────────────────────────────────────────────────────
 debug: true
 host: "127.0.0.1"
-port: 8008
+port: 8000
 cors_origins:
   - "http://localhost:3000"
   - "http://localhost:5173"
@@ -25,6 +25,14 @@ ws_pong_timeout_seconds: 10
 idempotency_enabled: true
 idempotency_lock_seconds: 30
 ratelimit_enabled: true
+
+# ── upstream services (for local dev — all services running on localhost) ──────
+identity_url: "http://localhost:8001"
+catalog_url: "http://localhost:8002"
+sales_url: "http://localhost:8003"
+payments_url: "http://localhost:8004"
+ticketing_url: "http://localhost:8005"
+entry_url: "http://localhost:8006"
 
 # ── observability ─────────────────────────────────────────────────────────────
 otel_enabled: false

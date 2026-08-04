@@ -2,6 +2,12 @@
 .git/
 .github/
 
+# Frontend build artifacts (frontend uses its own build context)
+apps/app/node_modules/
+apps/app/dist/
+apps/app/android/
+apps/app/.capacitor/
+
 # Python
 **/__pycache__/
 **/*.py[cod]

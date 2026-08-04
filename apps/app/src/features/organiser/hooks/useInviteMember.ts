@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -9,11 +9,13 @@ import { organiserApi } from '../api'
 
 export function useInviteMember(orgId: string) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: { email: string; role: 'member' | 'manager' | 'owner' }) =>
-      organiserApi.inviteMember(orgId, data),
+    mutationFn: (data: { user_id: string; role: 'member' | 'manager' }) =>
+      organiserApi.addMember(orgId, data),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['org-members', orgId] })
       toast.success(t('organiser.members.inviteSuccess'))
     },
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {

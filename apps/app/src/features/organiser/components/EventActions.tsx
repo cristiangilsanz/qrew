@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { CheckCircle, Play, ScanLine } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
-
 import type { OrgEvent } from '../api'
-import { useCancelEvent } from '../hooks/useCancelEvent'
 import { usePublishEvent } from '../hooks/usePublishEvent'
+import { useStartEvent } from '../hooks/useStartEvent'
 
 interface Props {
   event: OrgEvent
@@ -14,65 +13,50 @@ interface Props {
 
 export function EventActions({ event, orgId }: Props) {
   const { t } = useTranslation()
-  const [confirmPublish, setConfirmPublish] = useState(false)
-  const [confirmCancel, setConfirmCancel] = useState(false)
 
   const publishEvent = usePublishEvent(orgId, event.id)
-  const cancelEvent = useCancelEvent(orgId, event.id)
+  const startEvent = useStartEvent(orgId, event.id)
+
+  const showPublish = event.status === 'draft'
+  const showMarkStarted = event.status === 'published'
+  const showScan = event.status === 'ongoing'
+
+  if (!showPublish && !showMarkStarted && !showScan) return null
 
   return (
-    <div className="flex gap-2">
-      {event.status === 'draft' && (
-        <>
-          {confirmPublish ? (
-            <>
-              <Button
-                size="sm"
-                onClick={() => {
-                  publishEvent.mutate()
-                  setConfirmPublish(false)
-                }}
-                isLoading={publishEvent.isPending}
-              >
-                {t('organiser.events.confirmPublish')}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setConfirmPublish(false)}>
-                {t('common.cancel')}
-              </Button>
-            </>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => setConfirmPublish(true)}>
-              {t('organiser.events.publish')}
-            </Button>
-          )}
-        </>
-      )}
-      {(event.status === 'draft' || event.status === 'published') && (
-        <>
-          {confirmCancel ? (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  cancelEvent.mutate()
-                  setConfirmCancel(false)
-                }}
-                isLoading={cancelEvent.isPending}
-              >
-                {t('organiser.events.confirmCancel')}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setConfirmCancel(false)}>
-                {t('common.cancel')}
-              </Button>
-            </>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => setConfirmCancel(true)}>
-              {t('organiser.events.cancel')}
-            </Button>
-          )}
-        </>
-      )}
+    <div className="fixed inset-x-0 bottom-24 z-40">
+      <div className="mx-auto flex max-w-[430px] items-center justify-end gap-3 px-4">
+        {showPublish && (
+          <button
+            onClick={() => publishEvent.mutate()}
+            disabled={publishEvent.isPending}
+            className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
+          >
+            <CheckCircle className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('organiser.events.publish')}</span>
+          </button>
+        )}
+        {showMarkStarted && (
+          <button
+            onClick={() => startEvent.mutate()}
+            disabled={startEvent.isPending}
+            className="flex h-14 items-center gap-2 rounded-full bg-green-600 px-5 text-white shadow-lg transition-colors hover:bg-green-500 disabled:opacity-60"
+          >
+            <Play className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('organiser.events.markStarted')}</span>
+          </button>
+        )}
+        {showScan && (
+          <Link
+            to="/management/$orgId/events/$eventId/scan"
+            params={{ orgId, eventId: event.id }}
+            className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+          >
+            <ScanLine className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('organiser.scanner.scanTickets')}</span>
+          </Link>
+        )}
+      </div>
     </div>
   )
 }

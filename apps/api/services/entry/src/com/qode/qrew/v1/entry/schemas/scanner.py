@@ -12,6 +12,11 @@ class ScannerCreateRequest(BaseModel):
     date: date_type
 
 
+class ScannerForEventRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=128)
+    date: date_type | None = None
+
+
 class ScannerRotateRequest(BaseModel):
     venue_id: uuid.UUID
     event_id: uuid.UUID

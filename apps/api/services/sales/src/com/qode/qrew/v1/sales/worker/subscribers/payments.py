@@ -5,8 +5,16 @@ from typing import Any
 import structlog
 
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
+from com.qode.qrew.v1.sales.repositories.market import MarketRepository
+from com.qode.qrew.v1.sales.services.application.market.service import MarketService
 from com.qode.qrew.v1.sales.services.application.settlement import SettlementService
 from com.qode.qrew.v1.sales.worker._parser import parse
+from com.qode.qrew.v1.sales.core.config import settings
+from com.qode.qrew.v1.sales.repositories.projections import (
+    EventContextRepository,
+    TicketTypeInventoryRepository,
+)
+from com.qode.qrew.v1.sales.services.application.audit import AuditService
 
 logger = structlog.get_logger(__name__)
 
@@ -18,9 +26,43 @@ async def handle_payment_succeeded(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
         return
+
+    raw_reservation_id: str | None = data["data"].get("reservation_id")
+    raw_assignment_id: str | None = data["data"].get("market_assignment_id")
+
+    # Route to market settlement if this is a market assignment payment
+    if raw_assignment_id:
+        try:
+            payment_intent_id: str = str(data["data"].get("payment_intent_id", ""))
+        except (KeyError, ValueError):
+            await logger.awarning("payment_events.market.succeeded.bad_payload")
+            return
+        if not payment_intent_id:
+            return
+        async with AsyncSessionLocal() as session:
+            service = MarketService(
+                MarketRepository(session),
+                EventContextRepository(session),
+                TicketTypeInventoryRepository(session),
+                AuditService(),
+                assignment_ttl_hours=settings.market_assignment_ttl_hours,
+                listing_ttl_days=settings.market_listing_ttl_days,
+            )
+            await service.complete_assignment(payment_intent_id=payment_intent_id)
+        await session.commit()
+        await logger.ainfo(
+            "payment_events.market.succeeded",
+            market_assignment_id=raw_assignment_id,
+        )
+        return
+
+    # Standard reservation payment
+    if not raw_reservation_id:
+        await logger.awarning("payment_events.succeeded.bad_payload")
+        return
     try:
-        reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
-    except (KeyError, ValueError):
+        reservation_id = uuid.UUID(raw_reservation_id)
+    except ValueError:
         await logger.awarning("payment_events.succeeded.bad_payload")
         return
     async with AsyncSessionLocal() as session:

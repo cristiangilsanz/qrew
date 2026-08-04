@@ -88,7 +88,8 @@ def run_migrations(postgres_container, db_url):
                 text(
                     "CREATE TABLE IF NOT EXISTS catalog.events ("
                     "id UUID PRIMARY KEY, "
-                    "organisation_id UUID NOT NULL)"
+                    "organisation_id UUID NOT NULL, "
+                    "venue_id UUID NOT NULL)"
                 )
             )
             await conn.execute(
@@ -265,8 +266,14 @@ async def seed_ticket_context(
     return tc
 
 
-async def seed_event(db: AsyncSession, *, organisation_id: uuid.UUID) -> Event:
-    event = Event(id=uuid.uuid4(), organisation_id=organisation_id)
+async def seed_event(
+    db: AsyncSession, *, organisation_id: uuid.UUID, venue_id: uuid.UUID | None = None
+) -> Event:
+    event = Event(
+        id=uuid.uuid4(),
+        organisation_id=organisation_id,
+        venue_id=venue_id or uuid.uuid4(),
+    )
     db.add(event)
     await db.commit()
     await db.refresh(event)

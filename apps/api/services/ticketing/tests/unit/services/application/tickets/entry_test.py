@@ -45,7 +45,7 @@ class TestUseTicket:
         mock_transition.assert_awaited_once_with(
             session,
             ticket_id=ticket_id,
-            to_state=TicketState.used,
+            to_state=TicketState.redeemed,
             reason="entry_validated",
             actor_id=actor_id,
         )
@@ -75,14 +75,14 @@ class TestUseTicket:
 
         session.commit.assert_not_awaited()
 
-    async def test_silently_ignores_used_in_message(self) -> None:
+    async def test_silently_ignores_redeemed_in_message(self) -> None:
         session = _make_session()
 
         with (
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(
                 _PATCH_TRANSITION,
-                new=AsyncMock(side_effect=TicketTransitionError("already used", field="state")),
+                new=AsyncMock(side_effect=TicketTransitionError("already redeemed", field="state")),
             ),
         ):
             await use_ticket(session, ticket_id=uuid.uuid4(), actor_id=uuid.uuid4())

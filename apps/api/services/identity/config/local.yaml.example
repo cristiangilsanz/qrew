@@ -1,7 +1,7 @@
 # ── app ───────────────────────────────────────────────────────────────────────
 debug: true
 host: "127.0.0.1"
-port: 8006
+port: 8001
 base_url: "http://localhost:3000"
 cors_origins:
   - "http://localhost:3000"

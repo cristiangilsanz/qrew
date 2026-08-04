@@ -69,6 +69,16 @@ class SessionRepository:
         await self._session.execute(delete(Session).where(Session.jti == jti))
         await self._session.flush()
 
+    async def delete_by_device_id(self, device_id: uuid.UUID) -> list[str]:
+        """Delete all sessions linked to a specific device and return their JTIs."""
+        result = await self._session.execute(
+            select(Session.jti).where(Session.device_id == device_id)
+        )
+        jtis = list(result.scalars().all())
+        await self._session.execute(delete(Session).where(Session.device_id == device_id))
+        await self._session.flush()
+        return jtis
+
     async def delete_all_by_user_id(self, user_id: uuid.UUID) -> list[str]:
         """Delete all sessions for a user and return their token identifiers."""
         result = await self._session.execute(select(Session.jti).where(Session.user_id == user_id))

@@ -33,6 +33,7 @@ def make_user(
     kyc_status: KycStatus = KycStatus.approved,
     is_active: bool = True,
     is_admin: bool = False,
+    totp_enabled: bool = False,
 ) -> SimpleNamespace:
     return SimpleNamespace(
         id=user_id or uuid.uuid4(),
@@ -45,6 +46,7 @@ def make_user(
         kyc_status=kyc_status,
         is_active=is_active,
         is_admin=is_admin,
+        totp_enabled=totp_enabled,
         email_verification_token="tok123",
         email_verification_token_expires_at=None,
         phone_number_otp="123456",

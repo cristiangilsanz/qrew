@@ -34,10 +34,10 @@ settings.ws_heartbeat_seconds = 60
 settings.access_jwt_private_key = _EC_PRIVATE_PEM
 settings.scanner_jwt_private_key = _RSA_PRIVATE_PEM
 
-from com.qode.qrew.v1.gateway.core.auth import _access_public_keys, _scanner_public_keys  # noqa: E402
+from com.qode.qrew.v1.gateway.core.auth import access_public_keys, scanner_public_keys  # noqa: E402
 
-_access_public_keys.cache_clear()
-_scanner_public_keys.cache_clear()
+access_public_keys.cache_clear()
+scanner_public_keys.cache_clear()
 
 from com.qode.qrew.v1.gateway.app import app  # noqa: E402
 

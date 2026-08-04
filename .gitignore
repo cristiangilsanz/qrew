@@ -64,6 +64,7 @@ docker-compose.override.yml
 .env.*
 !.env.example
 config/local.yaml
+**/config/local.yaml
 .secrets.baseline
 certs/
 secrets/
@@ -217,5 +218,3 @@ ehthumbs.db
 ehthumbs_vista.db
 Thumbs.db
 Thumbs.db:encryptable
-
-notes

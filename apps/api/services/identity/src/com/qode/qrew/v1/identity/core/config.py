@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     refresh_jwt_previous_public_keys: str = ""
     queue_jwt_previous_public_keys: str = ""
     ticket_qr_jwt_previous_public_keys: str = ""
+    totp_jwt_private_key: str = ""
+    totp_jwt_previous_public_keys: str = ""
+    totp_token_expire_minutes: int = 5
     access_token_expire_minutes: int = 30
     setup_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
@@ -87,6 +90,7 @@ class Settings(BaseSettings):
     rp_id: str = "localhost"
     rp_name: str = "Qrew"
     rp_expected_origin: str = "http://localhost:3000"
+    rp_expected_origins: list[str] = []
 
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"
@@ -99,6 +103,7 @@ class Settings(BaseSettings):
     storage_root: str = "./var/storage"
     storage_signing_key: str = ""
     storage_signed_url_ttl_seconds: int = 300
+    storage_base_url: str = "http://localhost:8001"
     kyc_document_retention_days: int = 30
 
     notification_enabled: bool = True

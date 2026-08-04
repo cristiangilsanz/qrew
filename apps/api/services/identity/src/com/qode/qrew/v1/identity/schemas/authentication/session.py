@@ -11,6 +11,8 @@ class SessionResponse(BaseModel):
     device_fingerprint: str | None
     created_at: datetime
     last_used_at: datetime
+    is_current: bool = False
+    location: str | None = None
 
 
 class RevokeAllResponse(BaseModel):

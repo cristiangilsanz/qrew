@@ -1,10 +1,10 @@
 import uuid
 from collections.abc import AsyncGenerator
-from typing import Annotated
+from typing import Annotated, Optional
 
 import redis.asyncio as aioredis
 import structlog
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
 from slowapi import Limiter
@@ -58,6 +58,9 @@ from com.qode.qrew.v1.identity.services.application.authentication.account.chang
 from com.qode.qrew.v1.identity.services.application.authentication.account.changes.phone_change import (
     PhoneChangeService,
 )
+from com.qode.qrew.v1.identity.services.application.authentication.account.changes.forgot_password import (
+    ForgotPasswordService,
+)
 from com.qode.qrew.v1.identity.services.application.authentication.account.recovery import (
     RecoveryService,
 )
@@ -110,12 +113,15 @@ from com.qode.qrew.v1.identity.services.application.authentication.registration.
     PhoneVerificationService,
 )
 from com.qode.qrew.v1.identity.services.application.authentication.session import SessionService
+from com.qode.qrew.v1.identity.services.application.authentication.login.guards.totp import (
+    TotpService,
+)
 
 logger = structlog.get_logger(__name__)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
-_bearer = HTTPBearer()
+_bearer = HTTPBearer(auto_error=False)
 
 _CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -141,17 +147,25 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[t
         await client.aclose()
 
 
-# ---------------------------------------------------------------------------
-# User / session resolution
-# ---------------------------------------------------------------------------
+# User and session resolution
 
 
 async def _resolve_user(
-    credentials: HTTPAuthorizationCredentials,
+    credentials: Optional[HTTPAuthorizationCredentials],
     db: AsyncSession,
     *,
     allow_setup: bool,
+    trusted_user_id: Optional[uuid.UUID] = None,
 ) -> User:
+    if trusted_user_id is not None:
+        user = await UserRepository(db).get_by_id(trusted_user_id)
+        if user is None or not user.is_active:
+            raise _CREDENTIALS_EXCEPTION
+        return user
+
+    if credentials is None:
+        raise _CREDENTIALS_EXCEPTION
+
     try:
         matched, payload = jwt_keys.verify_any(
             (jwt_keys.ACCESS, jwt_keys.SETUP), credentials.credentials
@@ -182,17 +196,33 @@ async def _resolve_user(
 
 
 async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    request: Request,
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    return await _resolve_user(credentials, db, allow_setup=False)
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    trusted_id: Optional[uuid.UUID] = None
+    if user_id_str:
+        try:
+            trusted_id = uuid.UUID(user_id_str)
+        except ValueError as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
+    return await _resolve_user(credentials, db, allow_setup=False, trusted_user_id=trusted_id)
 
 
 async def get_setup_or_full_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    request: Request,
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    return await _resolve_user(credentials, db, allow_setup=True)
+    user_id_str = request.headers.get("x-authenticated-user-id")
+    trusted_id: Optional[uuid.UUID] = None
+    if user_id_str:
+        try:
+            trusted_id = uuid.UUID(user_id_str)
+        except ValueError as exc:
+            raise _CREDENTIALS_EXCEPTION from exc
+    return await _resolve_user(credentials, db, allow_setup=True, trusted_user_id=trusted_id)
 
 
 async def get_recovery_user(
@@ -265,9 +295,7 @@ def domain_error(message: str, field: str | None, http_status: int) -> HTTPExcep
     return HTTPException(status_code=http_status, detail={"message": message, "field": field})
 
 
-# ---------------------------------------------------------------------------
 # Shared singletons
-# ---------------------------------------------------------------------------
 
 
 def get_captcha_service() -> CaptchaService:
@@ -286,9 +314,7 @@ def get_ocr_service() -> OcrService:
     return OcrService()
 
 
-# ---------------------------------------------------------------------------
 # Auth service factories
-# ---------------------------------------------------------------------------
 
 
 def get_login_service(
@@ -344,8 +370,9 @@ def get_logout_service(
 def get_session_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
+    geoip: GeoIpService = Depends(get_geoip_service),
 ) -> SessionService:
-    return SessionService(SessionRepository(db), redis)
+    return SessionService(SessionRepository(db), redis, geoip)
 
 
 def get_profile_service(
@@ -357,9 +384,7 @@ def get_profile_service(
     )
 
 
-# ---------------------------------------------------------------------------
 # Registration service factories
-# ---------------------------------------------------------------------------
 
 
 def get_registration_service(
@@ -396,9 +421,7 @@ def get_resend_phone_otp_service(
     return ResendPhoneOtpService(UserRepository(db), notifier)
 
 
-# ---------------------------------------------------------------------------
-# Setup / KYC service factories
-# ---------------------------------------------------------------------------
+# Setup and KYC service factories
 
 
 def get_kyc_service(
@@ -420,9 +443,7 @@ def get_complete_setup_service(
     )
 
 
-# ---------------------------------------------------------------------------
 # Account service factories
-# ---------------------------------------------------------------------------
 
 
 def get_email_change_service(
@@ -448,6 +469,16 @@ def get_password_change_service(
         SessionRepository(db),
         redis,
         AuditService(),
+    )
+
+
+def get_forgot_password_service(
+    db: AsyncSession = Depends(get_db),
+    notifier: NotificationDispatcher = Depends(get_notification_service),
+) -> ForgotPasswordService:
+    return ForgotPasswordService(
+        user_repo=UserRepository(db),
+        notifier=notifier,
     )
 
 
@@ -481,9 +512,7 @@ def get_recovery_service(
     )
 
 
-# ---------------------------------------------------------------------------
 # Device service factories
-# ---------------------------------------------------------------------------
 
 
 def get_fingerprint_service(
@@ -517,9 +546,7 @@ def get_device_service(
     )
 
 
-# ---------------------------------------------------------------------------
 # Passkey service factories
-# ---------------------------------------------------------------------------
 
 
 def get_passkey_registration_service(
@@ -560,9 +587,7 @@ def get_passkey_management_service(
     return PasskeyManagementService(PasskeyCredentialRepository(db), AuditService())
 
 
-# ---------------------------------------------------------------------------
 # Admin service factories
-# ---------------------------------------------------------------------------
 
 
 def get_kyc_review_service(
@@ -582,3 +607,36 @@ def get_user_repository(
     db: AsyncSession = Depends(get_db),
 ) -> UserRepository:
     return UserRepository(db)
+
+
+async def get_totp_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    try:
+        payload = jwt_keys.verify(jwt_keys.TOTP, credentials.credentials)
+    except (ExpiredSignatureError, InvalidTokenError) as exc:
+        raise _CREDENTIALS_EXCEPTION from exc
+
+    if payload.get("type") != "access" or payload.get("scope") != "totp":
+        raise _CREDENTIALS_EXCEPTION
+
+    subject = payload.get("sub")
+    if not isinstance(subject, str):
+        raise _CREDENTIALS_EXCEPTION
+
+    try:
+        user_id = uuid.UUID(subject)
+    except ValueError as exc:
+        raise _CREDENTIALS_EXCEPTION from exc
+
+    user = await UserRepository(db).get_by_id(user_id)
+    if user is None or not user.is_active:
+        raise _CREDENTIALS_EXCEPTION
+    return user
+
+
+def get_totp_service(
+    db: AsyncSession = Depends(get_db),
+) -> TotpService:
+    return TotpService(UserRepository(db))

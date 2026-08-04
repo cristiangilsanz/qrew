@@ -42,6 +42,23 @@ class GeoIpService:
             logger.warning("geoip_locate_failed", ip=ip, error=repr(exc))
             return None
 
+    def locate_label(self, ip: str) -> str | None:
+        """Resolve an IP to a human-readable 'City, Country' label."""
+        if self._reader is None:
+            return None
+        try:
+            response = self._reader.city(ip)
+            city = response.city.name
+            country = response.country.name
+            if city and country:
+                return f"{city}, {country}"
+            if country:
+                return country
+            return None
+        except Exception as exc:
+            logger.warning("geoip_label_failed", ip=ip, error=repr(exc))
+            return None
+
     def distance_km(
         self,
         loc1: tuple[float, float],

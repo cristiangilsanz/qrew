@@ -69,12 +69,51 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_password_reset_token(self, token: str) -> User | None:
+        """Return the user matching the given password reset token."""
+        result = await self._session.execute(
+            select(User).where(User.password_reset_token == token).limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def get_by_national_id_hash(self, national_id_hash: str) -> User | None:
         """Return the user matching the given national ID hash."""
         result = await self._session.execute(
             select(User).where(User.national_id_hash == national_id_hash).limit(1)
         )
         return result.scalar_one_or_none()
+
+    async def get_by_ids(self, user_ids: list[uuid.UUID]) -> list[User]:
+        """Return all users matching the given ids (order not guaranteed)."""
+        if not user_ids:
+            return []
+        result = await self._session.execute(select(User).where(User.id.in_(user_ids)))
+        return list(result.scalars().all())
+
+    async def search_by_email_partial(self, q: str, *, limit: int = 50) -> list[User]:
+        """Return up to `limit` users whose decrypted email or name contains q.
+
+        Email is Fernet-encrypted so filtering must happen in Python after decryption.
+        The query fetches rows in batches to avoid loading the entire table at once.
+        """
+        pattern = q.strip().lower()
+        matches: list[User] = []
+        batch_size = 500
+        offset = 0
+        while len(matches) < limit:
+            result = await self._session.execute(
+                select(User).order_by(User.created_at.desc()).limit(batch_size).offset(offset)
+            )
+            batch = list(result.scalars())
+            if not batch:
+                break
+            for u in batch:
+                if pattern in u.email.lower() or pattern in u.full_name.lower():
+                    matches.append(u)
+                    if len(matches) >= limit:
+                        break
+            offset += batch_size
+        return matches
 
     async def save(self, user: User) -> User:
         """Persist pending changes for an already-tracked user."""
