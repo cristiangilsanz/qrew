@@ -1,3 +1,4 @@
+from .internal import matches_internal_key
 from .jwt import decode_token, decode_unverified_header
 from .pii import (
     decrypt,
@@ -17,4 +18,5 @@ __all__ = [
     "encrypt_bytes",
     "hash_lookup",
     "make_fernet",
+    "matches_internal_key",
 ]

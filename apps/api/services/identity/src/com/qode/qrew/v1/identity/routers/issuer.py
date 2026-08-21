@@ -3,6 +3,8 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
+from security import matches_internal_key
+
 from com.qode.qrew.v1.identity.core.utils import jwt as jwt_keys
 from com.qode.qrew.v1.identity.core.config import settings
 
@@ -13,7 +15,7 @@ _ALLOWED_PURPOSES = set(jwt_keys.PURPOSES)
 
 def _require_internal_key(request: Request) -> None:
     key = request.headers.get("X-Internal-Key", "")
-    if not key or key != settings.internal_api_key:
+    if not matches_internal_key(key, settings.internal_api_key):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 

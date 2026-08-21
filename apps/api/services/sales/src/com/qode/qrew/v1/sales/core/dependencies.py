@@ -6,6 +6,8 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from security import matches_internal_key
+
 from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.core.database import get_db
 from com.qode.qrew.v1.sales.repositories.market import MarketRepository
@@ -35,7 +37,7 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[t
 async def verify_internal_key(
     x_internal_key: str = Header(alias="X-Internal-Key", default=""),
 ) -> None:
-    if not x_internal_key or x_internal_key != settings.internal_api_key:
+    if not matches_internal_key(x_internal_key, settings.internal_api_key):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
