@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import structlog
 
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.services.application.authentication.token.security import (
     generate_otp,
     phone_number_otp_expiry,
@@ -52,7 +53,7 @@ class PhoneChangeService:
 
         otp = generate_otp()
         user.pending_phone_number = new_phone_number
-        user.pending_phone_otp = otp
+        user.pending_phone_otp = pii_crypto.hash_lookup(otp)
         user.pending_phone_otp_expires_at = phone_number_otp_expiry()
         await self._user_repo.save(user)
 
@@ -73,7 +74,10 @@ class PhoneChangeService:
 
     async def confirm_change(self, user: User, new_phone_number: str, otp: str) -> None:
         """Validate OTP and swap the phone number."""
-        if user.pending_phone_number != new_phone_number or user.pending_phone_otp != otp:
+        if (
+            user.pending_phone_number != new_phone_number
+            or user.pending_phone_otp != pii_crypto.hash_lookup(otp)
+        ):
             raise PhoneChangeError("Invalid or expired verification code", field="otp")
 
         if (

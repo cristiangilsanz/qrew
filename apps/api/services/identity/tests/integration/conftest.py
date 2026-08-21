@@ -189,14 +189,25 @@ async def _register(client: httpx.AsyncClient, email: str, phone: str) -> dict:
 
 
 async def _verify_email(client: httpx.AsyncClient, db: AsyncSession, user_id: str) -> None:
-    from sqlalchemy import select
-    from com.qode.qrew.v1.identity.models.user import User
-
-    result = await db.execute(select(User).where(User.id == _uuid.UUID(user_id)))
-    user = result.scalar_one()
-    token = user.email_verification_token
+    token = await _issued_token(db, _uuid.UUID(user_id), "email_account_verify", "token")
     resp = await client.post("/v1/auth/registration/verify-email", json={"token": token})
     assert resp.status_code == 200, resp.text
+
+
+async def _issued_token(
+    db: AsyncSession, user_id: _uuid.UUID, template_key: str, field: str
+) -> str:
+    from sqlalchemy import select
+    from com.qode.qrew.v1.identity.models.notification import Notification
+
+    result = await db.execute(
+        select(Notification)
+        .where(Notification.user_id == user_id, Notification.template_key == template_key)
+        .order_by(Notification.created_at.desc())
+        .limit(1)
+    )
+    notification = result.scalar_one()
+    return str(notification.payload[field])
 
 
 @pytest_asyncio.fixture

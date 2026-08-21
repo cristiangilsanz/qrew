@@ -6,6 +6,7 @@ import structlog
 from fastapi import Request
 
 from ratelimit.errors import RateLimitedError
+from middleware import client_ip
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.services.application.audit import AuditService
 from com.qode.qrew.v1.identity.core.config import settings
@@ -47,7 +48,7 @@ def make_audit_rejection_handler(
             await audit.record(
                 action=AuditAction.RATE_LIMIT_HIT,
                 actor_id=actor_id,
-                ip_address=request.client.host if request.client else None,
+                ip_address=client_ip(request, settings.trusted_proxy_ip),
                 payload={
                     "scope": exc.scope,
                     "limit": exc.limit,

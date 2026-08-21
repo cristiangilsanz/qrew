@@ -1,5 +1,6 @@
 import structlog
 
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.services.application.authentication.token.security import (
     email_verification_token_expiry,
     generate_otp,
@@ -40,7 +41,7 @@ class ResendEmailVerificationService:
             raise ResendError("This email address is already verified", field="email")
 
         token = generate_token()
-        user.email_verification_token = token
+        user.email_verification_token = pii_crypto.hash_lookup(token)
         user.email_verification_token_expires_at = email_verification_token_expiry()
         await self._repo.save(user)
 
@@ -69,7 +70,7 @@ class ResendPhoneOtpService:
             raise ResendError("This phone number is already verified", field="phone_number")
 
         otp = generate_otp()
-        user.phone_number_otp = otp
+        user.phone_number_otp = pii_crypto.hash_lookup(otp)
         user.phone_number_otp_expires_at = phone_number_otp_expiry()
         await self._repo.save(user)
 

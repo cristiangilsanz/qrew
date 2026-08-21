@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
     redis_url: str = "redis://localhost:6379/0"
+    trusted_proxy_ip: str = ""
     nats_url: str = ""
 
     access_jwt_private_key: str = ""

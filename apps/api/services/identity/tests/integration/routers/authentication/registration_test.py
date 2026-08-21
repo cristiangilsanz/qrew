@@ -60,15 +60,21 @@ class TestVerifyEmail:
     ) -> None:
         import uuid as _uuid
         from sqlalchemy import select
-        from com.qode.qrew.v1.identity.models.user import User
+        from com.qode.qrew.v1.identity.models.notification import Notification
 
         payload = _payload()
         resp = await client.post("/v1/auth/registration/", json=payload)
         user_id = _uuid.UUID(resp.json()["id"])
 
-        result = await db_session.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one()
-        token = user.email_verification_token
+        result = await db_session.execute(
+            select(Notification)
+            .where(
+                Notification.user_id == user_id,
+                Notification.template_key == "email_account_verify",
+            )
+            .limit(1)
+        )
+        token = str(result.scalar_one().payload["token"])
 
         verify_resp = await client.post("/v1/auth/registration/verify-email", json={"token": token})
         assert verify_resp.status_code == 200

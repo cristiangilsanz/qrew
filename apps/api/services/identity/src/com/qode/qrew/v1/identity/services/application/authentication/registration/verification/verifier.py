@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import structlog
 
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.repositories.user import UserRepository
@@ -74,7 +75,7 @@ class PhoneVerificationService:
         """Verify a phone number with the provided one-time password."""
         user = await self._repo.get_by_phone_number(phone_number)
 
-        if user is None or user.phone_number_otp != otp:
+        if user is None or user.phone_number_otp != pii_crypto.hash_lookup(otp):
             await logger.awarning("phone_number_verification_failed", reason="invalid_otp")
             raise VerificationError("Invalid or expired verification OTP", field="otp")
         if user.phone_number_verified:

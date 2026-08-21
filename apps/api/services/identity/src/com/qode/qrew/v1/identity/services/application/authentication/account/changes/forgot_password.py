@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import structlog
 
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.services.application.authentication.token.security import (
     generate_token,
     hash_password,
@@ -39,7 +40,7 @@ class ForgotPasswordService:
         expires_at = datetime.now(UTC) + timedelta(
             hours=settings.email_verification_token_expire_hours
         )
-        user.password_reset_token = token
+        user.password_reset_token = pii_crypto.hash_lookup(token)
         user.password_reset_token_expires_at = expires_at
         await self._user_repo.save(user)
 

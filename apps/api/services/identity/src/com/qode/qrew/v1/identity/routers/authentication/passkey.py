@@ -3,6 +3,9 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from pagination import Page
+from middleware import client_ip
+
+from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.core.dependencies import (
     get_current_session,
     get_current_user,
@@ -110,7 +113,7 @@ async def passkey_authenticate_complete(
     service: PasskeyAuthenticationService = Depends(get_passkey_authentication_service),
 ) -> LoginResponse:
     """Complete passkey authentication and return access tokens."""
-    ip_address = request.client.host if request.client else None
+    ip_address = client_ip(request, settings.trusted_proxy_ip)
     user_agent = request.headers.get("User-Agent")
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:

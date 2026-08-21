@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from middleware import client_ip
+
+from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.core.dependencies import get_setup_or_full_user
 from idempotency import idempotent
 from com.qode.qrew.v1.identity.core.dependencies import limiter
@@ -58,7 +61,7 @@ async def register(
     service: RegistrationService = Depends(get_registration_service),
 ) -> RegisterResponse:
     """Register a new user account."""
-    ip_address = request.client.host if request.client else "unknown"
+    ip_address = client_ip(request, settings.trusted_proxy_ip) or "unknown"
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:
         return await service.register(body, ip_address, device_fingerprint)

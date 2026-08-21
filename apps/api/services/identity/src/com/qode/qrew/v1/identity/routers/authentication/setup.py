@@ -2,6 +2,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 
+from middleware import client_ip
+
+from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.core.dependencies import get_setup_or_full_user
 from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.models.user import User
@@ -82,7 +85,7 @@ async def complete_setup(
     service: CompleteSetupService = Depends(get_complete_setup_service),
 ) -> LoginResponse:
     """Exchange a setup token for a full access token."""
-    ip_address = request.client.host if request.client else None
+    ip_address = client_ip(request, settings.trusted_proxy_ip)
     user_agent = request.headers.get("User-Agent")
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:

@@ -3,6 +3,9 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from middleware import client_ip
+
+from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.core.dependencies import limiter
 from ratelimit import rate_limit
 from com.qode.qrew.v1.identity.services.application.ratelimit.limiter import (
@@ -62,7 +65,7 @@ async def login(
     service: LoginService = Depends(get_login_service),
 ) -> LoginResponse:
     """Log in as a registered user."""
-    ip_address = request.client.host if request.client else None
+    ip_address = client_ip(request, settings.trusted_proxy_ip)
     user_agent = request.headers.get("User-Agent")
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
     device_id: uuid.UUID | None = None

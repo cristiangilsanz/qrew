@@ -42,7 +42,9 @@ class UserRepository:
     async def get_by_email_verification_token(self, token: str) -> User | None:
         """Return the user matching the given email verification token."""
         result = await self._session.execute(
-            select(User).where(User.email_verification_token == token).limit(1)
+            select(User)
+            .where(User.email_verification_token == pii_crypto.hash_lookup(token))
+            .limit(1)
         )
         return result.scalar_one_or_none()
 
@@ -65,14 +67,16 @@ class UserRepository:
     async def get_by_pending_email_token(self, token: str) -> User | None:
         """Return the user matching the given pending email verification token."""
         result = await self._session.execute(
-            select(User).where(User.pending_email_verification_token == token).limit(1)
+            select(User)
+            .where(User.pending_email_verification_token == pii_crypto.hash_lookup(token))
+            .limit(1)
         )
         return result.scalar_one_or_none()
 
     async def get_by_password_reset_token(self, token: str) -> User | None:
         """Return the user matching the given password reset token."""
         result = await self._session.execute(
-            select(User).where(User.password_reset_token == token).limit(1)
+            select(User).where(User.password_reset_token == pii_crypto.hash_lookup(token)).limit(1)
         )
         return result.scalar_one_or_none()
 

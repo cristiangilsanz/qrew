@@ -43,7 +43,7 @@ class User(Base):
     email_verification_token_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    phone_number_otp: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    phone_number_otp: Mapped[str | None] = mapped_column(String(64), nullable=True)
     phone_number_otp_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -54,7 +54,7 @@ class User(Base):
     pending_phone_number_hash: Mapped[str | None] = mapped_column(
         String(64), nullable=True, index=True
     )
-    pending_phone_otp: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    pending_phone_otp: Mapped[str | None] = mapped_column(String(64), nullable=True)
     pending_phone_otp_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

@@ -17,6 +17,7 @@ from com.qode.qrew.v1.identity.services.application.authentication.registration.
     CaptchaService,
 )
 from com.qode.qrew.v1.identity.models.audit import AuditAction
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.repositories.user import UserRepository
 from com.qode.qrew.v1.identity.schemas.registration import (
@@ -39,6 +40,8 @@ def _build_user(
     request: RegisterRequest,
     ip_address: str,
     device_fingerprint: str | None,
+    email_token: str,
+    phone_otp: str,
 ) -> User:
     """Builds a new user record from the registration request data."""
     now = datetime.now(UTC)
@@ -50,9 +53,9 @@ def _build_user(
         hashed_password=hash_password(request.password),
         email_verified=False,
         phone_number_verified=False,
-        email_verification_token=generate_token(),
+        email_verification_token=pii_crypto.hash_lookup(email_token),
         email_verification_token_expires_at=email_verification_token_expiry(),
-        phone_number_otp=generate_otp(),
+        phone_number_otp=pii_crypto.hash_lookup(phone_otp),
         phone_number_otp_expires_at=phone_number_otp_expiry(),
         terms_accepted_at=now,
         registration_ip=ip_address,
@@ -88,10 +91,12 @@ class RegistrationService:
         await self._assert_phone_available(request.phone_number)
         await self._assert_password_not_breached(request.password)
 
-        user = _build_user(request, ip_address, device_fingerprint)
+        email_token = generate_token()
+        phone_otp = generate_otp()
+        user = _build_user(request, ip_address, device_fingerprint, email_token, phone_otp)
         created = await self._repo.create(user)
 
-        await self._dispatch_verifications(created)
+        await self._dispatch_verifications(created, email_token, phone_otp)
 
         await logger.ainfo(
             "user_registered",
@@ -173,16 +178,14 @@ class RegistrationService:
                 field="password",
             )
 
-    async def _dispatch_verifications(self, user: User) -> None:
+    async def _dispatch_verifications(self, user: User, email_token: str, phone_otp: str) -> None:
         """Send verification link and OTP to the newly registered user."""
-        assert user.email_verification_token is not None
-        assert user.phone_number_otp is not None
         await self._notifier.send_email_verification_link(
             user.email,
             user.full_name,
-            user.email_verification_token,
+            email_token,
         )
         await self._notifier.send_sms_otp(
             user.phone_number,
-            user.phone_number_otp,
+            phone_otp,
         )
