@@ -3,6 +3,9 @@ from com.qode.qrew.v1.identity.services.application.storage.errors import (
     SignatureExpiredError,
     SignatureInvalidError,
 )
+from com.qode.qrew.v1.identity.services.application.storage.security.content import (
+    has_allowed_signature,
+)
 from com.qode.qrew.v1.identity.services.application.storage.security.keys import is_valid_key
 from com.qode.qrew.v1.identity.services.application.storage.providers.filesystem import (
     LocalFilesystemBackend,
@@ -27,5 +30,6 @@ __all__ = [
     "SignatureInvalidError",
     "constraint_for",
     "is_valid_key",
+    "has_allowed_signature",
     "storage",
 ]

@@ -10,6 +10,7 @@ from com.qode.qrew.v1.identity.services.application.storage import (
     SignatureExpiredError,
     SignatureInvalidError,
     constraint_for,
+    has_allowed_signature,
     is_valid_key,
     storage,
 )
@@ -98,6 +99,11 @@ async def local_upload(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"message": str(exc), "field": "sig"},
         ) from exc
+    if await storage.exists(key):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": "object already stored", "field": "key"},
+        )
     body = await request.body()
     try:
         constraint = constraint_for(storage_kind_for_key(key))
@@ -108,6 +114,8 @@ async def local_upload(
             )
     except ValueError:
         pass
+    if not has_allowed_signature(body):
+        raise _bad_request("payload is not an accepted file type", field="body")
     await storage.store_at(key, body, content_type)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
