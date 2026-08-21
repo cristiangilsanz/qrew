@@ -6,9 +6,9 @@ ObjectKey = str
 
 _ALLOWED_KINDS = frozenset({"kyc", "event_image", "scanner_photo"})
 _KIND_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
-_TENANT_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,31}(?::[A-Za-z0-9._-]{1,64})?$")
+_TENANT_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,31}(?::[A-Za-z0-9_-]{1,64})?$")
 _KEY_PATTERN = re.compile(
-    r"^[a-z][a-z0-9_]{0,31}(?::[A-Za-z0-9._-]{1,64})?"
+    r"^[a-z][a-z0-9_]{0,31}(?::[A-Za-z0-9_-]{1,64})?"
     r"/[a-z][a-z0-9_]{0,31}/\d{4}/\d{2}/\d{2}/[a-f0-9]{32}$"
 )
 

@@ -30,15 +30,15 @@ class ResendEmailVerificationService:
         user = await self._repo.get_by_email(email)
 
         if user is None:
-            await logger.awarning("resend_email_failed", reason="user_not_found")
-            raise ResendError("No account found with that email address", field="email")
+            await logger.awarning("resend_email_skipped", reason="user_not_found")
+            return
         if user.email_verified:
             await logger.awarning(
-                "resend_email_failed",
+                "resend_email_skipped",
                 reason="already_verified",
                 user_id=str(user.id),
             )
-            raise ResendError("This email address is already verified", field="email")
+            return
 
         token = generate_token()
         user.email_verification_token = pii_crypto.hash_lookup(token)
@@ -59,15 +59,15 @@ class ResendPhoneOtpService:
         user = await self._repo.get_by_phone_number(phone_number)
 
         if user is None:
-            await logger.awarning("resend_otp_failed", reason="user_not_found")
-            raise ResendError("No account found with that phone number", field="phone_number")
+            await logger.awarning("resend_otp_skipped", reason="user_not_found")
+            return
         if user.phone_number_verified:
             await logger.awarning(
-                "resend_otp_failed",
+                "resend_otp_skipped",
                 reason="already_verified",
                 user_id=str(user.id),
             )
-            raise ResendError("This phone number is already verified", field="phone_number")
+            return
 
         otp = generate_otp()
         user.phone_number_otp = pii_crypto.hash_lookup(otp)

@@ -26,7 +26,6 @@ _PUBLIC_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"^POST /api/identity/v1/auth/passkeys/"),
     re.compile(r"^POST /api/identity/v1/auth/otp/"),
     re.compile(r"^POST /api/identity/v1/auth/totp/verify$"),
-    re.compile(r"^GET  /api/identity/v1/auth/"),
     # Health probes on all services
     re.compile(r"^(GET|HEAD) /api/\w+/v?1?/?health"),
     re.compile(r"^(GET|HEAD) /api/\w+/healthz"),
