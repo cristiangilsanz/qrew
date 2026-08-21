@@ -39,4 +39,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "Referrer-Policy", "strict-origin-when-cross-origin"
         )
         response.headers.setdefault("Permissions-Policy", "geolocation=(), camera=()")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+        )
         return response
+
+
+def client_ip(request: Request, trusted_proxy_ip: str = "") -> str | None:
+    """Returns the caller address, trusting the proxy header only from a known hop."""
+    client_host = request.client.host if request.client else None
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded and trusted_proxy_ip and client_host == trusted_proxy_ip:
+        return forwarded.split(",", 1)[0].strip() or None
+    return client_host
