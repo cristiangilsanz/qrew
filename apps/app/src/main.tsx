@@ -7,6 +7,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { routeTree } from './routeTree.gen'
+import { useAuthStore } from './store/auth'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,10 +30,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </StrictMode>,
-)
+const mount = () => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+}
+
+if (useAuthStore.persist.hasHydrated()) {
+  mount()
+} else {
+  useAuthStore.persist.onFinishHydration(mount)
+}

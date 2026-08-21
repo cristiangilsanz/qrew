@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 
+import { preferencesStorage } from '@/lib/storage'
+
 interface AuthState {
   accessToken: string | null
   refreshToken: string | null
@@ -83,7 +85,7 @@ export const useAuthStore = create<AuthState>()(
     })),
     {
       name: 'qrew-auth',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => preferencesStorage),
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
