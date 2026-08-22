@@ -267,6 +267,7 @@ def upgrade() -> None:
         sa.Column("account_count_at_seen", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["identity.users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id", "fingerprint_hash", name="uq_device_fingerprints_user_hash"),
         schema="identity",
     )
     op.create_index(
