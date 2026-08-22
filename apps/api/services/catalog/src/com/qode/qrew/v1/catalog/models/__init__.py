@@ -1,5 +1,4 @@
 from com.qode.qrew.v1.catalog.models.event import Event, EventStatus
-from com.qode.qrew.v1.catalog.models.identity import User
 from com.qode.qrew.v1.catalog.models.organisation import (
     Organisation,
     OrganisationMember,
@@ -16,7 +15,6 @@ __all__ = [
     "OrganisationMember",
     "OrganisationRole",
     "TicketType",
-    "User",
     "Venue",
     "role_rank",
 ]

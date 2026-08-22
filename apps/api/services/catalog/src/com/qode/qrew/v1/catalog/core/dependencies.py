@@ -14,7 +14,6 @@ from com.qode.qrew.v1.catalog.models.organisation import (
     role_rank,
 )
 from com.qode.qrew.v1.catalog.repositories.events.event import EventRepository
-from com.qode.qrew.v1.catalog.repositories.identity import UserRepository
 from com.qode.qrew.v1.catalog.repositories.organisation import (
     OrganisationMemberRepository,
     OrganisationRepository,
@@ -100,7 +99,6 @@ def get_organisation_service(db: AsyncSession = Depends(get_db)) -> Organisation
     return OrganisationService(
         OrganisationRepository(db),
         OrganisationMemberRepository(db),
-        UserRepository(db),
         AuditService(),
     )
 

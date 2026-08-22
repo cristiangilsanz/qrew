@@ -31,17 +31,18 @@ def _make_svc(
     member_repo.delete = AsyncMock()
     member_repo.count_owners = AsyncMock(return_value=owner_count)
 
-    user_repo = MagicMock()
-    user_repo.get_by_email = AsyncMock(return_value=invitee)
-
     audit = AsyncMock()
     audit.record = AsyncMock()
+
+    async def resolver(email: str) -> object:
+        del email
+        return getattr(invitee, "id", None)
 
     svc = OrganisationService(
         org_repo=org_repo,
         member_repo=member_repo,
-        user_repo=user_repo,
         audit=audit,
+        user_resolver=resolver,
     )
     return svc, org_repo, member_repo
 

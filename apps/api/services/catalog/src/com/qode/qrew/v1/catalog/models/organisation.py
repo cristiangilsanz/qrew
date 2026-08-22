@@ -58,11 +58,7 @@ class OrganisationMember(Base):
         ForeignKey("catalog.organisations.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("identity.users.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     role: Mapped[OrganisationRole] = mapped_column(
         Enum(OrganisationRole, name="organisation_role"), nullable=False
     )

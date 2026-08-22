@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 
 import httpx
 import pytest
+from fastapi import Depends
 
 from tests.integration.conftest import auth_headers_for
 
@@ -116,18 +117,46 @@ async def test_get_public_organisation_not_found(client: httpx.AsyncClient) -> N
 
 
 async def test_invite_member(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
+    from com.qode.qrew.v1.catalog.app import app
+    from com.qode.qrew.v1.catalog.core.dependencies import get_organisation_service
+    from com.qode.qrew.v1.catalog.repositories.organisation import (
+        OrganisationMemberRepository,
+        OrganisationRepository,
+    )
+    from com.qode.qrew.v1.catalog.services.application.audit import AuditService
+    from com.qode.qrew.v1.catalog.services.application.organisation import OrganisationService
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from com.qode.qrew.v1.catalog.core.database import get_db
+
     headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
 
     invitee_id = uuid.uuid4()
-    invitee_email = f"invitee-{invitee_id.hex[:8]}@example.com"
-    resp = await client.post(
-        f"/v1/organisations/{org['id']}/members",
-        json={"email": invitee_email, "role": "member"},
-        headers=headers,
-    )
-    # 201 if UserRepository finds the email, 400/404 if not (user doesn't exist in catalog DB)
-    assert resp.status_code in {201, 400, 404}
+
+    async def _resolver(email: str) -> uuid.UUID:
+        del email
+        return invitee_id
+
+    def _service(db: AsyncSession = Depends(get_db)) -> OrganisationService:
+        return OrganisationService(
+            OrganisationRepository(db),
+            OrganisationMemberRepository(db),
+            AuditService(),
+            user_resolver=_resolver,
+        )
+
+    app.dependency_overrides[get_organisation_service] = _service
+    try:
+        resp = await client.post(
+            f"/v1/organisations/{org['id']}/members",
+            json={"email": f"invitee-{invitee_id.hex[:8]}@example.com", "role": "member"},
+            headers=headers,
+        )
+    finally:
+        app.dependency_overrides.pop(get_organisation_service, None)
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["user_id"] == str(invitee_id)
 
 
 async def test_remove_member_not_found(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:

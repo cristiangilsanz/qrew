@@ -1,5 +1,6 @@
 import re
 import uuid
+from collections.abc import Awaitable, Callable
 
 import structlog
 from sqlalchemy import Select
@@ -12,7 +13,10 @@ from com.qode.qrew.v1.catalog.models.organisation import (
     OrganisationMember,
     OrganisationRole,
 )
-from com.qode.qrew.v1.catalog.repositories.identity import UserRepository
+from com.qode.qrew.v1.catalog.services.application.identity import (
+    IdentityUnavailableError,
+    resolve_user_id,
+)
 from com.qode.qrew.v1.catalog.repositories.organisation import (
     MemberRow,
     OrganisationMemberRepository,
@@ -33,13 +37,13 @@ class OrganisationService:
         self,
         org_repo: OrganisationRepository,
         member_repo: OrganisationMemberRepository,
-        user_repo: UserRepository,
         audit: AuditService,
+        user_resolver: Callable[[str], Awaitable[uuid.UUID | None]] = resolve_user_id,
     ) -> None:
         self._orgs = org_repo
         self._members = member_repo
-        self._users = user_repo
         self._audit = audit
+        self._resolve_user = user_resolver
 
     def list_for_user_query(self, user_id: uuid.UUID) -> Select[tuple[Organisation]]:
         return self._orgs.list_for_user_query(user_id)
@@ -91,20 +95,23 @@ class OrganisationService:
     ) -> OrganisationMember:
         if role == OrganisationRole.owner:
             raise OrganisationError("Owners are promoted, not invited", field="role")
-        invitee = await self._users.get_by_email(invitee_email)
-        if invitee is None:
+        try:
+            invitee_id = await self._resolve_user(invitee_email)
+        except IdentityUnavailableError as exc:
+            raise OrganisationError("The directory is unavailable", field=None) from exc
+        if invitee_id is None:
             raise OrganisationError("No user with this email", field="email")
-        existing = await self._members.get(organisation_id, invitee.id)
+        existing = await self._members.get(organisation_id, invitee_id)
         if existing is not None:
             raise OrganisationError("User is already a member of this organisation", field="email")
         member = await self._members.insert(
-            organisation_id=organisation_id, user_id=invitee.id, role=role
+            organisation_id=organisation_id, user_id=invitee_id, role=role
         )
         await self._audit_safe(
             "organisation_member_added",
             actor_id=actor_id,
             organisation_id=organisation_id,
-            payload={"member_user_id": str(invitee.id), "role": str(role)},
+            payload={"member_user_id": str(invitee_id), "role": str(role)},
         )
         return member
 

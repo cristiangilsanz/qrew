@@ -115,26 +115,6 @@ def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
     cfg.set_main_option("sqlalchemy.url", test_db_url)
     alembic_command.upgrade(cfg, "head")
 
-    import asyncio
-
-    from sqlalchemy import text
-
-    async def _create_identity_schema() -> None:
-        setup_engine = create_async_engine(test_db_url)
-        async with setup_engine.begin() as conn:
-            await conn.execute(text("CREATE SCHEMA IF NOT EXISTS identity"))
-            await conn.execute(
-                text(
-                    "CREATE TABLE IF NOT EXISTS identity.users ("
-                    "id UUID PRIMARY KEY, "
-                    "email VARCHAR(320) NOT NULL UNIQUE, "
-                    "created_at TIMESTAMPTZ NOT NULL DEFAULT now())"
-                )
-            )
-        await setup_engine.dispose()
-
-    asyncio.run(_create_identity_schema())
-
 
 @pytest_asyncio.fixture
 async def db_session(setup_test_infrastructure: None) -> AsyncSession:

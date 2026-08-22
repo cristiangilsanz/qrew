@@ -4,8 +4,9 @@ from typing import Annotated, Optional
 
 import redis.asyncio as aioredis
 import structlog
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from security import matches_internal_key
 from jwt import ExpiredSignatureError, InvalidTokenError
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -125,6 +126,12 @@ limiter = Limiter(
     enabled=settings.ratelimit_enabled,
 )
 limiter.enabled = settings.ratelimit_enabled
+
+
+def verify_internal_key(x_internal_key: str = Header(alias="X-Internal-Key")) -> None:
+    """Rejects a sibling-service call that does not carry the shared key."""
+    if not matches_internal_key(x_internal_key, settings.internal_api_key):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 _bearer = HTTPBearer(auto_error=False)
 
