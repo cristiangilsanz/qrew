@@ -119,7 +119,12 @@ from com.qode.qrew.v1.identity.services.application.authentication.login.guards.
 
 logger = structlog.get_logger(__name__)
 
-limiter = Limiter(key_func=get_remote_address, default_limits=[])
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[],
+    enabled=settings.ratelimit_enabled,
+)
+limiter.enabled = settings.ratelimit_enabled
 
 _bearer = HTTPBearer(auto_error=False)
 

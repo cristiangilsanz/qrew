@@ -31,6 +31,7 @@ from com.qode.qrew.v1.catalog.core.config import settings
 from db import create_redis_dependency
 
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
+limiter.enabled = settings.ratelimit_enabled
 
 _FORBIDDEN = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,

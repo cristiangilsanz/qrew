@@ -73,6 +73,7 @@ class Settings(BaseSettings):
     android_package_name: str = ""
     android_app_cert_digest_sha256: str = ""
 
+    ratelimit_enabled: bool = True
     captcha_enabled: bool = False
     captcha_secret_key: str = ""
 

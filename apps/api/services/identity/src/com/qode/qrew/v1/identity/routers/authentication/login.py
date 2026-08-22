@@ -58,6 +58,7 @@ router = APIRouter()
     [("ip", 10, 60)],
     limiter_factory=limiter_for,
     on_rejection=audit_on_rejection,
+    enabled=settings.ratelimit_enabled,
 )
 async def login(
     request: Request,
