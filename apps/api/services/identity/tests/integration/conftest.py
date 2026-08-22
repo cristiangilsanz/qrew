@@ -1,8 +1,6 @@
 import os
 import uuid as _uuid
 
-from cryptography.fernet import Fernet
-
 # Must be set before any identity app imports so settings + JWT keys pick them up.
 os.environ.setdefault("DEBUG", "true")
 os.environ.setdefault("CAPTCHA_ENABLED", "false")
@@ -16,12 +14,6 @@ os.environ.setdefault("NOTIFICATION_ENABLED", "false")
 os.environ.setdefault("OTEL_ENABLED", "false")
 os.environ.setdefault("KYC_AUTO_APPROVE", "false")
 os.environ.setdefault("INTERNAL_API_KEY", "test-internal-key")
-# Fernet-format keys required by PII crypto and national-ID encryption.
-_FERNET_KEY = Fernet.generate_key().decode()
-os.environ.setdefault("PII_ENCRYPTION_KEY", _FERNET_KEY)
-os.environ.setdefault("NATIONAL_ID_ENCRYPTION_KEY", _FERNET_KEY)
-# Storage signing key — arbitrary secret used for HMAC URL signing.
-os.environ.setdefault("STORAGE_SIGNING_KEY", _uuid.uuid4().hex * 2)
 # JWT: empty → ephemeral EC keys auto-generated when debug=True (see jwt.py).
 
 import pytest  # noqa: E402

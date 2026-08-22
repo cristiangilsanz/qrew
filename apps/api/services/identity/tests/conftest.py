@@ -1,6 +1,14 @@
 import os
+import uuid as _uuid_env
+
+from cryptography.fernet import Fernet as _Fernet
+
+_FERNET_KEY = _Fernet.generate_key().decode()
 
 os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("PII_ENCRYPTION_KEY", _FERNET_KEY)
+os.environ.setdefault("NATIONAL_ID_ENCRYPTION_KEY", _FERNET_KEY)
+os.environ.setdefault("STORAGE_SIGNING_KEY", _uuid_env.uuid4().hex * 2)
 os.environ.setdefault("RATELIMIT_ENABLED", "false")
 os.environ.setdefault("CAPTCHA_ENABLED", "false")
 os.environ.setdefault("CAPTCHA_SECRET_KEY", "")
