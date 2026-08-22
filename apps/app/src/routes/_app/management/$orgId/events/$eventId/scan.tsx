@@ -26,7 +26,6 @@ function ScanPage() {
     notSupportedMessage: t('organiser.scanner.notSupported'),
   })
 
-   
   useEffect(() => {
     void startScanning()
   }, [])
