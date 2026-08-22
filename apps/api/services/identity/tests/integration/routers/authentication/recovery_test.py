@@ -11,7 +11,7 @@ class TestRecoveryBegin:
         self, client: httpx.AsyncClient
     ) -> None:
         # Recovery must not leak whether an account exists.
-        fake_image = io.BytesIO(b"fake-image-data")
+        fake_image = io.BytesIO(b"\xff\xd8\xff" + b"0" * 64)
         resp = await client.post(
             "/v1/auth/recovery/begin",
             data={"email": "nobody@example.com"},
@@ -28,7 +28,7 @@ class TestRecoveryBegin:
         assert resp.status_code == 422
 
     async def test_missing_email_returns_422(self, client: httpx.AsyncClient) -> None:
-        fake_image = io.BytesIO(b"fake-image-data")
+        fake_image = io.BytesIO(b"\xff\xd8\xff" + b"0" * 64)
         resp = await client.post(
             "/v1/auth/recovery/begin",
             files={"document": ("id.jpg", fake_image, "image/jpeg")},

@@ -30,12 +30,12 @@ class TestPasskeyRegisterComplete:
 
 
 class TestPasskeyList:
-    async def test_returns_empty_list_initially(
+    async def test_returns_the_registered_passkey(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
-        resp = await client.get("/v1/auth/passkeys", headers=auth_headers)
+        resp = await client.get("/v1/auth/passkeys/", headers=auth_headers)
         assert resp.status_code == 200
-        assert resp.json()["items"] == []
+        assert len(resp.json()["items"]) == 1
 
 
 class TestPasskeyAuthBegin:
@@ -43,9 +43,12 @@ class TestPasskeyAuthBegin:
         resp = await client.post("/v1/auth/passkeys/authenticate/begin", json={})
         assert resp.status_code in (200, 400, 422)
 
-    async def test_unknown_email_returns_200_or_404(self, client: httpx.AsyncClient) -> None:
+    async def test_unknown_email_answers_like_an_account_without_passkey(
+        self, client: httpx.AsyncClient
+    ) -> None:
         resp = await client.post(
             "/v1/auth/passkeys/authenticate/begin",
             json={"email": "nobody@example.com"},
         )
-        assert resp.status_code in (200, 404)
+        assert resp.status_code == 400
+        assert resp.json()["detail"]["message"] == "No passkey found for this account"

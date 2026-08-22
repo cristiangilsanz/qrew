@@ -65,7 +65,6 @@ async def _create_event(
     return resp.json()
 
 
-@pytest.mark.asyncio
 async def test_create_organisation(client: httpx.AsyncClient, auth_headers: dict) -> None:
     payload = _org_payload()
     resp = await client.post("/v1/organisations", json=payload, headers=auth_headers)
@@ -76,7 +75,6 @@ async def test_create_organisation(client: httpx.AsyncClient, auth_headers: dict
     assert "id" in body
 
 
-@pytest.mark.asyncio
 async def test_create_organisation_duplicate_slug(
     client: httpx.AsyncClient, auth_headers: dict
 ) -> None:
@@ -87,13 +85,11 @@ async def test_create_organisation_duplicate_slug(
     assert r2.status_code == 409
 
 
-@pytest.mark.asyncio
 async def test_create_organisation_unauthenticated(client: httpx.AsyncClient) -> None:
     resp = await client.post("/v1/organisations", json=_org_payload())
     assert resp.status_code in {401, 403}
 
 
-@pytest.mark.asyncio
 async def test_list_my_organisations(client: httpx.AsyncClient, auth_headers: dict) -> None:
     org = await _create_org(client, auth_headers)
     resp = await client.get("/v1/organisations", headers=auth_headers)
@@ -102,13 +98,11 @@ async def test_list_my_organisations(client: httpx.AsyncClient, auth_headers: di
     assert org["id"] in ids
 
 
-@pytest.mark.asyncio
 async def test_list_my_organisations_unauthenticated(client: httpx.AsyncClient) -> None:
     resp = await client.get("/v1/organisations")
     assert resp.status_code in {401, 403}
 
 
-@pytest.mark.asyncio
 async def test_get_public_organisation(client: httpx.AsyncClient, auth_headers: dict) -> None:
     org = await _create_org(client, auth_headers)
     resp = await client.get(f"/v1/organisations/{org['id']}")
@@ -116,15 +110,13 @@ async def test_get_public_organisation(client: httpx.AsyncClient, auth_headers: 
     assert resp.json()["id"] == org["id"]
 
 
-@pytest.mark.asyncio
 async def test_get_public_organisation_not_found(client: httpx.AsyncClient) -> None:
     resp = await client.get(f"/v1/organisations/{uuid.uuid4()}")
     assert resp.status_code == 404
 
 
-@pytest.mark.asyncio
 async def test_invite_member(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
 
     invitee_id = uuid.uuid4()
@@ -138,9 +130,8 @@ async def test_invite_member(client: httpx.AsyncClient, user_id: uuid.UUID) -> N
     assert resp.status_code in {201, 400, 404}
 
 
-@pytest.mark.asyncio
 async def test_remove_member_not_found(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     random_user = uuid.uuid4()
     resp = await client.delete(
@@ -150,9 +141,8 @@ async def test_remove_member_not_found(client: httpx.AsyncClient, user_id: uuid.
     assert resp.status_code in {204, 400}
 
 
-@pytest.mark.asyncio
 async def test_create_org_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     venue_id = await _create_venue(client, headers)
     event = await _create_event(client, org["id"], venue_id, headers)
@@ -161,9 +151,8 @@ async def test_create_org_event(client: httpx.AsyncClient, user_id: uuid.UUID) -
     assert event["status"] == "draft"
 
 
-@pytest.mark.asyncio
 async def test_list_org_events(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     venue_id = await _create_venue(client, headers)
     event = await _create_event(client, org["id"], venue_id, headers)
@@ -174,9 +163,8 @@ async def test_list_org_events(client: httpx.AsyncClient, user_id: uuid.UUID) ->
     assert event["id"] in ids
 
 
-@pytest.mark.asyncio
 async def test_get_org_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     venue_id = await _create_venue(client, headers)
     event = await _create_event(client, org["id"], venue_id, headers)
@@ -186,19 +174,17 @@ async def test_get_org_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> N
     assert resp.json()["id"] == event["id"]
 
 
-@pytest.mark.asyncio
 async def test_get_org_event_not_found(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     resp = await client.get(f"/v1/organisations/{org['id']}/events/{uuid.uuid4()}", headers=headers)
     assert resp.status_code == 404
 
 
-@pytest.mark.asyncio
 async def test_org_events_forbidden_non_member(
     client: httpx.AsyncClient, user_id: uuid.UUID
 ) -> None:
-    owner_headers = auth_headers_for(user_id)
+    owner_headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, owner_headers)
 
     other_headers = auth_headers_for(uuid.uuid4())

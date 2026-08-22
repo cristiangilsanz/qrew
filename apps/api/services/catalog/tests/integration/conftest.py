@@ -56,7 +56,9 @@ def _get_test_redis_url() -> str | None:
 
         _r = RedisContainer("redis:7-alpine")
         _r.start()
-        return _r.get_connection_url()
+        host = _r.get_container_host_ip()
+        port = _r.get_exposed_port(6379)
+        return f"redis://{host}:{port}/0"
     except Exception:
         return None
 
@@ -96,14 +98,42 @@ def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
     db_module.engine = new_engine
     db_module.AsyncSessionLocal = async_sessionmaker(new_engine, expire_on_commit=False)
 
+    import sys
+
+    for module in list(sys.modules.values()):
+        name = getattr(module, "__name__", "")
+        if name.startswith("com.qode.qrew") and hasattr(module, "AsyncSessionLocal"):
+            module.AsyncSessionLocal = db_module.AsyncSessionLocal
+
     import pathlib
     from alembic.config import Config
     from alembic import command as alembic_command
 
-    alembic_ini = str(pathlib.Path(__file__).parents[2] / "alembic.ini")
-    cfg = Config(alembic_ini)
+    service_root = pathlib.Path(__file__).parents[2]
+    cfg = Config(str(service_root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(service_root / "migrations"))
     cfg.set_main_option("sqlalchemy.url", test_db_url)
     alembic_command.upgrade(cfg, "head")
+
+    import asyncio
+
+    from sqlalchemy import text
+
+    async def _create_identity_schema() -> None:
+        setup_engine = create_async_engine(test_db_url)
+        async with setup_engine.begin() as conn:
+            await conn.execute(text("CREATE SCHEMA IF NOT EXISTS identity"))
+            await conn.execute(
+                text(
+                    "CREATE TABLE IF NOT EXISTS identity.users ("
+                    "id UUID PRIMARY KEY, "
+                    "email VARCHAR(320) NOT NULL UNIQUE, "
+                    "created_at TIMESTAMPTZ NOT NULL DEFAULT now())"
+                )
+            )
+        await setup_engine.dispose()
+
+    asyncio.run(_create_identity_schema())
 
 
 @pytest_asyncio.fixture
@@ -125,18 +155,24 @@ async def client(setup_test_infrastructure: None) -> httpx.AsyncClient:
         yield c
 
 
-def _make_token(user_id: _uuid.UUID) -> str:
+def _make_token(user_id: _uuid.UUID, *, is_admin: bool = False) -> str:
     """Sign a catalog access JWT using the session-scoped ephemeral keypair."""
     from com.qode.qrew.v1.catalog.core.principals import _KEYS, ACCESS, ALGORITHM
 
     keys = _KEYS[ACCESS]
     now = int(time.time())
-    payload = {"sub": str(user_id), "type": "access", "iat": now, "exp": now + 3600}
+    payload = {
+        "sub": str(user_id),
+        "type": "access",
+        "iat": now,
+        "exp": now + 3600,
+        "adm": is_admin,
+    }
     return jwt.encode(payload, keys.private_pem, algorithm=ALGORITHM, headers={"kid": keys.kid})
 
 
-def auth_headers_for(user_id: _uuid.UUID) -> dict:
-    return {"Authorization": f"Bearer {_make_token(user_id)}"}
+def auth_headers_for(user_id: _uuid.UUID, *, is_admin: bool = False) -> dict:
+    return {"Authorization": f"Bearer {_make_token(user_id, is_admin=is_admin)}"}
 
 
 @pytest.fixture
@@ -146,4 +182,9 @@ def user_id() -> _uuid.UUID:
 
 @pytest.fixture
 def auth_headers(user_id: _uuid.UUID) -> dict:
+    return auth_headers_for(user_id, is_admin=True)
+
+
+@pytest.fixture
+def member_headers(user_id: _uuid.UUID) -> dict:
     return auth_headers_for(user_id)

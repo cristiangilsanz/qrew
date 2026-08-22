@@ -13,7 +13,7 @@ def _payload(**overrides) -> dict:
     base = {
         "full_name": "Test User",
         "email": f"reg-{uuid.uuid4().hex[:8]}@example.com",
-        "phone_number": f"+316{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}",
+        "phone_number": f"+346{str(int(uuid.uuid4().int % 90_000_000) + 10_000_000)}",
         "password": _DEFAULT_PASSWORD,
         "terms_accepted": True,
         "captcha_token": "test-token",
@@ -36,7 +36,7 @@ class TestRegister:
             "/v1/auth/registration/",
             json={
                 **payload,
-                "phone_number": f"+316{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}",
+                "phone_number": f"+346{str(int(uuid.uuid4().int % 90_000_000) + 10_000_000)}",
             },
         )
         assert resp2.status_code == 409
@@ -58,23 +58,13 @@ class TestVerifyEmail:
     async def test_valid_token_verifies(
         self, client: httpx.AsyncClient, db_session: AsyncSession
     ) -> None:
-        import uuid as _uuid
-        from sqlalchemy import select
-        from com.qode.qrew.v1.identity.models.notification import Notification
+        from integration.conftest import _issued_token
 
         payload = _payload()
         resp = await client.post("/v1/auth/registration/", json=payload)
-        user_id = _uuid.UUID(resp.json()["id"])
+        assert resp.status_code == 201
 
-        result = await db_session.execute(
-            select(Notification)
-            .where(
-                Notification.user_id == user_id,
-                Notification.template_key == "email_account_verify",
-            )
-            .limit(1)
-        )
-        token = str(result.scalar_one().payload["token"])
+        token = await _issued_token(db_session, payload["email"], "email_account_verify", "token")
 
         verify_resp = await client.post("/v1/auth/registration/verify-email", json={"token": token})
         assert verify_resp.status_code == 200

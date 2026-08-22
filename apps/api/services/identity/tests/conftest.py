@@ -1,6 +1,19 @@
 import os
 
 os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("RATELIMIT_ENABLED", "false")
+os.environ.setdefault("CAPTCHA_ENABLED", "false")
+os.environ.setdefault("CAPTCHA_SECRET_KEY", "")
+os.environ.setdefault("HIBP_ENABLED", "false")
+os.environ.setdefault("SMTP_ENABLED", "false")
+os.environ.setdefault("TWILIO_ENABLED", "false")
+os.environ.setdefault("NATS_URL", "")
+os.environ.setdefault("IDEMPOTENCY_ENABLED", "false")
+os.environ.setdefault("ATTESTATION_ENABLED", "false")
+os.environ.setdefault("NOTIFICATION_ENABLED", "false")
+os.environ.setdefault("OTEL_ENABLED", "false")
+os.environ.setdefault("KYC_AUTO_APPROVE", "false")
+os.environ.setdefault("INTERNAL_API_KEY", "test-internal-key")
 
 import uuid
 from types import SimpleNamespace

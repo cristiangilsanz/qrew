@@ -70,6 +70,7 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
+markers = ["integration: mark test as integration test requiring Docker services (Postgres + Redis)"]
 
 [tool.ruff]
 line-length = 100

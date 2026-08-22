@@ -13,7 +13,7 @@ async def _user_with_pending_kyc(client: httpx.AsyncClient, db_session: AsyncSes
     from com.qode.qrew.v1.identity.models.user import KycStatus, User
 
     email = f"kyc-{uuid.uuid4().hex[:8]}@example.com"
-    phone = f"+316{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}"
+    phone = f"+346{str(int(uuid.uuid4().int % 90_000_000) + 10_000_000)}"
     resp = await client.post(
         "/v1/auth/registration/",
         json={

@@ -33,11 +33,11 @@ class TestLogin:
         )
         assert resp.status_code == 401
 
-    async def test_unverified_email_returns_setup_required(self, client: httpx.AsyncClient) -> None:
+    async def test_unverified_email_is_rejected(self, client: httpx.AsyncClient) -> None:
         import uuid
 
         email = f"unverified-{uuid.uuid4().hex[:8]}@example.com"
-        phone = f"+316{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}"
+        phone = f"+346{str(int(uuid.uuid4().int % 90_000_000) + 10_000_000)}"
         await client.post(
             "/v1/auth/registration/",
             json={
@@ -53,8 +53,7 @@ class TestLogin:
             "/v1/auth/login",
             json={"email": email, "password": "StrongP@ss1!"},
         )
-        assert resp.status_code == 200
-        assert resp.json()["setup_required"] is True
+        assert resp.status_code == 401
 
 
 class TestRefresh:

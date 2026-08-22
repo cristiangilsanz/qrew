@@ -102,7 +102,7 @@ class TestChangePhone:
     ) -> None:
         import uuid
 
-        new_phone = f"+317{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}"
+        new_phone = f"+3471{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}"
         resp = await client.post(
             "/v1/auth/account/change-phone",
             headers=auth_headers,

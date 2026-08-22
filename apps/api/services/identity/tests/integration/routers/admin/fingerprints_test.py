@@ -8,7 +8,7 @@ class TestGetFingerprint:
     async def test_unknown_hash_returns_empty_list(
         self, client: httpx.AsyncClient, admin_headers: dict
     ) -> None:
-        resp = await client.get("/v1/admin/fingerprints/deadbeef1234", headers=admin_headers)
+        resp = await client.get("/v1/admin/fingerprints/" + "de" * 32, headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["account_count"] == 0
@@ -17,7 +17,7 @@ class TestGetFingerprint:
     async def test_known_hash_returned_after_fingerprint_report(
         self, client: httpx.AsyncClient, auth_headers: dict, admin_headers: dict
     ) -> None:
-        fp_hash = "testfingerprinthash999"
+        fp_hash = "ab" * 32
         await client.post(
             "/v1/auth/devices/fingerprint",
             headers=auth_headers,

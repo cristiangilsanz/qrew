@@ -79,7 +79,9 @@ def _get_test_redis_url() -> str | None:
 
         _r = RedisContainer("redis:7-alpine")
         _r.start()
-        return _r.get_connection_url()
+        host = _r.get_container_host_ip()
+        port = _r.get_exposed_port(6379)
+        return f"redis://{host}:{port}/0"
     except Exception:
         return None
 
@@ -124,12 +126,20 @@ def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
     db_module.engine = new_engine
     db_module.AsyncSessionLocal = async_sessionmaker(new_engine, expire_on_commit=False)
 
+    import sys
+
+    for module in list(sys.modules.values()):
+        name = getattr(module, "__name__", "")
+        if name.startswith("com.qode.qrew") and hasattr(module, "AsyncSessionLocal"):
+            module.AsyncSessionLocal = db_module.AsyncSessionLocal
+
     import pathlib
     from alembic.config import Config
     from alembic import command as alembic_command
 
-    alembic_ini = str(pathlib.Path(__file__).parents[3] / "alembic.ini")
-    cfg = Config(alembic_ini)
+    service_root = pathlib.Path(__file__).parents[2]
+    cfg = Config(str(service_root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(service_root / "migrations"))
     cfg.set_main_option("sqlalchemy.url", test_db_url)
     alembic_command.upgrade(cfg, "head")
 
@@ -165,8 +175,8 @@ def _unique_email() -> str:
 
 
 def _unique_phone() -> str:
-    suffix = str(int(_uuid.uuid4().int % 9_000_000) + 1_000_000)
-    return f"+316{suffix}"
+    suffix = str(int(_uuid.uuid4().int % 90_000_000) + 10_000_000)
+    return f"+346{suffix}"
 
 
 _DEFAULT_PASSWORD = "StrongP@ss1!"
@@ -188,35 +198,71 @@ async def _register(client: httpx.AsyncClient, email: str, phone: str) -> dict:
     return resp.json()
 
 
-async def _verify_email(client: httpx.AsyncClient, db: AsyncSession, user_id: str) -> None:
-    token = await _issued_token(db, _uuid.UUID(user_id), "email_account_verify", "token")
+async def _verify_email(client: httpx.AsyncClient, db: AsyncSession, email: str) -> None:
+    token = await _issued_token(db, email, "email_account_verify", "token")
     resp = await client.post("/v1/auth/registration/verify-email", json={"token": token})
     assert resp.status_code == 200, resp.text
 
 
-async def _issued_token(
-    db: AsyncSession, user_id: _uuid.UUID, template_key: str, field: str
-) -> str:
+async def _issued_token(db: AsyncSession, destination: str, template_key: str, field: str) -> str:
+    """Read a single-use secret from the notification issued to that destination.
+
+    The destination column is encrypted with a non-deterministic scheme, so the
+    match happens after decryption instead of in the query.
+    """
     from sqlalchemy import select
     from com.qode.qrew.v1.identity.models.notification import Notification
 
     result = await db.execute(
         select(Notification)
-        .where(Notification.user_id == user_id, Notification.template_key == template_key)
+        .where(Notification.template_key == template_key)
         .order_by(Notification.created_at.desc())
-        .limit(1)
+        .limit(50)
     )
-    notification = result.scalar_one()
-    return str(notification.payload[field])
+    for notification in result.scalars():
+        if notification.destination == destination:
+            return str(notification.payload[field])
+    raise AssertionError(f"no {template_key} notification issued to {destination}")
+
+
+async def _complete_setup(db: AsyncSession, user_id: _uuid.UUID) -> None:
+    """Bring the account to the state that login requires for a full session.
+
+    Onboarding demands a verified phone, a submitted document and a registered
+    passkey, and the last one cannot be produced without a WebAuthn ceremony, so
+    the state is written straight into the database.
+    """
+    import os as _os
+
+    from sqlalchemy import update
+    from com.qode.qrew.v1.identity.models.passkey import PasskeyCredential
+    from com.qode.qrew.v1.identity.models.user import KycStatus, User
+
+    await db.execute(
+        update(User)
+        .where(User.id == user_id)
+        .values(phone_number_verified=True, kyc_status=KycStatus.approved)
+    )
+    db.add(
+        PasskeyCredential(
+            user_id=user_id,
+            credential_id=_os.urandom(32),
+            public_key=_os.urandom(64),
+            aaguid=str(_uuid.uuid4()),
+            name="test-passkey",
+        )
+    )
+    await db.commit()
 
 
 @pytest_asyncio.fixture
 async def registered_user(client: httpx.AsyncClient, db_session: AsyncSession) -> dict:
-    """Register + verify email. Returns {email, phone, password, user_id}."""
+    """Register, verify email and finish onboarding. Returns the account data."""
     email = _unique_email()
     phone = _unique_phone()
     data = await _register(client, email, phone)
-    await _verify_email(client, db_session, data["id"])
+    await _verify_email(client, db_session, email)
+    await _complete_setup(db_session, _uuid.UUID(data["id"]))
     return {"email": email, "phone": phone, "password": _DEFAULT_PASSWORD, "user_id": data["id"]}
 
 
@@ -246,6 +292,7 @@ async def admin_headers(client: httpx.AsyncClient, db_session: AsyncSession) -> 
         update(User).where(User.id == user_id).values(is_admin=True, email_verified=True)
     )
     await db_session.commit()
+    await _complete_setup(db_session, user_id)
 
     resp = await client.post(
         "/v1/auth/login",
