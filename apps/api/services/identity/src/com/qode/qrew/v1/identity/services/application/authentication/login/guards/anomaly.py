@@ -3,10 +3,11 @@ from datetime import UTC, datetime, timedelta
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.models.audit import AuditAction, AuditEvent
+from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.repositories.session import SessionRepository
 from com.qode.qrew.v1.identity.services.application.audit import AuditService
+from com.qode.qrew.v1.identity.services.application.trail import AuditTrailEntry
 from com.qode.qrew.v1.identity.core.utils.geoip import GeoIpService
 from com.qode.qrew.v1.identity.services.application.notification.dispatcher import (
     NotificationDispatcher,
@@ -116,7 +117,7 @@ class LoginAnomalyService:
     def _travel_anomaly_reason(
         self,
         current_loc: tuple[float, float],
-        prev_event: AuditEvent,
+        prev_event: AuditTrailEntry,
     ) -> str | None:
         prev_ip = prev_event.ip_address
         if not prev_ip:

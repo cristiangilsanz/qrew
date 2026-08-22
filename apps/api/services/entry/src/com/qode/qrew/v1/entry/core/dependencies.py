@@ -12,17 +12,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from com.qode.qrew.v1.entry.core.config import settings
 from com.qode.qrew.v1.entry.core.database import get_db
 from com.qode.qrew.v1.entry.core.errors import EventNotFoundError, NotEventMemberError
-from com.qode.qrew.v1.entry.core.principals import verify_access_token
-from com.qode.qrew.v1.entry.core.utils.jwt import decode_scanner_token
-from com.qode.qrew.v1.entry.models.projections import User
-from com.qode.qrew.v1.entry.models.scanner import Scanner
-from com.qode.qrew.v1.entry.repositories.projections import (
-    EventRepository,
-    OrganisationMemberRepository,
-    UserRepository,
+from com.qode.qrew.v1.entry.core.principals import (
+    AuthenticatedUser,
+    verify_access_token,
 )
+from com.qode.qrew.v1.entry.core.utils.jwt import decode_scanner_token
+from com.qode.qrew.v1.entry.models.scanner import Scanner
 from com.qode.qrew.v1.entry.repositories.scanner import ScannerRepository
 from com.qode.qrew.v1.entry.services.application.audit import AuditService
+from com.qode.qrew.v1.entry.services.application.catalog import (
+    CatalogUnavailableError,
+    EventMembership,
+    fetch_event_membership,
+)
 from com.qode.qrew.v1.entry.services.application.scanner import ScannerService
 
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
@@ -42,30 +44,26 @@ async def get_current_user(
     credentials: Annotated[
         HTTPAuthorizationCredentials | None, Depends(_bearer)
     ] = None,
-    db: AsyncSession = Depends(get_db),
-) -> User:
+) -> AuthenticatedUser:
     user_id_str = request.headers.get("x-authenticated-user-id")
     if user_id_str:
         try:
             user_id = uuid.UUID(user_id_str)
         except ValueError as exc:
             raise _CREDENTIALS_EXCEPTION from exc
-    else:
-        if credentials is None:
-            raise _CREDENTIALS_EXCEPTION
-        try:
-            user_id = verify_access_token(credentials.credentials)
-        except (ExpiredSignatureError, InvalidTokenError, ValueError) as exc:
-            raise _CREDENTIALS_EXCEPTION from exc
-    user = await UserRepository(db).get_by_id(user_id)
-    if user is None or not user.is_active:
+        is_admin = request.headers.get("x-authenticated-user-is-admin") == "1"
+        return AuthenticatedUser(id=user_id, is_admin=is_admin)
+    if credentials is None:
         raise _CREDENTIALS_EXCEPTION
-    return user
+    try:
+        return verify_access_token(credentials.credentials)
+    except (ExpiredSignatureError, InvalidTokenError, ValueError) as exc:
+        raise _CREDENTIALS_EXCEPTION from exc
 
 
 async def get_admin_user(
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
+    current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+) -> AuthenticatedUser:
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -115,12 +113,19 @@ def get_scanner_service(db: AsyncSession = Depends(get_db)) -> ScannerService:
     return ScannerService(ScannerRepository(db), AuditService())
 
 
-async def require_event_member(
-    db: AsyncSession, event_id: uuid.UUID, user_id: uuid.UUID
-) -> None:
-    event = await EventRepository(db).get_by_id(event_id)
-    if event is None:
+async def event_membership(event_id: uuid.UUID, user_id: uuid.UUID) -> EventMembership:
+    try:
+        return await fetch_event_membership(event_id, user_id)
+    except CatalogUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"message": "The catalog is unavailable", "field": None},
+        ) from exc
+
+
+async def require_event_member(event_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    membership = await event_membership(event_id, user_id)
+    if not membership.event_exists:
         raise EventNotFoundError(event_id)
-    member = await OrganisationMemberRepository(db).get(event.organisation_id, user_id)
-    if member is None:
+    if not membership.is_member:
         raise NotEventMemberError(user_id)

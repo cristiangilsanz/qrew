@@ -1,8 +1,10 @@
+import contextlib
 import pathlib
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import fakeredis.aioredis
 import jwt
@@ -25,13 +27,11 @@ from com.qode.qrew.v1.entry.core.database import get_db  # noqa: E402
 from com.qode.qrew.v1.entry.core.dependencies import get_redis  # noqa: E402
 from com.qode.qrew.v1.entry.core.principals import _KEYS, ALGORITHM  # noqa: E402
 from com.qode.qrew.v1.entry.core.utils.jwt import create_scanner_token  # noqa: E402
-from com.qode.qrew.v1.entry.models.projections import (  # noqa: E402
-    Event,
-    OrganisationMember,
-    TicketContext,
-    User,
-)
+from com.qode.qrew.v1.entry.models.projections import TicketContext  # noqa: E402
 from com.qode.qrew.v1.entry.models.scanner import Scanner  # noqa: E402
+from com.qode.qrew.v1.entry.services.application.catalog import (  # noqa: E402
+    EventMembership,
+)
 
 try:
     from testcontainers.postgres import PostgresContainer
@@ -59,50 +59,15 @@ def db_url(postgres_container):
 
 @pytest.fixture(scope="session", autouse=True)
 def run_migrations(postgres_container, db_url):
-    import asyncio
 
     from alembic import command as alembic_command
     from alembic.config import Config
-    from sqlalchemy import text
 
     settings.database_url = db_url
     alembic_ini = str(pathlib.Path(__file__).parents[2] / "alembic.ini")
     cfg = Config(alembic_ini)
     cfg.set_main_option("sqlalchemy.url", db_url)
     alembic_command.upgrade(cfg, "head")
-
-    async def _create_projection_tables() -> None:
-        engine = create_async_engine(db_url)
-        async with engine.begin() as conn:
-            await conn.execute(text("CREATE SCHEMA IF NOT EXISTS identity"))
-            await conn.execute(text("CREATE SCHEMA IF NOT EXISTS catalog"))
-            await conn.execute(
-                text(
-                    "CREATE TABLE IF NOT EXISTS identity.users ("
-                    "id UUID PRIMARY KEY, "
-                    "is_active BOOLEAN NOT NULL, "
-                    "is_admin BOOLEAN NOT NULL)"
-                )
-            )
-            await conn.execute(
-                text(
-                    "CREATE TABLE IF NOT EXISTS catalog.events ("
-                    "id UUID PRIMARY KEY, "
-                    "organisation_id UUID NOT NULL, "
-                    "venue_id UUID NOT NULL)"
-                )
-            )
-            await conn.execute(
-                text(
-                    "CREATE TABLE IF NOT EXISTS catalog.organisation_members ("
-                    "id UUID PRIMARY KEY, "
-                    "organisation_id UUID NOT NULL, "
-                    "user_id UUID NOT NULL)"
-                )
-            )
-        await engine.dispose()
-
-    asyncio.run(_create_projection_tables())
 
 
 @pytest.fixture(scope="session")
@@ -150,12 +115,13 @@ async def client(session_factory, fake_redis) -> AsyncGenerator[AsyncClient, Non
 # ---------------------------------------------------------------------------
 
 
-def make_access_token(user_id: uuid.UUID) -> str:
+def make_access_token(user_id: uuid.UUID, *, is_admin: bool = False) -> str:
     now = datetime.now(UTC)
     return jwt.encode(
         {
             "sub": str(user_id),
             "type": "access",
+            "adm": is_admin,
             "iat": int(now.timestamp()),
             "exp": int((now + timedelta(hours=1)).timestamp()),
         },
@@ -220,12 +186,34 @@ async def _noop_ticketing_use(*args, **kwargs) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def seed_user(db: AsyncSession, *, is_admin: bool = False) -> User:
-    user = User(id=uuid.uuid4(), is_active=True, is_admin=is_admin)
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-    return user
+def make_principal(*, is_admin: bool = False) -> SimpleNamespace:
+    """A principal comes from the token, not from a table of another service."""
+    return SimpleNamespace(id=uuid.uuid4(), is_admin=is_admin)
+
+
+@contextlib.contextmanager
+def membership(
+    *,
+    event_exists: bool = True,
+    is_member: bool = True,
+    venue_id: uuid.UUID | None = None,
+):
+    """Answers the catalog membership question without reaching catalog."""
+    import com.qode.qrew.v1.entry.core.dependencies as deps
+
+    async def _fetch(_event_id: uuid.UUID, _user_id: uuid.UUID) -> EventMembership:
+        return EventMembership(
+            event_exists=event_exists,
+            is_member=is_member,
+            venue_id=venue_id or uuid.uuid4(),
+        )
+
+    original = deps.fetch_event_membership
+    deps.fetch_event_membership = _fetch
+    try:
+        yield
+    finally:
+        deps.fetch_event_membership = original
 
 
 async def seed_scanner(
@@ -264,31 +252,3 @@ async def seed_ticket_context(
     await db.commit()
     await db.refresh(tc)
     return tc
-
-
-async def seed_event(
-    db: AsyncSession, *, organisation_id: uuid.UUID, venue_id: uuid.UUID | None = None
-) -> Event:
-    event = Event(
-        id=uuid.uuid4(),
-        organisation_id=organisation_id,
-        venue_id=venue_id or uuid.uuid4(),
-    )
-    db.add(event)
-    await db.commit()
-    await db.refresh(event)
-    return event
-
-
-async def seed_org_member(
-    db: AsyncSession, *, organisation_id: uuid.UUID, user_id: uuid.UUID
-) -> OrganisationMember:
-    member = OrganisationMember(
-        id=uuid.uuid4(),
-        organisation_id=organisation_id,
-        user_id=user_id,
-    )
-    db.add(member)
-    await db.commit()
-    await db.refresh(member)
-    return member

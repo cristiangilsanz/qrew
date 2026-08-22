@@ -17,8 +17,8 @@ from com.qode.qrew.v1.entry.core.dependencies import (
     require_event_member,
 )
 from com.qode.qrew.v1.entry.core.errors import EventNotFoundError, NotEventMemberError
+from com.qode.qrew.v1.entry.core.principals import AuthenticatedUser
 from com.qode.qrew.v1.entry.core.utils.jwt import decode_scanner_token
-from com.qode.qrew.v1.entry.models.projections import User
 from com.qode.qrew.v1.entry.models.scanner import Scanner
 from com.qode.qrew.v1.entry.schemas.entry.entry import (
     EntryValidateRequest,
@@ -116,13 +116,13 @@ async def get_entry_stats(
     request: Request,
     event_id: uuid.UUID,
     since: datetime | None = Query(default=None),
-    current_user: User = Depends(get_current_user),
+    current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> EntryStatsResponse:
     del request
     try:
-        await require_event_member(db, event_id, current_user.id)
+        await require_event_member(event_id, current_user.id)
     except EventNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

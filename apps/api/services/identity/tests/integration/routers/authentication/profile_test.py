@@ -43,7 +43,18 @@ class TestAuditLog:
     async def test_returns_paginated_audit_events(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
-        resp = await client.get("/v1/auth/profile/audit", headers=auth_headers)
+        import com.qode.qrew.v1.identity.services.application.authentication.profile as profile
+        from com.qode.qrew.v1.identity.services.application.trail import AuditTrailPage
+
+        async def _trail(*_args: object, **_kwargs: object) -> AuditTrailPage:
+            return AuditTrailPage(items=[], next_cursor=None)
+
+        original = profile.fetch_trail
+        profile.fetch_trail = _trail
+        try:
+            resp = await client.get("/v1/auth/profile/audit", headers=auth_headers)
+        finally:
+            profile.fetch_trail = original
         assert resp.status_code == 200
         body = resp.json()
         assert "items" in body

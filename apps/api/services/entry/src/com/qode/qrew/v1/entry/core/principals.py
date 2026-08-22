@@ -99,8 +99,14 @@ def verify(purpose: str, token: str) -> dict[str, object]:
     return _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[no-any-return]
 
 
-def verify_access_token(token: str) -> uuid.UUID:
-    """Verify an access JWT and return the subject user-id.
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    id: uuid.UUID
+    is_admin: bool = False
+
+
+def verify_access_token(token: str) -> AuthenticatedUser:
+    """Verify an access JWT and return the principal it names.
 
     Raises InvalidTokenError or ExpiredSignatureError on failure.
     Raises ValueError if the sub claim is not a valid UUID.
@@ -111,7 +117,7 @@ def verify_access_token(token: str) -> uuid.UUID:
     subject = payload.get("sub")
     if not isinstance(subject, str):
         raise InvalidTokenError("Token sub claim is missing or not a string")
-    return uuid.UUID(subject)
+    return AuthenticatedUser(id=uuid.UUID(subject), is_admin=payload.get("adm") is True)
 
 
 def get_verifiers(purpose: str) -> dict[str, str]:

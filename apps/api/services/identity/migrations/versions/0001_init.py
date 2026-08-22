@@ -23,53 +23,6 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     # --- Schemas ---
     op.execute("CREATE SCHEMA IF NOT EXISTS identity")
-    op.execute("CREATE SCHEMA IF NOT EXISTS audit")
-
-    # --- audit.audit_events ---
-    op.create_table(
-        "audit_events",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("actor_id", sa.UUID(), nullable=True),
-        sa.Column("action", sa.String(length=64), nullable=False),
-        sa.Column("entity_type", sa.String(length=64), nullable=True),
-        sa.Column("entity_id", sa.String(length=255), nullable=True),
-        sa.Column("ip_address", sa.String(length=45), nullable=True),
-        sa.Column("device_fingerprint_hash", sa.String(length=255), nullable=True),
-        sa.Column("user_agent", sa.Text(), nullable=True),
-        sa.Column("payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("prev_hash", sa.LargeBinary(length=32), nullable=True),
-        sa.Column("hash", sa.LargeBinary(length=32), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        schema="audit",
-    )
-    op.create_index(
-        op.f("ix_audit_audit_events_action"),
-        "audit_events",
-        ["action"],
-        unique=False,
-        schema="audit",
-    )
-    op.create_index(
-        op.f("ix_audit_audit_events_actor_id"),
-        "audit_events",
-        ["actor_id"],
-        unique=False,
-        schema="audit",
-    )
-    op.create_index(
-        op.f("ix_audit_audit_events_created_at"),
-        "audit_events",
-        ["created_at"],
-        unique=False,
-        schema="audit",
-    )
-
     # --- identity.notifications ---
     op.create_table(
         "notifications",
@@ -529,11 +482,7 @@ def downgrade() -> None:
     op.drop_table("notifications", schema="identity")
 
     op.drop_index(
-        op.f("ix_audit_audit_events_created_at"), table_name="audit_events", schema="audit"
     )
-    op.drop_index(op.f("ix_audit_audit_events_actor_id"), table_name="audit_events", schema="audit")
-    op.drop_index(op.f("ix_audit_audit_events_action"), table_name="audit_events", schema="audit")
-    op.drop_table("audit_events", schema="audit")
 
     # --- Drop enum types ---
     sa.Enum(name="kyc_status").drop(op.get_bind(), checkfirst=True)
@@ -542,4 +491,3 @@ def downgrade() -> None:
 
     # --- Drop schemas ---
     op.execute("DROP SCHEMA IF EXISTS identity")
-    op.execute("DROP SCHEMA IF EXISTS audit")

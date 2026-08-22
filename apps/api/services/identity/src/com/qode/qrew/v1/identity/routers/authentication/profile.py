@@ -88,7 +88,6 @@ async def list_user_audit(
     """Return the current user's audit history."""
     page_limit = clamp_limit(limit, default=_AUDIT_PAGE_SIZE)
     events, next_cursor = await profile_svc.paginate_audit(
-        db,
         current_user.id,
         action=action,
         since=since,

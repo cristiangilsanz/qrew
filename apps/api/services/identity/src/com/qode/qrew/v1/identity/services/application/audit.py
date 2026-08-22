@@ -3,9 +3,10 @@ from datetime import UTC, datetime
 
 import structlog
 
-from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
-from com.qode.qrew.v1.identity.models.audit import AuditEvent
-from com.qode.qrew.v1.identity.repositories.audit import AuditRepository
+from com.qode.qrew.v1.identity.services.application.trail import (
+    AuditTrailEntry,
+    fetch_trail,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -75,8 +76,9 @@ class AuditService:
             except Exception as exc:
                 await logger.awarning("ws_fanout_publish_failed", action=action, error=repr(exc))
 
-    async def get_recent_login_events(self, user_id: uuid.UUID, limit: int = 5) -> list[AuditEvent]:
-        """Returns the most recent successful login events for a given user."""
-        async with AsyncSessionLocal() as session:
-            repo = AuditRepository(session)
-            return await repo.get_recent_login_events(user_id, limit)
+    async def get_recent_login_events(
+        self, user_id: uuid.UUID, limit: int = 5
+    ) -> list[AuditTrailEntry]:
+        """Returns the most recent logins of a user, as the audit service reports them."""
+        page = await fetch_trail(user_id, action="login", limit=limit)
+        return [entry for entry in page.items if entry.ip_address]

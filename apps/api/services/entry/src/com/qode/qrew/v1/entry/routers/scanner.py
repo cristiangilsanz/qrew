@@ -10,16 +10,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.entry.core.database import get_db
 from com.qode.qrew.v1.entry.core.dependencies import (
+    event_membership,
     get_admin_user,
     get_current_user,
     get_scanner_service,
     limiter,
-    require_event_member,
 )
-from com.qode.qrew.v1.entry.core.errors import EventNotFoundError, NotEventMemberError
+from com.qode.qrew.v1.entry.core.principals import AuthenticatedUser
 from com.qode.qrew.v1.entry.core.utils.jwt import decode_scanner_token_for_refresh
-from com.qode.qrew.v1.entry.models.projections import User
-from com.qode.qrew.v1.entry.repositories.projections import EventRepository
 from com.qode.qrew.v1.entry.schemas.scanner import (
     ScannerCreateRequest,
     ScannerDeactivateResponse,
@@ -115,33 +113,30 @@ async def create_scanner_for_event(
     request: Request,
     event_id: uuid.UUID,
     body: ScannerForEventRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: AuthenticatedUser = Depends(get_current_user),
     service: ScannerService = Depends(get_scanner_service),
     db: AsyncSession = Depends(get_db),
 ) -> ScannerTokenResponse:
     del request
-    event = await EventRepository(db).get_by_id(event_id)
-    if event is None:
+    membership = await event_membership(event_id, current_user.id)
+    if not membership.event_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"message": "Event not found", "field": "event_id"},
         )
-    if not current_user.is_admin:
-        try:
-            await require_event_member(db, event_id, current_user.id)
-        except EventNotFoundError:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={"message": "Event not found", "field": "event_id"},
-            ) from None
-        except NotEventMemberError:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={"message": "Not a member of this organisation", "field": None},
-            ) from None
+    if not current_user.is_admin and not membership.is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"message": "Not a member of this organisation", "field": None},
+        )
+    if membership.venue_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Event not found", "field": "event_id"},
+        )
     scan_date = body.date if body.date is not None else today_date.today()
     scanner, token = await service.create(
-        current_user.id, body.name, event.venue_id, event_id, scan_date
+        current_user.id, body.name, membership.venue_id, event_id, scan_date
     )
     return ScannerTokenResponse(
         scanner_id=scanner.id,
@@ -163,7 +158,7 @@ async def create_scanner_for_event(
 async def create_scanner(
     request: Request,
     body: ScannerCreateRequest,
-    admin: User = Depends(get_admin_user),
+    admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerTokenResponse:
     del request
@@ -186,7 +181,7 @@ async def create_scanner(
 @limiter.limit("60/minute")  # type: ignore[misc]
 async def list_scanners(
     request: Request,
-    _admin: User = Depends(get_admin_user),
+    _admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerListResponse:
     del request
@@ -204,7 +199,7 @@ async def list_scanners(
 async def get_scanner_by_id(
     request: Request,
     scanner_id: uuid.UUID,
-    _admin: User = Depends(get_admin_user),
+    _admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerSummaryResponse:
     del request
@@ -229,7 +224,7 @@ async def rotate_scanner(
     request: Request,
     scanner_id: uuid.UUID,
     body: ScannerRotateRequest,
-    admin: User = Depends(get_admin_user),
+    admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerTokenResponse:
     del request
@@ -259,7 +254,7 @@ async def rotate_scanner(
 async def deactivate_scanner(
     request: Request,
     scanner_id: uuid.UUID,
-    admin: User = Depends(get_admin_user),
+    admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerDeactivateResponse:
     del request

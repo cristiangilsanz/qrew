@@ -17,7 +17,6 @@ from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.utils.geoip import GeoIpService
 from com.qode.qrew.v1.identity.models.session import Session
 from com.qode.qrew.v1.identity.models.user import User
-from com.qode.qrew.v1.identity.repositories.audit import AuditRepository
 from com.qode.qrew.v1.identity.repositories.device import DeviceRepository
 from com.qode.qrew.v1.identity.repositories.fingerprint import DeviceFingerprintRepository
 from com.qode.qrew.v1.identity.repositories.passkey import PasskeyCredentialRepository
@@ -132,6 +131,7 @@ def verify_internal_key(x_internal_key: str = Header(alias="X-Internal-Key")) ->
     """Rejects a sibling-service call that does not carry the shared key."""
     if not matches_internal_key(x_internal_key, settings.internal_api_key):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -390,10 +390,7 @@ def get_session_service(
 def get_profile_service(
     db: AsyncSession = Depends(get_db),
 ) -> ProfileService:
-    return ProfileService(
-        passkey_repo=PasskeyCredentialRepository(db),
-        audit_repo=AuditRepository(db),
-    )
+    return ProfileService(passkey_repo=PasskeyCredentialRepository(db))
 
 
 # Registration service factories

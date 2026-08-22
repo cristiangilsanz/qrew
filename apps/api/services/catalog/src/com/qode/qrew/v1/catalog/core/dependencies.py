@@ -1,7 +1,8 @@
 import uuid
 from collections.abc import Awaitable, Callable
 
-from fastapi import Depends, HTTPException, Path, status
+from fastapi import Depends, Header, HTTPException, Path, status
+from security import matches_internal_key
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +32,12 @@ from db import create_redis_dependency
 
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
 limiter.enabled = settings.ratelimit_enabled
+
+
+def verify_internal_key(x_internal_key: str = Header(alias="X-Internal-Key")) -> None:
+    """Rejects a sibling-service call that does not carry the shared key."""
+    if not matches_internal_key(x_internal_key, settings.internal_api_key):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 _FORBIDDEN = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
