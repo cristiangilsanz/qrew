@@ -39,6 +39,7 @@ def verify_internal_key(x_internal_key: str = Header(alias="X-Internal-Key")) ->
     if not matches_internal_key(x_internal_key, settings.internal_api_key):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
+
 _FORBIDDEN = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
     detail={"message": "Not a member of this organisation", "field": None},

@@ -481,8 +481,7 @@ def downgrade() -> None:
     )
     op.drop_table("notifications", schema="identity")
 
-    op.drop_index(
-    )
+    op.drop_index()
 
     # --- Drop enum types ---
     sa.Enum(name="kyc_status").drop(op.get_bind(), checkfirst=True)
