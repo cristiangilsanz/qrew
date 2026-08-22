@@ -23,13 +23,13 @@ os.environ.setdefault("OTEL_ENABLED", "false")
 os.environ.setdefault("KYC_AUTO_APPROVE", "false")
 os.environ.setdefault("INTERNAL_API_KEY", "test-internal-key")
 
-import uuid
-from types import SimpleNamespace
-from unittest.mock import AsyncMock
+import uuid  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+from unittest.mock import AsyncMock  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
-from com.qode.qrew.v1.identity.models.user import KycStatus
+from com.qode.qrew.v1.identity.models.user import KycStatus  # noqa: E402
 
 
 @pytest.fixture
