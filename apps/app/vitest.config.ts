@@ -16,6 +16,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
+      include: ['src/**'],
       exclude: ['src/test', 'src/routeTree.gen.ts', '*.config.*'],
     },
   },

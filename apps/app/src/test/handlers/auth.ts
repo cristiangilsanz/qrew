@@ -68,6 +68,22 @@ export const authHandlers = [
     })
   }),
 
+  http.get(`${API_URL}/v1/auth/profile/onboarding-status`, () =>
+    HttpResponse.json({
+      email_verified: true,
+      phone_verified: true,
+      kyc_status: 'approved',
+      has_passkey: true,
+      is_complete: true,
+    }),
+  ),
+
+  http.get(`${API_URL}/v1/auth/totp/status`, () => HttpResponse.json({ enabled: false })),
+
+  http.get(`${API_URL}/v1/admin/users/search`, () =>
+    HttpResponse.json({ items: [], next_cursor: null }),
+  ),
+
   http.post(`${API_URL}/v1/auth/account/change-password`, () =>
     HttpResponse.json({ message: 'Password changed successfully.' }),
   ),

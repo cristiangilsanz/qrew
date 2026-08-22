@@ -55,6 +55,35 @@ export const catalogHandlers = [
     ),
   ),
 
+  http.get(`${CATALOG_URL}/v1/organisations/:orgId/members`, () =>
+    HttpResponse.json({
+      items: [
+        {
+          user_id: 'mock-user-id',
+          email: 'user@example.com',
+          full_name: 'Test User',
+          role: 'owner',
+          joined_at: '2026-01-01T00:00:00Z',
+        },
+      ],
+      next_cursor: null,
+    }),
+  ),
+
+  http.get(`${CATALOG_URL}/v1/venues`, () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: 'venue-1',
+          name: 'Palau Sant Jordi',
+          city: 'Barcelona',
+          country: 'ES',
+        },
+      ],
+      next_cursor: null,
+    }),
+  ),
+
   http.post(`${CATALOG_URL}/v1/organisations/:orgId/members`, () =>
     HttpResponse.json(
       {

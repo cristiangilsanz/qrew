@@ -27,6 +27,24 @@ export const salesHandlers = [
     HttpResponse.json(RESERVATION, { status: 201 }),
   ),
 
+  http.get(`${SALES_URL}/v1/market/assignments/pending`, () => HttpResponse.json(null)),
+
+  http.get(`${SALES_URL}/v1/market/assignments/:assignmentId`, () =>
+    HttpResponse.json({
+      id: 'assignment-1',
+      listing_id: 'listing-1',
+      event_name: 'Summer Fest',
+      status: 'pending',
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      price_cents: 2500,
+      currency: 'EUR',
+    }),
+  ),
+
+  http.get(`${SALES_URL}/v1/market/queues`, () =>
+    HttpResponse.json({ items: [], next_cursor: null }),
+  ),
+
   http.get(`${SALES_URL}/v1/reservations/:reservationId`, () => HttpResponse.json(RESERVATION)),
 
   http.post(`${SALES_URL}/v1/reservations/:reservationId/cancel`, () =>
