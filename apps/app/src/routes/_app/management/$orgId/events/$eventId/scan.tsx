@@ -26,7 +26,7 @@ function ScanPage() {
     notSupportedMessage: t('organiser.scanner.notSupported'),
   })
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   useEffect(() => {
     void startScanning()
   }, [])
