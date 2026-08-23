@@ -8,7 +8,7 @@ from observability import setup_tracing, shutdown_tracing
 
 from com.qode.qrew.v1.payments.core.config import settings
 from com.qode.qrew.v1.payments.core.database import engine
-from com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency import (
+from com.qode.qrew.v1.payments.services.application.webhooks.idempotency import (
     close_webhook_idempotency,
 )
 

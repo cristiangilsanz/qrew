@@ -10,15 +10,15 @@ from com.qode.qrew.v1.payments.services.application.payment import (
     PaymentExpiredError,
     PaymentService,
     WebhookError,
-    _map_intent_status,
 )
+from com.qode.qrew.v1.payments.services.domain.status import map_intent_status
 from conftest import make_payment
 
 _PATCH_GET_CTX = "com.qode.qrew.v1.payments.services.application.payment._get_reservation_context"
 _PATCH_CRYPTO = "com.qode.qrew.v1.payments.services.application.payment.pii_crypto"
-_PATCH_CLAIM = "com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency.claim_event"
+_PATCH_CLAIM = "com.qode.qrew.v1.payments.services.application.webhooks.idempotency.claim_event"
 _PATCH_DISPATCH = (
-    "com.qode.qrew.v1.payments.services.infrastructure.webhooks.dispatch.dispatch_webhook_event"
+    "com.qode.qrew.v1.payments.services.application.webhooks.dispatch.dispatch_webhook_event"
 )
 
 
@@ -61,22 +61,22 @@ def _make_svc(
 
 class TestMapIntentStatus:
     def test_succeeded(self) -> None:
-        assert _map_intent_status("succeeded") == PaymentStatus.succeeded
+        assert map_intent_status("succeeded") == PaymentStatus.succeeded
 
     def test_processing(self) -> None:
-        assert _map_intent_status("processing") == PaymentStatus.processing
+        assert map_intent_status("processing") == PaymentStatus.processing
 
     def test_requires_payment_method(self) -> None:
-        assert _map_intent_status("requires_payment_method") == PaymentStatus.requires_action
+        assert map_intent_status("requires_payment_method") == PaymentStatus.requires_action
 
     def test_requires_confirmation(self) -> None:
-        assert _map_intent_status("requires_confirmation") == PaymentStatus.requires_action
+        assert map_intent_status("requires_confirmation") == PaymentStatus.requires_action
 
     def test_canceled_maps_to_failed(self) -> None:
-        assert _map_intent_status("canceled") == PaymentStatus.failed
+        assert map_intent_status("canceled") == PaymentStatus.failed
 
     def test_unknown_maps_to_requires_action(self) -> None:
-        assert _map_intent_status("unknown_status") == PaymentStatus.requires_action
+        assert map_intent_status("unknown_status") == PaymentStatus.requires_action
 
 
 class TestPaymentServiceInitiate:

@@ -13,7 +13,8 @@ from com.qode.qrew.v1.payments.core.errors import DomainError
 from com.qode.qrew.v1.payments.core.utils import crypto as pii_crypto
 from com.qode.qrew.v1.payments.models.payment import Payment, PaymentStatus
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
-from com.qode.qrew.v1.payments.services.infrastructure.stripe_client import StripeClient
+from com.qode.qrew.v1.payments.services.application.stripe_client import StripeClient
+from com.qode.qrew.v1.payments.services.domain.status import is_terminal, map_intent_status
 
 logger = structlog.get_logger(__name__)
 
@@ -159,7 +160,7 @@ class PaymentService:
         )
         payment.provider_payment_intent_id = intent.intent_id
         payment.client_secret_ciphertext = pii_crypto.encrypt(intent.client_secret)
-        payment.status = _map_intent_status(intent.status)
+        payment.status = map_intent_status(intent.status)
         if existing is None:
             payment = await self._repo.insert(payment)
         else:
@@ -206,7 +207,7 @@ class PaymentService:
         )
         payment.provider_payment_intent_id = intent.intent_id
         payment.client_secret_ciphertext = pii_crypto.encrypt(intent.client_secret)
-        payment.status = _map_intent_status(intent.status)
+        payment.status = map_intent_status(intent.status)
         if existing is None:
             payment = await self._repo.insert(payment)
         else:
@@ -342,17 +343,17 @@ class PaymentService:
         payment = await self._repo.get_by_intent_id(intent_id)
         if payment is None:
             return
-        new_status = _map_intent_status(status)
-        if new_status in {PaymentStatus.succeeded, PaymentStatus.failed}:
+        new_status = map_intent_status(status)
+        if is_terminal(new_status):
             return
         payment.status = new_status
         await self._repo.flush()
 
     async def handle_webhook(self, payload: bytes, signature: str | None) -> dict[str, str]:
-        from com.qode.qrew.v1.payments.services.infrastructure.webhooks.dispatch import (
+        from com.qode.qrew.v1.payments.services.application.webhooks.dispatch import (
             dispatch_webhook_event,
         )
-        from com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency import (
+        from com.qode.qrew.v1.payments.services.application.webhooks.idempotency import (
             claim_event,
         )
 
@@ -369,15 +370,3 @@ class PaymentService:
             return {"status": "duplicate"}
         await dispatch_webhook_event(self, event)
         return {"status": "ok"}
-
-
-def _map_intent_status(stripe_status: str) -> PaymentStatus:
-    mapping = {
-        "succeeded": PaymentStatus.succeeded,
-        "processing": PaymentStatus.processing,
-        "requires_payment_method": PaymentStatus.requires_action,
-        "requires_confirmation": PaymentStatus.requires_action,
-        "requires_action": PaymentStatus.requires_action,
-        "canceled": PaymentStatus.failed,
-    }
-    return mapping.get(stripe_status, PaymentStatus.requires_action)

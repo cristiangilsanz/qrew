@@ -112,7 +112,7 @@ def test_session_factory(setup_test_infrastructure: None) -> async_sessionmaker[
 
 @pytest.fixture
 def mock_stripe() -> AsyncMock:
-    from com.qode.qrew.v1.payments.services.infrastructure.stripe_client import CreatedIntent
+    from com.qode.qrew.v1.payments.services.application.stripe_client import CreatedIntent
 
     mock = AsyncMock()
     mock.create_payment_intent.return_value = CreatedIntent(
@@ -136,7 +136,7 @@ async def client(
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
     from com.qode.qrew.v1.payments.app import app
     from com.qode.qrew.v1.payments.core.dependencies import get_stripe_client
-    from com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency import (
+    from com.qode.qrew.v1.payments.services.application.webhooks.idempotency import (
         _ClientState,
     )
 
