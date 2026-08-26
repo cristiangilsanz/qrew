@@ -33,24 +33,6 @@ erDiagram
         timestamp updated_at
     }
 
-    catalog_events["catalog.events (projection)"] {
-        UUID id PK
-        UUID organisation_id
-        UUID venue_id
-    }
-
-    catalog_org_members["catalog.organisation_members (projection)"] {
-        UUID id PK
-        UUID organisation_id
-        UUID user_id
-    }
-
-    identity_users["identity.users (projection)"] {
-        UUID id PK
-        bool is_active
-        bool is_admin
-    }
-
     scans }o--|| scanners : "submitted by"
     scans }o--|| ticket_contexts : "validates"
 ```

@@ -75,15 +75,8 @@ erDiagram
         TIMESTAMPTZ deleted_at
     }
 
-    identity_users["identity.users (projection)"] {
-        UUID id PK
-        string email
-        TIMESTAMPTZ created_at
-    }
-
     organisations ||--o{ organisation_members : "has"
     organisations ||--o{ events : "owns"
-    identity_users ||--o{ organisation_members : "belongs to"
     venues ||--o{ events : "hosts"
     events ||--o{ ticket_types : "has"
 ```

@@ -1,6 +1,6 @@
 # Catalog Event Contracts
 
-Published to stream `CATALOG`. All events wrap the [EventEnvelope](../README.md#eventenvelope).
+Published to stream `CATALOG`. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
 
 
 ## `catalog.event.published.v1`
@@ -46,6 +46,9 @@ Emitted when an event is manually marked as started by an organiser.
 
 
 ## `catalog.venue.created.v1`
+
+> [!WARNING]
+> Not published yet. Ticketing already subscribes to this subject and keeps the handler ready, but no service emits it, so the projection it feeds stays empty.
 
 Emitted when a new venue is created. Ticketing builds a local venue projection for geofence validation.
 

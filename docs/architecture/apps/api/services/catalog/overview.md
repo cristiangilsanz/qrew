@@ -45,8 +45,9 @@ Catalog is the source of truth for the public event catalog in the platform. It 
 | `GET` | `/events/{id}/ticket-types` | List ticket types for an event | Public |
 | `PATCH` | `/events/{id}/ticket-types/{tid}` | Update a ticket type (draft or published only) | JWT (manager) |
 | `DELETE` | `/events/{id}/ticket-types/{tid}` | Delete a ticket type (draft or published only) | JWT (manager) |
+| `GET` | `/_internal/events/{event_id}/members/{user_id}` | Report whether the event exists and the user belongs to its organisation | Internal |
 
-Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../packages/contracts/openapi/catalog/openapi.yaml)
+Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../../../packages/contracts/openapi/catalog/openapi.yaml)
 
 ## Events
 
@@ -62,7 +63,7 @@ Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../packa
 | `TicketTypeCreated` | `catalog.ticket_type.created.v1` | Emitted when a ticket type was added to an event. |
 | `TicketTypeUpdated` | `catalog.ticket_type.updated.v1` | Emitted when a ticket type capacity or price changes. |
 
-Schemas: [`packages/contracts/openapi/catalog/events/`](../../../../packages/contracts/openapi/catalog/events/)
+Schemas: [`packages/contracts/openapi/catalog/events/`](../../../../../../packages/contracts/openapi/catalog/events/)
 
 ### Consumed
 

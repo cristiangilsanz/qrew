@@ -22,7 +22,7 @@ Payments is the Stripe integration service in the platform. It creates and track
 | `POST` | `/market-assignments/{id}/payment` | Initiate a payment for a market assignment | JWT |
 | `POST` | `/payments/webhook` | Receive a Stripe webhook for payment outcomes | Stripe signature |
 
-Full spec: [`packages/contracts/openapi/payments/openapi.yaml`](../../../../packages/contracts/openapi/payments/openapi.yaml)
+Full spec: [`packages/contracts/openapi/payments/openapi.yaml`](../../../../../../packages/contracts/openapi/payments/openapi.yaml)
 
 ## Events
 
@@ -36,7 +36,7 @@ Full spec: [`packages/contracts/openapi/payments/openapi.yaml`](../../../../pack
 | `PaymentRefunded` | `payments.payment.refunded.v1` | Emitted when a full or partial refund was processed. |
 | `ChargebackOpened` | `payments.chargeback.opened.v1` | Emitted when a chargeback dispute was opened by the card issuer. |
 
-Schemas: [`packages/contracts/openapi/payments/events/`](../../../../packages/contracts/openapi/payments/events/)
+Schemas: [`packages/contracts/openapi/payments/events/`](../../../../../../packages/contracts/openapi/payments/events/)
 
 ### Consumed
 

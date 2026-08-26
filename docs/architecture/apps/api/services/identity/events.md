@@ -1,6 +1,6 @@
 # Identity Event Contracts
 
-Published to stream `IDENTITY`. All events wrap the [EventEnvelope](../README.md#eventenvelope).
+Published to stream `IDENTITY`. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
 
 
 ## `identity.user.registered.v1`
@@ -26,6 +26,9 @@ Emitted when a device fingerprint is observed, used by Sales for fraud scoring.
 
 ## `identity.device.attested.v1`
 
+> [!WARNING]
+> Not published yet. Ticketing already subscribes to this subject and keeps the handler ready, but no service emits it, so the projection it feeds stays empty.
+
 Emitted when a device passes hardware attestation.
 
 | Field | Type | Description |
@@ -36,6 +39,9 @@ Emitted when a device passes hardware attestation.
 
 
 ## `identity.device.revoked.v1`
+
+> [!WARNING]
+> Not published yet. Ticketing already subscribes to this subject and keeps the handler ready, but no service emits it, so the projection it feeds stays empty.
 
 Emitted when a device is revoked by the user or an admin. Ticketing reacts by freezing any tickets bound to the device.
 

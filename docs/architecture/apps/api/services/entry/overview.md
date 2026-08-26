@@ -28,7 +28,7 @@ Entry is the gate control service in the platform. It registers scanner devices,
 | `POST` | `/admin/scanners/{id}/refresh` | Mint a fresh credential for a scanner | JWT (admin) |
 | `DELETE` | `/admin/scanners/{id}` | Deactivate a scanner | JWT (admin) |
 
-Full spec: [`packages/contracts/openapi/entry/openapi.yaml`](../../../../packages/contracts/openapi/entry/openapi.yaml)
+Full spec: [`packages/contracts/openapi/entry/openapi.yaml`](../../../../../../packages/contracts/openapi/entry/openapi.yaml)
 
 ## Events
 
@@ -39,7 +39,7 @@ Full spec: [`packages/contracts/openapi/entry/openapi.yaml`](../../../../package
 | `EntryValidated` | `entry.entry.validated.v1` | Emitted when a ticket was successfully scanned and admitted. |
 | `EntryRejected` | `entry.entry.rejected.v1` | Emitted when a scan attempt was rejected due to an invalid token, wrong venue, or already used ticket. |
 
-Schemas: [`packages/contracts/openapi/entry/events/`](../../../../packages/contracts/openapi/entry/events/)
+Schemas: [`packages/contracts/openapi/entry/events/`](../../../../../../packages/contracts/openapi/entry/events/)
 
 ### Consumed
 

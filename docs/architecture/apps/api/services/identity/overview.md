@@ -47,8 +47,9 @@ Identity is the authentication and JWT issuance authority in the platform. It ma
 | `POST` | `/admin/kyc` | Approve or reject a KYC submission | JWT |
 | `GET` | `/admin/fingerprints` | Query device fingerprints | JWT |
 | `GET` | `/admin/outbox/dlq` | Inspect the outbox dead letter queue | JWT |
+| `POST` | `/_internal/users/lookup` | Resolve an email or phone into a user identifier | Internal |
 
-Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../packages/contracts/openapi/identity/openapi.yaml)
+Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../../../packages/contracts/openapi/identity/openapi.yaml)
 
 ## Events
 
@@ -63,7 +64,7 @@ Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../pack
 | `SessionEvicted` | `identity.session.evicted.v1` | Emitted when a session was forcibly terminated. |
 | `PasskeyReasserted` | `identity.passkey.reasserted.v1` | Emitted when a passkey was re-verified on a device. |
 
-Schemas: [`packages/contracts/openapi/identity/events/`](../../../../packages/contracts/openapi/identity/events/)
+Schemas: [`packages/contracts/openapi/identity/events/`](../../../../../../packages/contracts/openapi/identity/events/)
 
 ### Consumed
 

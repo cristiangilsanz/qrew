@@ -1,6 +1,6 @@
 # Ticketing Event Contracts
 
-Ticketing publishes to subjects not covered by a dedicated named stream. All events wrap the [EventEnvelope](../README.md#eventenvelope).
+Ticketing publishes to subjects not covered by a dedicated named stream. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
 
 
 ## `ticketing.ticket.state_changed`

@@ -1,6 +1,6 @@
 # Payments Event Contracts
 
-Published to stream `PAYMENTS`. All events wrap the [EventEnvelope](../README.md#eventenvelope).
+Published to stream `PAYMENTS`. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
 
 
 ## `payments.payment.initiated.v1`

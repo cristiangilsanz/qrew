@@ -1,6 +1,6 @@
 # Sales Event Contracts
 
-Published to stream `SALES`. All events wrap the [EventEnvelope](../README.md#eventenvelope).
+Published to stream `SALES`. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
 
 
 ## `sales.reservation.created.v1`
@@ -35,3 +35,16 @@ Emitted when a reservation is cancelled or expires. Ticketing cancels the associ
 |---|---|---|
 | `reservation_id` | UUID | Cancelled reservation |
 | `reason` | string | Cancellation reason |
+
+
+## `sales.reservation.expired.v1`
+
+Emitted by the reservation sweeper when a reservation times out before payment. Ticketing reacts by releasing whatever it had held for it.
+
+| Field | Type | Description |
+|---|---|---|
+| `reservation_id` | UUID | Expired reservation |
+| `user_id` | UUID | Owner of the reservation |
+| `event_id` | UUID | Event the reservation belonged to |
+| `ticket_type_id` | UUID | Ticket type released |
+| `quantity` | integer | Seats returned to the inventory |

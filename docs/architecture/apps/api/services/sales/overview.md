@@ -37,7 +37,7 @@ Sales is the reservation and queue management service in the platform. It create
 | `PUT` | `/market/assignments/{id}/holder` | Set holder name and DNI for the incoming ticket | JWT |
 | `POST` | `/market/assignments/{id}/decline` | Decline a market assignment | JWT |
 
-Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../packages/contracts/openapi/sales/openapi.yaml)
+Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../../../packages/contracts/openapi/sales/openapi.yaml)
 
 ## Events
 
@@ -53,7 +53,7 @@ Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../package
 | `QueueJoined` | `sales.queue.joined.v1` | Emitted when a user joined the waitlist queue. |
 | `QueueAdmitted` | `sales.queue.admitted.v1` | Emitted when a queued user was admitted and a reservation window opened. |
 
-Schemas: [`packages/contracts/openapi/sales/events/`](../../../../packages/contracts/openapi/sales/events/)
+Schemas: [`packages/contracts/openapi/sales/events/`](../../../../../../packages/contracts/openapi/sales/events/)
 
 ### Consumed
 
