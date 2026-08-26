@@ -204,6 +204,9 @@ tmp/
 playwright-report/
 test-results/
 
+# Thesis
+thesis/
+
 # Windows
 $RECYCLE.BIN/
 *.cab

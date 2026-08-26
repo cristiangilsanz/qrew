@@ -54,6 +54,7 @@ jobs:
           - { service: sales,     path: apps/api/services/sales}
           - { service: audit,     path: apps/api/services/audit}
           - { service: gateway,   path: apps/api/gateway }
+          - { service: app,       path: apps/app }
     steps:
       - uses: actions/checkout@v4
 
@@ -115,6 +116,7 @@ jobs:
           - { service: sales,     path: apps/api/services/sales}
           - { service: audit,     path: apps/api/services/audit}
           - { service: gateway,   path: apps/api/gateway }
+          - { service: app,       path: apps/app }
     steps:
       - uses: actions/checkout@v4
 
