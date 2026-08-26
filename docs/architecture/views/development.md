@@ -1,11 +1,7 @@
 # Development view
 
 > [!NOTE]
-> The development view describes how the system is organised as source code.
-
-## **Frontend**
-
-All code resides under `apps/app`, organised by feature module:
+> The development view describes how the source code is laid out and what each part depends on.
 
 ```
 apps/app/
@@ -22,10 +18,6 @@ apps/app/
     styles/        Global Styles
     test/          Tests
 ```
-
-## **Backend**:
-
-All code resides under `apps/api`, with the gateway at `apps/api/gateway` and the seven domain services under `apps/api/services`, organised by an identical internal structure:
 
 ```
 services/<name>/

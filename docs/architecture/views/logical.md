@@ -1,11 +1,7 @@
 # Logical view
 
 > [!NOTE]
-> The logical view describes the primary domain abstractions and the bounded context decomposition of the platform.
-
-The system is partitioned into 7 bounded contexts, each owning its own data model and enforcing its own invariants independently.
-
-The following diagram shows every domain event flow between bounded contexts in the system:
+> The logical view describes what the platform does and how the responsibilities split between its bounded contexts.
 
 <div align="center">
 

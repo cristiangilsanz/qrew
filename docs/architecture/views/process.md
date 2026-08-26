@@ -1,9 +1,7 @@
 # Process view
 
 > [!NOTE]
-> The process view describes the runtime model, covering how services and workers run as separate processes and how they communicate through shared infrastructure.
-
-The follwoing diagram shows how services handle requests, how workers handle asynchronous work, and the communication channels each one maintains in the system:
+> The process view describes what runs concurrently and how those processes reach one another through the shared infrastructure.
 
 <div align="center">
 
