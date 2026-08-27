@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import asyncpg
 
-from ..clock import Timeline
-from ..config import SeedConfig
-from ..crypto import encrypt, hash_password, hash_pii
-from ..dataset import PASSWORD, Dataset
-from ..ids import ident
+from ..core import SeedConfig, Timeline, encrypt, hash_password, hash_pii, ident
+from ..data import PASSWORD, Dataset
 
 NAME = "identity"
 

@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import asyncpg
 
-from ..clock import Timeline
-from ..config import SeedConfig
-from ..dataset import Dataset
-from ..ids import ident
+from ..core import SeedConfig, Timeline, ident
+from ..data import Dataset
 
 NAME = "ticketing"
 

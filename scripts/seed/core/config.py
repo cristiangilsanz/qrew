@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 from cryptography.fernet import Fernet, MultiFernet
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 IDENTITY_CONFIG = REPO_ROOT / "apps/api/services/identity/config/local.yaml"
 
 

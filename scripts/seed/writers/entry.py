@@ -4,24 +4,18 @@ from __future__ import annotations
 
 import asyncpg
 
-from ..clock import Timeline
-from ..config import SeedConfig
-from ..dataset import Dataset
-from ..ids import ident
+from ..core import SeedConfig, Timeline, ident
+from ..data import SCANNERS, Dataset
 
 NAME = "entry"
 
-_SCANNERS = (
-    ("gate-c", "Gate C", "venue-c", "member"),
-    ("gate-a", "Gate A", "venue-a", "member"),
-)
 _SCANNABLE = {"issued", "scanning", "redeemed"}
 
 
 async def write(
     conn: asyncpg.Connection, data: Dataset, when: Timeline, cfg: SeedConfig
 ) -> None:
-    for key, name, venue_key, owner_key in _SCANNERS:
+    for key, name, venue_key, owner_key in SCANNERS:
         await conn.execute(
             """
             INSERT INTO entry.scanners (

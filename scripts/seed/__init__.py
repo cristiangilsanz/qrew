@@ -10,25 +10,22 @@ from __future__ import annotations
 
 import asyncpg
 
-from .clock import Timeline
-from .config import SeedConfig, load
-from .dataset import Dataset, build
-from .reset import run as truncate
+from .core import SeedConfig, Timeline, load, truncate
+from .data import Dataset, build
 from .writers import WRITERS
 
 __all__ = ["SeedConfig", "load", "run"]
 
 
-async def run(*, reset: bool = True, verbose: bool = True) -> None:
+async def run(*, verbose: bool = True) -> None:
     cfg = load()
     data = build()
     when = Timeline()
     conn = await asyncpg.connect(cfg.dsn)
     try:
         async with conn.transaction():
-            if reset:
-                await truncate(conn)
-                _say(verbose, "reset", "every application table truncated")
+            await truncate(conn)
+            _say(verbose, "reset", "every application table truncated")
             for writer in WRITERS:
                 await writer.write(conn, data, when, cfg)
                 _say(verbose, writer.NAME, "seeded")

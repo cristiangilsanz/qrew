@@ -8,8 +8,7 @@ import asyncio
 import asyncpg
 
 from . import run
-from .config import load
-from .reset import run as truncate
+from .core import load, truncate
 
 
 def main() -> None:
@@ -27,7 +26,7 @@ def main() -> None:
     if args.truncate:
         asyncio.run(_truncate(verbose=not args.quiet))
         return
-    asyncio.run(run(reset=not args.keep, verbose=not args.quiet))
+    asyncio.run(run(verbose=not args.quiet))
 
 
 async def _truncate(*, verbose: bool) -> None:

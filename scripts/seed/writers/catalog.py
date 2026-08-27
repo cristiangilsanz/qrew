@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncpg
 
-from ..clock import Timeline
-from ..config import SeedConfig
-from ..dataset import Dataset
+from ..core import SeedConfig, Timeline
+from ..data import Dataset
 
 NAME = "catalog"
 

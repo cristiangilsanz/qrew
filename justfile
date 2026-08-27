@@ -60,10 +60,6 @@ shutdown:
 db-seed:
     cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py
 
-# Seed without wiping what is already there
-db-seed-keep:
-    cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py --keep
-
 # Wipe all application data rows (preserves schema/migrations)
 db-truncate:
     cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py --truncate
