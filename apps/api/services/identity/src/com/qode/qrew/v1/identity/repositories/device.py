@@ -38,8 +38,8 @@ class DeviceRepository:
 
     async def revoke_all_by_user_id(
         self, user_id: uuid.UUID, exclude_id: uuid.UUID | None = None
-    ) -> int:
-        """Revoke every active device for a user."""
+    ) -> list[uuid.UUID]:
+        """Revoke every active device for a user and return the identifiers revoked."""
         stmt = select(Device).where(Device.user_id == user_id, Device.revoked_at.is_(None))
         if exclude_id is not None:
             stmt = stmt.where(Device.id != exclude_id)
@@ -49,7 +49,7 @@ class DeviceRepository:
         for device in devices:
             device.revoked_at = now
         await self._session.flush()
-        return len(devices)
+        return [device.id for device in devices]
 
     async def get_by_public_key(self, public_key: bytes) -> Device | None:
         result = await self._session.execute(

@@ -65,8 +65,17 @@ def _validate_max_tickets(value: int) -> None:
         )
 
 
-def _event_data(event: Any) -> dict[str, Any]:
+def _event_data(event: Any, venue: Any | None = None) -> dict[str, Any]:
+    geo: dict[str, Any] = {}
+    if venue is not None:
+        geo = {
+            "latitude": str(venue.latitude),
+            "longitude": str(venue.longitude),
+            "geofence_radius_m": venue.geofence_radius_m,
+            "timezone": venue.timezone,
+        }
     return {
+        **geo,
         "event_id": str(event.id),
         "organisation_id": str(event.organisation_id),
         "venue_id": str(event.venue_id) if event.venue_id else None,
@@ -226,9 +235,15 @@ class EventService:
             "catalog.event.updated.v1",
             aggregate_type="event",
             aggregate_id=str(event.id),
-            data=_event_data(event),
+            data=_event_data(event, await self._venue(event)),
         )
         return event
+
+    async def _venue(self, event: Any) -> Any | None:
+        """Returns the venue of an event, so its geofence travels with the announcement."""
+        if event.venue_id is None:
+            return None
+        return await self._venue_repo.get_by_id(event.venue_id)
 
     @traced("event.publish")
     async def publish_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
@@ -256,7 +271,7 @@ class EventService:
                 "catalog.event.published.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),
-                data=_event_data(event),
+                data=_event_data(event, await self._venue(event)),
             )
             return event
 
@@ -292,7 +307,7 @@ class EventService:
                 "catalog.event.ongoing.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),
-                data=_event_data(event),
+                data=_event_data(event, await self._venue(event)),
             )
             return event
 
@@ -320,7 +335,7 @@ class EventService:
                 "catalog.event.cancelled.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),
-                data=_event_data(event),
+                data=_event_data(event, await self._venue(event)),
             )
             return event
 

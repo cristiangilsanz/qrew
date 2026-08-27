@@ -356,3 +356,44 @@ class TestEventServiceCancel:
         assert result.status == EventStatus.cancelled
         assert result.cancelled_at is not None
         repo.flush.assert_awaited()
+
+
+class TestGeofenceTravelsWithTheAnnouncement:
+    @pytest.mark.asyncio
+    async def test_the_published_event_carries_the_venue_geofence(self) -> None:
+        venue = make_venue()
+        event = make_event(status=EventStatus.draft, venue_id=venue.id)
+        svc, _ = _make_svc(event=event, venue=venue)
+        publish = AsyncMock()
+
+        with (
+            patch(_PATCH_REDLOCK, make_redlock_cm()),
+            patch(_PATCH_SETTINGS, make_fake_settings()),
+            patch(_PATCH_REINDEX, AsyncMock()),
+            patch("messaging.publisher.publish", publish),
+        ):
+            await svc.publish_event(actor_id=uuid.uuid4(), event_id=event.id)
+
+        subject, envelope = publish.await_args.args
+        assert subject == "catalog.event.published.v1"
+        assert envelope.data["latitude"] == str(venue.latitude)
+        assert envelope.data["longitude"] == str(venue.longitude)
+        assert envelope.data["geofence_radius_m"] == venue.geofence_radius_m
+        assert envelope.data["timezone"] == venue.timezone
+
+    @pytest.mark.asyncio
+    async def test_an_event_without_a_venue_travels_without_geofence(self) -> None:
+        event = make_event(status=EventStatus.draft, venue_id=None)
+        svc, _ = _make_svc(event=event, venue=None)
+        publish = AsyncMock()
+
+        with (
+            patch(_PATCH_REDLOCK, make_redlock_cm()),
+            patch(_PATCH_SETTINGS, make_fake_settings()),
+            patch(_PATCH_REINDEX, AsyncMock()),
+            patch("messaging.publisher.publish", publish),
+        ):
+            await svc.publish_event(actor_id=uuid.uuid4(), event_id=event.id)
+
+        _, envelope = publish.await_args.args
+        assert "latitude" not in envelope.data

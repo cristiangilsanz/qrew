@@ -15,6 +15,10 @@ Emitted when an event moves from draft to published state.
 | `name` | string | Event name |
 | `starts_at` | ISO 8601 | Event start time |
 | `ends_at` | ISO 8601 | Event end time |
+| `latitude` | decimal string | Venue latitude, when the event has a venue |
+| `longitude` | decimal string | Venue longitude, when the event has a venue |
+| `geofence_radius_m` | integer | Radius Ticketing enforces at the gate |
+| `timezone` | string | Venue timezone |
 
 
 ## `catalog.event.cancelled.v1`
@@ -43,18 +47,6 @@ Emitted when an event is manually marked as started by an organiser.
 | Field | Type | Description |
 |---|---|---|
 | `event_id` | UUID | Event now in ongoing state |
-
-
-## `catalog.venue.created.v1`
-
-> [!WARNING]
-> Not published yet. Ticketing already subscribes to this subject and keeps the handler ready, but no service emits it, so the projection it feeds stays empty.
-
-Emitted when a new venue is created. Ticketing builds a local venue projection for geofence validation.
-
-| Field | Type | Description |
-|---|---|---|
-| `venue_id` | UUID | Created venue |
 
 
 ## `catalog.ticket_type.created.v1`

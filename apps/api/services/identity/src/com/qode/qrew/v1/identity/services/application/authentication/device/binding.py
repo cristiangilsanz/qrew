@@ -128,7 +128,36 @@ class DeviceBindingService:
                 "audit_write_failed", action=AuditAction.DEVICE_BIND, error=repr(exc)
             )
 
+        await _publish_device_attested(device, platform=platform, attested_at=now)
+
         return device
+
+
+async def _publish_device_attested(
+    device: Device, *, platform: str | None, attested_at: datetime
+) -> None:
+    """Announces a newly bound device so the ticketing projection can trust it."""
+    try:
+        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
+        from messaging.publisher import publish as nats_publish  # type: ignore[import-not-found]
+
+        envelope = EventEnvelope(
+            occurred_at=datetime.now(UTC),
+            aggregate_type="device",
+            aggregate_id=str(device.id),
+            actor_id=str(device.user_id),
+            data={
+                "device_id": str(device.id),
+                "user_id": str(device.user_id),
+                "attested_at": attested_at.isoformat(),
+                "platform": platform,
+            },
+        )
+        await nats_publish("identity.device.attested.v1", envelope)
+    except Exception as exc:
+        await logger.awarning(
+            "nats_publish_failed", subject="identity.device.attested.v1", error=repr(exc)
+        )
 
 
 def _pad_b64(value: str) -> str:

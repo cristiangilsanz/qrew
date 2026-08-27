@@ -19,6 +19,32 @@ _BLACKLIST_JTI_PREFIX = "blacklist:jti:"
 _JTI_TTL_SECONDS = settings.refresh_token_expire_days * 86400
 
 
+async def _publish_device_revoked(
+    device_id: uuid.UUID, user_id: uuid.UUID, revoked_at: datetime | None
+) -> None:
+    """Announces a revoked device so the ticketing projection stops trusting it."""
+    try:
+        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
+        from messaging.publisher import publish as nats_publish  # type: ignore[import-not-found]
+
+        envelope = EventEnvelope(
+            occurred_at=datetime.now(UTC),
+            aggregate_type="device",
+            aggregate_id=str(device_id),
+            actor_id=str(user_id),
+            data={
+                "device_id": str(device_id),
+                "user_id": str(user_id),
+                "revoked_at": (revoked_at or datetime.now(UTC)).isoformat(),
+            },
+        )
+        await nats_publish("identity.device.revoked.v1", envelope)
+    except Exception as exc:
+        await logger.awarning(
+            "nats_publish_failed", subject="identity.device.revoked.v1", error=repr(exc)
+        )
+
+
 class DeviceError(DomainError):
     """Raised when a device management operation cannot be completed."""
 
@@ -73,17 +99,24 @@ class DeviceService:
                 "audit_write_failed", action=AuditAction.DEVICE_REVOKE, error=repr(exc)
             )
 
+        await _publish_device_revoked(device_id, user.id, device.revoked_at)
+
     async def revoke_all_devices(
         self,
         user: User,
         calling_device_id: uuid.UUID | None = None,
     ) -> int:
         """Revokes all devices for the user except the one currently in use."""
-        revoked_count = await self._device_repo.revoke_all_by_user_id(
+        revoked_ids = await self._device_repo.revoke_all_by_user_id(
             user.id, exclude_id=calling_device_id
         )
+        revoked_count = len(revoked_ids)
 
         await self._kill_all_sessions(user.id)
+
+        now = datetime.now(UTC)
+        for revoked_id in revoked_ids:
+            await _publish_device_revoked(revoked_id, user.id, now)
 
         await logger.ainfo(
             "devices_revoke_all",
