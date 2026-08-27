@@ -1,3 +1,4 @@
+# registers rotates and revokes the scanners used at the gate
 import uuid
 from datetime import UTC, datetime
 from datetime import date as date_type
@@ -20,10 +21,12 @@ class ScannerError(DomainError):
 
 
 class ScannerService:
+    # stores the repository and audit service the scanner service uses
     def __init__(self, repo: ScannerRepository, audit: AuditService) -> None:
         self._repo = repo
         self._audit = audit
 
+    # registers a scanner and issues its first token
     async def create(
         self,
         admin_id: uuid.UUID,
@@ -55,9 +58,11 @@ class ScannerService:
             )
         return scanner, token
 
+    # lists every registered scanner
     async def list_all(self) -> list[Scanner]:
         return await self._repo.list_all()
 
+    # issues a fresh token for an active scanner in its own venue
     async def rotate(
         self,
         admin_id: uuid.UUID,
@@ -94,6 +99,7 @@ class ScannerService:
             )
         return scanner, token
 
+    # deactivates a scanner so its credential no longer works
     async def deactivate(self, admin_id: uuid.UUID, scanner_id: uuid.UUID) -> Scanner:
         scanner = await self._repo.get_by_id(scanner_id)
         if scanner is None:
@@ -117,6 +123,7 @@ class ScannerService:
             )
         return scanner
 
+    # reissues a scanner's own token before it expires
     async def refresh_self(
         self,
         scanner_id: uuid.UUID,
@@ -154,12 +161,14 @@ class ScannerService:
             )
         return scanner, token
 
+    # reads a scanner by its identifier
     async def get_by_id(self, scanner_id: uuid.UUID) -> Scanner:
         scanner = await self._repo.get_by_id(scanner_id)
         if scanner is None:
             raise ScannerError("Scanner not found", field="scanner_id")
         return scanner
 
+    # records why a self refresh was denied
     async def _record_refresh_failure(
         self, scanner_id: uuid.UUID, *, reason: str
     ) -> None:
@@ -178,6 +187,7 @@ class ScannerService:
                 error=repr(exc),
             )
 
+    # returns how many hours a scanner token stays valid
     @property
     def token_ttl_hours(self) -> int:
         return settings.scanner_token_expire_hours

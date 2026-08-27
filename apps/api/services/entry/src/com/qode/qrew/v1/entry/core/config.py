@@ -1,3 +1,4 @@
+# defines the configuration settings for the entry service
 from pathlib import Path
 
 from pydantic_settings import (
@@ -56,6 +57,7 @@ class Settings(BaseSettings):
 
     ratelimit_enabled: bool = True
 
+    # orders the configuration sources so the yaml file can override the defaults
     @classmethod
     def settings_customise_sources(
         cls,

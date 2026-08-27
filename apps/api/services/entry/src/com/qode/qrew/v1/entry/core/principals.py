@@ -1,3 +1,4 @@
+# verifies access and ticket qr tokens for the entry service
 import hashlib
 import uuid
 from dataclasses import dataclass, field
@@ -24,6 +25,7 @@ class _PurposeKeys:
     verifiers: dict[str, str] = field(default_factory=lambda: {})
 
 
+# creates a throwaway signing key for local development
 def _generate_ephemeral_keypair() -> tuple[str, str]:
     private = ec.generate_private_key(ec.SECP256R1())
     private_pem = private.private_bytes(
@@ -42,6 +44,7 @@ def _generate_ephemeral_keypair() -> tuple[str, str]:
     return private_pem, public_pem
 
 
+# derives the public key that matches a private key
 def _derive_public_pem(private_pem: str) -> str:
     key = serialization.load_pem_private_key(private_pem.encode(), password=None)
     return (
@@ -54,15 +57,18 @@ def _derive_public_pem(private_pem: str) -> str:
     )
 
 
+# derives a stable identifier for a public key
 def _kid_for(public_pem: str) -> str:
     return hashlib.sha256(public_pem.encode()).hexdigest()[:16]
 
 
+# splits a concatenated string of public keys into individual keys
 def _split_pems(raw: str) -> list[str]:
     parts = [chunk.strip() for chunk in raw.split("-----END PUBLIC KEY-----")]
     return [f"{p}\n-----END PUBLIC KEY-----\n" for p in parts if p.strip()]
 
 
+# loads the signing and verification keys configured for a token purpose
 def _load_purpose_keys(purpose: str) -> _PurposeKeys:
     raw: str = getattr(settings, f"{purpose}_jwt_private_key", "") or ""
     private_pem = raw.strip()
@@ -89,6 +95,7 @@ def _load_purpose_keys(purpose: str) -> _PurposeKeys:
 _KEYS: dict[str, _PurposeKeys] = {p: _load_purpose_keys(p) for p in _PURPOSES}
 
 
+# verifies a token against the key its header names
 def verify(purpose: str, token: str) -> dict[str, object]:
     keys = _KEYS[purpose]
     header = _sec_jwt.decode_unverified_header(token)
@@ -105,12 +112,8 @@ class AuthenticatedUser:
     is_admin: bool = False
 
 
+# verifies an access token and resolves the authenticated user
 def verify_access_token(token: str) -> AuthenticatedUser:
-    """Verify an access JWT and return the principal it names.
-
-    Raises InvalidTokenError or ExpiredSignatureError on failure.
-    Raises ValueError if the sub claim is not a valid UUID.
-    """
     payload = verify(ACCESS, token)
     if payload.get("type") != "access":
         raise InvalidTokenError("Token type is not 'access'")
@@ -120,5 +123,6 @@ def verify_access_token(token: str) -> AuthenticatedUser:
     return AuthenticatedUser(id=uuid.UUID(subject), is_admin=payload.get("adm") is True)
 
 
+# returns the public keys that verify tokens of a purpose
 def get_verifiers(purpose: str) -> dict[str, str]:
     return dict(_KEYS[purpose].verifiers)

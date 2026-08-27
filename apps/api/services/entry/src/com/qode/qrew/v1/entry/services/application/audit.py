@@ -1,3 +1,4 @@
+# publishes audit events for actions taken in the entry service
 import uuid
 from datetime import UTC, datetime
 
@@ -7,8 +8,7 @@ logger = structlog.get_logger(__name__)
 
 
 class AuditService:
-    """Forwards audit events to the message broker for central processing."""
-
+    # publishes an audit event onto the shared nats connection
     async def record(
         self,
         action: str,

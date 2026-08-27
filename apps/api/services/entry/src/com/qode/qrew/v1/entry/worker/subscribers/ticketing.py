@@ -1,3 +1,4 @@
+# projects ticketing's ticket state into the entry service's local context
 import asyncio
 import contextlib
 import json
@@ -15,6 +16,7 @@ logger = structlog.get_logger(__name__)
 SUBJECT = "ticketing.ticket.state_changed"
 
 
+# updates the local ticket context from a ticket state change message
 async def handle_ticket_state_changed(msg: Any) -> None:
     try:
         data = json.loads(msg.data.decode())
@@ -79,6 +81,7 @@ async def handle_ticket_state_changed(msg: Any) -> None:
     )
 
 
+# subscribes to ticket state changes and keeps the process alive
 async def run_projector() -> None:
     nc = get_nats()
     js = nc.js

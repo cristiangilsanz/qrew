@@ -1,3 +1,4 @@
+# defines the ticket state enum and the ticket context projection
 import enum
 import uuid
 from datetime import datetime
@@ -20,8 +21,6 @@ class TicketState(enum.StrEnum):
 
 
 class TicketContext(Base):
-    """Read-only local projection of ticket state, updated via event subscription."""
-
     __tablename__ = "ticket_contexts"
     __table_args__ = {"schema": "entry"}
 

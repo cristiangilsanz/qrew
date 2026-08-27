@@ -1,3 +1,4 @@
+# defines the scanner table used to authenticate control devices
 import uuid
 from datetime import datetime
 

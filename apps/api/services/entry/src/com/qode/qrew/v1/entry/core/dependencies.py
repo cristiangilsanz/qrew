@@ -1,3 +1,4 @@
+# provides the shared fastapi dependencies for the entry service
 import uuid
 from typing import Annotated
 
@@ -39,6 +40,7 @@ _CREDENTIALS_EXCEPTION = HTTPException(
 )
 
 
+# resolves the authenticated user from the request headers or bearer token
 async def get_current_user(
     request: Request,
     credentials: Annotated[
@@ -61,6 +63,7 @@ async def get_current_user(
         raise _CREDENTIALS_EXCEPTION from exc
 
 
+# rejects a request whose authenticated user is not an admin
 async def get_admin_user(
     current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
 ) -> AuthenticatedUser:
@@ -72,6 +75,7 @@ async def get_admin_user(
     return current_user
 
 
+# resolves the authenticated control device from its header or bearer token
 async def get_scanner(
     request: Request,
     credentials: Annotated[
@@ -109,10 +113,12 @@ async def get_scanner(
     return scanner
 
 
+# builds a scanner service for a request
 def get_scanner_service(db: AsyncSession = Depends(get_db)) -> ScannerService:
     return ScannerService(ScannerRepository(db), AuditService())
 
 
+# asks catalog whether a user belongs to an event
 async def event_membership(event_id: uuid.UUID, user_id: uuid.UUID) -> EventMembership:
     try:
         return await fetch_event_membership(event_id, user_id)
@@ -123,6 +129,7 @@ async def event_membership(event_id: uuid.UUID, user_id: uuid.UUID) -> EventMemb
         ) from exc
 
 
+# rejects a request whose user does not belong to the event
 async def require_event_member(event_id: uuid.UUID, user_id: uuid.UUID) -> None:
     membership = await event_membership(event_id, user_id)
     if not membership.event_exists:

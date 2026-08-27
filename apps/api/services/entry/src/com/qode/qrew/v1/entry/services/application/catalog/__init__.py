@@ -1,3 +1,4 @@
+# exposes the catalog client used by the entry service
 from com.qode.qrew.v1.entry.services.application.catalog.membership import (
     CatalogUnavailableError,
     EventMembership,

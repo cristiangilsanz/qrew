@@ -1,3 +1,4 @@
+# defines the request and response schemas for validating an entry
 import uuid
 from datetime import datetime
 

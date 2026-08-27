@@ -1,3 +1,4 @@
+# exposes the endpoints that validate a ticket at the gate and report entry stats
 import uuid
 from datetime import datetime
 from typing import Annotated
@@ -36,10 +37,12 @@ events_router = APIRouter(prefix="/events", tags=["entry"])
 _bearer = HTTPBearer(auto_error=True)
 
 
+# builds an audit service for a request
 def _audit_service() -> AuditService:
     return AuditService()
 
 
+# resolves the venue and event a scanner token is scoped to
 def _claims_or_401(token: str) -> tuple[uuid.UUID | None, uuid.UUID]:
     try:
         payload = decode_scanner_token(token)
@@ -66,6 +69,7 @@ def _claims_or_401(token: str) -> tuple[uuid.UUID | None, uuid.UUID]:
     return event_id, venue_id
 
 
+# validates a ticket qr against the scanner's scope
 @entry_router.post(
     "/validate",
     response_model=EntryValidateResponse,
@@ -102,9 +106,7 @@ async def validate_entry_endpoint(
     )
 
 
-# Entry statistics
-
-
+# returns the entry rollup for an event to a member of its organisation
 @events_router.get(
     "/{event_id}/entry-stats",
     response_model=EntryStatsResponse,

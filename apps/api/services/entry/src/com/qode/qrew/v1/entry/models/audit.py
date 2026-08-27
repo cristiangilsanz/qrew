@@ -1,3 +1,4 @@
+# defines the audit action enum for the entry service
 import enum
 
 

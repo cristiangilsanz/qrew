@@ -1,3 +1,4 @@
+# defines the entry attempt table that records every scan
 import uuid
 from datetime import datetime
 

@@ -1,3 +1,4 @@
+# exposes the endpoints that create refresh and manage scanners
 import uuid
 from datetime import date as date_type
 from datetime import date as today_date
@@ -43,6 +44,7 @@ _INVALID_TOKEN = HTTPException(
 )
 
 
+# reads the scanner identity and scope out of a refresh token payload
 def _claims_from(
     payload: dict[str, Any],
 ) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID, date_type]:
@@ -58,13 +60,12 @@ def _claims_from(
     return scanner_id, venue_id, event_id, scan_date
 
 
+# converts a scanner row into its summary response
 def _scanner_summary(scanner: object) -> ScannerSummaryResponse:
     return ScannerSummaryResponse.model_validate(scanner, from_attributes=True)
 
 
-# Scanner endpoints
-
-
+# reissues a scanner's own token before it expires
 @router.post(
     "/refresh",
     response_model=ScannerTokenResponse,
@@ -99,9 +100,7 @@ async def refresh_scanner(
     )
 
 
-# Org member scanner creation
-
-
+# creates a scanner token for a member of the event's organisation
 @router.post(
     "/for-event/{event_id}",
     response_model=ScannerTokenResponse,
@@ -145,9 +144,7 @@ async def create_scanner_for_event(
     )
 
 
-# Admin scanner management
-
-
+# registers a scanner and returns its initial credential
 @admin_router.post(
     "",
     response_model=ScannerTokenResponse,
@@ -172,6 +169,7 @@ async def create_scanner(
     )
 
 
+# lists every registered scanner
 @admin_router.get(
     "",
     response_model=ScannerListResponse,
@@ -189,6 +187,7 @@ async def list_scanners(
     return ScannerListResponse(scanners=[_scanner_summary(s) for s in scanners])
 
 
+# reads a single scanner by its identifier
 @admin_router.get(
     "/{scanner_id}",
     response_model=ScannerSummaryResponse,
@@ -213,6 +212,7 @@ async def get_scanner_by_id(
     return _scanner_summary(scanner)
 
 
+# mints a fresh credential for an existing scanner
 @admin_router.post(
     "/{scanner_id}/rotate",
     response_model=ScannerTokenResponse,
@@ -244,6 +244,7 @@ async def rotate_scanner(
     )
 
 
+# deactivates a scanner so its credential no longer works
 @admin_router.delete(
     "/{scanner_id}",
     response_model=ScannerDeactivateResponse,

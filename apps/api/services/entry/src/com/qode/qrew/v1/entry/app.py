@@ -1,3 +1,4 @@
+# assembles the fastapi application for the entry service including its middleware
 import structlog
 from exceptions import (
     default_responses,

@@ -1,3 +1,4 @@
+# asks catalog whether a user belongs to an event's organisation
 import uuid
 from dataclasses import dataclass
 
@@ -12,7 +13,7 @@ _TIMEOUT_SECONDS = 5.0
 
 
 class CatalogUnavailableError(Exception):
-    """Raised when the catalog service cannot answer a membership question."""
+    pass
 
 
 @dataclass(frozen=True)
@@ -22,10 +23,10 @@ class EventMembership:
     venue_id: uuid.UUID | None
 
 
+# fetches an event's existence venue and the user's membership from catalog
 async def fetch_event_membership(
     event_id: uuid.UUID, user_id: uuid.UUID
 ) -> EventMembership:
-    """Asks catalog whether a user belongs to the organisation that owns an event."""
     url = f"{settings.catalog_url}/v1/_internal/events/{event_id}/members/{user_id}"
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT_SECONDS) as client:

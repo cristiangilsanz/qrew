@@ -1,3 +1,4 @@
+# reads and writes the local projection of a ticket's state
 import uuid
 from datetime import UTC, datetime
 
@@ -9,15 +10,18 @@ from com.qode.qrew.v1.entry.models.projections import TicketContext
 
 
 class TicketContextRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads the projected context of a ticket
     async def get(self, ticket_id: uuid.UUID) -> TicketContext | None:
         result = await self._session.execute(
             select(TicketContext).where(TicketContext.ticket_id == ticket_id).limit(1)
         )
         return result.scalar_one_or_none()
 
+    # creates or refreshes the projected context of a ticket
     async def upsert(
         self,
         ticket_id: uuid.UUID,

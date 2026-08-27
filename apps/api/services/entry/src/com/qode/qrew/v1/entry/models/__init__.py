@@ -1,3 +1,4 @@
+# exposes the entry models package
 from com.qode.qrew.v1.entry.models import (
     audit,
     entry_attempt,

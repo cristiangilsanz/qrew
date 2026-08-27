@@ -1,3 +1,4 @@
+# validates a ticket qr against replay the ticket state and the scanner scope
 import time
 import uuid
 from datetime import UTC, datetime
@@ -28,14 +29,17 @@ _REPLAY_PREFIX = "entry:jti"
 _ENTRY_CHANNEL_PATTERN = "entry.{event_id}"
 
 
+# builds the fanout channel key for an event
 def _entry_channel_key(event_id: str) -> str:
     return _ENTRY_CHANNEL_PATTERN.format(event_id=event_id)
 
 
+# returns the current time
 def _now() -> datetime:
     return datetime.now(UTC)
 
 
+# validates a scan and records the outcome as an entry attempt
 @traced("entry.validate")
 async def validate_entry(
     session: AsyncSession,
@@ -84,6 +88,7 @@ async def validate_entry(
     return decision
 
 
+# checks the ticket signature replay state and scope before allowing entry
 async def _evaluate(
     *,
     session: AsyncSession,
@@ -256,6 +261,7 @@ class _TicketingError(Exception):
     pass
 
 
+# tells ticketing to mark the ticket as used
 async def _call_ticketing_use(ticket_id: uuid.UUID, scanner_id: uuid.UUID) -> None:
     url = f"{settings.ticketing_url}/v1/_internal/tickets/{ticket_id}/use"
     async with httpx.AsyncClient(timeout=5.0) as client:
@@ -270,6 +276,7 @@ async def _call_ticketing_use(ticket_id: uuid.UUID, scanner_id: uuid.UUID) -> No
         raise _TicketingError(f"ticketing returned {resp.status_code}")
 
 
+# builds a denied outcome for a rejection reason
 def _denied(reason: EntryReason, *, ticket_id: uuid.UUID | None = None) -> EntryOutcome:
     return EntryOutcome(
         allowed=False,
@@ -280,6 +287,7 @@ def _denied(reason: EntryReason, *, ticket_id: uuid.UUID | None = None) -> Entry
     )
 
 
+# records a rejected scan and notifies the event's fanout channel
 async def _audit_reject(
     audit: AuditService,
     scanner_id: uuid.UUID,

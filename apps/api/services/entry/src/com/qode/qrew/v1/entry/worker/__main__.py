@@ -1,3 +1,4 @@
+# entry point that starts the entry background worker
 import asyncio
 
 import structlog
@@ -10,6 +11,7 @@ from com.qode.qrew.v1.entry.worker.subscribers.ticketing import run_projector
 logger = structlog.get_logger(__name__)
 
 
+# connects to nats and starts the ticket state projector
 async def main() -> None:
     if not settings.nats_url:
         await logger.awarning("entry_worker.no_nats_url")
@@ -19,6 +21,7 @@ async def main() -> None:
     await run_nats_subscribers("entry", run_projector())
 
 
+# runs the worker main coroutine until it stops
 def run() -> None:
     asyncio.run(main())
 

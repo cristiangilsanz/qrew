@@ -1,3 +1,4 @@
+# defines the outcome and rollup value objects for entry validation
 import uuid
 from dataclasses import dataclass
 from dataclasses import field as _field
@@ -37,6 +38,7 @@ class EntryStats:
     rejections_by_reason: dict[str, int] = _field(default_factory=lambda: {})
     last_scan_at: datetime | None = None
 
+    # serializes the rollup for caching
     def to_payload(self) -> dict[str, object]:
         return {
             "event_id": str(self.event_id),
