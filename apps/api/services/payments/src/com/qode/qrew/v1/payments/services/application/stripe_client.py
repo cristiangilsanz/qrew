@@ -1,3 +1,4 @@
+# talks to stripe to create payment intents and verify webhooks
 from dataclasses import dataclass
 from typing import Any, Protocol, cast
 
@@ -15,6 +16,7 @@ class CreatedIntent:
 
 
 class StripeClient(Protocol):
+    # creates a payment intent for the given amount
     async def create_payment_intent(
         self,
         *,
@@ -24,14 +26,17 @@ class StripeClient(Protocol):
         metadata: dict[str, str],
     ) -> CreatedIntent: ...
 
+    # verifies a webhook signature and returns its event
     async def verify_webhook(self, payload: bytes, signature: str) -> dict[str, Any]: ...
 
 
 class StripeRealClient:
+    # configures the stripe sdk with the service credentials
     def __init__(self) -> None:
         stripe.api_key = settings.stripe_secret_key
         stripe.api_version = settings.stripe_api_version
 
+    # creates a payment intent through the stripe api
     async def create_payment_intent(
         self,
         *,
@@ -56,6 +61,7 @@ class StripeRealClient:
             status=cast("str", intent.status),  # type: ignore[reportUnknownMemberType]
         )
 
+    # verifies the webhook signature and parses the event payload
     async def verify_webhook(self, payload: bytes, signature: str) -> dict[str, Any]:
         import json
 

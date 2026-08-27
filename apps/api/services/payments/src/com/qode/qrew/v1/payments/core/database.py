@@ -1,3 +1,4 @@
+# sets up the async database engine and session factory for the payments service
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -14,6 +15,7 @@ engine = create_async_engine(settings.database_url, pool_pre_ping=True)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
+# yields a database session and commits or rolls back around the request
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         try:

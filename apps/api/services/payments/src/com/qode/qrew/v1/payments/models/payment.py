@@ -1,3 +1,4 @@
+# defines the payment status enum and the payment table
 import enum
 import uuid
 from datetime import datetime

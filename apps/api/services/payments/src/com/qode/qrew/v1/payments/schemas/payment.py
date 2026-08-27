@@ -1,3 +1,4 @@
+# defines the response schema returned when a payment is initiated
 import uuid
 from datetime import datetime
 

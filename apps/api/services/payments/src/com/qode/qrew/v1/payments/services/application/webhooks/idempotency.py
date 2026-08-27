@@ -1,3 +1,4 @@
+# deduplicates stripe webhook deliveries using redis
 import redis.asyncio as aioredis
 
 from com.qode.qrew.v1.payments.core.config import settings
@@ -9,6 +10,7 @@ class _ClientState:
     client: aioredis.Redis | None = None  # type: ignore[type-arg]
 
 
+# returns the shared redis client used for webhook deduplication
 def _shared_redis() -> aioredis.Redis:  # type: ignore[type-arg]
     if _ClientState.client is None:
         _ClientState.client = aioredis.from_url(  # type: ignore[type-arg]
@@ -17,12 +19,14 @@ def _shared_redis() -> aioredis.Redis:  # type: ignore[type-arg]
     return _ClientState.client
 
 
+# closes the shared redis client
 async def close_webhook_idempotency() -> None:
     if _ClientState.client is not None:
         await _ClientState.client.aclose()
     _ClientState.client = None
 
 
+# claims a webhook event so it is only processed once
 async def claim_event(event_id: str) -> bool:
     redis = _shared_redis()
     key = f"{_KEY_PREFIX}:{event_id}"

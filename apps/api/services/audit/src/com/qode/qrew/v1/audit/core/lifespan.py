@@ -1,3 +1,4 @@
+# manages startup and shutdown for the audit service
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -13,6 +14,7 @@ from observability import setup_tracing, shutdown_tracing
 logger = structlog.get_logger(__name__)
 
 
+# wires tracing and messaging on startup and releases them on shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_tracing(

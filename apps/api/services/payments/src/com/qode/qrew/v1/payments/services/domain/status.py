@@ -1,3 +1,4 @@
+# maps stripe payment intent statuses onto the service's own payment status
 from com.qode.qrew.v1.payments.models.payment import PaymentStatus
 
 _INTENT_STATUS = {
@@ -12,11 +13,11 @@ _INTENT_STATUS = {
 _TERMINAL = {PaymentStatus.succeeded, PaymentStatus.failed, PaymentStatus.refunded}
 
 
+# maps a stripe intent status onto a payment status
 def map_intent_status(provider_status: str) -> PaymentStatus:
-    """Translate the status of a payment intent into the status this service keeps."""
     return _INTENT_STATUS.get(provider_status, PaymentStatus.requires_action)
 
 
+# checks whether a payment status is final
 def is_terminal(status: PaymentStatus) -> bool:
-    """Report whether a status admits no further transition."""
     return status in _TERMINAL

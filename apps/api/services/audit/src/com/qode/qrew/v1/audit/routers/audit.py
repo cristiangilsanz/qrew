@@ -1,3 +1,4 @@
+# exposes the endpoint that verifies the audit hash chain
 from fastapi import APIRouter, Depends, status
 
 from com.qode.qrew.v1.audit.core.dependencies import get_chain_verifier, verify_internal_api_key
@@ -10,6 +11,7 @@ router = APIRouter(
 )
 
 
+# runs the chain verifier and returns its result
 @router.get(
     "/verify",
     response_model=AuditVerifyResponse,

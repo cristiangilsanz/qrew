@@ -1,3 +1,4 @@
+# exposes the payments services package
 from com.qode.qrew.v1.payments.services.application.payment import (
     PaymentError,
     PaymentExpiredError,

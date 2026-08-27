@@ -1,3 +1,4 @@
+# publishes an audit event envelope onto the shared nats connection
 from datetime import UTC, datetime
 from typing import Any
 
@@ -8,6 +9,7 @@ logger = structlog.get_logger(__name__)
 AUDIT_EVENTS_SUBJECT = "audit.events.v1"
 
 
+# builds an envelope and publishes it to the given subject
 async def publish_audit_event(
     *,
     subject: str,
@@ -16,7 +18,6 @@ async def publish_audit_event(
     actor_id: str | None,
     data: dict[str, Any],
 ) -> None:
-    """Publish a structured audit event using the service's shared NATS connection."""
     try:
         from contracts.messaging.envelope import EventEnvelope
         from messaging.client import get_nats

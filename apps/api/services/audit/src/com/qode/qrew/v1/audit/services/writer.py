@@ -1,3 +1,4 @@
+# writes tamper evident audit records under an advisory lock
 import uuid
 from datetime import UTC, datetime
 
@@ -14,8 +15,7 @@ ADVISORY_LOCK = "SELECT pg_advisory_xact_lock(hashtext('audit_events'))"
 
 
 class AuditService:
-    """Writes tamper-evident audit records using a hash chain."""
-
+    # appends a new audit event linked to the previous hash
     async def record(
         self,
         action: str,
@@ -51,6 +51,7 @@ class AuditService:
             actor_id=str(actor_id) if actor_id else None,
         )
 
+    # creates the first event of the chain if it does not exist yet
     async def ensure_genesis(self) -> None:
         async with AsyncSessionLocal() as session, session.begin():
             await session.execute(text(ADVISORY_LOCK))

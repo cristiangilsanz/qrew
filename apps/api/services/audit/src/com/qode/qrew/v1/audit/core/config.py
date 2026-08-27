@@ -1,3 +1,4 @@
+# defines the configuration settings for the audit service
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -37,6 +38,7 @@ class Settings(BaseSettings):
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"
 
+    # orders the configuration sources so the yaml file can override the defaults
     @classmethod
     def settings_customise_sources(
         cls,

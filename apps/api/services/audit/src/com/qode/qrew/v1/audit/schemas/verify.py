@@ -1,3 +1,4 @@
+# defines the response schema for the chain verification endpoint
 from pydantic import BaseModel
 
 

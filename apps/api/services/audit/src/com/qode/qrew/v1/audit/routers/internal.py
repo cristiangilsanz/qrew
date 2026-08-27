@@ -1,3 +1,4 @@
+# exposes the internal endpoint that lists audit events for another service
 import base64
 import binascii
 import uuid
@@ -38,11 +39,13 @@ class _EventPage(BaseModel):
     next_cursor: str | None
 
 
+# turns an event into an opaque pagination cursor
 def _encode(event: AuditEvent) -> str:
     raw = f"{event.created_at.isoformat()}|{event.id}".encode()
     return base64.urlsafe_b64encode(raw).decode()
 
 
+# recovers the timestamp and identifier from a pagination cursor
 def _decode(cursor: str) -> tuple[datetime, uuid.UUID]:
     try:
         raw = base64.urlsafe_b64decode(cursor.encode()).decode()
@@ -54,6 +57,7 @@ def _decode(cursor: str) -> tuple[datetime, uuid.UUID]:
         ) from exc
 
 
+# returns a page of one actor's audit trail newest first
 @router.get("", response_model=_EventPage)
 async def list_events(
     actor_id: uuid.UUID,
@@ -63,7 +67,6 @@ async def list_events(
     limit: int = Query(default=50, ge=1, le=_MAX_LIMIT),
     db: AsyncSession = Depends(get_db),
 ) -> _EventPage:
-    """Returns a page of the audit trail of one actor, newest first."""
     stmt = select(AuditEvent).where(AuditEvent.actor_id == actor_id)
     if action is not None:
         stmt = stmt.where(AuditEvent.action == action)

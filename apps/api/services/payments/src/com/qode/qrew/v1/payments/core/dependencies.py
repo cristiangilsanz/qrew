@@ -1,3 +1,4 @@
+# provides the shared fastapi dependencies for the payments service
 from db import create_redis_dependency
 from fastapi import Depends
 from slowapi import Limiter
@@ -20,10 +21,12 @@ get_redis = create_redis_dependency(settings.redis_url)
 _stripe_client: StripeClient = StripeRealClient()
 
 
+# returns the shared stripe client
 def get_stripe_client() -> StripeClient:
     return _stripe_client
 
 
+# builds a payment service for a request
 def get_payment_service(
     db: AsyncSession = Depends(get_db),
     stripe: StripeClient = Depends(get_stripe_client),

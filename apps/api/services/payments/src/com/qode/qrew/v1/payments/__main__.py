@@ -1,8 +1,10 @@
+# entry point that starts the payments api server
 import uvicorn
 
 from com.qode.qrew.v1.payments.core.config import settings
 
 
+# starts the payments api with uvicorn using the configured settings
 def main() -> None:
     uvicorn.run(
         "com.qode.qrew.v1.payments.app:app",

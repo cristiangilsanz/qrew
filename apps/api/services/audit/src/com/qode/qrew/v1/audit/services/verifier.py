@@ -1,3 +1,4 @@
+# verifies the integrity of the append only audit hash chain
 from dataclasses import dataclass
 
 import structlog
@@ -20,8 +21,7 @@ class ChainVerificationResult:
 
 
 class AuditChainVerifier:
-    """Verify the integrity of the append-only audit hash chain."""
-
+    # recomputes every hash and reports which events were tampered with
     async def verify(self) -> ChainVerificationResult:
         async with AsyncSessionLocal() as session:
             repo = AuditRepository(session)

@@ -1,3 +1,4 @@
+# assembles the audit service routers under a common prefix
 from fastapi import APIRouter
 
 from .audit import router as audit_router
