@@ -1,3 +1,4 @@
+# tests session cap
 import uuid
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -10,10 +11,12 @@ _MOD = "com.qode.qrew.v1.identity.services.application.authentication.login.guar
 _PATCH_SETTINGS = f"{_MOD}.settings"
 
 
+# handles fake settings
 def _fake_settings(*, cap: int = 3) -> SimpleNamespace:
     return SimpleNamespace(max_sessions_per_user=cap, refresh_token_expire_days=7)
 
 
+# handles make enforcer
 def _make_enforcer() -> tuple[SessionCapEnforcer, MagicMock, AsyncMock]:
     session_repo = MagicMock()
     session_repo.count_by_user_id = AsyncMock(return_value=0)
@@ -31,12 +34,14 @@ def _make_enforcer() -> tuple[SessionCapEnforcer, MagicMock, AsyncMock]:
 
 
 class TestSessionCapEnforcer:
+    # verifies that cap zero is disabled
     async def test_cap_zero_is_disabled(self) -> None:
         enforcer, session_repo, _ = _make_enforcer()
         with patch(_PATCH_SETTINGS, _fake_settings(cap=0)):
             await enforcer.enforce(uuid.uuid4())
         session_repo.count_by_user_id.assert_not_awaited()
 
+    # verifies that within cap does nothing
     async def test_within_cap_does_nothing(self) -> None:
         enforcer, session_repo, _ = _make_enforcer()
         session_repo.count_by_user_id = AsyncMock(return_value=2)
@@ -44,6 +49,7 @@ class TestSessionCapEnforcer:
             await enforcer.enforce(uuid.uuid4())
         session_repo.get_oldest_by_user_id.assert_not_awaited()
 
+    # verifies that at cap does nothing
     async def test_at_cap_does_nothing(self) -> None:
         enforcer, session_repo, _ = _make_enforcer()
         session_repo.count_by_user_id = AsyncMock(return_value=3)
@@ -51,6 +57,7 @@ class TestSessionCapEnforcer:
             await enforcer.enforce(uuid.uuid4())
         session_repo.get_oldest_by_user_id.assert_not_awaited()
 
+    # verifies that over cap evicts oldest
     async def test_over_cap_evicts_oldest(self) -> None:
         enforcer, session_repo, audit = _make_enforcer()
         victim = SimpleNamespace(id=uuid.uuid4(), jti="old-jti")
@@ -60,6 +67,7 @@ class TestSessionCapEnforcer:
             await enforcer.enforce(uuid.uuid4())
         session_repo.delete_by_jti.assert_awaited_once_with("old-jti")
 
+    # verifies that evicted jti is blacklisted
     async def test_evicted_jti_is_blacklisted(self) -> None:
         enforcer, session_repo, _ = _make_enforcer()
         victim = SimpleNamespace(id=uuid.uuid4(), jti="evicted-jti")
@@ -71,6 +79,7 @@ class TestSessionCapEnforcer:
         key = enforcer._redis.setex.call_args.args[0]
         assert "evicted-jti" in key
 
+    # verifies that audit failure does not propagate
     async def test_audit_failure_does_not_propagate(self) -> None:
         enforcer, session_repo, audit = _make_enforcer()
         victim = SimpleNamespace(id=uuid.uuid4(), jti="jti")

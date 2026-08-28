@@ -1,3 +1,4 @@
+# tests lockout
 import uuid
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -13,6 +14,7 @@ _MOD = "com.qode.qrew.v1.identity.services.application.authentication.login.guar
 _PATCH_SETTINGS = f"{_MOD}.settings"
 
 
+# handles fake settings
 def _fake_settings() -> SimpleNamespace:
     return SimpleNamespace(
         login_max_attempts=5,
@@ -20,6 +22,7 @@ def _fake_settings() -> SimpleNamespace:
     )
 
 
+# handles make svc
 def _make_svc() -> tuple[LoginLockoutService, MagicMock, AsyncMock]:
     redis = MagicMock()
     redis.ttl = AsyncMock(return_value=0)
@@ -34,38 +37,46 @@ def _make_svc() -> tuple[LoginLockoutService, MagicMock, AsyncMock]:
 
 
 class TestDurationForAttempts:
+    # verifies that below first threshold returns none
     def test_below_first_threshold_returns_none(self) -> None:
         with patch(_PATCH_SETTINGS, _fake_settings()):
             assert LoginLockoutService._duration_for_attempts(4) is None
 
+    # verifies that first threshold returns base
     def test_first_threshold_returns_base(self) -> None:
         with patch(_PATCH_SETTINGS, _fake_settings()):
             assert LoginLockoutService._duration_for_attempts(5) == 300
 
+    # verifies that second threshold returns 6x
     def test_second_threshold_returns_6x(self) -> None:
         with patch(_PATCH_SETTINGS, _fake_settings()):
             assert LoginLockoutService._duration_for_attempts(10) == 1800
 
+    # verifies that third threshold returns 288x
     def test_third_threshold_returns_288x(self) -> None:
         with patch(_PATCH_SETTINGS, _fake_settings()):
             assert LoginLockoutService._duration_for_attempts(20) == 300 * 288
 
+    # verifies that between thresholds returns none
     def test_between_thresholds_returns_none(self) -> None:
         with patch(_PATCH_SETTINGS, _fake_settings()):
             assert LoginLockoutService._duration_for_attempts(7) is None
 
 
 class TestCheckNotLocked:
+    # verifies that passes when no lock
     async def test_passes_when_no_lock(self) -> None:
         svc, redis, _ = _make_svc()
         redis.ttl = AsyncMock(return_value=0)
         await svc.check_not_locked(uuid.uuid4())
 
+    # verifies that passes when ttl negative
     async def test_passes_when_ttl_negative(self) -> None:
         svc, redis, _ = _make_svc()
         redis.ttl = AsyncMock(return_value=-1)
         await svc.check_not_locked(uuid.uuid4())
 
+    # verifies that raises when locked
     async def test_raises_when_locked(self) -> None:
         svc, redis, _ = _make_svc()
         redis.ttl = AsyncMock(return_value=120)
@@ -75,6 +86,7 @@ class TestCheckNotLocked:
 
 
 class TestRecordFailure:
+    # verifies that no lockout below threshold
     async def test_no_lockout_below_threshold(self) -> None:
         svc, redis, audit = _make_svc()
         redis.incr = AsyncMock(return_value=3)
@@ -82,6 +94,7 @@ class TestRecordFailure:
             await svc.record_failure(uuid.uuid4())
         redis.setex.assert_not_awaited()
 
+    # verifies that lockout triggered at threshold
     async def test_lockout_triggered_at_threshold(self) -> None:
         svc, redis, audit = _make_svc()
         redis.incr = AsyncMock(return_value=5)
@@ -91,6 +104,7 @@ class TestRecordFailure:
         call_args = redis.setex.call_args
         assert call_args.args[1] == 300
 
+    # verifies that expire set on first attempt
     async def test_expire_set_on_first_attempt(self) -> None:
         svc, redis, _ = _make_svc()
         redis.incr = AsyncMock(return_value=1)
@@ -98,6 +112,7 @@ class TestRecordFailure:
             await svc.record_failure(uuid.uuid4())
         redis.expire.assert_awaited_once()
 
+    # verifies that audit swallowed on failure
     async def test_audit_swallowed_on_failure(self) -> None:
         svc, redis, audit = _make_svc()
         redis.incr = AsyncMock(return_value=5)
@@ -107,6 +122,7 @@ class TestRecordFailure:
 
 
 class TestReset:
+    # verifies that deletes both keys
     async def test_deletes_both_keys(self) -> None:
         svc, redis, _ = _make_svc()
         user_id = uuid.uuid4()
@@ -117,6 +133,7 @@ class TestReset:
 
 
 class TestAdminUnlock:
+    # verifies that clears lock and records audit
     async def test_clears_lock_and_records_audit(self) -> None:
         svc, redis, audit = _make_svc()
         user_id = uuid.uuid4()
@@ -125,6 +142,7 @@ class TestAdminUnlock:
         redis.delete.assert_awaited_once()
         audit.record.assert_awaited_once()
 
+    # verifies that audit failure is swallowed
     async def test_audit_failure_is_swallowed(self) -> None:
         svc, redis, audit = _make_svc()
         audit.record = AsyncMock(side_effect=RuntimeError("down"))

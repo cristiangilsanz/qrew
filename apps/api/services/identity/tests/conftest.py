@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import os
 import uuid as _uuid_env
 
@@ -32,16 +33,19 @@ import pytest  # noqa: E402
 from com.qode.qrew.v1.identity.models.user import KycStatus  # noqa: E402
 
 
+# provides user id
 @pytest.fixture
 def user_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides actor id
 @pytest.fixture
 def actor_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# handles make user
 def make_user(
     *,
     user_id: uuid.UUID | None = None,
@@ -77,6 +81,7 @@ def make_user(
     )
 
 
+# handles make session
 def make_session(
     *,
     session_id: uuid.UUID | None = None,
@@ -100,6 +105,7 @@ def make_session(
     )
 
 
+# handles make audit svc
 def make_audit_svc() -> AsyncMock:
     audit = AsyncMock()
     audit.record = AsyncMock()

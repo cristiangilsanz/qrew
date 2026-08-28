@@ -1,7 +1,7 @@
+# provides shared pytest fixtures
 import os
 import uuid as _uuid
 
-# Must be set before any identity app imports so settings + JWT keys pick them up.
 os.environ.setdefault("DEBUG", "true")
 os.environ.setdefault("CAPTCHA_ENABLED", "false")
 os.environ.setdefault("HIBP_ENABLED", "false")
@@ -14,7 +14,6 @@ os.environ.setdefault("NOTIFICATION_ENABLED", "false")
 os.environ.setdefault("OTEL_ENABLED", "false")
 os.environ.setdefault("KYC_AUTO_APPROVE", "false")
 os.environ.setdefault("INTERNAL_API_KEY", "test-internal-key")
-# JWT: empty → ephemeral EC keys auto-generated when debug=True (see jwt.py).
 
 import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
@@ -23,16 +22,10 @@ from httpx import ASGITransport  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine  # noqa: E402
 
 
-# ---------------------------------------------------------------------------
-# Infrastructure helpers
-# ---------------------------------------------------------------------------
-
-
+# return the test Postgres URL from env var or by starting a container
 def _get_test_db_url() -> str | None:
-    """Return the test Postgres URL from env var or by starting a container."""
     explicit = os.environ.get("IDENTITY_TEST_DB_URL") or os.environ.get("DATABASE_URL")
     if explicit:
-        # Ensure asyncpg driver.
         for old, new in (
             ("postgresql+psycopg2://", "postgresql+asyncpg://"),
             ("postgresql://", "postgresql+asyncpg://"),
@@ -41,7 +34,6 @@ def _get_test_db_url() -> str | None:
                 return explicit.replace(old, new, 1)
         return explicit
 
-    # Try testcontainers (requires Docker).
     try:
         from testcontainers.postgres import PostgresContainer  # noqa: PLC0415
 
@@ -60,8 +52,8 @@ def _get_test_db_url() -> str | None:
         return None
 
 
+# return the test Redis URL from env var or by starting a container
 def _get_test_redis_url() -> str | None:
-    """Return the test Redis URL from env var or by starting a container."""
     explicit = os.environ.get("IDENTITY_TEST_REDIS_URL") or os.environ.get("REDIS_URL")
     if explicit:
         return explicit
@@ -78,11 +70,7 @@ def _get_test_redis_url() -> str | None:
         return None
 
 
-# ---------------------------------------------------------------------------
-# Session-scoped infrastructure
-# ---------------------------------------------------------------------------
-
-
+# verifies that db url
 @pytest.fixture(scope="session")
 def test_db_url() -> str:
     url = _get_test_db_url()
@@ -94,6 +82,7 @@ def test_db_url() -> str:
     return url
 
 
+# verifies that redis url
 @pytest.fixture(scope="session")
 def test_redis_url() -> str:
     url = _get_test_redis_url()
@@ -105,9 +94,9 @@ def test_redis_url() -> str:
     return url
 
 
+# patch settings + engine and run Alembic migrations once per session
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
-    """Patch settings + engine and run Alembic migrations once per session."""
     from com.qode.qrew.v1.identity.core.config import settings
     import com.qode.qrew.v1.identity.core.database as db_module
 
@@ -136,23 +125,18 @@ def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
     alembic_command.upgrade(cfg, "head")
 
 
-# ---------------------------------------------------------------------------
-# Per-test fixtures: session, client, helpers
-# ---------------------------------------------------------------------------
-
-
+# provide a live DB session for direct DB reads inside fixtures
 @pytest_asyncio.fixture
 async def db_session(setup_test_infrastructure: None) -> AsyncSession:
-    """Provide a live DB session for direct-DB reads inside fixtures."""
     import com.qode.qrew.v1.identity.core.database as db_module
 
     async with db_module.AsyncSessionLocal() as session:
         yield session
 
 
+# aSGI test client wired to the real FastAPI app
 @pytest_asyncio.fixture
 async def client(setup_test_infrastructure: None) -> httpx.AsyncClient:
-    """ASGI test client wired to the real FastAPI app."""
     from com.qode.qrew.v1.identity.app import app
 
     async with httpx.AsyncClient(
@@ -162,10 +146,12 @@ async def client(setup_test_infrastructure: None) -> httpx.AsyncClient:
         yield c
 
 
+# handles unique email
 def _unique_email() -> str:
     return f"user-{_uuid.uuid4().hex[:10]}@example.com"
 
 
+# handles unique phone
 def _unique_phone() -> str:
     suffix = str(int(_uuid.uuid4().int % 90_000_000) + 10_000_000)
     return f"+346{suffix}"
@@ -174,6 +160,7 @@ def _unique_phone() -> str:
 _DEFAULT_PASSWORD = "StrongP@ss1!"
 
 
+# handles register
 async def _register(client: httpx.AsyncClient, email: str, phone: str) -> dict:
     resp = await client.post(
         "/v1/auth/registration/",
@@ -190,18 +177,15 @@ async def _register(client: httpx.AsyncClient, email: str, phone: str) -> dict:
     return resp.json()
 
 
+# handles verify email
 async def _verify_email(client: httpx.AsyncClient, db: AsyncSession, email: str) -> None:
     token = await _issued_token(db, email, "email_account_verify", "token")
     resp = await client.post("/v1/auth/registration/verify-email", json={"token": token})
     assert resp.status_code == 200, resp.text
 
 
+# read a single use secret from the notification issued to that destination
 async def _issued_token(db: AsyncSession, destination: str, template_key: str, field: str) -> str:
-    """Read a single-use secret from the notification issued to that destination.
-
-    The destination column is encrypted with a non-deterministic scheme, so the
-    match happens after decryption instead of in the query.
-    """
     from sqlalchemy import select
     from com.qode.qrew.v1.identity.models.notification import Notification
 
@@ -217,13 +201,8 @@ async def _issued_token(db: AsyncSession, destination: str, template_key: str, f
     raise AssertionError(f"no {template_key} notification issued to {destination}")
 
 
+# bring the account to the state that login requires for a full session
 async def _complete_setup(db: AsyncSession, user_id: _uuid.UUID) -> None:
-    """Bring the account to the state that login requires for a full session.
-
-    Onboarding demands a verified phone, a submitted document and a registered
-    passkey, and the last one cannot be produced without a WebAuthn ceremony, so
-    the state is written straight into the database.
-    """
     import os as _os
 
     from sqlalchemy import update
@@ -247,9 +226,9 @@ async def _complete_setup(db: AsyncSession, user_id: _uuid.UUID) -> None:
     await db.commit()
 
 
+# register, verify email and finish onboarding
 @pytest_asyncio.fixture
 async def registered_user(client: httpx.AsyncClient, db_session: AsyncSession) -> dict:
-    """Register, verify email and finish onboarding. Returns the account data."""
     email = _unique_email()
     phone = _unique_phone()
     data = await _register(client, email, phone)
@@ -258,9 +237,9 @@ async def registered_user(client: httpx.AsyncClient, db_session: AsyncSession) -
     return {"email": email, "phone": phone, "password": _DEFAULT_PASSWORD, "user_id": data["id"]}
 
 
+# log in and return Authorization headers for a regular user
 @pytest_asyncio.fixture
 async def auth_headers(client: httpx.AsyncClient, registered_user: dict) -> dict:
-    """Log in and return Authorization headers for a regular user."""
     resp = await client.post(
         "/v1/auth/login",
         json={"email": registered_user["email"], "password": registered_user["password"]},
@@ -269,9 +248,9 @@ async def auth_headers(client: httpx.AsyncClient, registered_user: dict) -> dict
     return {"Authorization": f"Bearer {resp.json()['access_token']}"}
 
 
+# create an admin user and return Authorization headers
 @pytest_asyncio.fixture
 async def admin_headers(client: httpx.AsyncClient, db_session: AsyncSession) -> dict:
-    """Create an admin user and return Authorization headers."""
     from sqlalchemy import update
     from com.qode.qrew.v1.identity.models.user import User
 

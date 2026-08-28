@@ -1,3 +1,4 @@
+# tests session
 import httpx
 import pytest
 
@@ -5,6 +6,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")
 
 
 class TestListSessions:
+    # verifies that returns current session
     async def test_returns_current_session(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
@@ -14,12 +16,14 @@ class TestListSessions:
         assert "items" in body
         assert len(body["items"]) >= 1
 
+    # verifies that unauthenticated returns 401
     async def test_unauthenticated_returns_401(self, client: httpx.AsyncClient) -> None:
         resp = await client.get("/v1/auth/sessions")
         assert resp.status_code == 401
 
 
 class TestRevokeSession:
+    # verifies that revoke specific session
     async def test_revoke_specific_session(
         self, client: httpx.AsyncClient, registered_user: dict
     ) -> None:
@@ -37,6 +41,7 @@ class TestRevokeSession:
         resp = await client.delete(f"/v1/auth/sessions/{jti}", headers=headers)
         assert resp.status_code == 204
 
+    # verifies that revoke nonexistent jti returns 404
     async def test_revoke_nonexistent_jti_returns_404(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
@@ -45,6 +50,7 @@ class TestRevokeSession:
 
 
 class TestRevokeAllSessions:
+    # verifies that revoke all returns 200
     async def test_revoke_all_returns_200(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:

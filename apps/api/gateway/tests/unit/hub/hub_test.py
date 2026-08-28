@@ -1,3 +1,4 @@
+# tests hub
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -7,6 +8,7 @@ from com.qode.qrew.v1.gateway.hub.connection import Connection
 from com.qode.qrew.v1.gateway.hub.hub import Hub
 
 
+# handles make socket
 def _make_socket(state: WebSocketState = WebSocketState.CONNECTED) -> MagicMock:
     ws = MagicMock()
     ws.application_state = state
@@ -15,11 +17,13 @@ def _make_socket(state: WebSocketState = WebSocketState.CONNECTED) -> MagicMock:
     return ws
 
 
+# handles make connection
 async def _make_connection(queue_size: int = 64) -> Connection:
     ws = _make_socket()
     return Connection(socket=ws, claims={}, queue_size=queue_size)
 
 
+# verifies that subscribe and deliver
 @pytest.mark.asyncio
 async def test_subscribe_and_deliver() -> None:
     hub = Hub()
@@ -35,6 +39,7 @@ async def test_subscribe_and_deliver() -> None:
         await hub.stop()
 
 
+# verifies that unsubscribe removes connection
 @pytest.mark.asyncio
 async def test_unsubscribe_removes_connection() -> None:
     hub = Hub()
@@ -49,6 +54,7 @@ async def test_unsubscribe_removes_connection() -> None:
         await hub.stop()
 
 
+# verifies that deliver closes overloaded connection
 @pytest.mark.asyncio
 async def test_deliver_closes_overloaded_connection() -> None:
     hub = Hub()
@@ -56,15 +62,14 @@ async def test_deliver_closes_overloaded_connection() -> None:
     try:
         conn = await _make_connection(queue_size=1)
         await hub.subscribe("me.user-3", conn)
-        # Fill the queue so next enqueue returns False
         await conn.enqueue({"type": "fill"})
-        # Deliver should detect overload and close
         await hub.deliver("me.user-3", {"type": "overflow"})
         assert conn.closed
     finally:
         await hub.stop()
 
 
+# verifies that stop closes all connections
 @pytest.mark.asyncio
 async def test_stop_closes_all_connections() -> None:
     hub = Hub()
@@ -75,6 +80,7 @@ async def test_stop_closes_all_connections() -> None:
     assert conn.closed
 
 
+# verifies that deliver to empty channel is noop
 @pytest.mark.asyncio
 async def test_deliver_to_empty_channel_is_noop() -> None:
     hub = Hub()

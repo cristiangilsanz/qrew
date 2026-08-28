@@ -1,3 +1,4 @@
+# tests registration
 import uuid
 
 import httpx
@@ -9,6 +10,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")
 _DEFAULT_PASSWORD = "StrongP@ss1!"
 
 
+# handles payload
 def _payload(**overrides) -> dict:
     base = {
         "full_name": "Test User",
@@ -22,6 +24,7 @@ def _payload(**overrides) -> dict:
 
 
 class TestRegister:
+    # verifies that creates user and returns id
     async def test_creates_user_and_returns_id(self, client: httpx.AsyncClient) -> None:
         resp = await client.post("/v1/auth/registration/", json=_payload())
         assert resp.status_code == 201
@@ -29,6 +32,7 @@ class TestRegister:
         assert "id" in body
         assert uuid.UUID(body["id"])
 
+    # verifies that duplicate email returns 409
     async def test_duplicate_email_returns_409(self, client: httpx.AsyncClient) -> None:
         payload = _payload()
         await client.post("/v1/auth/registration/", json=payload)
@@ -41,20 +45,24 @@ class TestRegister:
         )
         assert resp2.status_code == 409
 
+    # verifies that weak password returns 422
     async def test_weak_password_returns_422(self, client: httpx.AsyncClient) -> None:
         resp = await client.post("/v1/auth/registration/", json=_payload(password="weak"))
         assert resp.status_code == 422
 
+    # verifies that missing terms returns 422
     async def test_missing_terms_returns_422(self, client: httpx.AsyncClient) -> None:
         resp = await client.post("/v1/auth/registration/", json=_payload(terms_accepted=False))
         assert resp.status_code == 422
 
+    # verifies that invalid email returns 422
     async def test_invalid_email_returns_422(self, client: httpx.AsyncClient) -> None:
         resp = await client.post("/v1/auth/registration/", json=_payload(email="not-an-email"))
         assert resp.status_code == 422
 
 
 class TestVerifyEmail:
+    # verifies that valid token verifies
     async def test_valid_token_verifies(
         self, client: httpx.AsyncClient, db_session: AsyncSession
     ) -> None:
@@ -69,12 +77,14 @@ class TestVerifyEmail:
         verify_resp = await client.post("/v1/auth/registration/verify-email", json={"token": token})
         assert verify_resp.status_code == 200
 
+    # verifies that invalid token returns 400
     async def test_invalid_token_returns_400(self, client: httpx.AsyncClient) -> None:
         resp = await client.post("/v1/auth/registration/verify-email", json={"token": "bad-token"})
         assert resp.status_code == 400
 
 
 class TestResendEmailVerification:
+    # verifies that resend returns 200
     async def test_resend_returns_200(self, client: httpx.AsyncClient) -> None:
         payload = _payload()
         await client.post("/v1/auth/registration/", json=payload)
@@ -84,6 +94,7 @@ class TestResendEmailVerification:
         )
         assert resp.status_code == 200
 
+    # verifies that unknown email still returns 200
     async def test_unknown_email_still_returns_200(self, client: httpx.AsyncClient) -> None:
         resp = await client.post(
             "/v1/auth/registration/resend-email-verification",

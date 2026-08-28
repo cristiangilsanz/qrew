@@ -1,3 +1,4 @@
+# tests profile
 import httpx
 import pytest
 
@@ -5,6 +6,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")
 
 
 class TestGetMe:
+    # verifies that returns profile for authenticated user
     async def test_returns_profile_for_authenticated_user(
         self, client: httpx.AsyncClient, auth_headers: dict, registered_user: dict
     ) -> None:
@@ -14,12 +16,14 @@ class TestGetMe:
         assert body["email"] == registered_user["email"]
         assert body["email_verified"] is True
 
+    # verifies that unauthenticated returns 401
     async def test_unauthenticated_returns_401(self, client: httpx.AsyncClient) -> None:
         resp = await client.get("/v1/auth/profile/me")
         assert resp.status_code == 401
 
 
 class TestOnboardingStatus:
+    # verifies that returns status for authenticated user
     async def test_returns_status_for_authenticated_user(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
@@ -32,6 +36,7 @@ class TestOnboardingStatus:
         assert "passkey_registered" in body
         assert "is_complete" in body
 
+    # verifies that email verified is true after verify
     async def test_email_verified_is_true_after_verify(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
@@ -40,12 +45,14 @@ class TestOnboardingStatus:
 
 
 class TestAuditLog:
+    # verifies that returns paginated audit events
     async def test_returns_paginated_audit_events(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
         import com.qode.qrew.v1.identity.services.application.authentication.profile as profile
         from com.qode.qrew.v1.identity.services.application.trail import AuditTrailPage
 
+        # handles trail
         async def _trail(*_args: object, **_kwargs: object) -> AuditTrailPage:
             return AuditTrailPage(items=[], next_cursor=None)
 

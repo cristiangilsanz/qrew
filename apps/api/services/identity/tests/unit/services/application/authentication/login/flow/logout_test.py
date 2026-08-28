@@ -1,3 +1,4 @@
+# tests logout
 import uuid
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -14,6 +15,7 @@ _MOD = "com.qode.qrew.v1.identity.services.application.authentication.login.flow
 _PATCH_DECODE = f"{_MOD}.decode_refresh_token"
 
 
+# handles make svc
 def _make_svc(*, with_session_repo: bool = True) -> tuple[LogoutService, MagicMock, AsyncMock]:
     redis = MagicMock()
     redis.setex = AsyncMock()
@@ -29,18 +31,21 @@ def _make_svc(*, with_session_repo: bool = True) -> tuple[LogoutService, MagicMo
     return svc, redis, audit
 
 
+# handles valid payload
 def _valid_payload(*, jti: str = "test-jti") -> dict:
     exp = int((datetime.now(UTC) + timedelta(days=7)).timestamp())
     return {"type": "refresh", "jti": jti, "sub": str(uuid.uuid4()), "exp": exp}
 
 
 class TestLogoutService:
+    # verifies that expired token returns silently
     async def test_expired_token_returns_silently(self) -> None:
         svc, redis, audit = _make_svc()
         with patch(_PATCH_DECODE, side_effect=ExpiredSignatureError("expired")):
             await svc.logout("expired.token")
         redis.setex.assert_not_awaited()
 
+    # verifies that invalid token raises logout error
     async def test_invalid_token_raises_logout_error(self) -> None:
         svc, _, _ = _make_svc()
         with (
@@ -49,6 +54,7 @@ class TestLogoutService:
         ):
             await svc.logout("bad.token")
 
+    # verifies that wrong token type raises
     async def test_wrong_token_type_raises(self) -> None:
         svc, _, _ = _make_svc()
         payload = {"type": "access", "jti": "j", "sub": str(uuid.uuid4()), "exp": 9999999999}
@@ -58,6 +64,7 @@ class TestLogoutService:
         ):
             await svc.logout("access.token")
 
+    # verifies that valid token blacklists jti
     async def test_valid_token_blacklists_jti(self) -> None:
         svc, redis, _ = _make_svc()
         payload = _valid_payload(jti="my-jti")
@@ -67,6 +74,7 @@ class TestLogoutService:
         key = redis.setex.call_args.args[0]
         assert "my-jti" in key
 
+    # verifies that valid token deletes session
     async def test_valid_token_deletes_session(self) -> None:
         svc, _, _ = _make_svc(with_session_repo=True)
         payload = _valid_payload(jti="my-jti")
@@ -74,12 +82,14 @@ class TestLogoutService:
             await svc.logout("valid.token")
         svc._session_repo.delete_by_jti.assert_awaited_once_with("my-jti")
 
+    # verifies that no session repo does not fail
     async def test_no_session_repo_does_not_fail(self) -> None:
         svc, _, _ = _make_svc(with_session_repo=False)
         payload = _valid_payload()
         with patch(_PATCH_DECODE, return_value=payload):
             await svc.logout("valid.token")
 
+    # verifies that expired token does not blacklist
     async def test_expired_token_does_not_blacklist(self) -> None:
         svc, redis, _ = _make_svc()
         payload = _valid_payload()
@@ -88,6 +98,7 @@ class TestLogoutService:
             await svc.logout("valid.token")
         redis.setex.assert_not_awaited()
 
+    # verifies that audit failure is swallowed
     async def test_audit_failure_is_swallowed(self) -> None:
         svc, _, audit = _make_svc()
         audit.record = AsyncMock(side_effect=RuntimeError("audit down"))

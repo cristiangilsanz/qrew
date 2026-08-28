@@ -1,3 +1,4 @@
+# tests publication
 import uuid
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -17,6 +18,7 @@ _BINDING = "com.qode.qrew.v1.identity.services.application.authentication.device
 _MANAGEMENT = "com.qode.qrew.v1.identity.services.application.authentication.device.management"
 
 
+# handles device
 def _device(user_id: uuid.UUID) -> MagicMock:
     device = MagicMock()
     device.id = uuid.uuid4()
@@ -25,6 +27,7 @@ def _device(user_id: uuid.UUID) -> MagicMock:
     return device
 
 
+# verifies that binding announces the attested device
 @pytest.mark.asyncio
 async def test_binding_announces_the_attested_device() -> None:
     user_id = uuid.uuid4()
@@ -42,6 +45,7 @@ async def test_binding_announces_the_attested_device() -> None:
     assert envelope.data["platform"] == "android"
 
 
+# verifies that a failed publication does not break the binding
 @pytest.mark.asyncio
 async def test_a_failed_publication_does_not_break_the_binding() -> None:
     device = _device(uuid.uuid4())
@@ -49,6 +53,7 @@ async def test_a_failed_publication_does_not_break_the_binding() -> None:
         await _publish_device_attested(device, platform="ios", attested_at=datetime.now(UTC))
 
 
+# verifies that revocation announces the device
 @pytest.mark.asyncio
 async def test_revocation_announces_the_device() -> None:
     device_id, user_id = uuid.uuid4(), uuid.uuid4()
@@ -64,6 +69,7 @@ async def test_revocation_announces_the_device() -> None:
     assert envelope.data["revoked_at"] == revoked_at.isoformat()
 
 
+# verifies that revoking every device announces each one
 @pytest.mark.asyncio
 async def test_revoking_every_device_announces_each_one() -> None:
     user = make_user()
@@ -80,6 +86,7 @@ async def test_revoking_every_device_announces_each_one() -> None:
 
     publicados: list[uuid.UUID] = []
 
+    # handles capturar
     async def _capturar(device_id, user_id, revoked_at):  # type: ignore[no-untyped-def]
         publicados.append(device_id)
 

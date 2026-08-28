@@ -1,3 +1,4 @@
+# tests connection
 import time
 from unittest.mock import AsyncMock, MagicMock
 
@@ -8,6 +9,7 @@ from com.qode.qrew.v1.gateway.hub.connection import Connection
 from com.qode.qrew.v1.gateway.hub.close_codes import WS_CLOSE_NORMAL
 
 
+# handles make connection
 def _make_connection(
     queue_size: int = 4, state: WebSocketState = WebSocketState.CONNECTED
 ) -> Connection:
@@ -18,6 +20,7 @@ def _make_connection(
     return Connection(socket=ws, claims={}, queue_size=queue_size)
 
 
+# verifies that enqueue returns true when space
 @pytest.mark.asyncio
 async def test_enqueue_returns_true_when_space() -> None:
     conn = _make_connection()
@@ -25,6 +28,7 @@ async def test_enqueue_returns_true_when_space() -> None:
     assert result is True
 
 
+# verifies that enqueue returns false when full
 @pytest.mark.asyncio
 async def test_enqueue_returns_false_when_full() -> None:
     conn = _make_connection(queue_size=1)
@@ -33,6 +37,7 @@ async def test_enqueue_returns_false_when_full() -> None:
     assert result is False
 
 
+# verifies that enqueue returns false when closed
 @pytest.mark.asyncio
 async def test_enqueue_returns_false_when_closed() -> None:
     conn = _make_connection()
@@ -41,18 +46,21 @@ async def test_enqueue_returns_false_when_closed() -> None:
     assert result is False
 
 
+# verifies that is stale returns true after timeout
 def test_is_stale_returns_true_after_timeout() -> None:
     conn = _make_connection()
     conn._last_pong = time.monotonic() - 100.0
     assert conn.is_stale(time.monotonic(), max_silence_seconds=30.0) is True
 
 
+# verifies that is stale returns false when recent
 def test_is_stale_returns_false_when_recent() -> None:
     conn = _make_connection()
     conn._last_pong = time.monotonic()
     assert conn.is_stale(time.monotonic(), max_silence_seconds=30.0) is False
 
 
+# verifies that close sets closed
 @pytest.mark.asyncio
 async def test_close_sets_closed() -> None:
     conn = _make_connection()
@@ -61,6 +69,7 @@ async def test_close_sets_closed() -> None:
     assert conn.closed is True
 
 
+# verifies that close is idempotent
 @pytest.mark.asyncio
 async def test_close_is_idempotent() -> None:
     conn = _make_connection()
@@ -69,6 +78,7 @@ async def test_close_is_idempotent() -> None:
     assert conn.closed is True
 
 
+# verifies that record pong updates last pong
 def test_record_pong_updates_last_pong() -> None:
     conn = _make_connection()
     old = conn._last_pong
