@@ -77,9 +77,7 @@ export function CreateVenueForm({ onSuccess }: Props) {
     setOptions({ apiKey: env.GOOGLE_MAPS_API_KEY })
     importLibrary('places')
       .then(() => setMapsReady(true))
-      .catch(() => {
-        /* silent — fallback to manual */
-      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -128,9 +126,7 @@ export function CreateVenueForm({ onSuccess }: Props) {
               form.setValue('timezone', data.timeZoneId, { shouldValidate: true })
             }
           })
-          .catch(() => {
-            /* ignore */
-          })
+          .catch(() => {})
       }
     })
   }, [mapsReady, form])
