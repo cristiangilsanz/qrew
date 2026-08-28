@@ -1,3 +1,4 @@
+# exposes the endpoints that join and redeem an event's virtual waiting room
 import secrets
 import uuid
 
@@ -17,6 +18,7 @@ from com.qode.qrew.v1.sales.services.application.queue.service import QueueError
 router = APIRouter(prefix="/events/{event_id}/queue", tags=["queue"])
 
 
+# converts a queue error into its http response
 def _bad_request(error: QueueError) -> HTTPException:
     code = (
         status.HTTP_404_NOT_FOUND
@@ -28,6 +30,7 @@ def _bad_request(error: QueueError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
+# joins the caller into an event's queue
 @router.post(
     "/join",
     response_model=QueueJoinResponse,
@@ -51,6 +54,7 @@ async def join_queue(
     return QueueJoinResponse(position=position)
 
 
+# reads the caller's current position in the queue
 @router.get(
     "/position",
     response_model=QueuePositionResponse,
@@ -69,6 +73,7 @@ async def queue_position(
     return QueuePositionResponse(position=position, redeem_token=redeem_token)
 
 
+# exchanges a redeem token for a reservation window
 @router.post(
     "/redeem",
     response_model=QueueRedeemResponse,

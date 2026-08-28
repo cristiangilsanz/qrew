@@ -1,3 +1,4 @@
+# scores a purchase against how soon after registration it happened
 import uuid
 from datetime import datetime
 
@@ -7,13 +8,13 @@ from com.qode.qrew.v1.sales.core.config import settings
 
 
 class TimeToPurchaseSignal:
-    """A first purchase seconds after sign-up looks scripted."""
-
     name = "time_to_purchase"
 
+    # stores the lookup of when each user registered
     def __init__(self, registered_at_lookup: dict[uuid.UUID, datetime]) -> None:
         self._lookup = registered_at_lookup
 
+    # scores a purchase higher the sooner it followed registration
     async def evaluate(self, context: PurchaseContext) -> SignalResult:
         registered_at = self._lookup.get(context.user_id)
         if registered_at is None:

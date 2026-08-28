@@ -1,3 +1,4 @@
+# projects identity's registrations and device fingerprints for fraud scoring
 import asyncio
 import uuid
 from datetime import UTC, datetime
@@ -18,6 +19,7 @@ STREAM = "IDENTITY"
 DURABLE = "sales-identity-handler"
 
 
+# projects a user's registration time and phone for the fraud signals
 async def handle_user_registered(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -37,6 +39,7 @@ async def handle_user_registered(raw: bytes) -> None:
     await logger.ainfo("identity_events.user_age_upserted", user_id=str(user_id))
 
 
+# records that a device fingerprint was seen again
 async def handle_fingerprint_seen(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -61,6 +64,7 @@ _HANDLERS = {
 }
 
 
+# subscribes to every identity event subject and dispatches each message
 async def run_identity_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -84,6 +88,7 @@ async def run_identity_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("identity_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             async for msg in psub.messages:  # type: ignore[attr-defined]
                 try:

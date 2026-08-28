@@ -1,3 +1,4 @@
+# provides the shared fastapi dependencies for the sales service
 from collections.abc import AsyncGenerator
 
 import redis.asyncio as aioredis
@@ -24,6 +25,7 @@ from com.qode.qrew.v1.sales.services.application.reservation import ReservationS
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
 
 
+# yields a redis client for the duration of a request
 async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[type-arg]
     client: aioredis.Redis = aioredis.from_url(  # type: ignore[type-arg]
         settings.redis_url, decode_responses=False
@@ -34,6 +36,7 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[t
         await client.aclose()
 
 
+# rejects a request without a valid internal api key
 async def verify_internal_key(
     x_internal_key: str = Header(alias="X-Internal-Key", default=""),
 ) -> None:
@@ -41,6 +44,7 @@ async def verify_internal_key(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
+# builds a reservation service for a request
 def get_reservation_service(db: AsyncSession = Depends(get_db)) -> ReservationService:
     return ReservationService(
         db,
@@ -51,10 +55,12 @@ def get_reservation_service(db: AsyncSession = Depends(get_db)) -> ReservationSe
     )
 
 
+# builds a queue service for a request
 def get_queue_service(db: AsyncSession = Depends(get_db)) -> QueueService:
     return QueueService(EventContextRepository(db), AuditService())
 
 
+# builds a market service for a request
 def get_market_service(db: AsyncSession = Depends(get_db)) -> MarketService:
     return MarketService(
         MarketRepository(db),

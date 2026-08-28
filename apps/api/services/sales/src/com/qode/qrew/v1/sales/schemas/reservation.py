@@ -1,3 +1,4 @@
+# defines the request and response schemas for reservations and their holders
 import re
 import uuid
 from datetime import datetime
@@ -12,10 +13,12 @@ _LETTER_MAP = "TRWAGMYFPDXBNJZSQVHLCKE"
 _NIE_PREFIX = {"X": "0", "Y": "1", "Z": "2"}
 
 
+# checks the control letter of a spanish national identity number
 def _valid_dni_letter(digits: str, letter: str) -> bool:
     return _LETTER_MAP[int(digits) % 23] == letter
 
 
+# validates a spanish dni or nie and returns it normalised
 def validate_spanish_id(value: str) -> str:
     v = value.strip().upper()
     if _DNI_RE.match(v):
@@ -53,6 +56,7 @@ class HolderInput(BaseModel):
     holder_name: str = Field(..., min_length=1, max_length=255)
     holder_dni: str = Field(..., min_length=1, max_length=50)
 
+    # validates that a holder's identity document is a real spanish dni or nie
     @field_validator("holder_dni")
     @classmethod
     def validate_dni(cls, v: str) -> str:

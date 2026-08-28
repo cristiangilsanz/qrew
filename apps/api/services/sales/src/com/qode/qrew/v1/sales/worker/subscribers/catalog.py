@@ -1,3 +1,4 @@
+# projects catalog's events and ticket types into the sales service's local context
 import asyncio
 import uuid
 from datetime import UTC, datetime
@@ -19,6 +20,7 @@ STREAM = "CATALOG"
 DURABLE = "sales-catalog-handler"
 
 
+# parses an optional isoformat timestamp
 def _parse_dt(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -29,6 +31,7 @@ def _parse_dt(value: str | None) -> datetime | None:
         return None
 
 
+# creates or refreshes an event's projected schedule and sale rules
 async def _upsert_event_ctx(
     data: dict[str, Any],
     *,
@@ -61,6 +64,7 @@ async def _upsert_event_ctx(
     await logger.ainfo("catalog_events.event_upserted", event_id=str(event_id), status=status)
 
 
+# projects a published event
 async def handle_event_published(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -68,6 +72,7 @@ async def handle_event_published(raw: bytes) -> None:
     await _upsert_event_ctx(data, status="published")
 
 
+# projects a cancelled event
 async def handle_event_cancelled(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -75,6 +80,7 @@ async def handle_event_cancelled(raw: bytes) -> None:
     await _upsert_event_ctx(data, status="cancelled")
 
 
+# projects a draft event
 async def handle_event_draft(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -82,11 +88,11 @@ async def handle_event_draft(raw: bytes) -> None:
     await _upsert_event_ctx(data, status="draft")
 
 
+# projects an event's edits while keeping its current status
 async def handle_event_updated(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
         return
-    # Preserve lifecycle status, propagate field changes only
     try:
         event_id = uuid.UUID(str(data["data"]["event_id"]))
     except (KeyError, ValueError):
@@ -98,6 +104,7 @@ async def handle_event_updated(raw: bytes) -> None:
     await _upsert_event_ctx(data, status=status)
 
 
+# projects a ticket type's capacity and price
 async def handle_ticket_type_created(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -123,6 +130,7 @@ async def handle_ticket_type_created(raw: bytes) -> None:
     await logger.ainfo("catalog_events.ticket_type_upserted", ticket_type_id=str(ticket_type_id))
 
 
+# projects a ticket type's edited capacity and price
 async def handle_ticket_type_updated(raw: bytes) -> None:
     await handle_ticket_type_created(raw)
 
@@ -137,6 +145,7 @@ _HANDLERS = {
 }
 
 
+# subscribes to every catalog event subject and dispatches each message
 async def run_catalog_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -160,6 +169,7 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("catalog_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             async for msg in psub.messages:  # type: ignore[attr-defined]
                 try:

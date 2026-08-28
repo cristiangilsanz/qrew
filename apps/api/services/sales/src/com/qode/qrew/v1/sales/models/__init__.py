@@ -1,3 +1,4 @@
+# exposes the sales models package
 from com.qode.qrew.v1.sales.models.reservation import (
     Reservation as Reservation,
     ReservationStatus as ReservationStatus,

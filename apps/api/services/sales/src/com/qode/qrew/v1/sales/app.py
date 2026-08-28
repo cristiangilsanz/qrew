@@ -1,3 +1,4 @@
+# assembles the fastapi application for the sales service including its middleware
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

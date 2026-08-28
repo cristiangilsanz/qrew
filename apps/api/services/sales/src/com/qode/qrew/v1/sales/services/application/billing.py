@@ -1,3 +1,4 @@
+# prices a reservation for payments to charge
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -10,6 +11,7 @@ from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepositor
 
 
 class PaymentContextError(Exception):
+    # stores the message and the pricing error code
     def __init__(self, message: str, error_code: str) -> None:
         super().__init__(message)
         self.message = message
@@ -22,6 +24,7 @@ class PaymentContext:
     currency: str
 
 
+# validates a reservation and computes its price
 async def get_payment_context(
     db: AsyncSession,
     *,

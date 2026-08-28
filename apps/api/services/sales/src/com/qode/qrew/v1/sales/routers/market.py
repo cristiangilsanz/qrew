@@ -1,3 +1,4 @@
+# exposes the endpoints for the resale market's queue listings and assignments
 import uuid
 
 import structlog
@@ -25,6 +26,7 @@ tickets_router = APIRouter(prefix="/tickets", tags=["market"])
 market_router = APIRouter(prefix="/market", tags=["market"])
 
 
+# converts a listing into its response
 def _listing_response(listing: MarketListing) -> MarketListingResponse:
     return MarketListingResponse(
         id=listing.id,
@@ -41,6 +43,7 @@ def _listing_response(listing: MarketListing) -> MarketListingResponse:
     )
 
 
+# converts an assignment into its response with its listing's pricing
 def _assignment_response(
     assignment: MarketAssignment, listing: MarketListing | None = None
 ) -> MarketAssignmentResponse:
@@ -59,6 +62,7 @@ def _assignment_response(
     )
 
 
+# converts a market error into its http response
 def _market_error(exc: MarketError) -> HTTPException:
     code = (
         status.HTTP_404_NOT_FOUND
@@ -72,6 +76,7 @@ def _market_error(exc: MarketError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": exc.message, "field": exc.field})
 
 
+# joins the caller into an event's resale queue
 @events_router.post(
     "/{event_id}/market/queue/join",
     response_model=MarketQueueJoinResponse,
@@ -95,6 +100,7 @@ async def join_market_queue(
     return MarketQueueJoinResponse(in_queue=True, joined_at=entry.joined_at)
 
 
+# removes the caller from an event's resale queue
 @events_router.delete(
     "/{event_id}/market/queue/leave",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -113,6 +119,7 @@ async def leave_market_queue(
     await db.commit()
 
 
+# reports the caller's resale queue standing and any pending assignment
 @events_router.get(
     "/{event_id}/market/queue/status",
     response_model=MarketQueueStatusResponse,
@@ -137,6 +144,7 @@ async def market_queue_status(
     )
 
 
+# lists a ticket for resale on the market
 @tickets_router.post(
     "/{ticket_id}/market/list",
     response_model=MarketListingResponse,
@@ -160,6 +168,7 @@ async def list_ticket(
     return _listing_response(listing)
 
 
+# reads a ticket's active listing
 @tickets_router.get(
     "/{ticket_id}/market/listing",
     response_model=MarketListingResponse,
@@ -184,6 +193,7 @@ async def get_ticket_listing(
     return _listing_response(listing)
 
 
+# lists every resale queue the caller is active in
 @market_router.get(
     "/queues",
     response_model=list[MarketQueueEntryResponse],
@@ -202,6 +212,7 @@ async def get_my_queues(
     return [MarketQueueEntryResponse(**e) for e in entries]
 
 
+# reads the caller's pending market assignment if any
 @market_router.get(
     "/assignments/pending",
     response_model=MarketAssignmentResponse | None,
@@ -223,6 +234,7 @@ async def get_pending_assignment(
     return _assignment_response(assignment, listing)
 
 
+# reads a specific market assignment owned by the caller
 @market_router.get(
     "/assignments/{assignment_id}",
     response_model=MarketAssignmentResponse,
@@ -248,6 +260,7 @@ async def get_assignment(
     return _assignment_response(assignment, listing)
 
 
+# names the holder of the ticket an assignment will transfer
 @market_router.put(
     "/assignments/{assignment_id}/holders",
     response_model=MarketAssignmentResponse,
@@ -278,6 +291,7 @@ async def set_assignment_holders(
     return _assignment_response(assignment, listing)
 
 
+# declines a market assignment and removes the caller from the queue
 @market_router.post(
     "/assignments/{assignment_id}/decline",
     status_code=status.HTTP_204_NO_CONTENT,

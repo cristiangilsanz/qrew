@@ -1,3 +1,4 @@
+# defines the request and response schemas for the queue
 from pydantic import BaseModel, Field
 
 

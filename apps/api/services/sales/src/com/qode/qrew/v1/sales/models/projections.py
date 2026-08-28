@@ -1,3 +1,4 @@
+# defines the local projections of event ticket type user age and fingerprint context
 import uuid
 from datetime import datetime
 
@@ -9,8 +10,6 @@ from com.qode.qrew.v1.sales.core.database import Base
 
 
 class EventContext(Base):
-    """Projection of catalog event data needed for reservation validation."""
-
     __tablename__ = "event_context"
     __table_args__ = ({"schema": "sales"},)
 
@@ -30,8 +29,6 @@ class EventContext(Base):
 
 
 class TicketTypeInventory(Base):
-    """Sales-owned inventory projection tracking capacity, reservations, and pricing per ticket type."""
-
     __tablename__ = "ticket_type_inventory"
     __table_args__ = ({"schema": "sales"},)
 
@@ -47,8 +44,6 @@ class TicketTypeInventory(Base):
 
 
 class UserAgeContext(Base):
-    """Fraud projection: when did this user register?"""
-
     __tablename__ = "user_age_context"
     __table_args__ = ({"schema": "sales"},)
 
@@ -61,8 +56,6 @@ class UserAgeContext(Base):
 
 
 class FingerprintContext(Base):
-    """Fraud projection: how many distinct users share this fingerprint?"""
-
     __tablename__ = "fingerprint_context"
     __table_args__ = ({"schema": "sales"},)
 

@@ -1,3 +1,4 @@
+# entry point that starts the sales background worker
 import asyncio
 
 from messaging.client import init_nats
@@ -5,6 +6,7 @@ from worker import run_nats_subscribers
 from com.qode.qrew.v1.sales.core.config import settings
 
 
+# connects to nats and starts every sales subscriber
 async def main() -> None:
     if not settings.nats_url:
         import structlog
@@ -26,6 +28,7 @@ async def main() -> None:
     )
 
 
+# runs the worker main coroutine until it stops
 def run() -> None:
     asyncio.run(main())
 

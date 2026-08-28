@@ -1,3 +1,4 @@
+# defines the reservation status enum and the reservation table
 import enum
 import uuid
 from datetime import datetime

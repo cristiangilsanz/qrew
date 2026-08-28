@@ -1,3 +1,4 @@
+# exposes the internal endpoints payments uses to price a reservation or assignment
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -36,10 +37,12 @@ class _PaymentContextResponse(BaseModel):
     currency: str
 
 
+# converts a payment context into its response
 def _to_response(ctx: PaymentContext) -> _PaymentContextResponse:
     return _PaymentContextResponse(amount_cents=ctx.amount_cents, currency=ctx.currency)
 
 
+# prices a reservation for payments to charge
 @router.post(
     "/reservations/{reservation_id}/charge",
     response_model=_PaymentContextResponse,
@@ -49,7 +52,6 @@ async def create_charge(
     body: _PaymentContextRequest,
     db: AsyncSession = Depends(get_db),
 ) -> _PaymentContextResponse:
-    """Returns the billable amount and currency for a reservation."""
     try:
         ctx = await get_payment_context(
             db,
@@ -65,6 +67,7 @@ async def create_charge(
     return _to_response(ctx)
 
 
+# prices a market assignment for payments to charge
 @router.post(
     "/market-assignments/{assignment_id}/charge",
     response_model=_PaymentContextResponse,
@@ -75,7 +78,6 @@ async def create_market_assignment_charge(
     db: AsyncSession = Depends(get_db),
     service: MarketService = Depends(get_market_service),
 ) -> _PaymentContextResponse:
-    """Returns the billable amount and currency for a market assignment."""
     try:
         ctx = await service.get_payment_context(user_id=body.user_id, assignment_id=assignment_id)
     except MarketError as exc:

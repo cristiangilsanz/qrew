@@ -1,8 +1,10 @@
+# entry point that starts the sales api server
 import uvicorn
 
 from com.qode.qrew.v1.sales.core.config import settings
 
 
+# starts the sales api with uvicorn using the configured settings
 def main() -> None:
     uvicorn.run(
         "com.qode.qrew.v1.sales.app:app",

@@ -1,3 +1,4 @@
+# expires overdue reservations and releases the inventory they held
 import asyncio
 from datetime import UTC, datetime
 from typing import Any
@@ -34,8 +35,8 @@ _DECREMENT_INVENTORY = text(
 )
 
 
+# expires a batch of overdue reservations and releases their inventory
 async def sweep_expired() -> int:
-    """Marks timed-out reservations as expired, releases inventory, and publishes expiry events."""
     swept = 0
     expired_rows: list[dict[str, Any]] = []
 
@@ -61,6 +62,7 @@ async def sweep_expired() -> int:
     return swept
 
 
+# publishes that a reservation expired onto the shared nats connection
 async def _publish_expired(row: dict[str, Any]) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]

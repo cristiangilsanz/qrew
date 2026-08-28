@@ -1,3 +1,4 @@
+# scores a purchase against how many recent purchases its ip address made
 import redis.asyncio as aioredis
 
 from com.qode.qrew.v1.sales.services.domain.fraud.context import PurchaseContext
@@ -6,7 +7,6 @@ from com.qode.qrew.v1.sales.core.config import settings
 
 _IP_KEY = "fraud:ip:{ip}:purchases"
 
-# TTL is set only on first INCR so the window is fixed from first hit
 _INCR_WITH_TTL = """
 local count = redis.call('INCR', KEYS[1])
 if count == 1 then
@@ -19,9 +19,11 @@ return count
 class IpVelocitySignal:
     name = "ip_velocity"
 
+    # stores the redis client the signal counts through
     def __init__(self, redis: aioredis.Redis) -> None:  # type: ignore[type-arg]
         self._redis = redis
 
+    # scores a purchase higher the more purchases its ip made in the window
     async def evaluate(self, context: PurchaseContext) -> SignalResult:
         ip = context.ip_address
         if ip is None:

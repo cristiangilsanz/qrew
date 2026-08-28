@@ -1,3 +1,4 @@
+# exposes the endpoints that reserve cancel read and staff a reservation
 import re
 import uuid
 
@@ -37,6 +38,7 @@ events_router = APIRouter(prefix="/events", tags=["reservations"])
 router = APIRouter(prefix="/reservations", tags=["reservations"])
 
 
+# converts a reservation into its response
 def _to_response(reservation: Reservation) -> ReservationResponse:
     return ReservationResponse(
         id=reservation.id,
@@ -49,6 +51,7 @@ def _to_response(reservation: Reservation) -> ReservationResponse:
     )
 
 
+# converts a reservation error into its http response
 def _bad_request(error: ReservationError) -> HTTPException:
     code = (
         status.HTTP_404_NOT_FOUND
@@ -65,6 +68,7 @@ def _bad_request(error: ReservationError) -> HTTPException:
     )
 
 
+# reserves tickets against an event under the caller's per user limit
 @events_router.post(
     "/{event_id}/reserve",
     response_model=ReservationResponse,
@@ -127,6 +131,7 @@ async def create_reservation(
     return _to_response(reservation)
 
 
+# cancels an open reservation
 @router.post(
     "/{reservation_id}/cancel",
     response_model=ReservationResponse,
@@ -158,6 +163,7 @@ async def cancel_reservation(
     return _to_response(reservation)
 
 
+# reads a reservation owned by the caller
 @router.get(
     "/{reservation_id}",
     response_model=ReservationResponse,
@@ -182,6 +188,7 @@ async def get_reservation(
     return _to_response(reservation)
 
 
+# names each ticket holder of a still open reservation
 @router.put(
     "/{reservation_id}/holders",
     response_model=list[HolderResponse],

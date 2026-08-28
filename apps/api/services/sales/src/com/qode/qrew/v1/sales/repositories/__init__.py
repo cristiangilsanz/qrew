@@ -1,3 +1,4 @@
+# exposes the sales repositories package
 from com.qode.qrew.v1.sales.repositories.reservation import (
     ReservationRepository as ReservationRepository,
 )

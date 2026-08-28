@@ -1,3 +1,4 @@
+# exposes the fraud signals package
 from com.qode.qrew.v1.sales.services.domain.fraud.signals.account_age import AccountAgeSignal
 from com.qode.qrew.v1.sales.services.domain.fraud.signals.base import SignalResult
 from com.qode.qrew.v1.sales.services.domain.fraud.signals.fingerprint_reuse import (

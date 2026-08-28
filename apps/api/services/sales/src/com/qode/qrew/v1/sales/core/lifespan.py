@@ -1,3 +1,4 @@
+# manages startup and shutdown for the sales service
 import asyncio
 import contextlib
 from collections.abc import AsyncGenerator
@@ -21,6 +22,7 @@ from com.qode.qrew.v1.sales.core.config import settings
 logger = structlog.get_logger(__name__)
 
 
+# runs a coroutine on a fixed interval until cancelled
 async def _run_periodic(fn: object, interval_seconds: int) -> None:
     while True:
         try:
@@ -30,6 +32,7 @@ async def _run_periodic(fn: object, interval_seconds: int) -> None:
         await asyncio.sleep(interval_seconds)
 
 
+# wires tracing messaging and the reservation and market schedulers around the app lifecycle
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_tracing(

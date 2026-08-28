@@ -1,3 +1,4 @@
+# reads and writes the market's queue entries listings and assignments
 import uuid
 
 from sqlalchemy import func, select, text
@@ -13,9 +14,11 @@ from com.qode.qrew.v1.sales.models.market import (
 
 
 class MarketRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads a user's active queue entry for an event
     async def get_queue_entry(
         self, *, event_id: uuid.UUID, user_id: uuid.UUID
     ) -> MarketQueueEntry | None:
@@ -28,6 +31,7 @@ class MarketRepository:
         )
         return result.scalar_one_or_none()
 
+    # lists a user's active queue entries across events
     async def get_active_queue_entries_for_user(
         self, *, user_id: uuid.UUID
     ) -> list[MarketQueueEntry]:
@@ -39,12 +43,14 @@ class MarketRepository:
         )
         return list(result.scalars().all())
 
+    # writes a new queue entry to the database
     async def insert_queue_entry(self, entry: MarketQueueEntry) -> MarketQueueEntry:
         self._session.add(entry)
         await self._session.flush()
         await self._session.refresh(entry)
         return entry
 
+    # counts an event's active queue entries
     async def active_queue_count(self, event_id: uuid.UUID) -> int:
         result = await self._session.execute(
             select(func.count()).where(
@@ -54,8 +60,8 @@ class MarketRepository:
         )
         return int(result.scalar_one() or 0)
 
+    # counts a user's live tickets and pending assignments for an event
     async def active_ticket_count_for_user(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> int:
-        """Counts issued/frozen/reserved tickets + pending assignments for a user on an event."""
         ticket_count_sql = text(
             """
             SELECT COUNT(*) FROM ticketing.tickets
@@ -79,9 +85,11 @@ class MarketRepository:
         assignment_count = int(pending_assignments.scalar_one() or 0)
         return ticket_count + assignment_count
 
+    # reads a listing by its identifier
     async def get_listing_by_id(self, listing_id: uuid.UUID) -> MarketListing | None:
         return await self._session.get(MarketListing, listing_id)
 
+    # reads a ticket's active listing
     async def get_listing_by_ticket_id(self, ticket_id: uuid.UUID) -> MarketListing | None:
         result = await self._session.execute(
             select(MarketListing).where(
@@ -93,6 +101,7 @@ class MarketRepository:
         )
         return result.scalar_one_or_none()
 
+    # lists a seller's active listings for an event
     async def get_active_listings_for_seller(
         self, *, seller_user_id: uuid.UUID, event_id: uuid.UUID
     ) -> list[MarketListing]:
@@ -107,16 +116,17 @@ class MarketRepository:
         )
         return list(result.scalars().all())
 
+    # writes a new listing to the database
     async def insert_listing(self, listing: MarketListing) -> MarketListing:
         self._session.add(listing)
         await self._session.flush()
         await self._session.refresh(listing)
         return listing
 
+    # locks a batch of available listings that have no pending assignment
     async def pick_available_listings_without_assignment(
         self, batch: int = 50
     ) -> list[MarketListing]:
-        """Returns listings in 'available' state with no active pending assignment."""
         result = await self._session.execute(
             text(
                 """
@@ -141,6 +151,7 @@ class MarketRepository:
         )
         return list(listings_result.scalars().all())
 
+    # locks a random eligible queue member for an event
     async def pick_random_queue_member(
         self,
         *,
@@ -148,7 +159,6 @@ class MarketRepository:
         exclude_user_ids: list[uuid.UUID],
         max_tickets: int,
     ) -> MarketQueueEntry | None:
-        """Picks a random active queue member that has not exceeded the ticket limit."""
         exclude_clause = ""
         params: dict[str, object] = {"event_id": event_id, "max_tickets": max_tickets}
         if exclude_user_ids:
@@ -185,8 +195,8 @@ class MarketRepository:
             return None
         return await self._session.get(MarketQueueEntry, row[0])
 
+    # locks a batch of listings whose deadline has passed
     async def expired_active_listings(self, batch: int = 50) -> list[MarketListing]:
-        """Listings past their expires_at that are still active (available or assigned)."""
         result = await self._session.execute(
             text(
                 """
@@ -207,9 +217,11 @@ class MarketRepository:
         )
         return list(listings_result.scalars().all())
 
+    # reads an assignment by its identifier
     async def get_assignment_by_id(self, assignment_id: uuid.UUID) -> MarketAssignment | None:
         return await self._session.get(MarketAssignment, assignment_id)
 
+    # reads a listing's pending assignment if it has one
     async def get_active_assignment_for_listing(
         self, listing_id: uuid.UUID
     ) -> MarketAssignment | None:
@@ -221,6 +233,7 @@ class MarketRepository:
         )
         return result.scalar_one_or_none()
 
+    # reads a user's pending assignment for an event
     async def get_pending_assignment_for_user(
         self, *, buyer_user_id: uuid.UUID, event_id: uuid.UUID
     ) -> MarketAssignment | None:
@@ -233,6 +246,7 @@ class MarketRepository:
         )
         return result.scalar_one_or_none()
 
+    # reads a user's pending assignment across every event
     async def get_pending_assignment_for_user_any_event(
         self, buyer_user_id: uuid.UUID
     ) -> MarketAssignment | None:
@@ -244,6 +258,7 @@ class MarketRepository:
         )
         return result.scalar_one_or_none()
 
+    # lists the users a listing has already been assigned to
     async def previously_assigned_user_ids(self, listing_id: uuid.UUID) -> list[uuid.UUID]:
         result = await self._session.execute(
             select(MarketAssignment.buyer_user_id).where(
@@ -252,6 +267,7 @@ class MarketRepository:
         )
         return list(result.scalars().all())
 
+    # locks a batch of pending assignments whose deadline has passed
     async def expired_pending_assignments(self, batch: int = 100) -> list[MarketAssignment]:
         result = await self._session.execute(
             text(
@@ -272,12 +288,14 @@ class MarketRepository:
         )
         return list(assignments_result.scalars().all())
 
+    # writes a new assignment to the database
     async def insert_assignment(self, assignment: MarketAssignment) -> MarketAssignment:
         self._session.add(assignment)
         await self._session.flush()
         await self._session.refresh(assignment)
         return assignment
 
+    # reads an assignment by its stripe payment intent
     async def get_assignment_by_payment_intent(
         self, payment_intent_id: str
     ) -> MarketAssignment | None:
@@ -286,6 +304,7 @@ class MarketRepository:
         )
         return result.scalar_one_or_none()
 
+    # reads the ticket a would be listing refers to
     async def get_ticket_for_listing(
         self, *, ticket_id: uuid.UUID, owner_user_id: uuid.UUID
     ) -> dict[str, object] | None:
@@ -308,5 +327,6 @@ class MarketRepository:
             "state": str(row["state"]),
         }
 
+    # flushes pending changes to the database
     async def flush(self) -> None:
         await self._session.flush()

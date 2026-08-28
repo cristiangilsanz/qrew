@@ -1,3 +1,4 @@
+# defines the table that names each reservation's ticket holders
 import uuid
 
 from sqlalchemy import CheckConstraint, Index, Integer, String, UniqueConstraint

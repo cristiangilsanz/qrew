@@ -1,3 +1,4 @@
+# expires overdue market assignments and cancels listings past their deadline
 from datetime import UTC, datetime, timedelta
 
 import structlog
@@ -18,8 +19,8 @@ logger = structlog.get_logger(__name__)
 _NATS_TIMEOUT = 5.0
 
 
+# expires overdue assignments and cancels overdue listings
 async def sweep_expired() -> tuple[int, int]:
-    """Expire pending assignments and cancel overdue listings."""
     assignments_expired = await _expire_assignments()
     listings_cancelled = await _cancel_expired_listings()
     if assignments_expired or listings_cancelled:
@@ -31,6 +32,7 @@ async def sweep_expired() -> tuple[int, int]:
     return assignments_expired, listings_cancelled
 
 
+# expires an overdue assignment and reassigns its listing when possible
 async def _expire_assignments() -> int:
     expired = 0
     async with AsyncSessionLocal() as session:
@@ -53,7 +55,6 @@ async def _expire_assignments() -> int:
 
                     fresh.state = MarketAssignmentState.expired
 
-                    # Remove from queue to prevent reassignment
                     entry = await repo.get_queue_entry(
                         event_id=fresh.event_id, user_id=fresh.buyer_user_id
                     )
@@ -65,7 +66,6 @@ async def _expire_assignments() -> int:
                         await session.commit()
                         continue
 
-                    # Get max_tickets_per_user for this event
                     result = await session.execute(
                         text(
                             "SELECT max_tickets_per_user FROM sales.event_context WHERE event_id = :eid"
@@ -75,7 +75,6 @@ async def _expire_assignments() -> int:
                     row = result.mappings().first()
                     max_tickets = int(row["max_tickets_per_user"]) if row else 10
 
-                    # Pick next eligible queue member
                     previous_ids = await repo.previously_assigned_user_ids(listing.id)
                     member = await repo.pick_random_queue_member(
                         event_id=listing.event_id,
@@ -121,6 +120,7 @@ async def _expire_assignments() -> int:
     return expired
 
 
+# cancels a listing whose deadline has passed
 async def _cancel_expired_listings() -> int:
     cancelled = 0
     async with AsyncSessionLocal() as session:
@@ -144,7 +144,6 @@ async def _cancel_expired_listings() -> int:
                     ):
                         continue
 
-                    # Cancel any active assignment first
                     active = await repo.get_active_assignment_for_listing(fresh.id)
                     if active is not None:
                         active.state = MarketAssignmentState.expired
@@ -153,7 +152,6 @@ async def _cancel_expired_listings() -> int:
                     fresh.cancelled_at = datetime.now(UTC)
                     await session.commit()
 
-                    # Return ticket to original seller
                     await _publish_listing_expired(
                         ticket_id=fresh.ticket_id,
                         seller_user_id=fresh.seller_user_id,
@@ -169,6 +167,7 @@ async def _cancel_expired_listings() -> int:
     return cancelled
 
 
+# publishes that a market assignment was created onto the shared nats connection
 async def _publish_assigned(*, assignment_id: object, buyer_user_id: object) -> None:
     try:
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
@@ -188,6 +187,7 @@ async def _publish_assigned(*, assignment_id: object, buyer_user_id: object) -> 
         )
 
 
+# publishes that a market listing expired onto the shared nats connection
 async def _publish_listing_expired(*, ticket_id: object, seller_user_id: object) -> None:
     try:
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]

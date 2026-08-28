@@ -1,3 +1,4 @@
+# reads and writes the local projections of event ticket type user age and fingerprint context
 import uuid
 from datetime import UTC, datetime
 
@@ -13,12 +14,15 @@ from com.qode.qrew.v1.sales.models.projections import (
 
 
 class EventContextRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads an event's projected context
     async def get_by_event_id(self, event_id: uuid.UUID) -> EventContext | None:
         return await self._session.get(EventContext, event_id)
 
+    # creates or refreshes an event's projected schedule and sale rules
     async def upsert(
         self,
         *,
@@ -60,12 +64,15 @@ class EventContextRepository:
 
 
 class TicketTypeInventoryRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads a ticket type's projected inventory
     async def get_by_id(self, ticket_type_id: uuid.UUID) -> TicketTypeInventory | None:
         return await self._session.get(TicketTypeInventory, ticket_type_id)
 
+    # creates or refreshes a ticket type's projected capacity and price
     async def upsert(
         self,
         *,
@@ -95,12 +102,15 @@ class TicketTypeInventoryRepository:
 
 
 class UserAgeContextRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads a user's projected age and phone context
     async def get_by_user_id(self, user_id: uuid.UUID) -> UserAgeContext | None:
         return await self._session.get(UserAgeContext, user_id)
 
+    # creates or refreshes a user's projected registration and phone
     async def upsert(
         self,
         *,
@@ -123,14 +133,16 @@ class UserAgeContextRepository:
 
 
 class FingerprintContextRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads how many distinct accounts share a device fingerprint
     async def get_by_hash(self, fingerprint_hash: str) -> FingerprintContext | None:
         return await self._session.get(FingerprintContext, fingerprint_hash)
 
+    # records another account seen using a device fingerprint
     async def seen(self, *, fingerprint_hash: str, now: datetime) -> None:
-        # Atomic upsert avoids count duplication on concurrent writes
         await self._session.execute(
             text(
                 "INSERT INTO sales.fingerprint_context "

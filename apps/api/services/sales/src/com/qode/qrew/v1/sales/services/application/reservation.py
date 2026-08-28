@@ -1,3 +1,4 @@
+# reserves tickets against the fraud check the queue and the ticket type inventory
 import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -34,22 +35,24 @@ _NATS_PUBLISH_TIMEOUT = 5.0
 
 
 class ReservationError(DomainError):
-    """Raised when a reservation operation fails a domain rule."""
+    pass
 
 
 class TierBusyError(DomainError):
-    """Raised when the inventory record is temporarily unavailable due to a concurrent update."""
+    pass
 
 
 class FraudBlockedError(DomainError):
-    """Raised when a reservation attempt is blocked by the fraud engine."""
+    pass
 
 
+# returns the current time
 def _now() -> datetime:
     return datetime.now(UTC)
 
 
 class ReservationService:
+    # stores the session repositories and audit service the service uses
     def __init__(
         self,
         session: AsyncSession,
@@ -64,9 +67,8 @@ class ReservationService:
         self._inventory_repo = inventory_repo
         self._audit = audit
 
+    # locks a ticket type's inventory row without waiting for a rival caller
     async def _lock_inventory_nowait(self, ticket_type_id: uuid.UUID) -> TicketTypeInventory | None:
-        # Single SELECT FOR UPDATE NOWAIT that both locks the row and returns fresh data,
-        # Avoids TOCTOU between lock check and session fetch
         try:
             return await self._session.get(
                 TicketTypeInventory,
@@ -80,6 +82,7 @@ class ReservationService:
                 field="ticket_type_id",
             ) from exc
 
+    # scores the purchase for fraud and reserves tickets within the event's limits
     @traced("reservation.create")
     async def reserve(
         self,
@@ -182,7 +185,6 @@ class ReservationService:
                     "quantity": quantity,
                 },
             )
-            # Commit inside the lock so no concurrent holder sees uncommitted inventory changes.
             await self._session.commit()
 
         if evaluation.decision == FraudDecision.review:
@@ -195,6 +197,7 @@ class ReservationService:
         await _publish_reservation_created(reservation)
         return reservation
 
+    # cancels an open reservation and releases its inventory
     @traced("reservation.cancel")
     async def cancel(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Reservation:
         reservation = await self._repo.get_by_id(reservation_id)
@@ -225,12 +228,14 @@ class ReservationService:
         await _publish_reservation_cancelled(reservation)
         return reservation
 
+    # reads a reservation owned by the caller
     async def get_for_user(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Reservation:
         reservation = await self._repo.get_by_id(reservation_id)
         if reservation is None or reservation.user_id != actor_id:
             raise ReservationError("Reservation not found", field="reservation_id")
         return reservation
 
+    # records that a reservation was blocked for fraud risk
     async def _record_blocked(
         self, *, actor_id: uuid.UUID, event_id: uuid.UUID, payload: dict[str, Any]
     ) -> None:
@@ -247,6 +252,7 @@ class ReservationService:
                 "audit_write_failed", action="RESERVATION_BLOCKED", error=repr(exc)
             )
 
+    # records that a reservation was flagged for review
     async def _record_flagged(
         self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID, payload: dict[str, Any]
     ) -> None:
@@ -263,6 +269,7 @@ class ReservationService:
                 "audit_write_failed", action="RESERVATION_FLAGGED", error=repr(exc)
             )
 
+    # records an audit event without letting a failure interrupt the caller
     async def _record(
         self,
         action: str,
@@ -283,6 +290,7 @@ class ReservationService:
             await logger.awarning("audit_write_failed", action=action, error=repr(exc))
 
 
+# publishes that a reservation was created onto the shared nats connection
 async def _publish_reservation_created(reservation: Reservation) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
@@ -314,6 +322,7 @@ async def _publish_reservation_created(reservation: Reservation) -> None:
         )
 
 
+# publishes that a reservation was cancelled onto the shared nats connection
 async def _publish_reservation_cancelled(reservation: Reservation) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]

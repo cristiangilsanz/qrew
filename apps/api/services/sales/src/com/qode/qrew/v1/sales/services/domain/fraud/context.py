@@ -1,3 +1,4 @@
+# defines the purchase context a fraud signal reasons about
 import uuid
 from dataclasses import dataclass
 from datetime import datetime

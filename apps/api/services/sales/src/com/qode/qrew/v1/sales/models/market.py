@@ -1,3 +1,4 @@
+# defines the market queue entry listing and assignment tables
 import enum
 import uuid
 from datetime import datetime

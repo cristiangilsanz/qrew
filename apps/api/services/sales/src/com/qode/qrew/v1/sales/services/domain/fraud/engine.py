@@ -1,3 +1,4 @@
+# scores a purchase by running every fraud signal and classifying the total
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -24,6 +25,7 @@ class FraudEvaluation:
     decision: FraudDecision
     signals: list[SignalResult]
 
+    # serializes the evaluation for an audit record
     def to_payload(self) -> dict[str, Any]:
         return {
             "score": self.score,
@@ -37,13 +39,16 @@ class FraudEvaluation:
 class Signal(Protocol):
     name: str
 
+    # scores a purchase context against one fraud signal
     async def evaluate(self, context: PurchaseContext) -> SignalResult: ...
 
 
 class FraudRuleEngine:
+    # stores the signals the engine evaluates
     def __init__(self, signals: Sequence[Signal]) -> None:
         self._signals = list(signals)
 
+    # runs every signal against a purchase and classifies the combined score
     async def evaluate(self, context: PurchaseContext) -> FraudEvaluation:
         if not settings.fraud_signals_enabled:
             return FraudEvaluation(score=0, decision=FraudDecision.allow, signals=[])
@@ -64,6 +69,7 @@ class FraudRuleEngine:
         )
         return FraudEvaluation(score=total, decision=decision, signals=results)
 
+    # classifies a total score into a decision
     @staticmethod
     def _classify(score: int) -> FraudDecision:
         if score >= settings.fraud_score_block_threshold:

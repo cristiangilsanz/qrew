@@ -1,3 +1,4 @@
+# builds a fraud rule engine wired with a purchaser's account and device context
 import uuid
 from datetime import datetime
 
@@ -25,6 +26,7 @@ class _ClientState:
     client: aioredis.Redis | None = None  # type: ignore[type-arg]
 
 
+# returns the shared redis client used by the ip velocity signal
 def _shared_redis() -> aioredis.Redis:  # type: ignore[type-arg]
     if _ClientState.client is None:
         _ClientState.client = aioredis.from_url(  # type: ignore[type-arg]
@@ -33,19 +35,20 @@ def _shared_redis() -> aioredis.Redis:  # type: ignore[type-arg]
     return _ClientState.client
 
 
+# closes the shared redis client
 async def close_fraud() -> None:
     if _ClientState.client is not None:
         await _ClientState.client.aclose()
     _ClientState.client = None
 
 
+# assembles the fraud engine's signals from a user's stored context
 async def build_engine_for_user(
     session: AsyncSession,
     *,
     user_id: uuid.UUID,
     fingerprint_hash: str | None,
 ) -> FraudRuleEngine:
-    """Assembles the fraud detection engine with projection data pre-loaded for a specific user."""
     redis_client = _shared_redis()
 
     age_repo = UserAgeContextRepository(session)

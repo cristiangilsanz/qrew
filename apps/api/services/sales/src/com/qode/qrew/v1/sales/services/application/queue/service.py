@@ -1,3 +1,4 @@
+# joins reports and redeems positions in an event's virtual waiting room
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -25,18 +26,21 @@ _QUEUE_REDEEM_FAILED = "QUEUE_REDEEM_FAILED"
 
 
 class QueueError(DomainError):
-    """Raised when a queue operation fails a domain rule."""
+    pass
 
 
+# returns the current time
 def _now() -> datetime:
     return datetime.now(UTC)
 
 
 class QueueService:
+    # stores the event context repository and audit service the service uses
     def __init__(self, event_ctx_repo: EventContextRepository, audit: AuditService) -> None:
         self._event_ctx_repo = event_ctx_repo
         self._audit = audit
 
+    # joins a user into an event's queue once its window has opened
     @traced("queue.service.join")
     async def join(self, *, user_id: uuid.UUID, event_id: uuid.UUID, tiebreak: int) -> int:
         event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
@@ -77,6 +81,7 @@ class QueueService:
         )
         return result.position
 
+    # reads a user's queue position or their redeem token once admitted
     @traced("queue.service.position")
     async def position(
         self, *, user_id: uuid.UUID, event_id: uuid.UUID
@@ -85,6 +90,7 @@ class QueueService:
         redeem = await get_redeem_token(event_id, user_id) if pos is None else None
         return pos, redeem
 
+    # exchanges a redeem token for a reservation window token
     @traced("queue.service.redeem")
     async def redeem(self, *, user_id: uuid.UUID, token: str) -> str:
         try:
@@ -100,6 +106,7 @@ class QueueService:
         await self._record(_QUEUE_REDEEMED, actor_id=user_id, event_id=None, payload={})
         return reservation_token
 
+    # records an audit event without letting a failure interrupt the caller
     async def _record(
         self,
         action: str,
