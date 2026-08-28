@@ -1,4 +1,4 @@
-# restores a frozen on sale ticket onto a re-enrolled device
+# restores a frozen on sale ticket onto a reenrolled device
 import uuid
 from datetime import UTC, datetime, timedelta
 

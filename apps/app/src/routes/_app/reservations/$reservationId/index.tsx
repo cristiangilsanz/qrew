@@ -179,7 +179,6 @@ function ReservationPage() {
         )}
       </div>
 
-      {/* Order summary card */}
       <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
         <div>
           <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
@@ -213,7 +212,6 @@ function ReservationPage() {
         </div>
       </div>
 
-      {/* Holder info */}
       {!isPaid && !isCancelled && !clientSecret && (
         <div className="mt-4 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
           <div className="flex items-center justify-between">
@@ -272,7 +270,6 @@ function ReservationPage() {
         </div>
       )}
 
-      {/* Stripe form */}
       {clientSecret && (
         <div className="mt-6">
           <Suspense fallback={null}>
@@ -297,7 +294,6 @@ function ReservationPage() {
         </p>
       )}
 
-      {/* Pay Now button */}
       {canPay && (
         <div className="fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto flex max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-5">

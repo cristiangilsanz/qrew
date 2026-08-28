@@ -154,7 +154,6 @@ function CheckoutPage() {
 
   return (
     <div className="mx-auto min-h-screen max-w-[430px] space-y-6 px-4 pt-5 pb-28">
-      {/* Header */}
       <div>
         <BackButton
           onClick={() => void navigate({ to: '/events/$eventId', params: { eventId } })}
@@ -164,7 +163,6 @@ function CheckoutPage() {
         <p className="text-muted-foreground text-sm">{event.organisation.name}</p>
       </div>
 
-      {/* Ticket type cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">{t('events.ticketTypes')}</h2>
@@ -200,7 +198,6 @@ function CheckoutPage() {
               )}
             >
               <div className="flex items-center gap-3">
-                {/* Info */}
                 <div className="min-w-0 flex-1">
                   <p className="leading-tight font-semibold">{tt.name}</p>
                   {tt.description && (
@@ -217,7 +214,6 @@ function CheckoutPage() {
                   )}
                 </div>
 
-                {/* Stepper */}
                 {tt.available > 0 && (
                   <div className="flex shrink-0 items-center gap-2">
                     <button
@@ -258,7 +254,6 @@ function CheckoutPage() {
         })}
       </div>
 
-      {/* Bottom bar */}
       <div className="fixed inset-x-0 bottom-24 z-40">
         <div className="mx-auto max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
           {totalSelected > 0 && (

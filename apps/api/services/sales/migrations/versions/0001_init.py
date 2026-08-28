@@ -20,14 +20,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 # creates the sales schema and its tables
 def upgrade() -> None:
-    # ------------------------------------------------------------------
-    # Schema
-    # ------------------------------------------------------------------
     op.execute("CREATE SCHEMA IF NOT EXISTS sales")
 
-    # ------------------------------------------------------------------
-    # reservations
-    # ------------------------------------------------------------------
     op.execute("""
         CREATE TABLE IF NOT EXISTS sales.reservations (
             id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -56,10 +50,6 @@ def upgrade() -> None:
             ON sales.reservations (status, expires_at)
     """)
 
-    # ------------------------------------------------------------------
-    # event_context  (projection)
-    # starts_at was added in migration 0005 — included here in final state
-    # ------------------------------------------------------------------
     op.execute("""
         CREATE TABLE IF NOT EXISTS sales.event_context (
             event_id                    UUID         PRIMARY KEY,
@@ -74,9 +64,6 @@ def upgrade() -> None:
         )
     """)
 
-    # ------------------------------------------------------------------
-    # ticket_type_inventory  (projection)
-    # ------------------------------------------------------------------
     op.execute("""
         CREATE TABLE IF NOT EXISTS sales.ticket_type_inventory (
             ticket_type_id  UUID        PRIMARY KEY,
@@ -93,10 +80,6 @@ def upgrade() -> None:
             ON sales.ticket_type_inventory (event_id)
     """)
 
-    # ------------------------------------------------------------------
-    # user_age_context  (projection)
-    # phone_e164 was added in migration 0002 — included here in final state
-    # ------------------------------------------------------------------
     op.execute("""
         CREATE TABLE IF NOT EXISTS sales.user_age_context (
             user_id       UUID        PRIMARY KEY,
@@ -106,9 +89,6 @@ def upgrade() -> None:
         )
     """)
 
-    # ------------------------------------------------------------------
-    # fingerprint_context  (projection)
-    # ------------------------------------------------------------------
     op.execute("""
         CREATE TABLE IF NOT EXISTS sales.fingerprint_context (
             fingerprint_hash    VARCHAR(128) PRIMARY KEY,
@@ -118,9 +98,6 @@ def upgrade() -> None:
         )
     """)
 
-    # ------------------------------------------------------------------
-    # reservation_holders
-    # ------------------------------------------------------------------
     op.create_table(
         "reservation_holders",
         sa.Column(
@@ -146,12 +123,6 @@ def upgrade() -> None:
         schema="sales",
     )
 
-    # ------------------------------------------------------------------
-    # market_queue_entries
-    # No hard unique constraint on (event_id, user_id); a partial unique
-    # index (WHERE left_at IS NULL) is used instead to allow re-join after
-    # leaving (migration 0006 dropped the original full unique constraint).
-    # ------------------------------------------------------------------
     op.create_table(
         "market_queue_entries",
         sa.Column(
@@ -185,16 +156,12 @@ def upgrade() -> None:
         ["user_id"],
         schema="sales",
     )
-    # Partial unique index: at most one active entry per (event_id, user_id)
     op.execute("""
         CREATE UNIQUE INDEX uq_market_queue_entries_active_event_user
             ON sales.market_queue_entries (event_id, user_id)
             WHERE left_at IS NULL
     """)
 
-    # ------------------------------------------------------------------
-    # market_listings
-    # ------------------------------------------------------------------
     op.create_table(
         "market_listings",
         sa.Column(
@@ -246,9 +213,6 @@ def upgrade() -> None:
         postgresql_where=sa.text("state IN ('available', 'assigned')"),
     )
 
-    # ------------------------------------------------------------------
-    # market_assignments  (depends on market_listings)
-    # ------------------------------------------------------------------
     op.create_table(
         "market_assignments",
         sa.Column(
@@ -306,7 +270,6 @@ def upgrade() -> None:
 
 # drops the sales schema and its tables
 def downgrade() -> None:
-    # Drop in reverse dependency order (children before parents)
 
     op.drop_index(
         "ix_market_assignments_pending_expires", table_name="market_assignments", schema="sales"

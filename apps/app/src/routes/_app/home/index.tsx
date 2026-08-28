@@ -41,7 +41,6 @@ function HomePage() {
 
   return (
     <div className="space-y-4 pb-4">
-      {/* Greeting and Hero */}
       <div className="relative h-96 overflow-hidden">
         <img
           src={homeHero}
@@ -71,7 +70,6 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Upcoming Events */}
       <section className="space-y-3 px-4 pb-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">{t('home.upcomingEvents')}</h2>

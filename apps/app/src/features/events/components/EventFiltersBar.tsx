@@ -71,7 +71,6 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Search input */}
       <div className="relative">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <input
@@ -97,9 +96,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
         )}
       </div>
 
-      {/* City dropdown + Date picker row */}
       <div className="flex gap-2">
-        {/* City filter */}
         {citiesLoading ? (
           <Skeleton className="h-10 flex-1 rounded-xl" />
         ) : availableCities.length > 0 ? (
@@ -178,7 +175,6 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
           </div>
         ) : null}
 
-        {/* Date picker */}
         <div className="relative">
           <Calendar className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <input
@@ -193,7 +189,6 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
         </div>
       </div>
 
-      {/* Active filters + clear all */}
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2">
           {appliedQ.trim() && (

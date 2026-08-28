@@ -116,7 +116,6 @@ export function QrDisplay({ ticketId }: Props) {
             </Button>
           </div>
         </div>
-        {/* spacer to match countdown text height */}
         <div className="h-10" />
       </div>
     )
@@ -194,7 +193,6 @@ export function QrDisplay({ ticketId }: Props) {
       <div className="rounded-2xl bg-white p-4 shadow-md">
         <QRCode value={state.jwt} size={200} />
       </div>
-      {/* Countdown to next rotation */}
       <div className="flex flex-col items-center gap-0.5">
         <p className="font-mono text-2xl font-bold text-gray-900 tabular-nums">
           {mins}:{secs}

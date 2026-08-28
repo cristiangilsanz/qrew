@@ -186,7 +186,6 @@ function AssignmentPage() {
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
-      {/* Hero image */}
       <div className="relative h-64 overflow-hidden bg-[#111]">
         <ImageWithSkeleton
           src={imageUrl}
@@ -204,9 +203,7 @@ function AssignmentPage() {
         <BackButton to="/market" className="absolute top-4 left-4" />
       </div>
 
-      {/* Event info */}
       <div className="mx-auto w-full max-w-[430px] space-y-5 px-4 py-4">
-        {/* Org + timer + title */}
         <div>
           <div className="mb-1 flex items-center justify-between">
             <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
@@ -227,12 +224,10 @@ function AssignmentPage() {
           <h1 className="text-2xl font-bold">{eventName}</h1>
         </div>
 
-        {/* Description */}
         {event?.description && (
           <p className="text-muted-foreground text-sm leading-relaxed">{event.description}</p>
         )}
 
-        {/* Date */}
         {startDate && (
           <div className="text-muted-foreground text-sm">
             <span className="flex items-center gap-2">
@@ -249,7 +244,6 @@ function AssignmentPage() {
           </div>
         )}
 
-        {/* Link to event detail */}
         {assignment.event_id && (
           <Link
             to="/events/$eventId"
@@ -261,7 +255,6 @@ function AssignmentPage() {
           </Link>
         )}
 
-        {/* Ticket type card */}
         {(() => {
           // implements ticket type
           const ticketType = event?.ticket_types?.find(
@@ -285,7 +278,6 @@ function AssignmentPage() {
         })()}
       </div>
 
-      {/* Stripe checkout */}
       {clientSecret && (
         <div className="mx-auto mt-5 max-w-[430px] px-4 pb-32">
           <Suspense fallback={null}>
@@ -294,7 +286,6 @@ function AssignmentPage() {
         </div>
       )}
 
-      {/* Terminal states */}
       {isPaid && (
         <div className="mx-auto mt-5 max-w-[430px] px-4">
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-green-400/20 bg-green-400/5 p-6 text-center">
@@ -326,7 +317,6 @@ function AssignmentPage() {
         </div>
       )}
 
-      {/* Bottom: total + action buttons */}
       {isPending && !clientSecret && (
         <div className="fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto w-full max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
@@ -357,7 +347,6 @@ function AssignmentPage() {
         </div>
       )}
 
-      {/* Decline confirmation modal */}
       <AnimatePresence>
         {declineOpen && (
           <motion.div

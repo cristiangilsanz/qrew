@@ -36,7 +36,6 @@ function OrganiserPage() {
     <div className="mx-auto max-w-2xl space-y-6 px-4 pt-5 pb-28">
       <h1 className="text-2xl font-bold">{t('organiser.title')}</h1>
 
-      {/* Search bar */}
       <div className="relative">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <input
@@ -88,7 +87,6 @@ function OrganiserPage() {
         ))}
       </div>
 
-      {/* FAB */}
       <Link
         to="/management/new"
         className="bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"

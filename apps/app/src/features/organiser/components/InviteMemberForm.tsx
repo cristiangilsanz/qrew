@@ -98,7 +98,6 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
         })}
         className="w-full space-y-4"
       >
-        {/* Hidden user_id field */}
         <input type="hidden" {...form.register('user_id')} />
 
         <FormItem>

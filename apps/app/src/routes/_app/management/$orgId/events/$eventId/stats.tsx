@@ -46,7 +46,6 @@ function EntryStatsPage() {
       </div>
 
       <div className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
-        {/* Issued, Entered, Remaining */}
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
           <div className="grid grid-cols-3 divide-x divide-white/10">
             {isLoading ? (
@@ -79,7 +78,6 @@ function EntryStatsPage() {
             )}
           </div>
 
-          {/* Entry rate progress bar */}
           <div className="border-t border-white/10 px-4 py-3">
             {isLoading ? (
               <div className="space-y-1.5">
@@ -108,7 +106,6 @@ function EntryStatsPage() {
           </div>
         </div>
 
-        {/* Last scan */}
         <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
           {isLoading ? (
             <div className="flex items-center justify-between">

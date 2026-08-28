@@ -41,7 +41,6 @@ export function TicketCard({ ticket }: Props) {
           'bg-card border-border hover:border-primary overflow-hidden rounded-xl border transition-colors',
         )}
       >
-        {/* Image */}
         <div className="relative h-44 w-full overflow-hidden bg-[#111]">
           {!event ? (
             <Skeleton className="h-full w-full rounded-none" />
@@ -60,7 +59,6 @@ export function TicketCard({ ticket }: Props) {
           )}
         </div>
 
-        {/* Text section */}
         <div className="space-y-1.5 p-4">
           {!event ? (
             <>

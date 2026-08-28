@@ -1,4 +1,4 @@
-# exposes the endpoint that restores an on sale ticket onto a re-enrolled device
+# exposes the endpoint that restores an on sale ticket onto a reenrolled device
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status

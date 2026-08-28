@@ -18,13 +18,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 # creates the catalog schema and its tables
 def upgrade() -> None:
-    # --- Schema ---
     op.execute("CREATE SCHEMA IF NOT EXISTS catalog")
 
-    # --- Enum types ---
     op.execute("CREATE TYPE organisation_role AS ENUM ('member', 'manager', 'owner')")
-
-    # --- Tables (in FK dependency order) ---
 
     op.execute("""
         CREATE TABLE IF NOT EXISTS catalog.organisations (
@@ -141,15 +137,12 @@ def upgrade() -> None:
 
 # drops the catalog schema and its tables
 def downgrade() -> None:
-    # --- Tables (reverse FK dependency order) ---
     op.execute("DROP TABLE IF EXISTS catalog.ticket_types")
     op.execute("DROP TABLE IF EXISTS catalog.events")
     op.execute("DROP TABLE IF EXISTS catalog.venues")
     op.execute("DROP TABLE IF EXISTS catalog.organisation_members")
     op.execute("DROP TABLE IF EXISTS catalog.organisations")
 
-    # --- Enum types ---
     op.execute("DROP TYPE IF EXISTS organisation_role")
 
-    # --- Schema ---
     op.execute("DROP SCHEMA IF EXISTS catalog CASCADE")

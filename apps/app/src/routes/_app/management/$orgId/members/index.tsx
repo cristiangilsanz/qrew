@@ -119,7 +119,6 @@ function OrgMembersPage() {
         </div>
       )}
 
-      {/* Delete member modal */}
       <AnimatePresence>
         {confirmDelete && (
           <motion.div
@@ -179,7 +178,6 @@ function OrgMembersPage() {
         )}
       </AnimatePresence>
 
-      {/* FAB */}
       <Link
         to="/management/$orgId/members/new"
         params={{ orgId }}

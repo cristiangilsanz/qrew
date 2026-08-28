@@ -138,7 +138,6 @@ export function CreateVenueForm({ onSuccess }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit((v) => createVenue.mutate(v))} className="space-y-4 px-1">
-        {/* Places search */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium">{t('organiser.venues.searchLabel')}</label>
           <div className="relative">

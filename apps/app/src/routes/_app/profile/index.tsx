@@ -51,7 +51,6 @@ function ProfilePage() {
     <div className="min-h-screen space-y-6 px-4 pt-5 pb-28">
       <h1 className="text-2xl font-bold">{t('profile.myProfile')}</h1>
 
-      {/* Main sections */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <Link
           to="/profile/account"
@@ -78,7 +77,6 @@ function ProfilePage() {
         </Link>
       </div>
 
-      {/* Help & About */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <Link
           to="/profile/help"
@@ -105,7 +103,6 @@ function ProfilePage() {
         </Link>
       </div>
 
-      {/* Language */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <div className="flex items-center gap-3 px-4 py-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
@@ -131,7 +128,6 @@ function ProfilePage() {
         </div>
       </div>
 
-      {/* Log out */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <button
           onClick={handleLogout}
@@ -144,7 +140,6 @@ function ProfilePage() {
         </button>
       </div>
 
-      {/* Delete account */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-red-500/20 bg-red-500/5">
         <DeleteAccountDialog />
       </div>

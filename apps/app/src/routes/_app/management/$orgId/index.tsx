@@ -130,7 +130,6 @@ function OrgDashboardPage() {
         </Link>
       </div>
 
-      {/* Danger zone */}
       <div className="overflow-hidden rounded-2xl border border-red-500/15 bg-white/5">
         <button
           onClick={openDelete}
@@ -145,7 +144,6 @@ function OrgDashboardPage() {
         </button>
       </div>
 
-      {/* Delete confirmation modal */}
       <AnimatePresence>
         {deleteOpen && (
           <motion.div

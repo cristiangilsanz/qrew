@@ -168,7 +168,6 @@ function AccountPage() {
 
           <div className="mx-4 border-t border-white/10" />
 
-          {/* KYC identity row */}
           {profile.kyc_status === 'rejected' || profile.kyc_status === 'not_submitted' ? (
             <>
               <button

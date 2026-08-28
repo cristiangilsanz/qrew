@@ -131,7 +131,6 @@ function EventDetailPage() {
 
   return (
     <div className="pb-24">
-      {/* Hero */}
       <div className="relative h-64 overflow-hidden bg-[#111]">
         <ImageWithSkeleton
           src={imageUrl}
@@ -141,21 +140,17 @@ function EventDetailPage() {
             event.image_url ? 'object-cover opacity-80' : 'object-contain p-8 opacity-60',
           )}
         />
-        {/* top gradient overlay */}
         {event.image_url && (
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent" />
         )}
-        {/* bottom fade to background */}
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent" />
 
-        {/* Back button */}
         <BackButton
           onClick={() => void navigate({ to: '/events' })}
           className="absolute top-4 left-4"
         />
       </div>
 
-      {/* Content */}
       <div className="space-y-5 px-4 py-4">
         <div>
           <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
@@ -164,12 +159,10 @@ function EventDetailPage() {
           <h1 className="text-2xl font-bold">{event.name}</h1>
         </div>
 
-        {/* Description */}
         {event.description && (
           <p className="text-muted-foreground text-sm leading-relaxed">{event.description}</p>
         )}
 
-        {/* Start date */}
         <div className="text-muted-foreground text-sm">
           <span className="flex items-center gap-2">
             <Calendar className="h-4 w-4 shrink-0" />
@@ -177,7 +170,6 @@ function EventDetailPage() {
           </span>
         </div>
 
-        {/* Location */}
         <div className="space-y-2">
           <h2 className="text-base font-semibold">Location</h2>
           <span className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -195,7 +187,6 @@ function EventDetailPage() {
           </div>
         </div>
 
-        {/* Sale countdown */}
         {saleNotStarted && (
           <div className="text-center">
             <p className="text-muted-foreground mb-0.5 text-xs">Tickets on sale in</p>
@@ -205,7 +196,6 @@ function EventDetailPage() {
           </div>
         )}
 
-        {/* Resale queue info */}
         {showResaleQueue && (
           <div className="mt-8 flex flex-col items-center space-y-2">
             <Ticket className="h-7 w-7 text-white/20" />
@@ -216,7 +206,6 @@ function EventDetailPage() {
         )}
       </div>
 
-      {/* FAB */}
       {!saleNotStarted &&
         (showResaleQueue ? (
           inQueue ? (
@@ -259,7 +248,6 @@ function EventDetailPage() {
           </button>
         ))}
 
-      {/* Leave queue confirmation modal */}
       <AnimatePresence>
         {leaveOpen && (
           <motion.div

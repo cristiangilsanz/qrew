@@ -52,7 +52,6 @@ function ScanPage() {
         )}
       </div>
 
-      {/* Camera viewfinder */}
       <div className="relative flex-1 overflow-hidden">
         <video
           ref={videoRef}
@@ -62,7 +61,6 @@ function ScanPage() {
           autoPlay
         />
 
-        {/* Overlay when not scanning */}
         {phase === 'error' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-black/70 px-8">
             <XCircle className="h-12 w-12 text-red-400" />
@@ -83,7 +81,6 @@ function ScanPage() {
           </div>
         )}
 
-        {/* Scanning viewfinder corners */}
         {phase === 'scanning' && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative h-64 w-64">
@@ -95,7 +92,6 @@ function ScanPage() {
           </div>
         )}
 
-        {/* Scan result flash */}
         {phase === 'result' && scanResult && (
           <div
             className={cn(

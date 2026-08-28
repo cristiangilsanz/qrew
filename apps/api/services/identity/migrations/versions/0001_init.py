@@ -22,9 +22,7 @@ depends_on: str | Sequence[str] | None = None
 
 # creates the identity schema and its tables
 def upgrade() -> None:
-    # --- Schemas ---
     op.execute("CREATE SCHEMA IF NOT EXISTS identity")
-    # --- identity.notifications ---
     op.create_table(
         "notifications",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -84,7 +82,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.users ---
     op.create_table(
         "users",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -204,7 +201,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.device_fingerprints ---
     op.create_table(
         "device_fingerprints",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -239,7 +235,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.devices ---
     op.create_table(
         "devices",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -269,7 +264,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.passkey_credentials ---
     op.create_table(
         "passkey_credentials",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -305,7 +299,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.outbox ---
     op.create_table(
         "outbox",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -347,7 +340,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.sessions ---
     op.create_table(
         "sessions",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -400,7 +392,6 @@ def upgrade() -> None:
 
 # drops the identity schema and its tables
 def downgrade() -> None:
-    # --- Drop tables in reverse FK dependency order ---
     op.drop_index(op.f("ix_identity_sessions_user_id"), table_name="sessions", schema="identity")
     op.drop_index(op.f("ix_identity_sessions_jti"), table_name="sessions", schema="identity")
     op.drop_index(op.f("ix_identity_sessions_device_id"), table_name="sessions", schema="identity")
@@ -485,10 +476,8 @@ def downgrade() -> None:
 
     op.drop_index()
 
-    # --- Drop enum types ---
     sa.Enum(name="kyc_status").drop(op.get_bind(), checkfirst=True)
     sa.Enum(name="notification_status").drop(op.get_bind(), checkfirst=True)
     sa.Enum(name="notification_channel").drop(op.get_bind(), checkfirst=True)
 
-    # --- Drop schemas ---
     op.execute("DROP SCHEMA IF EXISTS identity")
