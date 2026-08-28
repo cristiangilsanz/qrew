@@ -1,3 +1,4 @@
+# entry point that starts the ticketing background worker
 import asyncio
 
 from messaging.client import init_nats
@@ -5,6 +6,7 @@ from worker import run_nats_subscribers
 from com.qode.qrew.v1.ticketing.core.config import settings
 
 
+# connects to nats and starts every ticketing subscriber
 async def main() -> None:
     if not settings.nats_url:
         import structlog
@@ -30,6 +32,7 @@ async def main() -> None:
     )
 
 
+# runs the worker main coroutine until it stops
 def run() -> None:
     asyncio.run(main())
 

@@ -1,3 +1,4 @@
+# reads and writes the local projections of event venue and device context
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -8,12 +9,15 @@ from com.qode.qrew.v1.ticketing.models.projections import DeviceContext, EventVe
 
 
 class EventVenueContextRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads an event's projected venue context
     async def get_by_event_id(self, event_id: uuid.UUID) -> EventVenueContext | None:
         return await self._session.get(EventVenueContext, event_id)
 
+    # creates or refreshes an event's status and schedule
     async def upsert_event(
         self,
         *,
@@ -44,6 +48,7 @@ class EventVenueContextRepository:
         ctx.updated_at = datetime.now(UTC)
         await self._session.flush()
 
+    # creates or refreshes an event's venue and geofence
     async def upsert_venue(
         self,
         *,
@@ -76,12 +81,15 @@ class EventVenueContextRepository:
 
 
 class DeviceContextRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads a device's projected attestation context
     async def get_by_device_id(self, device_id: uuid.UUID) -> DeviceContext | None:
         return await self._session.get(DeviceContext, device_id)
 
+    # creates or refreshes a device's attestation context
     async def upsert(
         self,
         *,

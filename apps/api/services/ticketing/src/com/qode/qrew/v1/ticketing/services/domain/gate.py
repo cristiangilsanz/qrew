@@ -1,3 +1,4 @@
+# decides whether a ticket may mint a qr at the gate
 import math
 import uuid
 from dataclasses import dataclass
@@ -33,6 +34,7 @@ class GateInputs:
     device_ctx: DeviceContext
 
 
+# computes the great circle distance between two coordinates in metres
 def haversine_metres(*, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
@@ -41,6 +43,7 @@ def haversine_metres(*, lat1: float, lon1: float, lat2: float, lon2: float) -> f
     return float(2 * _EARTH_RADIUS_M * math.asin(math.sqrt(a)))
 
 
+# loads the ticket event and device context a gate decision needs
 async def load_inputs(
     session: AsyncSession,
     *,
@@ -62,6 +65,7 @@ async def load_inputs(
     return GateInputs(ticket=ticket, event_ctx=event_ctx, device_ctx=device_ctx)
 
 
+# checks the ticket state reassertion attestation geofence and time window
 def evaluate_gate(
     inputs: GateInputs,
     *,

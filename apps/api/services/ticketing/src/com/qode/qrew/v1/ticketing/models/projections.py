@@ -1,3 +1,4 @@
+# defines the local projections of an event's venue and a device's attestation
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -10,8 +11,6 @@ from com.qode.qrew.v1.ticketing.core.database import Base
 
 
 class EventVenueContext(Base):
-    """Read-only local projection of event and venue data used during gate evaluation."""
-
     __tablename__ = "event_venue_context"
     __table_args__ = ({"schema": "ticketing"},)
 
@@ -30,8 +29,6 @@ class EventVenueContext(Base):
 
 
 class DeviceContext(Base):
-    """Read-only local projection of device attestation and revocation state."""
-
     __tablename__ = "device_context"
     __table_args__ = (
         Index("ix_device_context_user_id", "user_id"),

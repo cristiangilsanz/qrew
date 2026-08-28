@@ -1,3 +1,4 @@
+# manages startup and shutdown for the ticketing service
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -15,6 +16,7 @@ from com.qode.qrew.v1.ticketing.core.database import engine
 logger = structlog.get_logger(__name__)
 
 
+# runs a coroutine on a fixed interval until cancelled
 async def _run_periodic(fn: Callable[[], Coroutine[Any, Any, Any]], interval_seconds: int) -> None:
     while True:
         try:
@@ -24,6 +26,7 @@ async def _run_periodic(fn: Callable[[], Coroutine[Any, Any, Any]], interval_sec
         await asyncio.sleep(interval_seconds)
 
 
+# wires tracing messaging and the expiry purger around the app lifecycle
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_tracing(

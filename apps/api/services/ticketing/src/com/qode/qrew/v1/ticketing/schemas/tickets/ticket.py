@@ -1,3 +1,4 @@
+# defines the response schema for a ticket
 import uuid
 from datetime import datetime
 

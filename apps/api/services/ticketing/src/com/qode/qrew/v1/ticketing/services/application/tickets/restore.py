@@ -1,3 +1,4 @@
+# restores a frozen on sale ticket onto a re-enrolled device
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -20,6 +21,7 @@ class TicketRestoreError(DomainError):
     pass
 
 
+# validates the new device and moves the ticket back to issued
 async def restore_on_sale_ticket(
     db: AsyncSession,
     *,
@@ -89,6 +91,7 @@ async def restore_on_sale_ticket(
     return ticket
 
 
+# publishes that a ticket was restored onto the shared nats connection
 async def _publish_restored(ticket: Ticket, actor_id: uuid.UUID) -> None:
     try:
         from messaging.publisher import publish  # type: ignore[import-untyped]

@@ -1,3 +1,4 @@
+# projects catalog's event lifecycle into the ticketing service's local context
 import asyncio
 import uuid
 from datetime import datetime
@@ -16,6 +17,7 @@ STREAM = "CATALOG"
 DURABLE = "ticketing-catalog-handler"
 
 
+# updates an event's geofence when the message carries venue coordinates
 async def _upsert_geofence(
     repo: EventVenueContextRepository,
     data: dict[str, Any],
@@ -23,7 +25,6 @@ async def _upsert_geofence(
     event_id: uuid.UUID,
     venue_id: uuid.UUID,
 ) -> None:
-    """Stores the venue geofence that travels with the event announcement."""
     payload = data["data"]
     if "latitude" not in payload:
         return
@@ -40,6 +41,7 @@ async def _upsert_geofence(
         await logger.awarning("catalog_events.geofence.bad_payload", event_id=str(event_id))
 
 
+# projects a published event and cancels tickets that are no longer valid
 async def handle_event_published(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -68,6 +70,7 @@ async def handle_event_published(raw: bytes) -> None:
     await logger.ainfo("catalog_events.event_published", event_id=str(event_id))
 
 
+# cancels every active ticket of a cancelled event
 async def handle_event_cancelled(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -115,6 +118,7 @@ async def handle_event_cancelled(raw: bytes) -> None:
     )
 
 
+# projects a draft event's schedule and venue
 async def handle_event_draft(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -140,6 +144,7 @@ async def handle_event_draft(raw: bytes) -> None:
         await session.commit()
 
 
+# projects that an event has become ongoing
 async def handle_event_ongoing(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -174,6 +179,7 @@ _HANDLERS = {
 }
 
 
+# subscribes to every catalog event subject and dispatches each message
 async def run_catalog_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -197,6 +203,7 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("catalog_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             try:
                 async for msg in psub.messages:  # type: ignore[attr-defined]

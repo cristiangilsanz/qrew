@@ -1,3 +1,4 @@
+# exposes the endpoints that mint a ticket's rotating qr code at the gate
 import asyncio
 import json
 import uuid
@@ -39,6 +40,7 @@ _REASON_TO_STATUS: dict[DenialReason, int] = {
 }
 
 
+# converts a gate denial reason into its http response
 def _denied_exception(reason: DenialReason) -> HTTPException:
     return HTTPException(
         status_code=_REASON_TO_STATUS[reason],
@@ -46,6 +48,7 @@ def _denied_exception(reason: DenialReason) -> HTTPException:
     )
 
 
+# builds gate inputs for a bypassed device when the gate check is disabled
 async def _resolve_or_deny_bypass(
     db: AsyncSession,
     *,
@@ -70,6 +73,7 @@ async def _resolve_or_deny_bypass(
     return GateInputs(ticket=ticket, event_ctx=event_ctx, device_ctx=device_ctx)
 
 
+# loads the gate inputs for a ticket or records why it was denied
 async def _resolve_or_deny(
     db: AsyncSession,
     *,
@@ -123,6 +127,7 @@ async def _resolve_or_deny(
     return resolved
 
 
+# mints a single fresh qr for a ticket
 @router.get(
     "/{ticket_id}/qr",
     response_model=QrResponse,
@@ -168,6 +173,7 @@ async def issue_qr(
     )
 
 
+# streams a rotating qr for a ticket while the gate stays open
 @router.post(
     "/{ticket_id}/qr/stream",
     status_code=status.HTTP_200_OK,
@@ -187,6 +193,7 @@ async def stream_qr(
     longitude = float(body.longitude)
     device_id = current_user.device_id or _BYPASS_DEVICE_ID
 
+    # yields a fresh qr event on each rotation until the stream deadline
     async def _events() -> AsyncGenerator[bytes, None]:
         deadline = datetime.now(UTC).timestamp() + settings.ticket_qr_stream_max_seconds
         while datetime.now(UTC).timestamp() < deadline:

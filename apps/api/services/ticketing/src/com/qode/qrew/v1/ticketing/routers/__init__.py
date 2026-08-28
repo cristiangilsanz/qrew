@@ -1,3 +1,4 @@
+# assembles the ticketing service routers under a common prefix
 from fastapi import APIRouter
 
 from com.qode.qrew.v1.ticketing.routers.admission import router as admission_router

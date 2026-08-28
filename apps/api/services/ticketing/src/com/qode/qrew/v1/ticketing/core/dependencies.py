@@ -1,3 +1,4 @@
+# provides the shared fastapi dependencies for the ticketing service
 from db import create_redis_dependency
 from fastapi import Header, HTTPException, status
 from slowapi import Limiter
@@ -13,6 +14,7 @@ limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enable
 get_redis = create_redis_dependency(settings.redis_url)
 
 
+# rejects a request without a valid internal api key
 async def verify_internal_key(
     x_internal_key: str = Header(alias="X-Internal-Key", default=""),
 ) -> None:
@@ -20,5 +22,6 @@ async def verify_internal_key(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
+# builds an audit service for a request
 def get_audit_service() -> AuditService:
     return AuditService()

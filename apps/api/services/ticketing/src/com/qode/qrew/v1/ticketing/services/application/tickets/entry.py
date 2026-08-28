@@ -1,3 +1,4 @@
+# marks a ticket as used when a control device validates entry
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +22,7 @@ __all__ = [
 ]
 
 
+# transitions a ticket to redeemed under a lock tolerating a repeat call
 async def use_ticket(
     session: AsyncSession,
     *,

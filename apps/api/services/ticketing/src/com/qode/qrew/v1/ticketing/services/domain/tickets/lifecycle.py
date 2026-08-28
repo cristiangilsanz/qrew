@@ -1,3 +1,4 @@
+# moves a ticket through its state machine under a row lock
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -52,10 +53,12 @@ _LEGAL_TRANSITIONS: dict[TicketState, frozenset[TicketState]] = {
 }
 
 
+# checks whether a state transition is allowed
 def is_legal_transition(*, from_state: TicketState, to_state: TicketState) -> bool:
     return to_state in _LEGAL_TRANSITIONS.get(from_state, frozenset())
 
 
+# locks a ticket validates the transition and records the change
 async def transition_ticket(
     session: AsyncSession,
     *,
@@ -117,6 +120,7 @@ async def transition_ticket(
     return ticket
 
 
+# publishes the ticket's state change onto the shared nats connection
 async def _publish_state_changed(
     ticket: Ticket,
     previous_state: TicketState,
