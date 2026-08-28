@@ -18,6 +18,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+# creates the sales schema and its tables
 def upgrade() -> None:
     # ------------------------------------------------------------------
     # Schema
@@ -303,6 +304,7 @@ def upgrade() -> None:
     )
 
 
+# drops the sales schema and its tables
 def downgrade() -> None:
     # Drop in reverse dependency order (children before parents)
 

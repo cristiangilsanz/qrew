@@ -18,6 +18,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+# creates the payments schema and its tables
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS payments")
 
@@ -76,6 +77,7 @@ def upgrade() -> None:
     )
 
 
+# drops the payments schema and its tables
 def downgrade() -> None:
     op.drop_index("ix_payments_market_assignment_id", table_name="payments", schema="payments")
     op.drop_index(

@@ -16,6 +16,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+# creates the catalog schema and its tables
 def upgrade() -> None:
     # --- Schema ---
     op.execute("CREATE SCHEMA IF NOT EXISTS catalog")
@@ -138,6 +139,7 @@ def upgrade() -> None:
     )
 
 
+# drops the catalog schema and its tables
 def downgrade() -> None:
     # --- Tables (reverse FK dependency order) ---
     op.execute("DROP TABLE IF EXISTS catalog.ticket_types")

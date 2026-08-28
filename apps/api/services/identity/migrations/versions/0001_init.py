@@ -20,6 +20,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+# creates the identity schema and its tables
 def upgrade() -> None:
     # --- Schemas ---
     op.execute("CREATE SCHEMA IF NOT EXISTS identity")
@@ -397,6 +398,7 @@ def upgrade() -> None:
     )
 
 
+# drops the identity schema and its tables
 def downgrade() -> None:
     # --- Drop tables in reverse FK dependency order ---
     op.drop_index(op.f("ix_identity_sessions_user_id"), table_name="sessions", schema="identity")

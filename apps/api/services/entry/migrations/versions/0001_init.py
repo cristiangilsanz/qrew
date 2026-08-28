@@ -18,6 +18,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+# creates the entry schema and its tables
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS entry")
 
@@ -99,6 +100,7 @@ def upgrade() -> None:
     )
 
 
+# drops the entry schema and its tables
 def downgrade() -> None:
     op.drop_index("ix_entry_scans_event_scanned_at", table_name="scans", schema="entry")
     op.drop_index("ix_entry_scans_event_id", table_name="scans", schema="entry")
