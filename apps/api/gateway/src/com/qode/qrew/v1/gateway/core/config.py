@@ -1,3 +1,4 @@
+# defines the configuration settings for the gateway
 from pathlib import Path
 
 from pydantic import field_validator
@@ -30,7 +31,6 @@ class Settings(BaseSettings):
     jwt_audience: str = ""
     jwt_issuer: str = ""
 
-    # Upstream service URLs
     identity_url: str = "http://identity:8001"
     catalog_url: str = "http://catalog:8002"
     sales_url: str = "http://sales:8003"
@@ -50,14 +50,15 @@ class Settings(BaseSettings):
     idempotency_lock_seconds: int = 30
     ratelimit_enabled: bool = True
 
+    # splits a comma separated string of cors origins into a list
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _parse_cors_origins(cls, v: str | list[str]) -> list[str]:
-        """Accept both JSON arrays and comma-separated strings from env vars."""
         if isinstance(v, str):
             return [o.strip() for o in v.split(",") if o.strip()]
         return v
 
+    # orders the configuration sources so the yaml file can override the defaults
     @classmethod
     def settings_customise_sources(
         cls,

@@ -1,3 +1,4 @@
+# assembles the fastapi application for the gateway including its middleware
 import logging
 
 import structlog

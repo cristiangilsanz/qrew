@@ -1,3 +1,4 @@
+# routes fanout messages to their subscribed connections and reaps dead ones
 import asyncio
 import contextlib
 import time
@@ -13,20 +14,21 @@ logger = structlog.get_logger(__name__)
 
 
 class Hub:
-    """Maps channel keys to the local set of connected subscribers."""
-
+    # initializes the empty subscriber map and reaper state
     def __init__(self) -> None:
         self._local: dict[str, set[Connection]] = {}
         self._lock = asyncio.Lock()
         self._reaper_task: asyncio.Task[None] | None = None
         self._running = False
 
+    # starts the reaper task
     async def start(self) -> None:
         if self._running:
             return
         self._running = True
         self._reaper_task = asyncio.create_task(self._reaper())
 
+    # stops the reaper task and closes every open connection
     async def stop(self) -> None:
         self._running = False
         if self._reaper_task is not None:
@@ -39,10 +41,12 @@ class Hub:
             await asyncio.gather(*[c.close(1001, "shutdown") for c in connections])
         self._local.clear()
 
+    # adds a connection to a channel's subscriber set
     async def subscribe(self, channel_key: str, connection: Connection) -> None:
         async with self._lock:
             self._local.setdefault(channel_key, set()).add(connection)
 
+    # removes a connection from a channel's subscriber set
     async def unsubscribe(self, channel_key: str, connection: Connection) -> None:
         async with self._lock:
             subscribers = self._local.get(channel_key)
@@ -52,6 +56,7 @@ class Hub:
             if not subscribers:
                 self._local.pop(channel_key, None)
 
+    # delivers a payload to every connection subscribed to a channel
     async def deliver(self, channel_key: str, payload: dict[str, Any]) -> None:
         async with self._lock:
             subscribers = list(self._local.get(channel_key, ()))
@@ -61,6 +66,7 @@ class Hub:
                 await connection.close(WS_CLOSE_OVERLOAD, "send queue overflow")
                 await self.unsubscribe(channel_key, connection)
 
+    # closes connections that have gone silent past the heartbeat window
     async def _reaper(self) -> None:
         interval = max(1.0, settings.ws_pong_timeout_seconds / 2)
         max_silence = float(settings.ws_heartbeat_seconds + settings.ws_pong_timeout_seconds)
@@ -81,6 +87,7 @@ class Hub:
         except asyncio.CancelledError:
             raise
 
+    # unsubscribes and closes a connection that went stale
     async def _reap_one(self, connection: Connection) -> None:
         channel_keys: list[str] = []
         async with self._lock:
@@ -100,12 +107,14 @@ class Hub:
 _hub: Hub | None = None
 
 
+# returns the running hub instance
 def get_hub() -> Hub:
     if _hub is None:
         raise RuntimeError("Hub not started")
     return _hub
 
 
+# creates and starts the shared hub instance
 async def start_hub() -> None:
     global _hub
     if _hub is not None:
@@ -114,6 +123,7 @@ async def start_hub() -> None:
     await _hub.start()
 
 
+# stops and clears the shared hub instance
 async def stop_hub() -> None:
     global _hub
     if _hub is not None:

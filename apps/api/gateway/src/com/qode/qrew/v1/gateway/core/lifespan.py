@@ -1,3 +1,4 @@
+# manages startup and shutdown for the gateway
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
@@ -13,6 +14,7 @@ from com.qode.qrew.v1.gateway.core.config import settings
 logger = structlog.get_logger(__name__)
 
 
+# wires tracing the connection hub and the proxy client around the app lifecycle
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_tracing(
@@ -31,7 +33,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     await start_hub()
 
-    # Shared HTTP client with keepalive pool
     app.state.proxy_client = httpx.AsyncClient(
         timeout=httpx.Timeout(30.0),
         limits=httpx.Limits(max_connections=200, max_keepalive_connections=50),

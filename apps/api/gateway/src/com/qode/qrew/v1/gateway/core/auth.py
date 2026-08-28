@@ -1,3 +1,4 @@
+# authenticates websocket connections against access or scanner tokens
 import functools
 from dataclasses import dataclass
 
@@ -23,6 +24,7 @@ class WebSocketIdentity:
     accepted_subprotocol: str | None
 
 
+# derives the public key that matches a private key
 def _load_public_pem(private_pem: str) -> str:
     key = serialization.load_pem_private_key(private_pem.encode(), password=None)
     return (
@@ -35,9 +37,9 @@ def _load_public_pem(private_pem: str) -> str:
     )
 
 
+# returns the public keys that verify access tokens
 @functools.cache
 def access_public_keys() -> list[str]:
-    """Derived once from settings; cached for the lifetime of the process."""
     keys: list[str] = []
     if settings.access_jwt_private_key:
         keys.append(_load_public_pem(settings.access_jwt_private_key))
@@ -48,14 +50,15 @@ def access_public_keys() -> list[str]:
     return keys
 
 
+# returns the public keys that verify scanner tokens
 @functools.cache
 def scanner_public_keys() -> list[str]:
-    """Derived once from settings; cached for the lifetime of the process."""
     if settings.scanner_jwt_private_key:
         return [_load_public_pem(settings.scanner_jwt_private_key)]
     return []
 
 
+# reads the bearer token carried in the websocket subprotocol header
 def _extract_token(websocket: WebSocket) -> tuple[str, str | None] | None:
     raw = websocket.headers.get("sec-websocket-protocol")
     if raw:
@@ -68,6 +71,7 @@ def _extract_token(websocket: WebSocket) -> tuple[str, str | None] | None:
     return None
 
 
+# verifies a token against whichever of the given keys matches
 def try_verify(token: str, public_keys: list[str]) -> dict[str, object] | None:
     audience = settings.jwt_audience or None
     issuer = settings.jwt_issuer or None
@@ -85,6 +89,7 @@ def try_verify(token: str, public_keys: list[str]) -> dict[str, object] | None:
     return None
 
 
+# authenticates a websocket connection as an access or scanner identity
 def authenticate(websocket: WebSocket) -> WebSocketIdentity:
     extracted = _extract_token(websocket)
     if extracted is None:

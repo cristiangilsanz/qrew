@@ -1,3 +1,4 @@
+# authenticates every proxied request and forwards its identity as headers
 import json
 import re
 
@@ -15,10 +16,7 @@ from com.qode.qrew.v1.gateway.core.auth import (
 
 logger = structlog.get_logger(__name__)
 
-# Routes that are accessible without a valid access token.
-# Each pattern matches against METHOD plus path
 _PUBLIC_PATTERNS: list[re.Pattern[str]] = [
-    # Identity: auth flows
     re.compile(r"^POST /api/identity/v1/auth/login$"),
     re.compile(r"^POST /api/identity/v1/auth/refresh$"),
     re.compile(r"^POST /api/identity/v1/auth/logout$"),
@@ -26,22 +24,22 @@ _PUBLIC_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"^POST /api/identity/v1/auth/passkeys/"),
     re.compile(r"^POST /api/identity/v1/auth/otp/"),
     re.compile(r"^POST /api/identity/v1/auth/totp/verify$"),
-    # Health probes on all services
     re.compile(r"^(GET|HEAD) /api/\w+/v?1?/?health"),
     re.compile(r"^(GET|HEAD) /api/\w+/healthz"),
     re.compile(r"^(GET|HEAD) /api/\w+/ready"),
     re.compile(r"^(GET|HEAD) /health"),
     re.compile(r"^(GET|HEAD) /ready"),
-    # CORS preflight
     re.compile(r"^OPTIONS "),
 ]
 
 
+# checks whether a request matches one of the routes that skip authentication
 def _is_public(method: str, path: str) -> bool:
     key = f"{method} {path}"
     return any(p.match(key) for p in _PUBLIC_PATTERNS)
 
 
+# reads the bearer token from an authorization header
 def _extract_bearer(authorization: str | None) -> str | None:
     if not authorization:
         return None
@@ -59,11 +57,11 @@ _UNAUTHORIZED = Response(
 
 
 class AuthMiddleware:
-    """ASGI middleware that validates the JWT and injects identity headers."""
-
+    # stores the wrapped asgi application
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
 
+    # verifies the request's token and injects the caller's identity headers
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] not in ("http",):
             await self.app(scope, receive, send)
@@ -73,7 +71,6 @@ class AuthMiddleware:
         method = request.method
         path = request.url.path
 
-        # Only intercept proxied API routes
         if not path.startswith("/api/"):
             await self.app(scope, receive, send)
             return
@@ -87,7 +84,6 @@ class AuthMiddleware:
             await _UNAUTHORIZED(scope, receive, send)
             return
 
-        # Try access token first
         claims = try_verify(token, access_public_keys())
         if claims is not None:
             token_type = str(claims.get("type", ""))
@@ -106,7 +102,6 @@ class AuthMiddleware:
             await self.app(scope, receive, send)
             return
 
-        # Try scanner token
         scanner_keys = scanner_public_keys()
         if scanner_keys:
             claims = try_verify(token, scanner_keys)

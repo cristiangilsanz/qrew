@@ -1,3 +1,4 @@
+# subscribes to the fanout subject and forwards each message to the connection hub
 import asyncio
 import contextlib
 import json
@@ -15,6 +16,7 @@ SUBJECT = "ws.fanout.v1"
 DURABLE = "gateway-fanout-handler"
 
 
+# delivers a fanout message to its channel through the connection hub
 async def _handle(raw: bytes) -> None:
     try:
         envelope = json.loads(raw.decode())
@@ -37,6 +39,7 @@ async def _handle(raw: bytes) -> None:
     await hub.deliver(channel_key, payload)  # type: ignore[reportUnknownArgumentType]
 
 
+# connects to nats and subscribes to the fanout subject
 async def start_fanout_subscriber(
     nats_url: str,
 ) -> tuple[asyncio.Task[None], Callable[[], Awaitable[None]]]:
@@ -44,12 +47,15 @@ async def start_fanout_subscriber(
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
 
+    # logs a nats connection error
     async def _error_cb(exc: Exception) -> None:
         await logger.awarning("gateway_fanout.nats_error", error=repr(exc))
 
+    # logs that the nats connection was restored
     async def _reconnected_cb() -> None:
         await logger.ainfo("gateway_fanout.nats_reconnected")
 
+    # logs that the nats connection was lost
     async def _disconnected_cb() -> None:
         await logger.awarning("gateway_fanout.nats_disconnected")
 
@@ -74,6 +80,7 @@ async def start_fanout_subscriber(
     psub = await js.subscribe(SUBJECT, durable=DURABLE, config=config, stream=STREAM)  # type: ignore[misc]
     await logger.ainfo("gateway_fanout.subscribed", subject=SUBJECT)
 
+    # acknowledges each fanout message once it has been delivered
     async def _consume() -> None:
         async for msg in psub.messages:  # type: ignore[attr-defined]
             await _handle(msg.data)  # type: ignore[attr-defined]
@@ -81,6 +88,7 @@ async def start_fanout_subscriber(
 
     task: asyncio.Task[None] = asyncio.create_task(_consume())
 
+    # unsubscribes cancels the consumer and drains the nats connection
     async def stop() -> None:
         with contextlib.suppress(Exception):
             await psub.unsubscribe()  # type: ignore[attr-defined]
