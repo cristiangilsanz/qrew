@@ -1,3 +1,4 @@
+# exposes the shared job registry queue and worker builder
 from .context import JobRunner, wrap_handler
 from .dlq import dlq_key, push_to_dlq
 from .enqueue import enqueue

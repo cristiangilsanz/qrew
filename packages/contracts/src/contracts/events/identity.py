@@ -1,3 +1,4 @@
+# defines the data schemas for identity's domain events
 from __future__ import annotations
 
 import uuid
@@ -40,9 +41,11 @@ class PasskeyReassertedData(BaseModel):
     device_id: uuid.UUID
 
 
+# parses an envelope into a user registered payload
 def user_registered(envelope: EventEnvelope) -> UserRegisteredData:
     return UserRegisteredData(**envelope.data)
 
 
+# parses an envelope into a device revoked payload
 def device_revoked(envelope: EventEnvelope) -> DeviceRevokedData:
     return DeviceRevokedData(**envelope.data)

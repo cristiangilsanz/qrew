@@ -1,15 +1,15 @@
+# defines the shared rate limiter's rejection error
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class RateLimitedError(Exception):
-    """Raised by the limiter when at least one scope is over its budget."""
-
     scope: str
     limit: int
     window_seconds: int
     retry_after_seconds: int
 
+    # renders a human readable description of the rejection
     def __str__(self) -> str:
         return (
             f"rate limit exceeded for {self.scope} "

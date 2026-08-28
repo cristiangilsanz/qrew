@@ -1,3 +1,4 @@
+# registers a job's handler retry policy and cron schedule
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -28,13 +29,13 @@ class JobSpec:
 _registry: dict[str, JobSpec] = {}
 
 
+# records a job spec under its name
 def register(spec: JobSpec) -> None:
-    """Registers a job specification under its name."""
     _registry[spec.name] = spec
 
 
+# looks up a registered job spec by name
 def get_spec(name: str) -> JobSpec:
-    """Returns the registered specification for a job name."""
     try:
         return _registry[name]
     except KeyError:
@@ -43,17 +44,18 @@ def get_spec(name: str) -> JobSpec:
         raise JobNotFoundError(name) from None
 
 
+# lists every registered job spec
 def all_specs() -> list[JobSpec]:
-    """Returns all registered job specifications."""
     return list(_registry.values())
 
 
+# parses a five field crontab expression into cron fields
 def parse_crontab(expr: str) -> CronFields:
-    """Parse a standard five-field cron expression into structured fields."""
     parts = expr.strip().split()
     if len(parts) != 5:  # noqa: PLR2004
         raise ValueError(f"expected 5 cron fields, got {len(parts)}: {expr!r}")
 
+    # parses one crontab field into a wildcard integer or set of integers
     def _parse_field(val: str) -> set[int] | int | str:
         if val == "*":
             return "*"
@@ -73,6 +75,7 @@ def parse_crontab(expr: str) -> CronFields:
     )
 
 
+# registers a function as a job under the given name and retry policy
 def job(
     name: str,
     *,
@@ -80,8 +83,8 @@ def job(
     retry_delays: list[int] | None = None,
     cron: CronFields | None = None,
 ) -> Callable[[JobHandler], JobHandler]:
-    """Decorator that registers an async function as a named job."""
 
+    # records the function as a job spec
     def decorator(func: JobHandler) -> JobHandler:
         register(
             JobSpec(

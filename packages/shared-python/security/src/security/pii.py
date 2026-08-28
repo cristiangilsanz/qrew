@@ -1,3 +1,4 @@
+# encrypts and hashes personal fields shared across every service
 import hashlib
 from typing import Final
 
@@ -6,8 +7,8 @@ from cryptography.fernet import Fernet, MultiFernet
 _HASH_PREFIX: Final = b"qrew-pii-v1:"
 
 
+# builds a fernet instance that can decrypt with a rotated key
 def make_fernet(primary_key: str, previous_keys: str = "") -> MultiFernet:
-    """Build a Fernet encryptor supporting key rotation via optional previous keys."""
     keys = [Fernet(primary_key.encode())]
     for raw in previous_keys.splitlines():
         previous = raw.strip()
@@ -16,27 +17,27 @@ def make_fernet(primary_key: str, previous_keys: str = "") -> MultiFernet:
     return MultiFernet(keys)
 
 
+# encrypts a plaintext field for storage
 def encrypt(fernet: MultiFernet, plaintext: str) -> bytes:
-    """Encrypts a plaintext string using the provided key pool."""
     return fernet.encrypt(plaintext.encode())
 
 
+# decrypts a stored field back to plaintext
 def decrypt(fernet: MultiFernet, ciphertext: bytes) -> str:
-    """Decrypts a ciphertext to its original string using the provided key pool."""
     return fernet.decrypt(ciphertext).decode()
 
 
+# encrypts raw bytes for storage
 def encrypt_bytes(fernet: MultiFernet, plaintext: bytes) -> bytes:
-    """Encrypts raw bytes using the provided key pool."""
     return fernet.encrypt(plaintext)
 
 
+# decrypts stored bytes back to plaintext
 def decrypt_bytes(fernet: MultiFernet, ciphertext: bytes) -> bytes:
-    """Decrypts raw bytes using the provided key pool."""
     return fernet.decrypt(ciphertext)
 
 
+# hashes a value so it can be looked up without storing it in the clear
 def hash_lookup(plaintext: str) -> str:
-    """Return a deterministic hash for PII equality lookups."""
     normalised = plaintext.strip().lower().encode()
     return hashlib.sha256(_HASH_PREFIX + normalised).hexdigest()

@@ -1,2 +1,3 @@
+# defines the shared jobs package's errors
 class JobNotFoundError(Exception):
-    """Raised when a job name has no registered specification."""
+    pass

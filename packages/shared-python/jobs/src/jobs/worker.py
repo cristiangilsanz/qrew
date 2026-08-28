@@ -1,3 +1,4 @@
+# builds an arq worker settings class from every registered job spec
 from typing import Any
 
 from arq.connections import RedisSettings
@@ -8,14 +9,17 @@ from .context import wrap_handler
 from .registry import JobSpec, all_specs
 
 
+# wraps a job spec into an arq function definition
 def _arq_function(spec: JobSpec, runner: Any) -> Any:
     return func(runner, name=spec.name, max_tries=spec.max_attempts + 1)
 
 
+# converts a cron field's wildcard marker into arq's expected form
 def _arq_field(val: set[int] | int | str) -> set[int] | int | None:
     return None if isinstance(val, str) else val
 
 
+# builds an arq cron job from a job spec's schedule
 def _build_cron(spec: JobSpec, runner: Any) -> CronJob:
     f = spec.cron_fields
     assert f is not None
@@ -31,8 +35,8 @@ def _build_cron(spec: JobSpec, runner: Any) -> CronJob:
     )
 
 
+# builds the worker settings class arq runs from every registered job
 def build_worker_settings(redis_settings: RedisSettings) -> type:
-    """Assembles an Arq WorkerSettings class from all registered job specifications."""
     functions: list[Any] = []
     cron_jobs: list[CronJob] = []
     for spec in all_specs():

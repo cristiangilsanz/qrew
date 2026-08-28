@@ -1,3 +1,4 @@
+# exposes the shared rate limiter and its decorator
 from .decorator import RateLimitRule, rate_limit
 from .errors import RateLimitedError
 from .limiter import Decision, RateLimiter

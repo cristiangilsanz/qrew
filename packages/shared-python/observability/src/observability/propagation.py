@@ -1,3 +1,4 @@
+# carries the current trace context across process boundaries such as jobs and messages
 from typing import Any
 
 from opentelemetry import context as otel_context
@@ -6,8 +7,8 @@ from opentelemetry import propagate, trace
 CARRIER_KEY = "_otel"
 
 
+# injects the current trace context into a carrier dict
 def inject_current_context() -> dict[str, str]:
-    """Captures the active trace context into a carrier when a valid span is present."""
     span = trace.get_current_span()
     if not span.get_span_context().is_valid:
         return {}
@@ -16,15 +17,15 @@ def inject_current_context() -> dict[str, str]:
     return carrier
 
 
+# extracts a trace context from a carrier dict
 def extract_context(carrier: dict[str, str] | None) -> otel_context.Context | None:
-    """Restores a trace context from an incoming propagation carrier."""
     if not carrier:
         return None
     return propagate.extract(carrier)
 
 
+# pops the trace carrier out of a payload if it carries one
 def take_carrier(payload: dict[str, Any] | None) -> dict[str, str] | None:
-    """Removes and returns trace propagation data embedded in a message payload."""
     if not payload:
         return None
     raw = payload.pop(CARRIER_KEY, None)

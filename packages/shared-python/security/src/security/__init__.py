@@ -1,3 +1,4 @@
+# exposes the shared jwt pii and internal key security helpers
 from .internal import matches_internal_key
 from .jwt import decode_token, decode_unverified_header
 from .pii import (

@@ -1,3 +1,4 @@
+# defines the data schemas for sales' domain events
 from __future__ import annotations
 
 import uuid

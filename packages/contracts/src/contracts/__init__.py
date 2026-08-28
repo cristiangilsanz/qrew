@@ -1,3 +1,4 @@
+# exposes every domain event data schema shared across services
 from contracts.events.catalog import (
     EventCancelledData,
     EventPublishedData,

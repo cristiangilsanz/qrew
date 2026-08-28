@@ -1,3 +1,4 @@
+# replays a cached response instead of rerunning a request marked idempotent
 import json
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -27,6 +28,7 @@ logger = structlog.get_logger(__name__)
 HEADER_NAME = "Idempotency-Key"
 
 
+# builds a json error response carrying the idempotency key field
 def _error_response(
     status_code: int, message: str, headers: dict[str, str] | None = None
 ) -> JSONResponse:
@@ -44,6 +46,7 @@ class _StoreState:
     lock_seconds: int = 60
 
 
+# builds the shared idempotency store the first time it is needed
 async def _ensure_store() -> IdempotencyStore:
     if _StoreState.store is None:
         if _StoreState.redis_url is None:
@@ -60,14 +63,15 @@ async def _ensure_store() -> IdempotencyStore:
     return _StoreState.store
 
 
+# closes the shared idempotency store's redis client
 async def close_idempotency_store() -> None:
-    """Release the shared Redis client used by the middleware."""
     if _StoreState.redis is not None:
         await _StoreState.redis.aclose()
     _StoreState.redis = None
     _StoreState.store = None
 
 
+# resolves the idempotency configuration attached to the matched route
 def _route_config(request: Request) -> IdempotencyConfig | None:
     router = getattr(request.app, "router", None)
     if router is None:
@@ -83,14 +87,14 @@ def _route_config(request: Request) -> IdempotencyConfig | None:
     return None
 
 
+# reads the authenticated user id from the request state
 def _user_id(request: Request) -> str | None:
     actor = getattr(request.state, "current_user_id", None)
     return str(actor) if actor else None
 
 
 class IdempotencyMiddleware(BaseHTTPMiddleware):
-    """Enforce idempotent replay on opt-in routes with an Idempotency-Key header."""
-
+    # stores the redis connection settings and whether the middleware is enabled
     def __init__(
         self,
         app: Any,
@@ -104,6 +108,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         _StoreState.lock_seconds = lock_seconds
         self._enabled = enabled
 
+    # replays a cached response or runs and caches the request once
     async def dispatch(
         self,
         request: Request,
@@ -182,12 +187,14 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             await store.release(config.scope, user_id, key)
             raise
 
+    # rebuilds the request so its body can be read again downstream
     async def _replay_body(
         self,
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
         body: bytes,
     ) -> Response:
+        # replays the already read body as the request's asgi receive event
         async def receive() -> dict[str, object]:
             return {"type": "http.request", "body": body, "more_body": False}
 
@@ -195,6 +202,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         downstream = Request(request.scope, receive)
         return await call_next(downstream)
 
+    # reads the full response body from its stream
     async def _capture(self, response: Response) -> bytes:
         chunks: list[bytes] = []
         body_iterator: Any = getattr(response, "body_iterator", None)
@@ -210,6 +218,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             return body.encode()
         return body  # type: ignore[no-any-return]
 
+    # rebuilds a response from its captured body
     def _rebuild_response(self, response: Response, body: bytes) -> Response:
         return Response(
             content=body,
@@ -222,6 +231,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             media_type=response.media_type,
         )
 
+    # rebuilds a cached response and marks it as replayed
     def _materialise(self, cached: StoredResponse) -> Response:
         headers = dict(cached.headers)
         headers["Idempotency-Replayed"] = "true"

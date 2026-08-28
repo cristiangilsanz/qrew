@@ -1,3 +1,4 @@
+# encodes and decodes the opaque cursor used to paginate a query
 import base64
 import binascii
 import json
@@ -10,14 +11,14 @@ DEFAULT_LIMIT = 50
 MAX_LIMIT = 200
 
 
+# encodes a sort key and identifier into an opaque cursor
 def encode_cursor(sort_key: Any, last_id: str) -> str:
-    """Encodes a pagination position as an opaque URL-safe token."""
     payload = json.dumps({"sk": sort_key, "id": last_id}, default=str)
     return base64.urlsafe_b64encode(payload.encode()).rstrip(b"=").decode()
 
 
+# decodes an opaque cursor back into its sort key and identifier
 def decode_cursor(raw: str) -> tuple[Any, str]:
-    """Decodes a pagination token, raising an HTTP error on malformed input."""
     padded = raw + "=" * (-len(raw) % 4)
     try:
         decoded = base64.urlsafe_b64decode(padded).decode()
@@ -36,8 +37,8 @@ def decode_cursor(raw: str) -> tuple[Any, str]:
     return payload_dict["sk"], str(payload_dict["id"])
 
 
+# clamps a requested page limit within the allowed range
 def clamp_limit(limit: int | None, default: int = DEFAULT_LIMIT) -> int:
-    """Clamps a client-supplied page size into the accepted range."""
     if limit is None or limit <= 0:
         return default
     return min(limit, MAX_LIMIT)

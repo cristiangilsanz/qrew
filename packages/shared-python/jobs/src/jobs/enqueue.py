@@ -1,3 +1,4 @@
+# enqueues a named job carrying the trace context onto the shared arq queue
 from typing import Any
 
 from arq.connections import RedisSettings
@@ -8,6 +9,7 @@ from .pool import get_pool
 from .registry import get_spec
 
 
+# enqueues a job with its trace context attached
 async def enqueue(
     job_name: str,
     payload: dict[str, Any] | None = None,
@@ -15,7 +17,6 @@ async def enqueue(
     redis_settings: RedisSettings,
     defer_seconds: int | None = None,
 ) -> Job | None:
-    """Enqueues a registered job, propagating the current trace context."""
     spec = get_spec(job_name)
     pool = await get_pool(redis_settings)
     body = dict(payload or {})

@@ -1,8 +1,10 @@
+# decodes and verifies the jwts every service signs
 from typing import Any
 
 import jwt as pyjwt
 
 
+# verifies and decodes a signed token
 def decode_token(
     token: str,
     public_key: str,
@@ -11,7 +13,6 @@ def decode_token(
     audience: str | None = None,
     issuer: str | None = None,
 ) -> dict[str, Any]:
-    """Decodes and verifies a JWT, returning its claims on success."""
     opts: dict[str, Any] = {}
     if audience is not None:
         opts["audience"] = audience
@@ -25,6 +26,6 @@ def decode_token(
     )
 
 
+# reads a token's header without verifying its signature
 def decode_unverified_header(token: str) -> dict[str, Any]:
-    """Extracts the JWT header without verifying the signature."""
     return pyjwt.get_unverified_header(token)  # type: ignore[no-any-return]

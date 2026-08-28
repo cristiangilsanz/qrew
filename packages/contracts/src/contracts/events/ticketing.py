@@ -1,3 +1,4 @@
+# defines the data schemas for ticketing's domain events
 from __future__ import annotations
 
 import uuid

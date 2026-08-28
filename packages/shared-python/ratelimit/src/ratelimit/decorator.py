@@ -1,3 +1,4 @@
+# rejects a route handler's call once any of its scopes exceeds its limit
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import Any
@@ -15,6 +16,7 @@ logger = structlog.get_logger(__name__)
 RateLimitRule = tuple[str, int, int]
 
 
+# wraps a route handler with a rate limit check over the given scopes
 def rate_limit(
     rules: list[RateLimitRule],
     *,
@@ -22,14 +24,15 @@ def rate_limit(
     on_rejection: Callable[[Request, RateLimitedError], Awaitable[None]] | None = None,
     enabled: bool = True,
 ) -> Callable[..., Any]:
-    """Reject a request that breaches any of the given rules."""
     for scope, limit, window in rules:
         if scope not in ALLOWED_SCOPES:
             raise ValueError(f"unknown rate-limit scope: {scope}")
         if limit < 1 or window < 1:
             raise ValueError("limit and window must be positive integers")
 
+    # wraps the function with the rate limit check
     def decorator(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
+        # checks every scope and rejects the call if one exceeds its limit
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             if not enabled:
@@ -73,6 +76,7 @@ def rate_limit(
     return decorator
 
 
+# finds the request object among a handler's arguments
 def _find_request(args: tuple[Any, ...], kwargs: dict[str, Any]) -> Request | None:
     candidate = kwargs.get("request")
     if isinstance(candidate, Request):

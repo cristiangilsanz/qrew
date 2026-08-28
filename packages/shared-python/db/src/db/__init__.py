@@ -1,3 +1,4 @@
+# exposes the shared redis dependency helpers
 from .redis import create_redis_dependency, redis_settings_from_url
 
 __all__ = [

@@ -1,3 +1,4 @@
+# runs a worker's nats subscribers until a shutdown signal arrives
 import asyncio
 import signal
 from collections.abc import Coroutine
@@ -8,14 +9,15 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
+# runs every subscriber until a shutdown signal or one of them stops
 async def run_nats_subscribers(
     service_name: str,
     *subscribers: Coroutine[Any, Any, None],
 ) -> None:
-    """Run one or more async NATS subscriber coroutines with graceful shutdown."""
     loop = asyncio.get_running_loop()
     stop_event = asyncio.Event()
 
+    # signals the worker to stop
     def _handle_signal() -> None:
         stop_event.set()
 

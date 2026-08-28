@@ -1,3 +1,4 @@
+# subscribes to a nats subject and dispatches each message to a handler
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Coroutine
@@ -13,6 +14,7 @@ logger = structlog.get_logger(__name__)
 Handler = Callable[[bytes], Coroutine[Any, Any, None]]
 
 
+# subscribes to a subject and runs the consumer loop until cancelled
 async def subscribe(
     stream: str,
     subject: str,
@@ -21,7 +23,6 @@ async def subscribe(
     *,
     ack_wait: int = 30,
 ) -> None:
-    """Register a durable push consumer; nacks messages on handler failure."""
     js = get_nats().js
     config = ConsumerConfig(
         durable_name=durable,
@@ -34,6 +35,7 @@ async def subscribe(
         "nats.subscribed", stream=stream, subject=subject, durable=durable
     )
 
+    # acknowledges each message once its handler has run
     async def _consume() -> None:
         async for msg in psub.messages:  # type: ignore[attr-defined]
             try:
@@ -51,13 +53,13 @@ async def subscribe(
     await _consume()
 
 
+# pulls and yields a batch of messages from a durable subscription
 async def iter_messages(
     stream: str,
     subject: str,
     durable: str,
     batch: int = 10,
 ) -> AsyncGenerator[Any, None]:
-    """Fetches a batch of messages from a pull-based consumer and yields each one."""
     js = get_nats().js
     sub = await js.pull_subscribe(subject, durable=durable, stream=stream)  # type: ignore[misc]
     try:

@@ -1,3 +1,4 @@
+# defines the envelope every domain event is published inside
 from __future__ import annotations
 
 import uuid
@@ -13,8 +14,6 @@ class OtelCarrier(BaseModel):
 
 
 class EventEnvelope(BaseModel):
-    """Standard envelope carried by every domain event over the message broker."""
-
     event_id: uuid.UUID = Field(default_factory=uuid.uuid4)
     occurred_at: datetime
     aggregate_type: str

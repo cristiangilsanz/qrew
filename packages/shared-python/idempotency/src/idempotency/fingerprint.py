@@ -1,9 +1,10 @@
+# fingerprints a request so a retry with a different body is rejected
 import hashlib
 from urllib.parse import parse_qsl, urlencode
 
 
+# hashes a request's method path query and body into one fingerprint
 def compute_fingerprint(method: str, path: str, query_string: str, body: bytes) -> str:
-    """Computes a deterministic hash representing the semantic identity of a request."""
     sorted_query = urlencode(sorted(parse_qsl(query_string, keep_blank_values=True)))
     digest = hashlib.sha256()
     digest.update(method.upper().encode())
