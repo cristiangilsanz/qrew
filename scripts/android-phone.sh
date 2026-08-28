@@ -1,4 +1,5 @@
 #!/bin/bash
+# syncs and launches the app on a connected android phone
 set -e
 ADB="/mnt/c/Users/Cristian/AppData/Local/Android/Sdk/platform-tools/adb.exe"
 SERIAL="CESOAA99UKONEY9H"

@@ -1,4 +1,5 @@
 #!/bin/bash
+# syncs and launches the app on the android emulator
 set -e
 ADB="/mnt/c/Users/Cristian/AppData/Local/Android/Sdk/platform-tools/adb.exe"
 SERIAL="emulator-5554"

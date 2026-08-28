@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# runs pyright across every backend service
 set -e
 cd apps/api/services/identity  && ~/.local/bin/uv run pyright && cd - &&
 cd apps/api/services/catalog   && ~/.local/bin/uv run pyright && cd - &&
