@@ -1,3 +1,4 @@
+# verifies a captcha token through cloudflare turnstile or a disabled stub
 from typing import Protocol
 
 import httpx
@@ -10,32 +11,29 @@ logger = structlog.get_logger(__name__)
 
 
 class CaptchaError(DomainError):
-    """Raised when a captcha token cannot be verified."""
+    pass
 
 
 class CaptchaService(Protocol):
-    async def verify(self, token: str, ip_address: str) -> None:
-        """Verify a captcha token."""
-        ...
+    # verifies a captcha token for a given ip address
+    async def verify(self, token: str, ip_address: str) -> None: ...
 
 
 class StubCaptchaService:
-    """Captcha service that accepts all tokens without verification, for development use."""
-
+    # accepts every token when captcha checking is disabled
     async def verify(self, token: str, ip_address: str) -> None:
         pass
 
 
 class CloudflareTurnstileCaptchaService:
-    """Captcha service backed by Cloudflare Turnstile."""
-
     _CLOUDFLARE_TURNSTILE_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
+    # stores the turnstile secret key
     def __init__(self, secret_key: str) -> None:
         self._secret_key = secret_key
 
+    # verifies a captcha token against cloudflare turnstile
     async def verify(self, token: str, ip_address: str) -> None:
-        """Verify a captcha token against Turnstile."""
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.post(
@@ -64,8 +62,8 @@ class CloudflareTurnstileCaptchaService:
             )
 
 
+# builds the configured captcha service or a stub when captcha is disabled
 def build_captcha_service() -> CaptchaService:
-    """Build the captcha service configured by settings."""
     if not settings.captcha_enabled or not settings.captcha_secret_key:
         return StubCaptchaService()
     return CloudflareTurnstileCaptchaService(settings.captcha_secret_key)

@@ -1,3 +1,4 @@
+# provides the shared fastapi dependencies for the identity service
 import uuid
 from collections.abc import AsyncGenerator
 from typing import Annotated, Optional
@@ -127,8 +128,8 @@ limiter = Limiter(
 limiter.enabled = settings.ratelimit_enabled
 
 
+# rejects a request without a valid internal api key
 def verify_internal_key(x_internal_key: str = Header(alias="X-Internal-Key")) -> None:
-    """Rejects a sibling-service call that does not carry the shared key."""
     if not matches_internal_key(x_internal_key, settings.internal_api_key):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
@@ -149,6 +150,7 @@ _SETUP_REQUIRED_EXCEPTION = HTTPException(
 )
 
 
+# yields a redis client for the duration of a request
 async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[type-arg]
     client: aioredis.Redis = aioredis.from_url(  # type: ignore[type-arg]
         settings.redis_url, decode_responses=False
@@ -159,9 +161,7 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[t
         await client.aclose()
 
 
-# User and session resolution
-
-
+# resolves the user a token or trusted header identifies
 async def _resolve_user(
     credentials: Optional[HTTPAuthorizationCredentials],
     db: AsyncSession,
@@ -207,6 +207,7 @@ async def _resolve_user(
     return user
 
 
+# resolves the authenticated user requiring a fully set up account
 async def get_current_user(
     request: Request,
     credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
@@ -222,6 +223,7 @@ async def get_current_user(
     return await _resolve_user(credentials, db, allow_setup=False, trusted_user_id=trusted_id)
 
 
+# resolves the authenticated user allowing an account still in setup
 async def get_setup_or_full_user(
     request: Request,
     credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(_bearer)] = None,
@@ -237,6 +239,7 @@ async def get_setup_or_full_user(
     return await _resolve_user(credentials, db, allow_setup=True, trusted_user_id=trusted_id)
 
 
+# resolves the user a recovery token identifies
 async def get_recovery_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
     db: AsyncSession = Depends(get_db),
@@ -265,6 +268,7 @@ async def get_recovery_user(
     return user
 
 
+# resolves the caller's session from an access token
 async def get_current_session(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
     db: AsyncSession = Depends(get_db),
@@ -292,6 +296,7 @@ async def get_current_session(
     return session
 
 
+# rejects a request whose authenticated user is not an admin
 async def get_admin_user(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
@@ -303,32 +308,32 @@ async def get_admin_user(
     return current_user
 
 
+# converts a domain message and field into an http exception
 def domain_error(message: str, field: str | None, http_status: int) -> HTTPException:
     return HTTPException(status_code=http_status, detail={"message": message, "field": field})
 
 
-# Shared singletons
-
-
+# builds the captcha service
 def get_captcha_service() -> CaptchaService:
     return build_captcha_service()
 
 
+# builds the notification dispatcher
 def get_notification_service() -> NotificationDispatcher:
     return build_notification_dispatcher()
 
 
+# builds the geoip service
 def get_geoip_service() -> GeoIpService:
     return GeoIpService(settings.geoip_db_path)
 
 
+# builds the ocr service
 def get_ocr_service() -> OcrService:
     return OcrService()
 
 
-# Auth service factories
-
-
+# builds a login service for a request
 def get_login_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -359,6 +364,7 @@ def get_login_service(
     )
 
 
+# builds a refresh service for a request
 def get_refresh_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -372,6 +378,7 @@ def get_refresh_service(
     )
 
 
+# builds a logout service for a request
 def get_logout_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -379,6 +386,7 @@ def get_logout_service(
     return LogoutService(redis, AuditService(), SessionRepository(db))
 
 
+# builds a session service for a request
 def get_session_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -387,15 +395,14 @@ def get_session_service(
     return SessionService(SessionRepository(db), redis, geoip)
 
 
+# builds a profile service for a request
 def get_profile_service(
     db: AsyncSession = Depends(get_db),
 ) -> ProfileService:
     return ProfileService(passkey_repo=PasskeyCredentialRepository(db))
 
 
-# Registration service factories
-
-
+# builds a registration service for a request
 def get_registration_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(get_notification_service),
@@ -404,18 +411,21 @@ def get_registration_service(
     return RegistrationService(UserRepository(db), notifier, captcha, AuditService())
 
 
+# builds an email verification service for a request
 def get_email_verification_service(
     db: AsyncSession = Depends(get_db),
 ) -> EmailVerificationService:
     return EmailVerificationService(UserRepository(db), AuditService())
 
 
+# builds a phone verification service for a request
 def get_phone_verification_service(
     db: AsyncSession = Depends(get_db),
 ) -> PhoneVerificationService:
     return PhoneVerificationService(UserRepository(db), AuditService())
 
 
+# builds a service that resends an email verification code
 def get_resend_email_verification_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(get_notification_service),
@@ -423,6 +433,7 @@ def get_resend_email_verification_service(
     return ResendEmailVerificationService(UserRepository(db), notifier)
 
 
+# builds a service that resends a phone verification code
 def get_resend_phone_otp_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(get_notification_service),
@@ -430,9 +441,7 @@ def get_resend_phone_otp_service(
     return ResendPhoneOtpService(UserRepository(db), notifier)
 
 
-# Setup and KYC service factories
-
-
+# builds a kyc submission service for a request
 def get_kyc_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(get_notification_service),
@@ -441,6 +450,7 @@ def get_kyc_service(
     return KycService(UserRepository(db), notifier, AuditService(), ocr)
 
 
+# builds a service that completes account setup
 def get_complete_setup_service(
     db: AsyncSession = Depends(get_db),
 ) -> CompleteSetupService:
@@ -452,9 +462,7 @@ def get_complete_setup_service(
     )
 
 
-# Account service factories
-
-
+# builds an email change service for a request
 def get_email_change_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(get_notification_service),
@@ -462,6 +470,7 @@ def get_email_change_service(
     return EmailChangeService(UserRepository(db), notifier, AuditService())
 
 
+# builds a phone change service for a request
 def get_phone_change_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(get_notification_service),
@@ -469,6 +478,7 @@ def get_phone_change_service(
     return PhoneChangeService(UserRepository(db), notifier, AuditService())
 
 
+# builds a password change service for a request
 def get_password_change_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -481,6 +491,7 @@ def get_password_change_service(
     )
 
 
+# builds a forgot password service for a request
 def get_forgot_password_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(get_notification_service),
@@ -491,6 +502,7 @@ def get_forgot_password_service(
     )
 
 
+# builds an account deletion service for a request
 def get_deletion_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -504,6 +516,7 @@ def get_deletion_service(
     )
 
 
+# builds an account recovery service for a request
 def get_recovery_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -521,15 +534,14 @@ def get_recovery_service(
     )
 
 
-# Device service factories
-
-
+# builds a fingerprint service for a request
 def get_fingerprint_service(
     db: AsyncSession = Depends(get_db),
 ) -> FingerprintService:
     return FingerprintService(DeviceFingerprintRepository(db), AuditService())
 
 
+# builds a device binding service for a request
 def get_device_binding_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -537,12 +549,14 @@ def get_device_binding_service(
     return DeviceBindingService(DeviceRepository(db), redis, AuditService())
 
 
+# builds a device attestation service for a request
 def get_device_attestation_service(
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> DeviceAttestationService:
     return DeviceAttestationService(build_attestation_verifier(), redis, AuditService())
 
 
+# builds a device management service for a request
 def get_device_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -555,9 +569,7 @@ def get_device_service(
     )
 
 
-# Passkey service factories
-
-
+# builds a passkey registration service for a request
 def get_passkey_registration_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -565,6 +577,7 @@ def get_passkey_registration_service(
     return PasskeyRegistrationService(PasskeyCredentialRepository(db), redis, AuditService())
 
 
+# builds a passkey authentication service for a request
 def get_passkey_authentication_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -578,6 +591,7 @@ def get_passkey_authentication_service(
     )
 
 
+# builds a passkey reassertion service for a request
 def get_passkey_reassertion_service(
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
@@ -590,15 +604,14 @@ def get_passkey_reassertion_service(
     )
 
 
+# builds a passkey management service for a request
 def get_passkey_management_service(
     db: AsyncSession = Depends(get_db),
 ) -> PasskeyManagementService:
     return PasskeyManagementService(PasskeyCredentialRepository(db), AuditService())
 
 
-# Admin service factories
-
-
+# builds a kyc review service for a request
 def get_kyc_review_service(
     db: AsyncSession = Depends(get_db),
     notifier: NotificationDispatcher = Depends(get_notification_service),
@@ -606,18 +619,21 @@ def get_kyc_review_service(
     return KycReviewService(UserRepository(db), notifier, AuditService())
 
 
+# builds a login lockout service for a request
 def get_login_lockout_service(
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> LoginLockoutService:
     return LoginLockoutService(redis, AuditService())
 
 
+# builds a user repository for a request
 def get_user_repository(
     db: AsyncSession = Depends(get_db),
 ) -> UserRepository:
     return UserRepository(db)
 
 
+# resolves the user a totp setup token identifies
 async def get_totp_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
     db: AsyncSession = Depends(get_db),
@@ -645,6 +661,7 @@ async def get_totp_user(
     return user
 
 
+# builds a totp service for a request
 def get_totp_service(
     db: AsyncSession = Depends(get_db),
 ) -> TotpService:

@@ -1,6 +1,8 @@
+# renders the html body of the kyc review outcome email
 from com.qode.qrew.v1.identity.services.application.notification.templates._base import base_email
 
 
+# renders the email body reporting the kyc review outcome
 def kyc_status_email(
     full_name: str, status: str, reason: str | None, logo_url: str | None = None
 ) -> str:

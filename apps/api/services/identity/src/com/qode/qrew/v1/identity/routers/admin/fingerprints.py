@@ -1,3 +1,4 @@
+# exposes the admin endpoint that inspects a device fingerprint
 from fastapi import APIRouter, Depends, Path, Request, status
 
 from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
@@ -13,6 +14,7 @@ from ._deps import get_fingerprint_service
 router = APIRouter(prefix="/fingerprints")
 
 
+# lists the accounts a device fingerprint has been seen on
 @router.get(
     "/{fingerprint_hash}",
     response_model=FingerprintAdminResponse,
@@ -26,7 +28,6 @@ async def get_fingerprint(
     _admin: User = Depends(get_admin_user),
     service: FingerprintService = Depends(get_fingerprint_service),
 ) -> FingerprintAdminResponse:
-    """List accounts associated with a device fingerprint."""
     user_ids = await service.get_by_hash(fingerprint_hash)
     return FingerprintAdminResponse(
         fingerprint_hash=fingerprint_hash,

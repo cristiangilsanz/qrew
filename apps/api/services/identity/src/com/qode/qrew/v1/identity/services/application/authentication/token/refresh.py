@@ -1,3 +1,4 @@
+# rotates a refresh token detecting reuse and verifying its bound device
 import base64
 import uuid
 from datetime import UTC, datetime
@@ -40,13 +41,13 @@ logger = structlog.get_logger(__name__)
 _ROTATED = b"rotated"
 
 
+# builds the bytes a bound device signs to prove possession of a refresh token
 def signature_payload(jti: str, iat: int) -> bytes:
-    """Return the bytes the client must sign for a device-bound refresh."""
     return f"{jti}|{iat}".encode()
 
 
+# decodes the device signature carried in a request header
 def decode_signature_header(raw: str | None) -> bytes | None:
-    """Decode a base64url device signature header."""
     if raw is None:
         return None
     padded = raw + "=" * (-len(raw) % 4)
@@ -57,10 +58,11 @@ def decode_signature_header(raw: str | None) -> bytes | None:
 
 
 class RefreshError(DomainError):
-    """A business-rule violation raised when a token refresh cannot be completed."""
+    pass
 
 
 class RefreshService:
+    # stores the repositories redis client and audit service the service uses
     def __init__(
         self,
         repo: UserRepository,
@@ -75,13 +77,13 @@ class RefreshService:
         self._session_repo = session_repo
         self._device_repo = device_repo
 
+    # verifies a refresh token and issues a fresh access and refresh pair
     @traced("auth.refresh")
     async def refresh(
         self,
         request: RefreshRequest,
         device_signature: bytes | None = None,
     ) -> RefreshResponse:
-        """Issue a new access + refresh token pair, invalidating the old one."""
         try:
             payload = jwt_keys.verify(jwt_keys.REFRESH, request.refresh_token)
         except ExpiredSignatureError as exc:
@@ -156,8 +158,8 @@ class RefreshService:
             refresh_token=new_refresh_token,
         )
 
+    # rejects a refresh token that has already been rotated or revoked
     async def _check_jti(self, jti_key: str, subject: object, jti: object) -> None:
-        """Raises an error if the token identifier is blacklisted and detects replay theft."""
         stored: bytes | None = await self._redis.get(jti_key)
         if stored is None:
             return
@@ -166,8 +168,8 @@ class RefreshService:
         await logger.awarning("refresh_failed", reason="token_revoked")
         raise RefreshError("Refresh token has been revoked")
 
+    # blacklists every token issued before now and kills the user's sessions
     async def _handle_theft(self, subject: str, jti: str) -> None:
-        """Revoke all tokens for the user and record the theft event."""
         ttl = settings.refresh_token_expire_days * 24 * 3600
         await self._redis.setex(
             BLACKLIST_USER_PREFIX + subject,
@@ -195,8 +197,8 @@ class RefreshService:
                 "audit_write_failed", action=AuditAction.TOKEN_THEFT_DETECTED, error=repr(exc)
             )
 
+    # rejects a refresh token issued before a blanket revocation
     async def _check_user_revocation(self, subject: str, iat: object) -> None:
-        """Raise if a user-level revocation covers this token's issue time."""
         revoked_at_raw: bytes | None = await self._redis.get(BLACKLIST_USER_PREFIX + subject)
         if (
             revoked_at_raw is not None
@@ -206,6 +208,7 @@ class RefreshService:
             await logger.awarning("refresh_failed", reason="all_tokens_revoked")
             raise RefreshError("Refresh token has been revoked")
 
+    # verifies the bound device's signature over a refresh attempt
     async def check_device_binding(
         self,
         jti: object,
@@ -213,7 +216,6 @@ class RefreshService:
         signature: bytes | None,
         actor_id: uuid.UUID,
     ) -> uuid.UUID | None:
-        """Verifies the device signature for a device-bound session before allowing a token refresh."""
         if self._session_repo is None or not isinstance(jti, str):
             return None
         session = await self._session_repo.get_by_jti(jti)
@@ -252,6 +254,7 @@ class RefreshService:
             raise RefreshError("Refresh device signature invalid") from exc
         return session.device_id
 
+    # records why a device signature check failed
     async def _audit_signature_failure(self, actor_id: uuid.UUID, jti: str, reason: str) -> None:
         try:
             await self._audit.record(
@@ -268,8 +271,8 @@ class RefreshService:
                 error=repr(exc),
             )
 
+    # marks a refresh token as rotated for the remainder of its lifetime
     async def _rotate_jti(self, jti_key: str, exp: object) -> None:
-        """Marks the consumed token identifier as rotated so any replay attempt triggers theft detection."""
         ttl = int(exp) - int(datetime.now(UTC).timestamp()) if isinstance(exp, (int, float)) else 0
         if ttl > 0:
             await self._redis.setex(jti_key, ttl, "rotated")

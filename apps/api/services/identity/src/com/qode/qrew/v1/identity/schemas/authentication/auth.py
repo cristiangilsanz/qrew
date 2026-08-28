@@ -1,3 +1,4 @@
+# defines the request and response schemas for logging in and out
 import uuid
 from datetime import datetime
 from typing import Literal

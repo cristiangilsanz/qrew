@@ -1,3 +1,4 @@
+# queues the notification a cancelled event owes its ticket holders
 import asyncio
 import json
 import uuid
@@ -14,6 +15,7 @@ STREAM = "CATALOG"
 DURABLE = "identity-catalog-handler"
 
 
+# decodes a raw message into a json object
 async def _parse(raw: bytes) -> dict[str, Any] | None:
     try:
         data = json.loads(raw.decode())
@@ -24,6 +26,7 @@ async def _parse(raw: bytes) -> dict[str, Any] | None:
         return None
 
 
+# queues the cancellation notification for a cancelled event through the outbox
 async def handle_event_cancelled(raw: bytes) -> None:
     data = await _parse(raw)
     if data is None:
@@ -51,6 +54,7 @@ _HANDLERS = {
 }
 
 
+# subscribes to every catalog event subject and dispatches each message
 async def run_catalog_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -74,6 +78,7 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("catalog_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             try:
                 async for msg in psub.messages:  # type: ignore[attr-defined]

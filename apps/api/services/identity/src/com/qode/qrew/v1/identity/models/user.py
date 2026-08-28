@@ -1,3 +1,4 @@
+# defines the kyc status enum and the user table with its encrypted fields
 import enum
 import uuid
 from datetime import datetime
@@ -103,12 +104,14 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # decrypts the stored totp secret
     @property
     def totp_secret(self) -> str | None:
         if self.totp_secret_ciphertext is None:
             return None
         return pii_crypto.decrypt_bytes(self.totp_secret_ciphertext).decode()
 
+    # encrypts the totp secret for storage
     @totp_secret.setter
     def totp_secret(self, value: str | None) -> None:
         if value is None:
@@ -116,38 +119,46 @@ class User(Base):
         else:
             self.totp_secret_ciphertext = pii_crypto.encrypt_bytes(value.encode())
 
+    # decrypts the stored email
     @property
     def email(self) -> str:
         return pii_crypto.decrypt(self.email_ciphertext)
 
+    # encrypts the email for storage and hashes it for lookup
     @email.setter
     def email(self, value: str) -> None:
         self.email_ciphertext = pii_crypto.encrypt(value)
         self.email_hash = pii_crypto.hash_lookup(value)
 
+    # decrypts the stored phone number
     @property
     def phone_number(self) -> str:
         return pii_crypto.decrypt(self.phone_number_ciphertext)
 
+    # encrypts the phone number for storage and hashes it for lookup
     @phone_number.setter
     def phone_number(self, value: str) -> None:
         self.phone_number_ciphertext = pii_crypto.encrypt(value)
         self.phone_number_hash = pii_crypto.hash_lookup(value)
 
+    # decrypts the stored full name
     @property
     def full_name(self) -> str:
         return pii_crypto.decrypt(self.full_name_ciphertext)
 
+    # encrypts the full name for storage
     @full_name.setter
     def full_name(self, value: str) -> None:
         self.full_name_ciphertext = pii_crypto.encrypt(value)
 
+    # decrypts the stored pending email
     @property
     def pending_email(self) -> str | None:
         if self.pending_email_ciphertext is None:
             return None
         return pii_crypto.decrypt(self.pending_email_ciphertext)
 
+    # encrypts the pending email for storage and hashes it for lookup
     @pending_email.setter
     def pending_email(self, value: str | None) -> None:
         if value is None:
@@ -157,12 +168,14 @@ class User(Base):
             self.pending_email_ciphertext = pii_crypto.encrypt(value)
             self.pending_email_hash = pii_crypto.hash_lookup(value)
 
+    # decrypts the stored pending phone number
     @property
     def pending_phone_number(self) -> str | None:
         if self.pending_phone_number_ciphertext is None:
             return None
         return pii_crypto.decrypt(self.pending_phone_number_ciphertext)
 
+    # encrypts the pending phone number for storage and hashes it for lookup
     @pending_phone_number.setter
     def pending_phone_number(self, value: str | None) -> None:
         if value is None:

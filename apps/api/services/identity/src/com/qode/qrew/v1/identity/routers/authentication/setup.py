@@ -1,3 +1,4 @@
+# exposes the endpoints that submit kyc and complete account setup
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
@@ -29,16 +30,18 @@ router = APIRouter(prefix="/setup")
 
 _MAX_FILE_BYTES = 10 * 1024 * 1024
 _ALLOWED_MAGIC = [
-    b"\xff\xd8\xff",  # JPEG
-    b"\x89PNG\r\n\x1a\n",  # PNG
-    b"%PDF-",  # PDF
+    b"\xff\xd8\xff",
+    b"\x89PNG\r\n\x1a\n",
+    b"%PDF-",
 ]
 
 
+# checks that an uploaded file matches an accepted document type
 def _is_allowed_file(content: bytes) -> bool:
     return any(content.startswith(magic) for magic in _ALLOWED_MAGIC)
 
 
+# submits a national identity document for kyc review
 @router.post(
     "/kyc/upload",
     response_model=KycUploadResponse,
@@ -52,7 +55,6 @@ async def kyc_upload(
     current_user: User = Depends(get_setup_or_full_user),
     service: KycService = Depends(get_kyc_service),
 ) -> KycUploadResponse:
-    """Submit a national ID document for KYC verification."""
     content = await document.read()
     if len(content) > _MAX_FILE_BYTES:
         raise HTTPException(
@@ -72,6 +74,7 @@ async def kyc_upload(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# exchanges a setup token for a full access token
 @router.post(
     "/complete-setup",
     response_model=LoginResponse,
@@ -84,7 +87,6 @@ async def complete_setup(
     current_user: User = Depends(get_setup_or_full_user),
     service: CompleteSetupService = Depends(get_complete_setup_service),
 ) -> LoginResponse:
-    """Exchange a setup token for a full access token."""
     ip_address = client_ip(request, settings.trusted_proxy_ip)
     user_agent = request.headers.get("User-Agent")
     device_fingerprint = request.headers.get("X-Device-Fingerprint")

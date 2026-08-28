@@ -1,3 +1,4 @@
+# exposes the identity models package
 from com.qode.qrew.v1.identity.core.database import Base
 from com.qode.qrew.v1.identity.models.session import Session
 from com.qode.qrew.v1.identity.models.user import User

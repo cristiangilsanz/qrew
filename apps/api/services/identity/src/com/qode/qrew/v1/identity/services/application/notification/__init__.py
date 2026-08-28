@@ -1,3 +1,4 @@
+# exposes the notification service its dispatcher and its templates
 from com.qode.qrew.v1.identity.services.application.notification.sender import NotificationService
 from com.qode.qrew.v1.identity.services.application.notification.templates import (
     EMAIL_TEMPLATES,

@@ -1,3 +1,4 @@
+# stores uploaded objects on the local filesystem
 import asyncio
 import os
 from pathlib import Path
@@ -15,8 +16,7 @@ from com.qode.qrew.v1.identity.services.application.storage.security.signing imp
 
 
 class LocalFilesystemBackend:
-    """Store objects on the local filesystem under a configurable root."""
-
+    # stores the root directory and signing secret the backend uses
     def __init__(
         self,
         *,
@@ -29,6 +29,7 @@ class LocalFilesystemBackend:
         self._url_prefix = url_prefix.rstrip("/") + "/"
         self._root.mkdir(parents=True, exist_ok=True)
 
+    # resolves an object key to a path confined to the storage root
     def _path_for(self, key: ObjectKey) -> Path:
         if not is_valid_key(key):
             raise ValueError("invalid object key")
@@ -37,6 +38,7 @@ class LocalFilesystemBackend:
             raise ValueError("invalid object key")
         return candidate
 
+    # writes an object to disk atomically
     async def put(self, key: ObjectKey, content: bytes, content_type: str) -> None:
         del content_type
         target = self._path_for(key)
@@ -45,12 +47,14 @@ class LocalFilesystemBackend:
         await asyncio.to_thread(tmp.write_bytes, content)
         await asyncio.to_thread(os.replace, tmp, target)
 
+    # reads an object from disk
     async def get(self, key: ObjectKey) -> bytes:
         target = self._path_for(key)
         if not await asyncio.to_thread(target.exists):
             raise ObjectNotFoundError(key)
         return await asyncio.to_thread(target.read_bytes)
 
+    # deletes an object from disk and any directories left empty
     async def delete(self, key: ObjectKey) -> None:
         target = self._path_for(key)
         try:
@@ -65,10 +69,12 @@ class LocalFilesystemBackend:
                 break
             parent = parent.parent
 
+    # checks whether an object exists on disk
     async def exists(self, key: ObjectKey) -> bool:
         target = self._path_for(key)
         return await asyncio.to_thread(target.exists)
 
+    # signs a url that lets the caller upload an object
     def sign_put_url(self, key: ObjectKey, content_type: str, ttl_seconds: int) -> SignedUrl:
         expires_at, signature = sign(
             secret=self._signing_secret,
@@ -84,6 +90,7 @@ class LocalFilesystemBackend:
         )
         return SignedUrl(url=url, key=key, expires_at=expires_at, content_type=content_type)
 
+    # signs a url that lets the caller download an object
     def sign_get_url(self, key: ObjectKey, ttl_seconds: int) -> SignedUrl:
         expires_at, signature = sign(
             secret=self._signing_secret,
@@ -95,6 +102,7 @@ class LocalFilesystemBackend:
         url = f"{self._url_prefix}{key}?expires_at={expires_at}&sig={signature}"
         return SignedUrl(url=url, key=key, expires_at=expires_at, content_type=None)
 
+    # verifies a signed upload request
     async def verify_signed_put(
         self,
         key: ObjectKey,
@@ -111,6 +119,7 @@ class LocalFilesystemBackend:
             signature=signature,
         )
 
+    # verifies a signed download request
     async def verify_signed_get(self, key: ObjectKey, expires_at: int, signature: str) -> None:
         verify(
             secret=self._signing_secret,

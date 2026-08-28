@@ -1,3 +1,4 @@
+# binds a device to a user by verifying its ecdsa challenge response
 import base64
 import uuid
 from datetime import UTC, datetime
@@ -28,10 +29,11 @@ _CHALLENGE_TTL_SECONDS = 300
 
 
 class DeviceBindingError(DomainError):
-    """Raised when a device binding operation cannot be completed."""
+    pass
 
 
 class DeviceBindingService:
+    # stores the repository redis client and audit service the service uses
     def __init__(
         self,
         device_repo: DeviceRepository,
@@ -42,8 +44,8 @@ class DeviceBindingService:
         self._redis = redis
         self._audit = audit
 
+    # generates a short lived challenge for the device to sign
     async def begin(self, user: User) -> str:
-        """Generates a short-lived challenge nonce and stores it for later verification."""
         challenge = str(uuid.uuid4())
         await self._redis.set(
             _CHALLENGE_PREFIX + str(user.id),
@@ -53,6 +55,7 @@ class DeviceBindingService:
         await logger.ainfo("device_bind_begin", user_id=str(user.id))
         return challenge
 
+    # verifies the signed challenge and registers the device
     async def complete(
         self,
         user: User,
@@ -60,7 +63,6 @@ class DeviceBindingService:
         public_key_b64: str,
         signature_b64: str,
     ) -> Device:
-        """Verifies a cryptographic signature over the pending challenge and registers the device."""
         raw_challenge: bytes | None = await self._redis.get(_CHALLENGE_PREFIX + str(user.id))
         if raw_challenge is None:
             raise DeviceBindingError("Binding session expired. Please start again.", field=None)
@@ -133,10 +135,10 @@ class DeviceBindingService:
         return device
 
 
+# publishes that a device was bound onto the shared nats connection
 async def _publish_device_attested(
     device: Device, *, platform: str | None, attested_at: datetime
 ) -> None:
-    """Announces a newly bound device so the ticketing projection can trust it."""
     try:
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
         from messaging.publisher import publish as nats_publish  # type: ignore[import-not-found]
@@ -160,17 +162,17 @@ async def _publish_device_attested(
         )
 
 
+# adds the padding a base64url string needs to decode
 def _pad_b64(value: str) -> str:
-    """Add base64url padding if missing."""
     return value + "=" * (-len(value) % 4)
 
 
+# verifies an ecdsa signature accepting either raw or der encoding
 def verify_ecdsa(
     pub_key: EllipticCurvePublicKey,
     sig_bytes: bytes,
     data: bytes,
 ) -> None:
-    """Verify a device signature against a public key."""
     key_size_bytes = (pub_key.key_size + 7) // 8
     p1363_len = key_size_bytes * 2
 

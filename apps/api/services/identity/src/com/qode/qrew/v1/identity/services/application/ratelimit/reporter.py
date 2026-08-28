@@ -1,3 +1,4 @@
+# records a debounced audit event whenever a caller is rate limited
 import time
 import uuid
 from collections.abc import Awaitable, Callable
@@ -16,8 +17,8 @@ logger = structlog.get_logger(__name__)
 _last_record: dict[str, float] = {}
 
 
+# decides whether enough time has passed to record another hit for this scope
 def _debounced(scope_key: str) -> bool:
-    """Return whether enough time has passed since the last audit for this scope."""
     window = settings.ratelimit_audit_debounce_seconds
     if window <= 0:
         return True
@@ -29,11 +30,12 @@ def _debounced(scope_key: str) -> bool:
     return True
 
 
+# builds a handler that records a rate limit rejection to the audit trail
 def make_audit_rejection_handler(
     audit: AuditService,
 ) -> Callable[[Request, RateLimitedError], Awaitable[None]]:
-    """Build a rejection handler that records audit events with debouncing."""
 
+    # records the rejected request unless it was already recorded recently
     async def handler(request: Request, exc: RateLimitedError) -> None:
         if not _debounced(exc.scope):
             return

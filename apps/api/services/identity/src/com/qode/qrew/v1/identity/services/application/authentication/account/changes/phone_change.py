@@ -1,3 +1,4 @@
+# requests and confirms a change of a user's phone number
 from datetime import UTC, datetime
 
 import structlog
@@ -21,10 +22,11 @@ logger = structlog.get_logger(__name__)
 
 
 class PhoneChangeError(DomainError):
-    """Raised when a phone number change cannot be completed."""
+    pass
 
 
 class PhoneChangeService:
+    # stores the repository notifier and audit service the service uses
     def __init__(
         self,
         user_repo: UserRepository,
@@ -35,10 +37,10 @@ class PhoneChangeService:
         self._notifier = notifier
         self._audit = audit
 
+    # verifies the password and sends a verification code to the new number
     async def request_change(
         self, user: User, new_phone_number: str, current_password: str
     ) -> None:
-        """Verify password, store pending phone state, and send OTP to new number."""
         if not verify_password(current_password, user.hashed_password):
             raise PhoneChangeError("Current password is incorrect", field="current_password")
 
@@ -72,8 +74,8 @@ class PhoneChangeService:
                 "audit_write_failed", action=AuditAction.PHONE_CHANGE_REQUESTED, error=repr(exc)
             )
 
+    # confirms a pending phone change using its verification code
     async def confirm_change(self, user: User, new_phone_number: str, otp: str) -> None:
-        """Validate OTP and swap the phone number."""
         if (
             user.pending_phone_number != new_phone_number
             or user.pending_phone_otp != pii_crypto.hash_lookup(otp)

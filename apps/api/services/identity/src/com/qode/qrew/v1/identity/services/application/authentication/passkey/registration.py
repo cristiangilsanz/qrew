@@ -1,3 +1,4 @@
+# registers a new passkey for a user
 import uuid
 
 import redis.asyncio as aioredis
@@ -35,8 +36,7 @@ logger = structlog.get_logger(__name__)
 
 
 class PasskeyRegistrationService:
-    """Manage the passkey registration flow for the current user."""
-
+    # stores the repository redis client and audit service the service uses
     def __init__(
         self,
         passkey_repo: PasskeyCredentialRepository,
@@ -47,8 +47,8 @@ class PasskeyRegistrationService:
         self._redis = redis
         self._audit = audit
 
+    # generates the webauthn options for a new resident key registration
     async def begin(self, user: User) -> str:
-        """Generate registration options and cache the challenge."""
         options = webauthn.generate_registration_options(
             rp_id=settings.rp_id,
             rp_name=settings.rp_name,
@@ -64,8 +64,8 @@ class PasskeyRegistrationService:
         await logger.ainfo("passkey_registration_begin", user_id=str(user.id))
         return webauthn.options_to_json(options)
 
+    # verifies the attestation and stores the new passkey credential
     async def complete(self, user: User, request: PasskeyRegistrationCompleteRequest) -> None:
-        """Verify the attestation response and persist the credential."""
         raw_challenge = await self._consume_challenge(user)
         verification = self._verify_attestation(user, raw_challenge, request)
         await self._passkey_repo.create(
@@ -81,8 +81,8 @@ class PasskeyRegistrationService:
         await logger.ainfo("passkey_registered", user_id=str(user.id))
         await self._audit_safe(user.id)
 
+    # reads and deletes the pending registration challenge
     async def _consume_challenge(self, user: User) -> bytes:
-        """Pop and return the cached registration challenge."""
         raw_challenge: bytes | None = await self._redis.get(challenge_key(user.id))
         if raw_challenge is None:
             await logger.awarning(
@@ -94,13 +94,13 @@ class PasskeyRegistrationService:
         await self._redis.delete(challenge_key(user.id))
         return raw_challenge
 
+    # verifies the webauthn registration response against the challenge
     def _verify_attestation(
         self,
         user: User,
         raw_challenge: bytes,
         request: PasskeyRegistrationCompleteRequest,
     ) -> VerifiedRegistration:
-        """Verify the attestation payload against the cached challenge."""
         expected_origins: str | list[str] = (
             [settings.rp_expected_origin] + settings.rp_expected_origins
             if settings.rp_expected_origins
@@ -131,8 +131,8 @@ class PasskeyRegistrationService:
             )
             raise PasskeyError(msg) from exc
 
+    # records the passkey registration without letting a failure interrupt it
     async def _audit_safe(self, user_id: uuid.UUID) -> None:
-        """Record the registration audit event without propagating errors."""
         try:
             await self._audit.record(
                 action=AuditAction.PASSKEY_REGISTERED,

@@ -1,3 +1,4 @@
+# entry point that starts the identity background worker
 import asyncio
 
 import structlog
@@ -8,6 +9,7 @@ from com.qode.qrew.v1.identity.core.config import settings
 logger = structlog.get_logger(__name__)
 
 
+# connects to nats and starts every identity subscriber
 async def main() -> None:
     if not settings.nats_url:
         await logger.awarning("identity_worker.no_nats_url")
@@ -25,6 +27,7 @@ async def main() -> None:
     )
 
 
+# runs the worker main coroutine until it stops
 def run() -> None:
     asyncio.run(main())
 

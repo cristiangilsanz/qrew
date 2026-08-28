@@ -1,3 +1,4 @@
+# defines the request and response schemas for changing and recovering an account
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from com.qode.qrew.v1.identity.schemas._validators import (
@@ -11,10 +12,10 @@ class ChangePasswordRequest(BaseModel):
     current_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8)
 
+    # validates that the new password is strong enough
     @field_validator("new_password")
     @classmethod
     def _v_new_password(cls, v: str) -> str:
-        """Reject weak passwords."""
         return validate_strong_password(v)
 
 
@@ -26,10 +27,10 @@ class ChangeEmailRequest(BaseModel):
     new_email: EmailStr
     current_password: str = Field(..., min_length=1)
 
+    # validates that the new email is not a disposable address
     @field_validator("new_email")
     @classmethod
     def _v_new_email(cls, v: str) -> str:
-        """Reject disposable email addresses."""
         return validate_non_disposable_email(v)
 
 
@@ -45,10 +46,10 @@ class ChangePhoneRequest(BaseModel):
     new_phone_number: str = Field(..., min_length=7, max_length=20)
     current_password: str = Field(..., min_length=1)
 
+    # validates that the new phone number is valid for its region
     @field_validator("new_phone_number")
     @classmethod
     def _v_new_phone(cls, v: str) -> str:
-        """Reject invalid phone numbers."""
         return validate_phone_number(v)
 
 

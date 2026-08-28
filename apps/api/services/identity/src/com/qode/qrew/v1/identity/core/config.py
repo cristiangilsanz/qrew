@@ -1,3 +1,4 @@
+# defines the configuration settings for the identity service
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -118,6 +119,7 @@ class Settings(BaseSettings):
     audit_url: str = "http://localhost:8007"
     internal_api_key: str = ""
 
+    # orders the configuration sources so the yaml file can override the defaults
     @classmethod
     def settings_customise_sources(
         cls,

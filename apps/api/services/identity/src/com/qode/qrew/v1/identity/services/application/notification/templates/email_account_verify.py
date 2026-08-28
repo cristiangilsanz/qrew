@@ -1,3 +1,4 @@
+# renders the html body of the account verification email
 from com.qode.qrew.v1.identity.services.application.notification.templates._base import (
     cta_button,
     fallback_link,
@@ -5,6 +6,7 @@ from com.qode.qrew.v1.identity.services.application.notification.templates._base
 )
 
 
+# renders the email body carrying the account verification link
 def verification_link_email(
     full_name: str, link: str, expire_hours: int, logo_url: str | None = None
 ) -> str:

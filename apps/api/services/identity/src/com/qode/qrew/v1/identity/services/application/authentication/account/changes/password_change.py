@@ -1,3 +1,4 @@
+# changes a user's password and revokes their other sessions
 import redis.asyncio as aioredis
 import structlog
 
@@ -21,10 +22,11 @@ logger = structlog.get_logger(__name__)
 
 
 class PasswordChangeError(DomainError):
-    """Raised when a password change cannot be completed."""
+    pass
 
 
 class PasswordChangeService:
+    # stores the repositories redis client and audit service the service uses
     def __init__(
         self,
         user_repo: UserRepository,
@@ -37,8 +39,8 @@ class PasswordChangeService:
         self._redis = redis
         self._audit = audit
 
+    # verifies the current password and revokes every other session
     async def change_password(self, user: User, current_password: str, new_password: str) -> None:
-        """Verify current password, update to new one, and revoke all sessions."""
         if not verify_password(current_password, user.hashed_password):
             raise PasswordChangeError("Current password is incorrect", field="current_password")
 

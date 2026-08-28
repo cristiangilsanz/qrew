@@ -1,3 +1,4 @@
+# exposes the admin endpoint that approves or rejects a kyc submission
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -19,6 +20,7 @@ from ._deps import get_kyc_review_service
 router = APIRouter(prefix="/kyc")
 
 
+# approves or rejects a user's pending kyc submission
 @router.post(
     "/{user_id}/review",
     response_model=KycReviewResponse,
@@ -33,7 +35,6 @@ async def kyc_review(
     _admin: User = Depends(get_admin_user),
     service: KycReviewService = Depends(get_kyc_review_service),
 ) -> KycReviewResponse:
-    """Approve or reject a pending KYC submission."""
     try:
         user = await service.review(user_id, body.action, body.reason)
         return KycReviewResponse(

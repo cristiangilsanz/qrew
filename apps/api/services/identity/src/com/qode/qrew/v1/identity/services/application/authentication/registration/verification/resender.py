@@ -1,3 +1,4 @@
+# resends an email or phone verification code without disclosing whether the account exists
 import structlog
 
 from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
@@ -17,16 +18,17 @@ logger = structlog.get_logger(__name__)
 
 
 class ResendError(DomainError):
-    """Raised when a verification resend cannot be completed."""
+    pass
 
 
 class ResendEmailVerificationService:
+    # stores the repository and notifier the service uses
     def __init__(self, repo: UserRepository, notifier: NotificationDispatcher) -> None:
         self._repo = repo
         self._notifier = notifier
 
+    # resends the email verification link if the account is not already verified
     async def resend(self, email: str) -> None:
-        """Generates a new email verification credential and sends it to the user."""
         user = await self._repo.get_by_email(email)
 
         if user is None:
@@ -50,12 +52,13 @@ class ResendEmailVerificationService:
 
 
 class ResendPhoneOtpService:
+    # stores the repository and notifier the service uses
     def __init__(self, repo: UserRepository, notifier: NotificationDispatcher) -> None:
         self._repo = repo
         self._notifier = notifier
 
+    # resends the phone verification otp if the account is not already verified
     async def resend(self, phone_number: str) -> None:
-        """Generate a fresh OTP and dispatch it via SMS."""
         user = await self._repo.get_by_phone_number(phone_number)
 
         if user is None:

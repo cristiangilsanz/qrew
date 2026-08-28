@@ -1,3 +1,4 @@
+# records payment outcomes to the audit trail and queues their notifications
 import asyncio
 import json
 import uuid
@@ -16,6 +17,7 @@ STREAM = "PAYMENTS"
 DURABLE = "identity-payment-handler"
 
 
+# decodes a raw message into a json object
 async def _parse(raw: bytes) -> dict[str, Any] | None:
     try:
         data = json.loads(raw.decode())
@@ -26,6 +28,7 @@ async def _parse(raw: bytes) -> dict[str, Any] | None:
         return None
 
 
+# reads the acting user id from a message falling back to a random one
 def _actor_id(data: dict[str, Any]) -> uuid.UUID:
     try:
         return uuid.UUID(str(data["data"]["user_id"]))
@@ -33,6 +36,7 @@ def _actor_id(data: dict[str, Any]) -> uuid.UUID:
         return uuid.uuid4()
 
 
+# records a successful payment and queues its notification
 async def handle_payment_succeeded(raw: bytes) -> None:
     data = await _parse(raw)
     if data is None:
@@ -64,6 +68,7 @@ async def handle_payment_succeeded(raw: bytes) -> None:
     await logger.ainfo("payment_events.succeeded", reservation_id=str(reservation_id))
 
 
+# records a failed payment and queues its notification
 async def handle_payment_failed(raw: bytes) -> None:
     data = await _parse(raw)
     if data is None:
@@ -99,6 +104,7 @@ async def handle_payment_failed(raw: bytes) -> None:
         await session.commit()
 
 
+# records a refund and queues a cancellation notification for a full refund
 async def handle_payment_refunded(raw: bytes) -> None:
     data = await _parse(raw)
     if data is None:
@@ -151,6 +157,7 @@ async def handle_payment_refunded(raw: bytes) -> None:
         await session.commit()
 
 
+# records an opened chargeback and queues its cancellation notification
 async def handle_chargeback_opened(raw: bytes) -> None:
     data = await _parse(raw)
     if data is None:
@@ -185,6 +192,7 @@ async def handle_chargeback_opened(raw: bytes) -> None:
         await session.commit()
 
 
+# records that a chargeback closed
 async def handle_chargeback_closed(raw: bytes) -> None:
     data = await _parse(raw)
     if data is None:
@@ -216,6 +224,7 @@ _HANDLERS = {
 }
 
 
+# subscribes to every payments event subject and dispatches each message
 async def run_payment_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -239,6 +248,7 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("payment_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             try:
                 async for msg in psub.messages:  # type: ignore[attr-defined]

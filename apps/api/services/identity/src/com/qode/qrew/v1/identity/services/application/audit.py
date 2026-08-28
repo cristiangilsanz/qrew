@@ -1,3 +1,4 @@
+# publishes audit events and reads recent login history for the identity service
 import uuid
 from datetime import UTC, datetime
 
@@ -14,8 +15,7 @@ _ME_PATTERN = "me.{user_id}"
 
 
 class AuditService:
-    """Forwards audit events to the message broker and fans out real-time notifications to connected users."""
-
+    # publishes an audit event onto the shared nats connection and the caller's channel
     async def record(
         self,
         action: str,
@@ -76,9 +76,9 @@ class AuditService:
             except Exception as exc:
                 await logger.awarning("ws_fanout_publish_failed", action=action, error=repr(exc))
 
+    # reads the caller's recent login events with a known ip address
     async def get_recent_login_events(
         self, user_id: uuid.UUID, limit: int = 5
     ) -> list[AuditTrailEntry]:
-        """Returns the most recent logins of a user, as the audit service reports them."""
         page = await fetch_trail(user_id, action="login", limit=limit)
         return [entry for entry in page.items if entry.ip_address]

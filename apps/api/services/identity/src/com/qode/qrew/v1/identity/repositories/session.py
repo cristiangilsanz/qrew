@@ -1,3 +1,4 @@
+# reads and writes a user's login sessions
 import uuid
 from datetime import UTC, datetime
 
@@ -8,37 +9,38 @@ from com.qode.qrew.v1.identity.models.session import Session
 
 
 class SessionRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # writes a new session to the database
     async def create(self, session: Session) -> Session:
-        """Persist a new session record."""
         self._session.add(session)
         await self._session.flush()
         await self._session.refresh(session)
         return session
 
+    # reads a session by its refresh token identifier
     async def get_by_jti(self, jti: str) -> Session | None:
-        """Return the session matching the given token identifier."""
         result = await self._session.execute(select(Session).where(Session.jti == jti).limit(1))
         return result.scalar_one_or_none()
 
+    # lists a user's sessions most recently used first
     async def get_all_by_user_id(self, user_id: uuid.UUID) -> list[Session]:
-        """Return all sessions for the given user ordered."""
         result = await self._session.execute(
             select(Session).where(Session.user_id == user_id).order_by(Session.last_used_at.desc())
         )
         return list(result.scalars().all())
 
+    # counts how many sessions a user has open
     async def count_by_user_id(self, user_id: uuid.UUID) -> int:
-        """Return the number of sessions persisted for the given user."""
         result = await self._session.execute(
             select(func.count()).select_from(Session).where(Session.user_id == user_id)
         )
         return int(result.scalar_one())
 
+    # lists a user's oldest sessions up to a limit
     async def get_oldest_by_user_id(self, user_id: uuid.UUID, limit: int) -> list[Session]:
-        """Return the oldest sessions for a user up to a specified count."""
         result = await self._session.execute(
             select(Session)
             .where(Session.user_id == user_id)
@@ -47,8 +49,8 @@ class SessionRepository:
         )
         return list(result.scalars().all())
 
+    # rotates a session's refresh token identifier
     async def update_jti(self, old_jti: str, new_jti: str) -> None:
-        """Rotate the token identifier of a session and stamp last used."""
         result = await self._session.execute(select(Session).where(Session.jti == old_jti).limit(1))
         session = result.scalar_one_or_none()
         if session is not None:
@@ -56,21 +58,21 @@ class SessionRepository:
             session.last_used_at = datetime.now(UTC)
             await self._session.flush()
 
+    # records when a session last reasserted its passkey
     async def update_last_asserted_at(self, jti: str, asserted_at: datetime) -> None:
-        """Stamp the last passkey re-assertion timestamp on the given session."""
         result = await self._session.execute(select(Session).where(Session.jti == jti).limit(1))
         session = result.scalar_one_or_none()
         if session is not None:
             session.last_asserted_at = asserted_at
             await self._session.flush()
 
+    # deletes a session by its refresh token identifier
     async def delete_by_jti(self, jti: str) -> None:
-        """Delete the session matching the given token identifier."""
         await self._session.execute(delete(Session).where(Session.jti == jti))
         await self._session.flush()
 
+    # deletes every session bound to a device and returns their identifiers
     async def delete_by_device_id(self, device_id: uuid.UUID) -> list[str]:
-        """Delete all sessions linked to a specific device and return their JTIs."""
         result = await self._session.execute(
             select(Session.jti).where(Session.device_id == device_id)
         )
@@ -79,8 +81,8 @@ class SessionRepository:
         await self._session.flush()
         return jtis
 
+    # deletes every session of a user and returns their identifiers
     async def delete_all_by_user_id(self, user_id: uuid.UUID) -> list[str]:
-        """Delete all sessions for a user and return their token identifiers."""
         result = await self._session.execute(select(Session.jti).where(Session.user_id == user_id))
         jtis = list(result.scalars().all())
         await self._session.execute(delete(Session).where(Session.user_id == user_id))

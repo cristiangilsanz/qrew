@@ -1,3 +1,4 @@
+# drains the outbox by enqueuing each undispatched row with backoff on failure
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -21,8 +22,8 @@ logger = structlog.get_logger(__name__)
 EnqueueFn = Callable[[str, dict[str, Any]], Awaitable[Any]]
 
 
+# looks up the retry delay for a given attempt count
 def _backoff_delay_seconds(attempt: int) -> int:
-    """Pick the next backoff window based on the attempt count."""
     delays = settings.outbox_backoff_delays_seconds
     if not delays:
         return 60
@@ -30,6 +31,7 @@ def _backoff_delay_seconds(attempt: int) -> int:
     return delays[index]
 
 
+# locks a batch of undispatched rows that are due for another attempt
 async def _select_batch(session: AsyncSession, batch_size: int) -> list[OutboxEvent]:
     stmt = (
         select(OutboxEvent)
@@ -43,13 +45,13 @@ async def _select_batch(session: AsyncSession, batch_size: int) -> list[OutboxEv
     return list(result.scalars().all())
 
 
+# enqueues a batch of outbox rows and parks unrecoverable ones in the dead letter queue
 @traced("outbox.drain")
 async def drain_once(
     *,
     batch_size: int | None = None,
     enqueue_fn: EnqueueFn | None = None,
 ) -> int:
-    """Pull one batch of pending outbox rows and enqueue each."""
     enqueue_target = enqueue_fn or default_enqueue
     limit = batch_size if batch_size is not None else settings.outbox_batch_size
     drained = 0
@@ -104,10 +106,9 @@ async def drain_once(
 
 
 class IdentityOutboxSweeper:
-    """Concrete OutboxSweeper for the identity service."""
-
+    # drains a batch of the outbox
     async def sweep(self, batch_size: int = 50) -> int:
         return await drain_once(batch_size=batch_size)
 
 
-_: _OutboxSweeperProtocol = IdentityOutboxSweeper()  # static conformance check
+_: _OutboxSweeperProtocol = IdentityOutboxSweeper()

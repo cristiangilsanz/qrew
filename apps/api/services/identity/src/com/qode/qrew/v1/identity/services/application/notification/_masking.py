@@ -1,8 +1,9 @@
+# masks emails and phone numbers before they reach a log or an audit record
 import re
 
 
+# masks the local part of an email leaving its first and last letter
 def mask_email(email: str) -> str:
-    """Partially obscures an email address for display in notifications."""
     try:
         local, domain = email.split("@", 1)
         if len(local) <= 2:
@@ -14,8 +15,8 @@ def mask_email(email: str) -> str:
         return "***@***"
 
 
+# masks a phone number leaving only its last four digits
 def mask_phone_number(phone: str) -> str:
-    """Partially obscures a phone number for display in notifications."""
     digits = re.sub(r"\D", "", phone)
     if len(digits) < 4:
         return "****"

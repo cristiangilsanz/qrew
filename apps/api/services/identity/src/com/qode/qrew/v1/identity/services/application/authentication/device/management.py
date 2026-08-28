@@ -1,3 +1,4 @@
+# lists and revokes a user's bound devices
 import uuid
 from datetime import UTC, datetime
 
@@ -19,10 +20,10 @@ _BLACKLIST_JTI_PREFIX = "blacklist:jti:"
 _JTI_TTL_SECONDS = settings.refresh_token_expire_days * 86400
 
 
+# publishes that a device was revoked onto the shared nats connection
 async def _publish_device_revoked(
     device_id: uuid.UUID, user_id: uuid.UUID, revoked_at: datetime | None
 ) -> None:
-    """Announces a revoked device so the ticketing projection stops trusting it."""
     try:
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
         from messaging.publisher import publish as nats_publish  # type: ignore[import-not-found]
@@ -46,34 +47,35 @@ async def _publish_device_revoked(
 
 
 class DeviceError(DomainError):
-    """Raised when a device management operation cannot be completed."""
+    pass
 
 
 class DeviceService:
+    # stores the repositories redis client and audit service the service uses
     def __init__(
         self,
         device_repo: DeviceRepository,
         session_repo: SessionRepository,
         redis: aioredis.Redis,  # type: ignore[type-arg]
         audit: AuditService,
-        session: object | None = None,  # kept for backwards compat, unused
+        session: object | None = None,
     ) -> None:
         self._device_repo = device_repo
         self._session_repo = session_repo
         self._redis = redis
         self._audit = audit
 
+    # lists a user's devices that have not been revoked
     async def list_devices(self, user: User) -> list[Device]:
-        """Return all non-revoked devices for the user."""
         return await self._device_repo.get_active_by_user_id(user.id)
 
+    # revokes one of a user's devices and kills its sessions
     async def revoke_device(
         self,
         user: User,
         device_id: uuid.UUID,
         calling_device_id: uuid.UUID | None = None,
     ) -> None:
-        """Mark a device as revoked and cascade-kill all user sessions."""
         device = await self._device_repo.get_by_id(device_id)
         if device is None or device.user_id != user.id:
             raise DeviceError("Device not found.", field=None)
@@ -101,12 +103,12 @@ class DeviceService:
 
         await _publish_device_revoked(device_id, user.id, device.revoked_at)
 
+    # revokes every device of a user except the one calling
     async def revoke_all_devices(
         self,
         user: User,
         calling_device_id: uuid.UUID | None = None,
     ) -> int:
-        """Revokes all devices for the user except the one currently in use."""
         revoked_ids = await self._device_repo.revoke_all_by_user_id(
             user.id, exclude_id=calling_device_id
         )
@@ -138,14 +140,14 @@ class DeviceService:
 
         return revoked_count
 
+    # revokes and blacklists every session bound to a device
     async def _kill_device_sessions(self, device_id: uuid.UUID) -> None:
-        """Removes sessions linked to a specific device and blacklists their tokens."""
         jtis = await self._session_repo.delete_by_device_id(device_id)
         for jti in jtis:
             await self._redis.setex(_BLACKLIST_JTI_PREFIX + jti, _JTI_TTL_SECONDS, "1")
 
+    # revokes and blacklists every session of a user
     async def _kill_all_sessions(self, user_id: uuid.UUID) -> None:
-        """Removes all active sessions for a user and invalidates their tokens."""
         jtis = await self._session_repo.delete_all_by_user_id(user_id)
         for jti in jtis:
             await self._redis.setex(_BLACKLIST_JTI_PREFIX + jti, _JTI_TTL_SECONDS, "1")

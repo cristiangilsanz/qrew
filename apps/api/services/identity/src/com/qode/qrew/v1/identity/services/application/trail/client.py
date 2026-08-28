@@ -1,3 +1,4 @@
+# fetches a user's audit trail from the audit service
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -13,7 +14,7 @@ _TIMEOUT_SECONDS = 5.0
 
 
 class AuditUnavailableError(Exception):
-    """Raised when the audit service cannot answer a trail query."""
+    pass
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,7 @@ class AuditTrailPage:
     next_cursor: str | None
 
 
+# fetches a page of a user's audit trail from the audit service
 async def fetch_trail(
     actor_id: uuid.UUID,
     *,
@@ -41,7 +43,6 @@ async def fetch_trail(
     cursor: str | None = None,
     limit: int = 50,
 ) -> AuditTrailPage:
-    """Reads the audit trail of one actor from the service that owns it."""
     params: dict[str, str] = {"actor_id": str(actor_id), "limit": str(limit)}
     if action is not None:
         params["action"] = action

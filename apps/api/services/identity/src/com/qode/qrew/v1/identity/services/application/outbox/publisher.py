@@ -1,3 +1,4 @@
+# writes an outbox row in the same transaction as the change it announces
 from typing import Any
 
 import structlog
@@ -10,6 +11,7 @@ from com.qode.qrew.v1.identity.models.outbox import OutboxEvent
 logger = structlog.get_logger(__name__)
 
 
+# writes an outbox row carrying the current trace context
 @traced("outbox.publish")
 async def publish_via_outbox(
     session: AsyncSession,
@@ -19,7 +21,6 @@ async def publish_via_outbox(
     job_name: str,
     payload: dict[str, Any],
 ) -> OutboxEvent:
-    """Insert an outbox row inside the caller's open transaction."""
     enriched = dict(payload)
     span = trace.get_current_span()
     if span.get_span_context().is_valid:

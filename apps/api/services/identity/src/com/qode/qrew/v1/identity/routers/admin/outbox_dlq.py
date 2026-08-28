@@ -1,3 +1,4 @@
+# exposes the admin endpoint that lists outbox rows stuck in the dead letter queue
 import uuid
 from datetime import datetime
 
@@ -27,6 +28,7 @@ class OutboxDlqItem(BaseModel):
     dispatched_at: datetime | None
 
 
+# paginates the outbox rows the drainer parked in the dead letter queue
 @router.get(
     "/dlq",
     response_model=Page[OutboxDlqItem],
@@ -41,7 +43,6 @@ async def list_dlq(
     _admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> Page[OutboxDlqItem]:
-    """Return outbox rows that were parked in the DLQ."""
     del request
     page_limit = clamp_limit(limit, default=20)
     rows, next_cursor = await paginate_dlq(db, cursor=cursor, limit=page_limit)

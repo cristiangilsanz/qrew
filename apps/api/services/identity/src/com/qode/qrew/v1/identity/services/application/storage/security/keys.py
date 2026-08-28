@@ -1,3 +1,4 @@
+# builds and validates the object keys stored uploads are addressed by
 import re
 import uuid
 from datetime import UTC, datetime
@@ -13,13 +14,13 @@ _KEY_PATTERN = re.compile(
 )
 
 
+# checks whether a storage kind is recognised
 def is_known_kind(kind: str) -> bool:
-    """Return whether the kind is on the allow-list."""
     return kind in _ALLOWED_KINDS
 
 
+# builds a new object key scoped to a tenant kind and date
 def build_key(*, tenant: str, kind: str, now: datetime | None = None) -> ObjectKey:
-    """Build a date-partitioned object key for a new upload."""
     if not _TENANT_PATTERN.fullmatch(tenant):
         raise ValueError("invalid tenant")
     if not _KIND_PATTERN.fullmatch(kind):
@@ -28,11 +29,11 @@ def build_key(*, tenant: str, kind: str, now: datetime | None = None) -> ObjectK
     return f"{tenant}/{kind}/{stamp:%Y/%m/%d}/{uuid.uuid4().hex}"
 
 
+# checks whether a key matches the expected object key shape
 def is_valid_key(key: str) -> bool:
-    """Verify that a string matches the documented object key format."""
     return bool(_KEY_PATTERN.fullmatch(key))
 
 
+# reads the storage kind embedded in an object key
 def kind_for(key: ObjectKey) -> str:
-    """Extract the kind segment from an object key."""
     return key.split("/")[1]

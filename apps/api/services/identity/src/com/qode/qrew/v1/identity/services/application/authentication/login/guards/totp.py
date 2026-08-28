@@ -1,3 +1,4 @@
+# sets up verifies and disables two factor authentication and its backup codes
 import json
 import secrets
 
@@ -17,39 +18,39 @@ _BACKUP_LEN = 10
 _pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+# hashes a backup code for storage
 def _hash_backup(code: str) -> str:
     return _pwd.hash(code)  # type: ignore[no-any-return]
 
 
+# checks a backup code against its stored hash
 def _verify_backup(code: str, hashed: str) -> bool:
     return _pwd.verify(code, hashed)  # type: ignore[no-any-return]
 
 
 class TotpError(Exception):
+    # stores the error message
     def __init__(self, message: str) -> None:
         super().__init__(message)
         self.message = message
 
 
 class TotpService:
+    # stores the repository and audit service the totp service uses
     def __init__(self, repo: UserRepository, audit: AuditService | None = None) -> None:
         self._repo = repo
         self._audit = audit or AuditService()
 
+    # generates a new totp secret provisioning uri and backup codes
     def generate_setup(self, user: User, issuer: str = "Qrew") -> tuple[str, str, list[str]]:
-        """Generate a new TOTP secret, provisioning URI, and plaintext backup codes.
-
-        Returns (secret, provisioning_uri, backup_codes_plaintext).
-        The secret is NOT yet persisted — call confirm() to save it.
-        """
         secret = pyotp.random_base32()
         totp = pyotp.TOTP(secret)
         uri: str = totp.provisioning_uri(name=user.email, issuer_name=issuer)  # type: ignore[assignment]
         backup_codes = [secrets.token_hex(_BACKUP_LEN // 2) for _ in range(_BACKUP_COUNT)]
         return secret, uri, backup_codes
 
+    # verifies the first code and enables two factor authentication
     async def confirm(self, user: User, secret: str, code: str, backup_codes: list[str]) -> None:
-        """Verify the first code against a pending secret and enable 2FA for the user."""
         totp = pyotp.TOTP(secret)
         if not totp.verify(code, valid_window=2):
             raise TotpError("Invalid code")
@@ -65,8 +66,8 @@ class TotpService:
             entity_id=str(user.id),
         )
 
+    # verifies a totp code or a backup code during a login challenge
     async def verify_login(self, user: User, code: str) -> None:
-        """Verify a TOTP code (or backup code) during the login challenge."""
         if not user.totp_enabled or user.totp_secret is None:
             raise TotpError("2FA not enabled")
         totp = pyotp.TOTP(user.totp_secret)
@@ -78,7 +79,6 @@ class TotpService:
                 entity_id=str(user.id),
             )
             return
-        # Try backup codes
         if user.totp_backup_codes_json:
             hashed_list: list[str] = json.loads(user.totp_backup_codes_json)
             for i, hashed in enumerate(hashed_list):
@@ -103,8 +103,8 @@ class TotpService:
         )
         raise TotpError("Invalid code")
 
+    # disables two factor authentication after verifying a code
     async def disable(self, user: User, code: str) -> None:
-        """Verify the current TOTP code and then disable 2FA."""
         if not user.totp_enabled or user.totp_secret is None:
             raise TotpError("2FA is not enabled")
         totp = pyotp.TOTP(user.totp_secret)

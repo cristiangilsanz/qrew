@@ -1,3 +1,4 @@
+# clears expired verification tokens and one time codes on a periodic schedule
 from datetime import UTC, datetime
 from typing import Any
 
@@ -13,9 +14,9 @@ from com.qode.qrew.v1.identity.services.application.audit import AuditService
 logger = structlog.get_logger(__name__)
 
 
+# clears every expired verification token and one time code
 @job("auth.cleanup_expired_tokens", cron=parse_crontab("*/15 * * * *"), max_attempts=3)
 async def cleanup_expired_tokens(ctx: dict[str, Any]) -> dict[str, int]:
-    """Null out expired verification tokens and OTPs to keep the users table tidy."""
     del ctx
     now = datetime.now(UTC)
     cleared = 0

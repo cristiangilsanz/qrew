@@ -1,3 +1,4 @@
+# exposes the endpoints that register and verify a new account
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from middleware import client_ip
@@ -47,6 +48,7 @@ from ._deps import (
 router = APIRouter(prefix="/registration")
 
 
+# creates a new user account after passing the captcha
 @router.post(
     "/",
     response_model=RegisterResponse,
@@ -60,7 +62,6 @@ async def register(
     body: RegisterRequest,
     service: RegistrationService = Depends(get_registration_service),
 ) -> RegisterResponse:
-    """Register a new user account."""
     ip_address = client_ip(request, settings.trusted_proxy_ip) or "unknown"
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:
@@ -71,6 +72,7 @@ async def register(
         raise domain_error(exc.message, exc.field, status.HTTP_409_CONFLICT) from exc
 
 
+# confirms an email address using its verification token
 @router.post(
     "/verify-email",
     response_model=VerifyResponse,
@@ -83,7 +85,6 @@ async def verify_email(
     body: VerifyEmailRequest,
     service: EmailVerificationService = Depends(get_email_verification_service),
 ) -> VerifyResponse:
-    """Confirm an email address."""
     try:
         await service.verify(body.token)
         return VerifyResponse(message="Email verified successfully.")
@@ -91,6 +92,7 @@ async def verify_email(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# confirms a phone number using its otp
 @router.post(
     "/verify-phone",
     response_model=VerifyResponse,
@@ -104,7 +106,6 @@ async def verify_phone(
     current_user: User = Depends(get_setup_or_full_user),
     service: PhoneVerificationService = Depends(get_phone_verification_service),
 ) -> VerifyResponse:
-    """Confirm a phone number."""
     if body.phone_number != current_user.phone_number:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -120,6 +121,7 @@ async def verify_phone(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# resends the email verification link
 @router.post(
     "/resend-email-verification",
     response_model=ResendResponse,
@@ -132,7 +134,6 @@ async def resend_email_verification(
     body: ResendEmailVerificationRequest,
     service: ResendEmailVerificationService = Depends(get_resend_email_verification_service),
 ) -> ResendResponse:
-    """Send a fresh email verification link."""
     try:
         await service.resend(body.email)
         return ResendResponse(message="Verification link sent. Check your inbox.")
@@ -140,6 +141,7 @@ async def resend_email_verification(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# resends the phone verification otp
 @router.post(
     "/resend-phone-otp",
     response_model=ResendResponse,
@@ -152,7 +154,6 @@ async def resend_phone_otp(
     body: ResendPhoneOtpRequest,
     service: ResendPhoneOtpService = Depends(get_resend_phone_otp_service),
 ) -> ResendResponse:
-    """Send a fresh OTP to a phone number."""
     try:
         await service.resend(body.phone_number)
         return ResendResponse(message="Verification OTP sent. Check your SMS.")

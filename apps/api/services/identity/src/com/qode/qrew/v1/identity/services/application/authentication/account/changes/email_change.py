@@ -1,3 +1,4 @@
+# requests and confirms a change of a user's email address
 from datetime import UTC, datetime, timedelta
 
 import structlog
@@ -21,10 +22,11 @@ logger = structlog.get_logger(__name__)
 
 
 class EmailChangeError(DomainError):
-    """Raised when an email change cannot be completed."""
+    pass
 
 
 class EmailChangeService:
+    # stores the repository notifier and audit service the service uses
     def __init__(
         self,
         user_repo: UserRepository,
@@ -35,8 +37,8 @@ class EmailChangeService:
         self._notifier = notifier
         self._audit = audit
 
+    # verifies the password and sends a confirmation link to the new email
     async def request_change(self, user: User, new_email: str, current_password: str) -> None:
-        """Verify password, store pending email state, and send notification emails."""
         if not verify_password(current_password, user.hashed_password):
             raise EmailChangeError("Current password is incorrect", field="current_password")
 
@@ -73,8 +75,8 @@ class EmailChangeService:
                 "audit_write_failed", action=AuditAction.EMAIL_CHANGE_REQUESTED, error=repr(exc)
             )
 
+    # confirms a pending email change using its verification token
     async def confirm_change(self, token: str) -> None:
-        """Confirm an email change using the token sent to the new address."""
         user = await self._user_repo.get_by_pending_email_token(token)
         if user is None or user.pending_email is None:
             raise EmailChangeError("Invalid or expired token", field="token")

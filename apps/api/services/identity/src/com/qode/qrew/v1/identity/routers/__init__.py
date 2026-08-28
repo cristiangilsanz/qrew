@@ -1,3 +1,4 @@
+# assembles the identity service routers under a common prefix
 from fastapi import APIRouter
 
 from com.qode.qrew.v1.identity.routers.admin import router as admin_router

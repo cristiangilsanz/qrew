@@ -1,3 +1,4 @@
+# lists renames and deletes a user's passkeys
 import uuid
 
 import structlog
@@ -19,8 +20,7 @@ logger = structlog.get_logger(__name__)
 
 
 class PasskeyManagementService:
-    """List, rename, and delete the passkeys owned by a user."""
-
+    # stores the repository and audit service the service uses
     def __init__(
         self,
         passkey_repo: PasskeyCredentialRepository,
@@ -29,8 +29,8 @@ class PasskeyManagementService:
         self._passkey_repo = passkey_repo
         self._audit = audit
 
+    # lists a user's passkeys
     async def list_passkeys(self, user_id: uuid.UUID) -> PasskeyListResponse:
-        """List all passkeys registered by the given user."""
         credentials = await self._passkey_repo.get_all_by_user_id(user_id)
         return PasskeyListResponse(
             passkeys=[
@@ -45,8 +45,8 @@ class PasskeyManagementService:
             ]
         )
 
+    # deletes a passkey unless it is the account's last one
     async def delete_passkey(self, passkey_id: uuid.UUID, user_id: uuid.UUID) -> None:
-        """Delete a passkey, refusing to remove the user's last one."""
         credential = await self._passkey_repo.get_by_id(passkey_id)
         if credential is None or credential.user_id != user_id:
             raise PasskeyError("Passkey not found", field="id")
@@ -62,10 +62,10 @@ class PasskeyManagementService:
         await logger.ainfo("passkey_deleted", user_id=str(user_id), passkey_id=str(passkey_id))
         await self._audit_safe(AuditAction.PASSKEY_DELETED, user_id, passkey_id, payload=None)
 
+    # renames one of a user's passkeys
     async def rename_passkey(
         self, passkey_id: uuid.UUID, user_id: uuid.UUID, name: str
     ) -> PasskeyResponse:
-        """Rename a passkey and return the updated record."""
         credential = await self._passkey_repo.get_by_id(passkey_id)
         if credential is None or credential.user_id != user_id:
             raise PasskeyError("Passkey not found", field="id")
@@ -87,6 +87,7 @@ class PasskeyManagementService:
             created_at=updated.created_at,
         )
 
+    # records a passkey management event without letting a failure interrupt it
     async def _audit_safe(
         self,
         action: AuditAction,
@@ -95,7 +96,6 @@ class PasskeyManagementService:
         *,
         payload: dict[str, object] | None,
     ) -> None:
-        """Record a management audit event without propagating errors."""
         try:
             await self._audit.record(
                 action=action,

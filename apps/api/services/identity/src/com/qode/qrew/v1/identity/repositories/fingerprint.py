@@ -1,3 +1,4 @@
+# reads and writes the device fingerprints used to detect multi account abuse
 import uuid
 from datetime import UTC, datetime
 
@@ -9,11 +10,12 @@ from com.qode.qrew.v1.identity.models.fingerprint import DeviceFingerprint
 
 
 class DeviceFingerprintRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # records a fingerprint sighting and returns how many accounts share it
     async def upsert(self, record: DeviceFingerprint) -> int:
-        """Saves or updates a device fingerprint entry and returns how many distinct users share that fingerprint."""
         stmt = (
             insert(DeviceFingerprint)
             .values(
@@ -45,8 +47,8 @@ class DeviceFingerprintRepository:
         )
         return count_result.scalar_one()
 
+    # lists the distinct users who share a fingerprint
     async def get_user_ids_by_hash(self, fingerprint_hash: str) -> list[uuid.UUID]:
-        """Returns all distinct user identifiers associated with a given device fingerprint."""
         result = await self._session.execute(
             select(DeviceFingerprint.user_id.distinct()).where(
                 DeviceFingerprint.fingerprint_hash == fingerprint_hash

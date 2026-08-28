@@ -1,3 +1,4 @@
+# exposes the endpoints that sign and serve uploads to the local storage backend
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -24,10 +25,12 @@ from com.qode.qrew.v1.identity.core.config import settings
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 
+# derives the storage tenant scope for a user
 def _user_tenant(user: User) -> str:
     return f"user:{user.id}"
 
 
+# builds a bad request response with a message and field
 def _bad_request(message: str, field: str | None = None) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -35,6 +38,7 @@ def _bad_request(message: str, field: str | None = None) -> HTTPException:
     )
 
 
+# mints a signed url the caller can upload a new object to
 @router.post(
     "/sign",
     response_model=SignUploadResponse,
@@ -47,7 +51,6 @@ async def sign_upload(
     body: SignUploadRequest,
     current_user: User = Depends(get_setup_or_full_user),
 ) -> SignUploadResponse:
-    """Mint a signed upload URL for a new object."""
     try:
         constraint = constraint_for(body.kind)
     except ValueError as exc:
@@ -71,6 +74,7 @@ async def sign_upload(
     )
 
 
+# accepts a signed upload and stores it in the local backend
 @router.put(
     "/local/{key:path}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -84,7 +88,6 @@ async def local_upload(
     sig: Annotated[str, Query(...)],
     content_type: Annotated[str, Query(..., alias="content_type")],
 ) -> Response:
-    """Accept a signed PUT upload to the local backend."""
     if not is_valid_key(key):
         raise _bad_request("invalid key", field="key")
     try:
@@ -120,6 +123,7 @@ async def local_upload(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+# serves a signed download from the local backend
 @router.get(
     "/local/{key:path}",
     summary="Serve a signed GET request from the local backend",
@@ -130,7 +134,6 @@ async def local_download(
     expires_at: Annotated[int, Query(...)],
     sig: Annotated[str, Query(...)],
 ) -> Response:
-    """Serve a signed GET request from the local backend."""
     if not is_valid_key(key):
         raise _bad_request("invalid key", field="key")
     try:
@@ -150,13 +153,13 @@ async def local_download(
     return Response(content=body, media_type="application/octet-stream")
 
 
+# serves a public event image without authentication
 @router.get(
     "/public/{key:path}",
     summary="Serve a public event image (no auth required)",
     include_in_schema=False,
 )
 async def public_image(key: str) -> Response:
-    """Serve event images without authentication — they are public content."""
     if not is_valid_key(key):
         raise _bad_request("invalid key", field="key")
     if storage_kind_for_key(key) != "event_image":
@@ -175,6 +178,7 @@ async def public_image(key: str) -> Response:
     )
 
 
+# sniffs an image's content type from its leading bytes
 def _detect_image_type(data: bytes) -> str:
     if data[:3] == b"\xff\xd8\xff":
         return "image/jpeg"
@@ -185,9 +189,11 @@ def _detect_image_type(data: bytes) -> str:
     return "application/octet-stream"
 
 
+# reads the storage kind embedded in an object key
 def storage_kind_for_key(key: str) -> str:
     return key.split("/")[1]
 
 
+# reads the tenant scope embedded in an object key
 def storage_tenant_for_key(key: str) -> str:
     return key.split("/", maxsplit=1)[0]

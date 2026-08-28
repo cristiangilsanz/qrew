@@ -1,3 +1,4 @@
+# defines the notification channel and status enums and the notification table
 import enum
 import uuid
 from datetime import datetime
@@ -46,11 +47,12 @@ class Notification(Base):
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # decrypts the stored destination address
     @property
     def destination(self) -> str:
-        """Decrypts and returns the stored destination address."""
         return pii_crypto.decrypt(self.destination_ciphertext)
 
+    # encrypts the destination address for storage
     @destination.setter
     def destination(self, value: str) -> None:
         self.destination_ciphertext = pii_crypto.encrypt(value)

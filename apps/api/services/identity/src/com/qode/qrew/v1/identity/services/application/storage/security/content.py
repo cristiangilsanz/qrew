@@ -1,3 +1,4 @@
+# checks that uploaded bytes match an accepted file signature
 from typing import Final
 
 _ALLOWED_MAGIC: Final[list[bytes]] = [
@@ -7,6 +8,6 @@ _ALLOWED_MAGIC: Final[list[bytes]] = [
 ]
 
 
+# checks that content starts with an accepted file signature
 def has_allowed_signature(content: bytes) -> bool:
-    """Reports whether the payload starts with one of the accepted file signatures."""
     return any(content.startswith(magic) for magic in _ALLOWED_MAGIC)

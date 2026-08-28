@@ -1,3 +1,4 @@
+# defines the device fingerprint table used to detect abuse
 import uuid
 from datetime import datetime
 

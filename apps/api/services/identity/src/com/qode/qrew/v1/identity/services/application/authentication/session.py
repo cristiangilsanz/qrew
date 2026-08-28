@@ -1,3 +1,4 @@
+# lists and revokes a user's login sessions
 import uuid
 
 import redis.asyncio as aioredis
@@ -16,10 +17,11 @@ logger = structlog.get_logger(__name__)
 
 
 class SessionError(DomainError):
-    """Raised when a session operation cannot be completed."""
+    pass
 
 
 class SessionService:
+    # stores the repository redis client and geoip service the service uses
     def __init__(
         self,
         repo: SessionRepository,
@@ -30,10 +32,10 @@ class SessionService:
         self._redis = redis
         self._geoip = geoip
 
+    # lists a user's sessions with their approximate location
     async def list_sessions(
         self, user_id: uuid.UUID, current_jti: str | None = None
     ) -> list[SessionResponse]:
-        """Return all active sessions for the given user."""
         sessions = await self._repo.get_all_by_user_id(user_id)
         return [
             SessionResponse(
@@ -50,8 +52,8 @@ class SessionService:
             for s in sessions
         ]
 
+    # revokes one of a user's sessions
     async def revoke_session(self, jti: str, user_id: uuid.UUID) -> None:
-        """Invalidates and removes a single session belonging to the given user."""
         session = await self._repo.get_by_jti(jti)
         if session is None or session.user_id != user_id:
             raise SessionError("Session not found", field="jti")
@@ -60,13 +62,14 @@ class SessionService:
         await self._repo.delete_by_jti(jti)
         await logger.ainfo("session_revoked", jti=jti, user_id=str(user_id))
 
+    # revokes every session of a user
     async def revoke_all(self, user_id: uuid.UUID) -> None:
-        """Blacklist and delete every session for the given user."""
         jtis = await self._repo.delete_all_by_user_id(user_id)
         for jti in jtis:
             await self._blacklist_jti(jti)
         await logger.ainfo("sessions_revoked_all", count=len(jtis), user_id=str(user_id))
 
+    # blacklists a refresh token identifier for the rest of its lifetime
     async def _blacklist_jti(self, jti: str) -> None:
         ttl = settings.refresh_token_expire_days * 24 * 3600
         await self._redis.setex(BLACKLIST_JTI_PREFIX + jti, ttl, "revoked")

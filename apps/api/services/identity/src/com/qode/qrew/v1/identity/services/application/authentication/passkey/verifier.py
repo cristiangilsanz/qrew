@@ -1,3 +1,4 @@
+# authenticates a user with a passkey and issues a session or setup token
 import uuid
 from datetime import UTC, datetime
 
@@ -43,8 +44,7 @@ logger = structlog.get_logger(__name__)
 
 
 class PasskeyAuthenticationService:
-    """Sign a user in by verifying a passkey assertion."""
-
+    # stores the repositories redis client and audit service the service uses
     def __init__(
         self,
         passkey_repo: PasskeyCredentialRepository,
@@ -59,8 +59,8 @@ class PasskeyAuthenticationService:
         self._audit = audit
         self._session_repo = session_repo
 
+    # generates the webauthn options for the account's registered passkeys
     async def begin(self, email: str) -> str:
-        """Generate assertion options and cache the challenge."""
         user = await self._user_repo.get_by_email(email)
         if user is None or not user.is_active or not user.email_verified:
             raise PasskeyError("No passkey found for this account")
@@ -78,6 +78,7 @@ class PasskeyAuthenticationService:
         await logger.ainfo("passkey_authentication_begin", user_id=str(user.id))
         return webauthn.options_to_json(options)
 
+    # verifies the assertion and issues whichever token the account's state calls for
     async def complete(
         self,
         request: PasskeyAuthenticationCompleteRequest,
@@ -85,7 +86,6 @@ class PasskeyAuthenticationService:
         user_agent: str | None = None,
         device_fingerprint: str | None = None,
     ) -> LoginResponse:
-        """Verify the assertion and return access tokens."""
         stored = await self._lookup_credential(request)
         user = await self._lookup_user(stored.user_id)
         raw_challenge = await self._consume_challenge(user.id)
@@ -97,10 +97,10 @@ class PasskeyAuthenticationService:
 
         return await self._issue_response(user, ip_address, user_agent, device_fingerprint)
 
+    # resolves the stored credential the assertion claims to be
     async def _lookup_credential(
         self, request: PasskeyAuthenticationCompleteRequest
     ) -> PasskeyCredential:
-        """Look up the stored credential referenced by the assertion."""
         raw_id = base64url_to_bytes(request.raw_id)
         stored = await self._passkey_repo.get_by_credential_id(raw_id)
         if stored is None:
@@ -108,8 +108,8 @@ class PasskeyAuthenticationService:
             raise PasskeyError("Passkey not recognised")
         return stored
 
+    # resolves the active user a credential belongs to
     async def _lookup_user(self, user_id: uuid.UUID) -> User:
-        """Resolve the user that owns the asserted credential."""
         user = await self._user_repo.get_by_id(user_id)
         if user is None or not user.is_active:
             await logger.awarning(
@@ -118,8 +118,8 @@ class PasskeyAuthenticationService:
             raise PasskeyError("Authentication failed")
         return user
 
+    # reads and deletes the pending authentication challenge
     async def _consume_challenge(self, user_id: uuid.UUID) -> bytes:
-        """Pop and return the cached authentication challenge."""
         key = auth_challenge_key(user_id)
         raw_challenge: bytes | None = await self._redis.get(key)
         if raw_challenge is None:
@@ -132,6 +132,7 @@ class PasskeyAuthenticationService:
         await self._redis.delete(key)
         return raw_challenge
 
+    # verifies the webauthn assertion against the stored credential
     def _verify(
         self,
         user: User,
@@ -139,13 +140,13 @@ class PasskeyAuthenticationService:
         raw_challenge: bytes,
         stored: PasskeyCredential,
     ) -> VerifiedAuthentication:
-        """Run the WebAuthn verification or raise on failure."""
         try:
             credential = build_assertion_credential(request)
             return verify_assertion_response(credential, raw_challenge, stored)
         except Exception as exc:
             raise PasskeyError(assertion_error_message(exc, "authentication")) from exc
 
+    # issues a full session or a setup token depending on onboarding state
     async def _issue_response(
         self,
         user: User,
@@ -153,7 +154,6 @@ class PasskeyAuthenticationService:
         user_agent: str | None,
         device_fingerprint: str | None,
     ) -> LoginResponse:
-        """Returns the appropriate token response depending on whether onboarding is complete."""
         setup_complete = user.phone_number_verified and user.kyc_status != KycStatus.not_submitted
         if setup_complete:
             refresh_token = create_refresh_token(str(user.id))
@@ -172,6 +172,7 @@ class PasskeyAuthenticationService:
         await self._audit_safe(user.id, setup_complete=False)
         return LoginResponse(access_token=create_setup_token(str(user.id)), setup_required=True)
 
+    # writes the new session tied to its refresh token
     async def _persist_session(
         self,
         user_id: uuid.UUID,
@@ -180,7 +181,6 @@ class PasskeyAuthenticationService:
         user_agent: str | None,
         device_fingerprint: str | None,
     ) -> None:
-        """Persist a new session row when full authentication succeeds."""
         if self._session_repo is None:
             return
         jti = extract_jti(refresh_token)
@@ -197,8 +197,8 @@ class PasskeyAuthenticationService:
             )
         )
 
+    # records the passkey authentication without letting a failure interrupt it
     async def _audit_safe(self, user_id: uuid.UUID, *, setup_complete: bool) -> None:
-        """Record the authentication audit event without propagating errors."""
         try:
             await self._audit.record(
                 action=AuditAction.PASSKEY_AUTHENTICATED,

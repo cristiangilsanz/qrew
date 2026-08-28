@@ -1,3 +1,4 @@
+# defines the response schema for a user's audit trail entries
 import uuid
 from typing import TYPE_CHECKING
 from datetime import datetime
@@ -55,6 +56,7 @@ _SUMMARIES: dict[str, str] = {
 }
 
 
+# turns an audit action into a human readable summary
 def summarize(action: str) -> str:
     return _SUMMARIES.get(action, action.replace("_", " ").title())
 
@@ -72,6 +74,7 @@ class UserAuditEventResponse(BaseModel):
     device_fingerprint_hash: str | None
     created_at: datetime
 
+    # converts an audit trail entry into its response
     @classmethod
     def from_event(cls, event: "AuditTrailEntry") -> "UserAuditEventResponse":
         return cls(

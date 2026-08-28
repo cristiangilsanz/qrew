@@ -1,3 +1,4 @@
+# confirms a pending email or phone verification token
 from datetime import UTC, datetime
 
 import structlog
@@ -12,16 +13,17 @@ logger = structlog.get_logger(__name__)
 
 
 class VerificationError(DomainError):
-    """Raised when a verification token or one-time password is invalid."""
+    pass
 
 
 class EmailVerificationService:
+    # stores the repository and audit service the service uses
     def __init__(self, repo: UserRepository, audit: AuditService) -> None:
         self._repo = repo
         self._audit = audit
 
+    # confirms an email address using its still valid verification token
     async def verify(self, token: str) -> None:
-        """Verify an email address with the provided verification token."""
         user = await self._repo.get_by_email_verification_token(token)
 
         if user is None:
@@ -67,12 +69,13 @@ class EmailVerificationService:
 
 
 class PhoneVerificationService:
+    # stores the repository and audit service the service uses
     def __init__(self, repo: UserRepository, audit: AuditService) -> None:
         self._repo = repo
         self._audit = audit
 
+    # confirms a phone number using its still valid otp
     async def verify(self, phone_number: str, otp: str) -> None:
-        """Verify a phone number with the provided one-time password."""
         user = await self._repo.get_by_phone_number(phone_number)
 
         if user is None or user.phone_number_otp != pii_crypto.hash_lookup(otp):

@@ -1,3 +1,4 @@
+# defines the passkey credential table
 import uuid
 from datetime import datetime
 

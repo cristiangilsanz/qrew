@@ -1,3 +1,4 @@
+# assembles the admin routers under a common prefix
 from fastapi import APIRouter
 
 from ._deps import (

@@ -1,3 +1,4 @@
+# records device fingerprints and flags headless or multi account abuse
 import uuid
 
 import structlog
@@ -24,6 +25,7 @@ _HEADLESS_SIGNALS = [
 ]
 
 
+# checks whether a user agent looks like an automation tool
 def _is_headless(user_agent: str | None) -> bool:
     if not user_agent:
         return False
@@ -32,6 +34,7 @@ def _is_headless(user_agent: str | None) -> bool:
 
 
 class FingerprintService:
+    # stores the repository and audit service the service uses
     def __init__(
         self,
         repo: DeviceFingerprintRepository,
@@ -40,6 +43,7 @@ class FingerprintService:
         self._repo = repo
         self._audit = audit
 
+    # records a sighting and flags it if it looks headless or multi account
     async def report(
         self,
         user: User,
@@ -47,7 +51,6 @@ class FingerprintService:
         user_agent: str | None,
         ip_address: str | None,
     ) -> bool:
-        """Records a device fingerprint and flags suspicious activity patterns."""
         record = DeviceFingerprint(
             id=uuid.uuid4(),
             user_id=user.id,
@@ -123,6 +126,7 @@ class FingerprintService:
         )
         return flagged
 
+    # publishes that a fingerprint was seen onto the shared nats connection
     async def _publish_fingerprint_seen(self, fingerprint_hash: str) -> None:
         try:
             from datetime import UTC, datetime
@@ -149,6 +153,6 @@ class FingerprintService:
                 error=repr(exc),
             )
 
+    # lists the accounts a fingerprint has been seen on
     async def get_by_hash(self, fingerprint_hash: str) -> list[uuid.UUID]:
-        """Returns all user identifiers associated with a given device fingerprint."""
         return await self._repo.get_user_ids_by_hash(fingerprint_hash)

@@ -1,3 +1,4 @@
+# requests and applies a password reset without disclosing whether the email exists
 from datetime import UTC, datetime, timedelta
 
 import structlog
@@ -18,10 +19,11 @@ logger = structlog.get_logger(__name__)
 
 
 class ForgotPasswordError(DomainError):
-    """Raised when a password reset cannot be completed."""
+    pass
 
 
 class ForgotPasswordService:
+    # stores the repository and notifier the service uses
     def __init__(
         self,
         user_repo: UserRepository,
@@ -30,8 +32,8 @@ class ForgotPasswordService:
         self._user_repo = user_repo
         self._notifier = notifier
 
+    # sends a password reset link if the email belongs to an active account
     async def request_reset(self, email: str) -> None:
-        """Generate a reset token and email it; always succeeds silently for unknown emails."""
         user = await self._user_repo.get_by_email(email)
         if user is None or not user.is_active:
             return
@@ -49,8 +51,8 @@ class ForgotPasswordService:
         except Exception as exc:
             await logger.awarning("notification_failed", action="forgot_password", error=repr(exc))
 
+    # resets a password using a still valid reset token
     async def reset_password(self, token: str, new_password: str) -> None:
-        """Verify the token and update the user's password."""
         user = await self._user_repo.get_by_password_reset_token(token)
         if user is None or user.password_reset_token != token:
             raise ForgotPasswordError("Invalid or expired reset link.", field="token")

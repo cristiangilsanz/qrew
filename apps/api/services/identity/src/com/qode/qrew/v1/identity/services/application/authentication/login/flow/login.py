@@ -1,3 +1,4 @@
+# authenticates a user by password and issues a session setup or totp challenge
 import uuid
 from typing import NoReturn
 
@@ -45,12 +46,11 @@ _INVALID_CREDENTIALS = "Invalid email or password"
 
 
 class LoginError(DomainError):
-    """Raised when a login attempt cannot be completed."""
+    pass
 
 
 class LoginService:
-    """Authenticate users and mint setup or full access tokens."""
-
+    # stores the repositories and guards the login flow uses
     def __init__(
         self,
         repo: UserRepository,
@@ -73,6 +73,7 @@ class LoginService:
         self._session_cap = session_cap
         self._breach_checker = breach_checker
 
+    # authenticates a user and issues whichever token their state calls for
     @traced("auth.login")
     async def login(
         self,
@@ -82,7 +83,6 @@ class LoginService:
         device_fingerprint: str | None = None,
         device_id: uuid.UUID | None = None,
     ) -> LoginResponse:
-        """Authenticate a user and return a setup or full access token."""
         user = await self._repo.get_by_email(request.email)
         if user is None:
             await self._handle_unknown_email(request.password)
@@ -108,20 +108,20 @@ class LoginService:
             )
         return await self._issue_setup_token(user, password_compromised)
 
+    # verifies against a dummy hash to hide that no account matched the email
     async def _handle_unknown_email(self, password: str) -> NoReturn:
-        """Mimic a real password verify and reject the unknown account."""
         verify_password(password, _DUMMY_HASH)
         await logger.awarning("login_failed", reason="invalid_credentials")
         await self._audit_safe(AuditAction.LOGIN_FAILED, payload={"reason": "invalid_credentials"})
         raise LoginError(_INVALID_CREDENTIALS)
 
+    # rejects a login attempt against a locked account
     async def _check_not_locked(self, user_id: uuid.UUID) -> None:
-        """Reject if the per-account lockout is active."""
         if self._lockout is not None:
             await self._lockout.check_not_locked(user_id)
 
+    # verifies the password and records a lockout worthy failure
     async def _verify_credentials(self, user: User, password: str, ip_address: str | None) -> None:
-        """Verify the user's password and record a failure if it does not match."""
         if verify_password(password, user.hashed_password):
             return
         await logger.awarning("login_failed", reason="invalid_credentials", user_id=str(user.id))
@@ -136,39 +136,40 @@ class LoginService:
             await self._lockout.record_failure(user.id, ip_address)
         raise LoginError(_INVALID_CREDENTIALS)
 
+    # clears the account's failed attempt count after a successful login
     async def _reset_lockout(self, user_id: uuid.UUID) -> None:
-        """Clear the per-account lockout after a successful credential check."""
         if self._lockout is not None:
             await self._lockout.reset(user_id)
 
+    # checks whether the password appears in a known breach
     async def _check_breach(
         self, user_id: uuid.UUID, password: str, ip_address: str | None
     ) -> bool:
-        """Check whether the supplied password appears in breach data."""
         if self._breach_checker is None:
             return False
         return await self._breach_checker.is_compromised(user_id, password, ip_address)
 
+    # rejects a login whose email is not yet verified
     def _ensure_email_verified(self, user: User) -> None:
-        """Reject sign-in if the account's email is not verified."""
         if user.email_verified:
             return
         raise LoginError(_INVALID_CREDENTIALS)
 
+    # rejects a login against an inactive account
     def _ensure_account_active(self, user: User) -> None:
-        """Reject sign-in for a deactivated account."""
         if user.is_active:
             return
         raise LoginError(_INVALID_CREDENTIALS)
 
+    # checks whether a user has finished every onboarding step
     async def _is_setup_complete(self, user: User) -> bool:
-        """Return whether the user has finished onboarding."""
         return (
             user.phone_number_verified
             and user.kyc_status != KycStatus.not_submitted
             and await self._passkey_repo.has_passkey(user.id)
         )
 
+    # binds the device persists the session and issues a full access token
     async def _issue_full_session(
         self,
         user: User,
@@ -178,7 +179,6 @@ class LoginService:
         device_id: uuid.UUID | None,
         password_compromised: bool,
     ) -> LoginResponse:
-        """Mint full access and refresh tokens for a fully onboarded user."""
         bound_device_id = await self.resolve_bound_device(user.id, device_id)
         refresh_token = create_refresh_token(str(user.id))
         session_jti = extract_jti(refresh_token)
@@ -215,16 +215,16 @@ class LoginService:
             password_compromised=password_compromised,
         )
 
+    # issues a token that requires a totp code before a full session is granted
     def _issue_totp_challenge(self, user: User, password_compromised: bool) -> LoginResponse:
-        """Mint a short-lived TOTP challenge token; the client must verify it before getting full access."""
         return LoginResponse(
             access_token=create_totp_token(str(user.id)),
             totp_required=True,
             password_compromised=password_compromised,
         )
 
+    # issues a token that lets the user finish the remaining onboarding steps
     async def _issue_setup_token(self, user: User, password_compromised: bool) -> LoginResponse:
-        """Mint a setup token for a user that still has onboarding steps left."""
         await logger.ainfo("user_logged_in_setup_required", user_id=str(user.id))
         await self._audit_safe(
             AuditAction.LOGIN,
@@ -239,13 +239,13 @@ class LoginService:
             password_compromised=password_compromised,
         )
 
+    # runs the anomaly check without letting a failure interrupt the login
     async def _run_anomaly_check(
         self,
         user: User,
         ip_address: str | None,
         device_fingerprint: str | None,
     ) -> None:
-        """Run anomaly detection without letting it block the login flow."""
         if self._anomaly is None:
             return
         try:
@@ -253,12 +253,13 @@ class LoginService:
         except Exception as exc:
             await logger.awarning("anomaly_check_error", user_id=str(user.id), error=repr(exc))
 
+    # evicts the oldest sessions once the user exceeds the session cap
     async def _enforce_session_cap(self, user_id: uuid.UUID) -> None:
-        """Enforces the maximum allowed number of concurrent sessions per user."""
         if self._session_cap is None:
             return
         await self._session_cap.enforce(user_id)
 
+    # writes the new session tied to its refresh token
     async def _persist_session(
         self,
         user_id: uuid.UUID,
@@ -268,7 +269,6 @@ class LoginService:
         device_fingerprint: str | None,
         device_id: uuid.UUID | None = None,
     ) -> None:
-        """Persist a new session row for a freshly minted refresh token."""
         if self._session_repo is None:
             return
         jti = extract_jti(refresh_token)
@@ -286,10 +286,10 @@ class LoginService:
             )
         )
 
+    # resolves the caller's device if it is bound and not revoked
     async def resolve_bound_device(
         self, user_id: uuid.UUID, device_id: uuid.UUID | None
     ) -> uuid.UUID | None:
-        """Looks up and validates an optional device hint against the user's registered devices."""
         if device_id is None or self._device_repo is None:
             return None
         device = await self._device_repo.get_by_id(device_id)
@@ -297,8 +297,8 @@ class LoginService:
             return None
         return device.id
 
+    # records an audit event without letting a failure interrupt the login
     async def _audit_safe(self, action: AuditAction, **kwargs: object) -> None:
-        """Record an audit event without letting failure propagate."""
         try:
             await self._audit.record(action=action, **kwargs)  # type: ignore[arg-type]
         except Exception as exc:

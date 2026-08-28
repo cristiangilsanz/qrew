@@ -1,3 +1,4 @@
+# exposes the endpoints that set up verify and disable two factor authentication
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -38,6 +39,7 @@ from com.qode.qrew.v1.identity.core.dependencies import get_redis
 router = APIRouter(prefix="/totp", tags=["totp"])
 
 
+# converts a totp error message into its http response
 def _totp_error(message: str) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -45,6 +47,7 @@ def _totp_error(message: str) -> HTTPException:
     )
 
 
+# reports whether the caller has two factor authentication enabled
 @router.get(
     "/status",
     response_model=TotpStatusResponse,
@@ -57,6 +60,7 @@ async def totp_status(
     return TotpStatusResponse(enabled=current_user.totp_enabled)
 
 
+# generates a new totp secret and provisioning uri
 @router.post(
     "/setup",
     response_model=TotpSetupResponse,
@@ -74,6 +78,7 @@ async def totp_setup(
     return TotpSetupResponse(provisioning_uri=uri, backup_codes=backup_codes, secret=secret)
 
 
+# verifies the first totp code and enables two factor authentication
 @router.post(
     "/confirm",
     response_model=TotpConfirmResponse,
@@ -95,6 +100,7 @@ async def totp_confirm(
     return TotpConfirmResponse(message="Two-factor authentication enabled.")
 
 
+# verifies a totp code after the login challenge and issues full session tokens
 @router.post(
     "/verify",
     response_model=TotpVerifyResponse,
@@ -142,6 +148,7 @@ async def totp_verify(
     return TotpVerifyResponse(access_token=access_token, refresh_token=refresh_token)
 
 
+# disables two factor authentication after verifying a totp code
 @router.delete(
     "/disable",
     response_model=TotpDisableResponse,

@@ -1,3 +1,4 @@
+# reports a user's onboarding progress and paginates their audit trail
 import uuid
 from datetime import datetime
 
@@ -13,13 +14,12 @@ from com.qode.qrew.v1.identity.services.application.trail import (
 
 
 class ProfileService:
-    """Read-only queries that back the user metadata endpoints."""
-
+    # stores the passkey repository the service reads through
     def __init__(self, passkey_repo: PasskeyCredentialRepository) -> None:
         self._passkey_repo = passkey_repo
 
+    # reports which onboarding steps a user has completed
     async def get_onboarding_status(self, user: User) -> OnboardingStatusResponse:
-        """Return which onboarding steps the user has completed."""
         has_passkey = await self._passkey_repo.has_passkey(user.id)
         kyc_submitted = user.kyc_status != KycStatus.not_submitted
         email_verified = user.email_verified
@@ -44,6 +44,7 @@ class ProfileService:
             current_step=current_step,
         )
 
+    # returns a page of a user's audit trail from the audit service
     async def paginate_audit(
         self,
         user_id: uuid.UUID,
@@ -52,6 +53,5 @@ class ProfileService:
         cursor: str | None = None,
         limit: int = 50,
     ) -> tuple[list[AuditTrailEntry], str | None]:
-        """Return a page of the audit trail of a user, as the audit service reports it."""
         page = await fetch_trail(user_id, action=action, since=since, cursor=cursor, limit=limit)
         return page.items, page.next_cursor

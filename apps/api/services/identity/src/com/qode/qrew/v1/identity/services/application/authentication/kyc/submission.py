@@ -1,3 +1,4 @@
+# submits a national identity document for kyc review
 import hashlib
 
 import structlog
@@ -24,10 +25,11 @@ _MAX_FILE_BYTES = 10 * 1024 * 1024
 
 
 class KycError(DomainError):
-    """Raised when a KYC upload cannot be completed."""
+    pass
 
 
 class KycService:
+    # stores the repository notifier audit service and ocr service the service uses
     def __init__(
         self,
         repo: UserRepository,
@@ -40,8 +42,8 @@ class KycService:
         self._audit = audit
         self._ocr = ocr
 
+    # extracts the identity number stores the document and marks kyc pending
     async def upload(self, user: User, content: bytes) -> KycStatus:
-        """Extract national ID via OCR, enforce uniqueness, and mark KYC pending."""
         if user.kyc_status == KycStatus.approved:
             await logger.awarning(
                 "kyc_upload_failed", reason="already_approved", user_id=str(user.id)

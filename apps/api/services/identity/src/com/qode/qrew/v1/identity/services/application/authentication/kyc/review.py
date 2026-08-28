@@ -1,3 +1,4 @@
+# approves or rejects a user's pending kyc submission
 import uuid
 
 import structlog
@@ -16,10 +17,11 @@ logger = structlog.get_logger(__name__)
 
 
 class KycReviewError(DomainError):
-    """Raised when a KYC review cannot be completed."""
+    pass
 
 
 class KycReviewService:
+    # stores the repository notifier and audit service the service uses
     def __init__(
         self,
         repo: UserRepository,
@@ -30,13 +32,13 @@ class KycReviewService:
         self._notifier = notifier
         self._audit = audit
 
+    # moves a pending kyc submission to approved or rejected
     async def review(
         self,
         user_id: uuid.UUID,
         action: KycAction,
         reason: str | None,
     ) -> User:
-        """Approve or reject a pending KYC submission and notify the user."""
         user = await self._repo.get_by_id(user_id)
         if user is None:
             raise KycReviewError("User not found", field="user_id")

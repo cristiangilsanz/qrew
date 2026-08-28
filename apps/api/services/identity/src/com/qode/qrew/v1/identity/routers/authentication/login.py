@@ -1,3 +1,4 @@
+# exposes the endpoints that log in refresh and log out a session
 import contextlib
 import uuid
 
@@ -47,6 +48,7 @@ from ._deps import (
 router = APIRouter()
 
 
+# authenticates a user by password and issues a session
 @router.post(
     "/login",
     response_model=LoginResponse,
@@ -65,7 +67,6 @@ async def login(
     body: LoginRequest,
     service: LoginService = Depends(get_login_service),
 ) -> LoginResponse:
-    """Log in as a registered user."""
     ip_address = client_ip(request, settings.trusted_proxy_ip)
     user_agent = request.headers.get("User-Agent")
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
@@ -86,6 +87,7 @@ async def login(
         raise domain_error(exc.message, exc.field, status.HTTP_401_UNAUTHORIZED) from exc
 
 
+# refreshes an access token using a valid refresh token
 @router.post(
     "/refresh",
     response_model=RefreshResponse,
@@ -98,7 +100,6 @@ async def refresh(
     body: RefreshRequest,
     service: RefreshService = Depends(get_refresh_service),
 ) -> RefreshResponse:
-    """Refresh an access token."""
     signature = decode_signature_header(request.headers.get("X-Device-Signature"))
     try:
         return await service.refresh(body, signature)
@@ -106,6 +107,7 @@ async def refresh(
         raise domain_error(exc.message, exc.field, status.HTTP_401_UNAUTHORIZED) from exc
 
 
+# logs out and invalidates the refresh token
 @router.post(
     "/logout",
     response_model=LogoutResponse,
@@ -118,7 +120,6 @@ async def logout(
     body: LogoutRequest,
     service: LogoutService = Depends(get_logout_service),
 ) -> LogoutResponse:
-    """Log out and invalidate the refresh token."""
     try:
         await service.logout(body.refresh_token)
         return LogoutResponse(message="Logged out successfully.")

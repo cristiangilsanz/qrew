@@ -1,3 +1,4 @@
+# evicts a user's oldest sessions once they exceed the session cap
 import uuid
 
 import redis.asyncio as aioredis
@@ -15,8 +16,7 @@ logger = structlog.get_logger(__name__)
 
 
 class SessionCapEnforcer:
-    """Evict the oldest sessions when the per-user session cap is exceeded."""
-
+    # stores the session repository audit service and redis client the enforcer uses
     def __init__(
         self,
         session_repo: SessionRepository,
@@ -27,8 +27,8 @@ class SessionCapEnforcer:
         self._audit = audit
         self._redis = redis
 
+    # evicts the oldest sessions once a user exceeds the configured cap
     async def enforce(self, user_id: uuid.UUID) -> None:
-        """Evict the oldest sessions if the user is over the configured cap."""
         cap = settings.max_sessions_per_user
         if cap <= 0:
             return
@@ -46,8 +46,8 @@ class SessionCapEnforcer:
             await logger.ainfo("session_evicted", user_id=str(user_id), jti=jti)
             await self._audit_safe(user_id, victim.id, jti)
 
+    # records an evicted session without letting a failure interrupt the login
     async def _audit_safe(self, user_id: uuid.UUID, session_id: uuid.UUID, jti: str) -> None:
-        """Record a session-cap eviction audit event without raising."""
         try:
             await self._audit.record(
                 action=AuditAction.SESSION_EVICTED,

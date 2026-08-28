@@ -1,3 +1,5 @@
+# builds the html fragments shared by every email template
+# builds the call to action button markup
 def cta_button(url: str, label: str) -> str:
     return (
         f'      <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">\n'
@@ -16,6 +18,7 @@ def cta_button(url: str, label: str) -> str:
     )
 
 
+# builds the plain link shown when the button cannot be clicked
 def fallback_link(url: str) -> str:
     return (
         f'      <table class="body-sub" role="presentation">\n'
@@ -29,6 +32,7 @@ def fallback_link(url: str) -> str:
     )
 
 
+# wraps a template's content in the shared email layout
 def base_email(*, title: str, preheader: str, logo_url: str | None, content_html: str) -> str:
     masthead = (
         f'<a href="https://qrew.com"><img src="{logo_url}" alt="Qrew" height="240"'

@@ -1,3 +1,4 @@
+# exposes the internal endpoint other services use to sign a token
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -13,6 +14,7 @@ router = APIRouter(prefix="/issuer", include_in_schema=False)
 _ALLOWED_PURPOSES = set(jwt_keys.PURPOSES)
 
 
+# rejects a request without a valid internal api key
 def _require_internal_key(request: Request) -> None:
     key = request.headers.get("X-Internal-Key", "")
     if not matches_internal_key(key, settings.internal_api_key):
@@ -29,9 +31,9 @@ class _SignResponse(BaseModel):
     token: str
 
 
+# signs a token for the requested purpose and claims
 @router.post("/jwt/sign", response_model=_SignResponse)
 async def sign_jwt(body: _SignRequest, request: Request) -> _SignResponse:
-    """Issues a signed token for a given purpose on behalf of a sibling service."""
     _require_internal_key(request)
     if body.purpose not in _ALLOWED_PURPOSES:
         raise HTTPException(

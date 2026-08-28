@@ -1,3 +1,4 @@
+# locks out an account after repeated failed logins with an escalating backoff
 import uuid
 
 import redis.asyncio as aioredis
@@ -14,6 +15,7 @@ _FAILED_PREFIX = "login:failed:"
 _LOCK_PREFIX = "login:lock:"
 
 
+# builds the escalating attempt thresholds and lockout durations
 def _backoff_schedule() -> list[tuple[int, int]]:
     base = settings.login_lockout_base_seconds
     return [
@@ -24,22 +26,24 @@ def _backoff_schedule() -> list[tuple[int, int]]:
 
 
 class LoginLockoutError(DomainError):
-    """Raised when an account is currently locked out."""
-
+    # stores the message and how long the caller must wait to retry
     def __init__(self, message: str, retry_after_seconds: int) -> None:
         super().__init__(message)
         self.retry_after_seconds = retry_after_seconds
 
 
+# builds the redis key that counts a user's failed attempts
 def _failed_key(user_id: uuid.UUID) -> str:
     return f"{_FAILED_PREFIX}{user_id}"
 
 
+# builds the redis key that marks a user as locked
 def _lock_key(user_id: uuid.UUID) -> str:
     return f"{_LOCK_PREFIX}{user_id}"
 
 
 class LoginLockoutService:
+    # stores the redis client and audit service the service uses
     def __init__(
         self,
         redis: aioredis.Redis,  # type: ignore[type-arg]
@@ -48,8 +52,8 @@ class LoginLockoutService:
         self._redis = redis
         self._audit = audit
 
+    # rejects a login attempt against a currently locked account
     async def check_not_locked(self, user_id: uuid.UUID) -> None:
-        """Raises an error if the account is currently locked out."""
         ttl: int = await self._redis.ttl(_lock_key(user_id))
         if ttl > 0:
             raise LoginLockoutError(
@@ -57,12 +61,12 @@ class LoginLockoutService:
                 retry_after_seconds=ttl,
             )
 
+    # records a failed attempt and locks the account once a threshold is hit
     async def record_failure(
         self,
         user_id: uuid.UUID,
         ip_address: str | None = None,
     ) -> None:
-        """Increment the failure counter and trigger a lockout if a threshold is hit."""
         key = _failed_key(user_id)
         attempts: int = await self._redis.incr(key)
         if attempts == 1:
@@ -94,12 +98,12 @@ class LoginLockoutService:
                 "audit_write_failed", action=AuditAction.LOGIN_LOCKED, error=repr(exc)
             )
 
+    # clears a user's failed attempt count and lock
     async def reset(self, user_id: uuid.UUID) -> None:
-        """Clear the failure counter and any active lock."""
         await self._redis.delete(_failed_key(user_id), _lock_key(user_id))
 
+    # clears a user's lockout on an admin's request
     async def admin_unlock(self, user_id: uuid.UUID, admin_id: uuid.UUID) -> None:
-        """Admin-triggered unlock: clears the lock and records an audit event."""
         await self.reset(user_id)
         try:
             await self._audit.record(
@@ -113,9 +117,9 @@ class LoginLockoutService:
                 "audit_write_failed", action=AuditAction.LOGIN_UNLOCKED, error=repr(exc)
             )
 
+    # looks up the lockout duration a given attempt count triggers
     @staticmethod
     def _duration_for_attempts(attempts: int) -> int | None:
-        """Returns the lockout duration in seconds for the given attempt count, or nothing if no threshold is matched."""
         match: int | None = None
         for threshold, duration in _backoff_schedule():
             if attempts == threshold:

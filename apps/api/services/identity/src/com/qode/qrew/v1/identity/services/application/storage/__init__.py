@@ -1,3 +1,4 @@
+# exposes the storage service wired to its local filesystem backend
 from com.qode.qrew.v1.identity.services.application.storage.errors import (
     ObjectNotFoundError,
     SignatureExpiredError,

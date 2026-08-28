@@ -1,3 +1,4 @@
+# defines the session table that tracks a user's refresh tokens
 import uuid
 from datetime import datetime
 

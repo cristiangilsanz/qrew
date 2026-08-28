@@ -1,14 +1,15 @@
+# defines the storage service's errors
 class StorageError(Exception):
-    """Base error for the storage layer."""
+    pass
 
 
 class SignatureInvalidError(StorageError):
-    """Raised when a signed URL signature does not validate."""
+    pass
 
 
 class SignatureExpiredError(StorageError):
-    """Raised when a signed URL has passed its expiry time."""
+    pass
 
 
 class ObjectNotFoundError(StorageError):
-    """Raised when a storage object does not exist."""
+    pass

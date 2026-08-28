@@ -1,3 +1,4 @@
+# logs out a session by blacklisting its refresh token
 import uuid
 from datetime import UTC, datetime
 
@@ -20,10 +21,11 @@ BLACKLIST_USER_PREFIX = "blacklist:user:"
 
 
 class LogoutError(DomainError):
-    """A business-rule violation raised when logout cannot be completed."""
+    pass
 
 
 class LogoutService:
+    # stores the redis client audit service and session repository the service uses
     def __init__(
         self,
         redis: aioredis.Redis,  # type: ignore[type-arg]
@@ -34,8 +36,8 @@ class LogoutService:
         self._audit = audit
         self._session_repo = session_repo
 
+    # blacklists a refresh token and deletes its session
     async def logout(self, refresh_token: str) -> None:
-        """Revokes a refresh token and removes the associated session record."""
         try:
             payload = decode_refresh_token(refresh_token)
         except ExpiredSignatureError:
