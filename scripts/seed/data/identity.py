@@ -1,4 +1,4 @@
-"""Accounts and the devices bound to them."""
+# declares the fixture people and their devices
 
 from __future__ import annotations
 

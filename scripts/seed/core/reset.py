@@ -1,4 +1,4 @@
-"""Wipes every application row, in the order the foreign keys demand."""
+# truncates every seeded table in dependency order before a fresh load
 
 from __future__ import annotations
 
@@ -37,5 +37,6 @@ TABLES = (
 )
 
 
+# truncates every seeded table
 async def run(conn: asyncpg.Connection) -> None:
     await conn.execute(f"TRUNCATE {', '.join(TABLES)} CASCADE")

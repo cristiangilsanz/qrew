@@ -1,4 +1,4 @@
-"""Accounts, their devices and their passkeys."""
+# writes the fixture users devices and passkeys into identity
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from ..data import PASSWORD, Dataset
 NAME = "identity"
 
 
+# inserts every identity fixture row
 async def write(
     conn: asyncpg.Connection, data: Dataset, when: Timeline, cfg: SeedConfig
 ) -> None:

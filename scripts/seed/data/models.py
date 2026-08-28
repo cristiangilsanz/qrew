@@ -1,4 +1,4 @@
-"""The shape of every fixture: what a person, an event or a ticket carries."""
+# declares the fixture dataclasses every writer inserts
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from ..core import Timeline, ident
 
-PASSWORD = "Password1!"  # noqa: S105  fixture credential, never a real secret
+PASSWORD = "Password1!"  # noqa: S105
 CURRENCY = "EUR"
 
 
@@ -24,6 +24,7 @@ class Person:
     national_id: str | None = None
     verified: bool = True
 
+    # derives this person's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("user", self.key)
@@ -37,6 +38,7 @@ class Organisation:
     description: str
     members: tuple[tuple[str, str], ...]
 
+    # derives this organisation's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("organisation", self.key)
@@ -54,6 +56,7 @@ class Venue:
     radius_m: int
     timezone: str
 
+    # derives this venue's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("venue", self.key)
@@ -68,6 +71,7 @@ class TicketType:
     price_cents: int
     position: int
 
+    # derives this ticket type's deterministic identifier for an event
     def id(self, event_key: str) -> uuid.UUID:
         return ident("ticket-type", event_key, self.key)
 
@@ -89,19 +93,24 @@ class Event:
     queue_rate: int = 60
     max_per_user: int = 4
 
+    # derives this event's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("event", self.key)
 
+    # computes when the event starts relative to the seeded timeline
     def starts_at(self, when: Timeline) -> datetime:
         return when.hours(self.starts_in_hours)
 
+    # computes when the event ends relative to the seeded timeline
     def ends_at(self, when: Timeline) -> datetime:
         return when.hours(self.starts_in_hours + self.duration_hours)
 
+    # computes when ticket sales open relative to the seeded timeline
     def sale_starts_at(self, when: Timeline) -> datetime:
         return when.hours(self.sale_opens_in_hours)
 
+    # computes when ticket sales close relative to the seeded timeline
     def sale_ends_at(self, when: Timeline) -> datetime:
         return when.hours(self.sale_closes_in_hours)
 
@@ -120,6 +129,7 @@ class Reservation:
     requires_review: bool = False
     risk_score: int = 0
 
+    # derives this reservation's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("reservation", self.key)
@@ -139,6 +149,7 @@ class Ticket:
     bound_device: str | None = None
     expired_hours_ago: float | None = None
 
+    # derives this ticket's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("ticket", self.key)
@@ -158,6 +169,7 @@ class Listing:
     completed: bool = False
     cancelled: bool = False
 
+    # derives this listing's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("listing", self.key)
@@ -176,6 +188,7 @@ class Assignment:
     holder_dni: str
     paid: bool = False
 
+    # derives this assignment's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("assignment", self.key)
@@ -191,6 +204,7 @@ class Payment:
     status: str
     created_hours_ago: float
 
+    # derives this payment's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("payment", self.key)
@@ -206,6 +220,7 @@ class Scan:
     reason: str | None
     minutes_ago: float
 
+    # derives this scan's deterministic identifier
     @property
     def id(self) -> uuid.UUID:
         return ident("scan", self.key)
@@ -226,20 +241,26 @@ class Dataset:
     scans: tuple[Scan, ...]
     devices: tuple[tuple[str, str], ...] = field(default=())
 
+    # looks up a seeded person by key
     def person(self, key: str) -> Person:
         return next(p for p in self.people if p.key == key)
 
+    # looks up a seeded event by key
     def event(self, key: str) -> Event:
         return next(e for e in self.events if e.key == key)
 
+    # looks up a seeded venue by key
     def venue(self, key: str) -> Venue:
         return next(v for v in self.venues if v.key == key)
 
+    # looks up a seeded ticket by key
     def ticket(self, key: str) -> Ticket:
         return next(t for t in self.tickets if t.key == key)
 
+    # looks up a seeded listing by key
     def listing(self, key: str) -> Listing:
         return next(x for x in self.listings if x.key == key)
 
+    # looks up a seeded ticket type by event key and type key
     def ticket_type(self, event_key: str, type_key: str) -> TicketType:
         return next(t for t in self.event(event_key).ticket_types if t.key == type_key)

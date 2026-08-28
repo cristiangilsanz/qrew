@@ -1,4 +1,4 @@
-"""Scanners at the door and the scans already recorded."""
+# declares the fixture scanners and their scans
 
 from __future__ import annotations
 

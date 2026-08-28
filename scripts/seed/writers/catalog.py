@@ -1,4 +1,4 @@
-"""Organisations with their staff, venues, events and the ticket types on sale."""
+# writes the fixture organisations venues events and ticket types into catalog
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from ..data import Dataset
 NAME = "catalog"
 
 
+# inserts every catalog fixture row
 async def write(
     conn: asyncpg.Connection, data: Dataset, when: Timeline, cfg: SeedConfig
 ) -> None:

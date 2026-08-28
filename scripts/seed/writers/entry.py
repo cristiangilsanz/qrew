@@ -1,4 +1,4 @@
-"""Gate scanners, the ticket projection they read and a couple of past scans."""
+# writes the fixture scanners ticket contexts and scans into entry
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ NAME = "entry"
 _SCANNABLE = {"issued", "scanning", "redeemed"}
 
 
+# inserts every entry fixture row
 async def write(
     conn: asyncpg.Connection, data: Dataset, when: Timeline, cfg: SeedConfig
 ) -> None:

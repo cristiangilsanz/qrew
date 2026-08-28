@@ -1,11 +1,4 @@
-"""The fixture catalogue, one module per service.
-
-Admin is the account to test with. It owns an organisation, holds tickets in every
-state, sells and buys on the market and has a payment of each outcome, so almost any
-screen can be reached without switching accounts. The rest exist to exercise what needs
-a second party: Manager runs a separate organisation, Member works the gate, User A
-trades with Admin, User B waits in the queue and User C is a fresh account.
-"""
+# aggregates the seed data modules into one dataset
 
 from __future__ import annotations
 
@@ -20,8 +13,8 @@ from .ticketing import TICKETS
 __all__ = ["CURRENCY", "PASSWORD", "SCANNERS", "Dataset", "build"]
 
 
+# assembles the full seeded dataset from every domain module
 def build() -> Dataset:
-    """Assembles the catalogue every writer consumes."""
     return Dataset(
         people=PEOPLE,
         organisations=ORGANISATIONS,

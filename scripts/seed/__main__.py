@@ -1,4 +1,4 @@
-"""Command line entry point for the fixture loader."""
+# parses the command line and runs the seed or truncate flow
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from . import run
 from .core import load, truncate
 
 
+# parses the command line arguments and runs the requested flow
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Seed the local database with fixtures."
@@ -29,6 +30,7 @@ def main() -> None:
     asyncio.run(run(verbose=not args.quiet))
 
 
+# truncates every table without reseeding
 async def _truncate(*, verbose: bool) -> None:
     conn = await asyncpg.connect(load().dsn)
     try:

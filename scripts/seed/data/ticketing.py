@@ -1,4 +1,4 @@
-"""The tickets issued from those reservations, one per state."""
+# declares the fixture tickets
 
 from __future__ import annotations
 

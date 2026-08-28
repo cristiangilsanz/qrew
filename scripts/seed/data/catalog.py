@@ -1,4 +1,4 @@
-"""Organisations, venues, events and the tiers put on sale."""
+# declares the fixture organisations venues events and ticket types
 
 from __future__ import annotations
 

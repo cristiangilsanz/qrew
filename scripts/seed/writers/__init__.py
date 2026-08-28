@@ -1,4 +1,4 @@
-"""Every writer takes the same arguments and owns exactly one schema."""
+# turns each service's fixtures into rows through its own writer
 
 from __future__ import annotations
 

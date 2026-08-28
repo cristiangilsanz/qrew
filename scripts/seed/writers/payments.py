@@ -1,4 +1,4 @@
-"""One payment per outcome the provider can report."""
+# writes the fixture payments into payments
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from ..data import Dataset
 NAME = "payments"
 
 
+# inserts every payments fixture row
 async def write(
     conn: asyncpg.Connection, data: Dataset, when: Timeline, cfg: SeedConfig
 ) -> None:

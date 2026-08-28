@@ -1,4 +1,4 @@
-"""One payment per outcome the provider can report."""
+# declares the fixture payments
 
 from __future__ import annotations
 

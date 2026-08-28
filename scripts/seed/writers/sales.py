@@ -1,4 +1,4 @@
-"""Inventory, reservations, the resale market and the projections sales keeps."""
+# writes the fixture reservations listings assignments and queue entries into sales
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from ..data import Dataset
 NAME = "sales"
 
 
+# inserts every sales fixture row
 async def write(
     conn: asyncpg.Connection, data: Dataset, when: Timeline, cfg: SeedConfig
 ) -> None:

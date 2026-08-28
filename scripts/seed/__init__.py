@@ -1,10 +1,4 @@
-"""Fixture loader for the local environment.
-
-The seeder wipes the application rows and writes a catalogue of fixtures that covers
-every state the product can reach. Identifiers are derived from a fixed namespace and
-timestamps hang off the moment it runs, so two runs leave the database in the same
-shape with the deadlines always fresh.
-"""
+# truncates and reseeds the local database from the fixture dataset
 
 from __future__ import annotations
 
@@ -17,6 +11,7 @@ from .writers import WRITERS
 __all__ = ["SeedConfig", "load", "run"]
 
 
+# truncates every table then writes each service's fixtures in order
 async def run(*, verbose: bool = True) -> None:
     cfg = load()
     data = build()
@@ -34,11 +29,13 @@ async def run(*, verbose: bool = True) -> None:
     _report(verbose, data, when)
 
 
+# prints a progress line when verbose reporting is on
 def _say(verbose: bool, scope: str, message: str) -> None:
     if verbose:
         print(f"  {scope:<10} {message}")
 
 
+# prints a summary of every fixture the run seeded
 def _report(verbose: bool, data: Dataset, when: Timeline) -> None:
     if not verbose:
         return

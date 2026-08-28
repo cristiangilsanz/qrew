@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Entry point for the fixture loader. The seeder itself lives in scripts/seed."""
+# entry point that delegates to the seed package
 
 import sys
 from pathlib import Path

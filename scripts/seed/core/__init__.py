@@ -1,4 +1,4 @@
-"""Machinery shared by the catalogue and the writers."""
+# exposes the seed package's shared clock config crypto and reset helpers
 
 from __future__ import annotations
 

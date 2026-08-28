@@ -1,4 +1,4 @@
-"""Reads the connection and the encryption material from the identity configuration."""
+# loads the database dsn and encryption key from identity's local config
 
 from __future__ import annotations
 
@@ -18,10 +18,12 @@ class SeedConfig:
     fernet: MultiFernet
 
 
+# converts the async database url into the plain dsn asyncpg expects
 def _dsn(url: str) -> str:
     return url.replace("postgresql+asyncpg://", "postgresql://")
 
 
+# builds the fernet instance from the primary and previous encryption keys
 def _fernet(key: str, previous: str) -> MultiFernet:
     keys = [Fernet(key.encode())]
     keys.extend(
@@ -30,6 +32,7 @@ def _fernet(key: str, previous: str) -> MultiFernet:
     return MultiFernet(keys)
 
 
+# loads the seed configuration from identity's local yaml
 def load(path: Path | None = None) -> SeedConfig:
     source = path or IDENTITY_CONFIG
     if not source.exists():

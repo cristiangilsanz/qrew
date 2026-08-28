@@ -1,4 +1,4 @@
-"""Tickets and the two projections the gate reads before minting a code."""
+# writes the fixture event and device context and tickets into ticketing
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from ..data import Dataset
 NAME = "ticketing"
 
 
+# inserts every ticketing fixture row
 async def write(
     conn: asyncpg.Connection, data: Dataset, when: Timeline, cfg: SeedConfig
 ) -> None:

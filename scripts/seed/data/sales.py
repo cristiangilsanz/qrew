@@ -1,4 +1,4 @@
-"""Reservations, resale listings, their assignments and the admission queue."""
+# declares the fixture reservations listings assignments and queue entries
 
 from __future__ import annotations
 
