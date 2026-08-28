@@ -1,3 +1,4 @@
+// configures vitest for the frontend test suite
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { defineConfig } from 'vitest/config'

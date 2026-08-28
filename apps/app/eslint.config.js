@@ -8,6 +8,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 
+// configures eslint for the frontend
 export default [
   {
     ignores: [
@@ -21,7 +22,7 @@ export default [
     ],
   },
   js.configs.recommended,
-  // Type-aware rules scoped to src only (uses tsconfig.app.json)
+  // applies type aware rules scoped to the source directory
   {
     files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
@@ -52,7 +53,7 @@ export default [
     },
     settings: { react: { version: 'detect' } },
   },
-  // Non-type-aware rules for config and e2e files
+  // applies non type aware rules to config and e2e files
   {
     files: ['*.ts', 'e2e/**/*.ts'],
     languageOptions: {
