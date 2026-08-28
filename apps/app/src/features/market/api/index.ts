@@ -1,3 +1,4 @@
+// implements market api
 import { paymentsClient } from '@/lib/paymentsApi'
 import { salesClient } from '@/lib/salesApi'
 
@@ -58,43 +59,48 @@ export interface MarketAssignmentPayment {
 }
 
 export const marketApi = {
-  // Queue
+  // implements join queue
   joinQueue: (eventId: string) =>
     salesClient.post(`/v1/events/${eventId}/market/queue/join`).then((r) => r.data),
 
+  // implements leave queue
   leaveQueue: (eventId: string) =>
     salesClient.delete(`/v1/events/${eventId}/market/queue/leave`).then((r) => r.data),
 
+  // implements get queue status
   getQueueStatus: (eventId: string) =>
     salesClient
       .get<MarketQueueStatus>(`/v1/events/${eventId}/market/queue/status`)
       .then((r) => r.data),
 
-  // Listings
+  // implements list ticket
   listTicket: (ticketId: string) =>
     salesClient
       .post<MarketListingResponse>(`/v1/tickets/${ticketId}/market/list`)
       .then((r) => r.data),
 
+  // implements get listing
   getListing: (ticketId: string) =>
     salesClient
       .get<MarketListingResponse>(`/v1/tickets/${ticketId}/market/listing`)
       .then((r) => r.data),
 
-  // My queues
+  // implements get my queues
   getMyQueues: () => salesClient.get<MarketQueueEntry[]>('/v1/market/queues').then((r) => r.data),
 
-  // Assignments
+  // implements get pending assignment
   getPendingAssignment: () =>
     salesClient
       .get<MarketAssignmentResponse | null>('/v1/market/assignments/pending')
       .then((r) => r.data),
 
+  // implements get assignment
   getAssignment: (assignmentId: string) =>
     salesClient
       .get<MarketAssignmentResponse>(`/v1/market/assignments/${assignmentId}`)
       .then((r) => r.data),
 
+  // implements set holders
   setHolders: (assignmentId: string, holder_name: string, holder_dni: string) =>
     salesClient
       .put<MarketAssignmentResponse>(`/v1/market/assignments/${assignmentId}/holders`, {
@@ -103,10 +109,11 @@ export const marketApi = {
       })
       .then((r) => r.data),
 
+  // implements decline assignment
   declineAssignment: (assignmentId: string) =>
     salesClient.post(`/v1/market/assignments/${assignmentId}/decline`).then((r) => r.data),
 
-  // Payments
+  // implements initiate assignment payment
   initiateAssignmentPayment: (assignmentId: string) =>
     paymentsClient
       .post<MarketAssignmentPayment>(`/v1/market-assignments/${assignmentId}/payment`)

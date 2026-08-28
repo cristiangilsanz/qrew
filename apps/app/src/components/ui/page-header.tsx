@@ -1,3 +1,4 @@
+// implements page header
 import { type ReactNode } from 'react'
 
 import { BackButton } from './back-button'
@@ -10,6 +11,7 @@ interface PageHeaderProps {
   children?: ReactNode
 }
 
+// renders the page header component
 export function PageHeader({ title, backTo, backParams, onBack, children }: PageHeaderProps) {
   return (
     <div className="flex items-center gap-3 px-4 pt-4 pb-2">

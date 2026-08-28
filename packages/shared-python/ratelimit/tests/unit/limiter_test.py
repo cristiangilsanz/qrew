@@ -1,3 +1,4 @@
+# tests limiter
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -5,18 +6,20 @@ from ratelimit.errors import RateLimitedError
 from ratelimit.limiter import RateLimiter
 
 
+# handles make limiter
 def _make_limiter(*, fail_open: bool = True) -> tuple[RateLimiter, MagicMock]:
     from redis.asyncio import ResponseError
 
     redis = MagicMock()
     redis.evalsha = AsyncMock(side_effect=ResponseError("no sha"))
     redis.eval = AsyncMock(return_value=[1, 0])
-    redis.script_load = AsyncMock(return_value=None)  # prevents SHA caching
+    redis.script_load = AsyncMock(return_value=None)
     limiter = RateLimiter(redis, key_prefix="test", fail_open=fail_open)
     return limiter, redis
 
 
 class TestRateLimiterCheck:
+    # verifies that allowed when lua returns 1
     async def test_allowed_when_lua_returns_1(self) -> None:
         limiter, redis = _make_limiter()
         redis.eval = AsyncMock(return_value=[1, 0])
@@ -24,6 +27,7 @@ class TestRateLimiterCheck:
         assert decision.allowed is True
         assert decision.retry_after_seconds == 0
 
+    # verifies that denied when lua returns 0
     async def test_denied_when_lua_returns_0(self) -> None:
         limiter, redis = _make_limiter()
         redis.eval = AsyncMock(return_value=[0, 5000])
@@ -31,6 +35,7 @@ class TestRateLimiterCheck:
         assert decision.allowed is False
         assert decision.retry_after_seconds == 5
 
+    # verifies that fail open on redis error
     async def test_fail_open_on_redis_error(self) -> None:
         limiter, redis = _make_limiter(fail_open=True)
         from redis.asyncio import RedisError
@@ -39,6 +44,7 @@ class TestRateLimiterCheck:
         decision = await limiter.check("ip:x", limit=5, window_seconds=10)
         assert decision.allowed is True
 
+    # verifies that fail closed raises on redis error
     async def test_fail_closed_raises_on_redis_error(self) -> None:
         limiter, redis = _make_limiter(fail_open=False)
         from redis.asyncio import RedisError
@@ -49,6 +55,7 @@ class TestRateLimiterCheck:
 
 
 class TestCheckMany:
+    # verifies that passes when all allowed
     async def test_passes_when_all_allowed(self) -> None:
         limiter, redis = _make_limiter()
         redis.eval = AsyncMock(return_value=[1, 0])
@@ -59,16 +66,19 @@ class TestCheckMany:
             ]
         )
 
+    # verifies that raises when any denied
     async def test_raises_when_any_denied(self) -> None:
         limiter, redis = _make_limiter()
         redis.eval = AsyncMock(return_value=[0, 3000])
         with pytest.raises(RateLimitedError):
             await limiter.check_many([("ip:1.2.3.4", 10, 60)])
 
+    # verifies that raises worst retry after
     async def test_raises_worst_retry_after(self) -> None:
         limiter, redis = _make_limiter()
         call_count = 0
 
+        # handles eval
         async def _eval(*args: object, **kwargs: object) -> list[int]:
             nonlocal call_count
             call_count += 1

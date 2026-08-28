@@ -1,3 +1,4 @@
+// implements organiser api
 import { catalogClient } from '@/lib/catalogApi'
 
 export interface Organisation {
@@ -130,57 +131,72 @@ export interface CreateVenueData {
 }
 
 export const organiserApi = {
+  // implements list my orgs
   listMyOrgs: () =>
     catalogClient
       .get<{ items: Organisation[]; next_cursor: string | null }>('/v1/organisations')
       .then((r) => r.data),
 
+  // implements search orgs
   searchOrgs: (q: string) =>
     catalogClient
       .get<OrganisationSearchResult[]>('/v1/organisations/search', { params: { q } })
       .then((r) => r.data),
 
+  // implements create org
   createOrg: (data: { slug: string; name: string; description?: string }) =>
     catalogClient.post<Organisation>('/v1/organisations', data).then((r) => r.data),
 
+  // implements list members
   listMembers: (orgId: string) =>
     catalogClient
       .get<OrgMemberListItem[]>(`/v1/organisations/${orgId}/members`)
       .then((r) => r.data),
 
+  // implements add member
   addMember: (orgId: string, data: { user_id: string; role: 'member' | 'manager' }) =>
     catalogClient
       .post<OrgMember>(`/v1/organisations/${orgId}/members/add`, data)
       .then((r) => r.data),
 
+  // implements invite member
   inviteMember: (orgId: string, data: { email: string; role: 'member' | 'manager' | 'owner' }) =>
     catalogClient.post<OrgMember>(`/v1/organisations/${orgId}/members`, data).then((r) => r.data),
 
+  // implements remove member
   removeMember: (orgId: string, userId: string) =>
     catalogClient.delete(`/v1/organisations/${orgId}/members/${userId}`),
 
+  // implements delete organisation
   deleteOrganisation: (orgId: string) => catalogClient.delete(`/v1/organisations/${orgId}`),
 
+  // implements list org events
   listOrgEvents: (orgId: string) =>
     catalogClient
       .get<{ items: OrgEvent[]; next_cursor: string | null }>(`/v1/organisations/${orgId}/events`)
       .then((r) => r.data),
 
+  // implements create event
   createEvent: (orgId: string, data: CreateEventData) =>
     catalogClient.post<OrgEvent>(`/v1/organisations/${orgId}/events`, data).then((r) => r.data),
 
+  // implements update event
   updateEvent: (eventId: string, data: UpdateEventData) =>
     catalogClient.patch<OrgEvent>(`/v1/events/${eventId}`, data).then((r) => r.data),
 
+  // implements publish event
   publishEvent: (eventId: string) =>
     catalogClient.post<OrgEvent>(`/v1/events/${eventId}/publish`).then((r) => r.data),
 
+  // implements start event
   startEvent: (eventId: string) =>
     catalogClient.post<OrgEvent>(`/v1/events/${eventId}/start`).then((r) => r.data),
 
+  // implements cancel event
   cancelEvent: (eventId: string) =>
     catalogClient.post<OrgEvent>(`/v1/events/${eventId}/cancel`).then((r) => r.data),
 
+  // implements list ticket types
   listTicketTypes: (eventId: string) =>
     catalogClient
       .get<{ items: OrgTicketType[]; next_cursor: string | null }>(
@@ -188,24 +204,29 @@ export const organiserApi = {
       )
       .then((r) => r.data),
 
+  // implements create ticket type
   createTicketType: (eventId: string, data: CreateTicketTypeData) =>
     catalogClient
       .post<OrgTicketType>(`/v1/events/${eventId}/ticket-types`, data)
       .then((r) => r.data),
 
+  // implements update ticket type
   updateTicketType: (eventId: string, ttId: string, data: UpdateTicketTypeData) =>
     catalogClient
       .patch<OrgTicketType>(`/v1/events/${eventId}/ticket-types/${ttId}`, data)
       .then((r) => r.data),
 
+  // implements delete ticket type
   deleteTicketType: (eventId: string, ttId: string) =>
     catalogClient.delete(`/v1/events/${eventId}/ticket-types/${ttId}`),
 
+  // implements list venues
   listVenues: () =>
     catalogClient
       .get<{ items: Venue[]; next_cursor: string | null }>('/v1/venues')
       .then((r) => r.data),
 
+  // implements create venue
   createVenue: (data: CreateVenueData) =>
     catalogClient.post<Venue>('/v1/venues', data).then((r) => r.data),
 }

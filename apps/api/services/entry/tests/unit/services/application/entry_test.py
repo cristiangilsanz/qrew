@@ -1,3 +1,4 @@
+# tests entry
 import uuid
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -21,12 +22,14 @@ _PATCH_REDLOCK = f"{_MOD}.redlock"
 _PATCH_TICKETING = f"{_MOD}._call_ticketing_use"
 
 
+# handles make redis
 def _make_redis(*, set_result: object = True) -> MagicMock:
     redis = MagicMock()
     redis.set = AsyncMock(return_value=set_result)
     return redis
 
 
+# handles make fake settings
 def _make_fake_settings() -> MagicMock:
     s = MagicMock()
     s.ticket_qr_audience = "qrew.ticket"
@@ -35,6 +38,7 @@ def _make_fake_settings() -> MagicMock:
     return s
 
 
+# handles make redlock cm
 def _make_redlock_cm() -> MagicMock:
     cm = MagicMock()
     cm.__aenter__ = AsyncMock(return_value=None)
@@ -42,13 +46,13 @@ def _make_redlock_cm() -> MagicMock:
     return cm
 
 
+# return mock_jwt, mock_jwt_keys configured for the given scenario
 def _make_jwt_mocks(
     *,
     kid: str = "kid1",
     payload: dict | None = None,
     decode_side_effect: Exception | None = None,
 ) -> tuple[MagicMock, MagicMock]:
-    """Return (mock_jwt, mock_jwt_keys) configured for the given scenario."""
     mock_jwt = MagicMock()
     mock_jwt.get_unverified_header = MagicMock(return_value={"kid": kid})
     mock_jwt.ExpiredSignatureError = jwt.ExpiredSignatureError
@@ -69,6 +73,7 @@ def _make_jwt_mocks(
     return mock_jwt, mock_jwt_keys
 
 
+# handles valid payload
 def _valid_payload(
     *,
     ticket_id: uuid.UUID,
@@ -88,6 +93,7 @@ def _valid_payload(
     }
 
 
+# handles run
 async def _run(
     *,
     ticket_jwt: str = "fake.jwt.token",
@@ -151,13 +157,15 @@ async def _run(
 
 
 class TestValidateEntryJwtErrors:
+    # verifies that denied when kid not in verifiers
     async def test_denied_when_kid_not_in_verifiers(self) -> None:
         mock_jwt, mock_jwt_keys = _make_jwt_mocks(kid="kid1")
-        mock_jwt_keys.get_verifiers = MagicMock(return_value={})  # no matching kid
+        mock_jwt_keys.get_verifiers = MagicMock(return_value={})
         outcome = await _run(mock_jwt=mock_jwt, mock_jwt_keys=mock_jwt_keys)
         assert not outcome.allowed
         assert outcome.reason == EntryReason.signature
 
+    # verifies that denied when jwt expired
     async def test_denied_when_jwt_expired(self) -> None:
         mock_jwt, mock_jwt_keys = _make_jwt_mocks(
             decode_side_effect=jwt.ExpiredSignatureError("expired")
@@ -166,6 +174,7 @@ class TestValidateEntryJwtErrors:
         assert not outcome.allowed
         assert outcome.reason == EntryReason.expired
 
+    # verifies that denied when invalid audience
     async def test_denied_when_invalid_audience(self) -> None:
         mock_jwt, mock_jwt_keys = _make_jwt_mocks(
             decode_side_effect=jwt.InvalidAudienceError("bad audience")
@@ -174,6 +183,7 @@ class TestValidateEntryJwtErrors:
         assert not outcome.allowed
         assert outcome.reason == EntryReason.audience
 
+    # verifies that denied when invalid signature
     async def test_denied_when_invalid_signature(self) -> None:
         mock_jwt, mock_jwt_keys = _make_jwt_mocks(
             decode_side_effect=jwt.InvalidTokenError("bad sig")
@@ -182,12 +192,14 @@ class TestValidateEntryJwtErrors:
         assert not outcome.allowed
         assert outcome.reason == EntryReason.signature
 
+    # verifies that denied when payload missing required fields
     async def test_denied_when_payload_missing_required_fields(self) -> None:
         mock_jwt, mock_jwt_keys = _make_jwt_mocks(payload={"ticket_id": "only-this"})
         outcome = await _run(mock_jwt=mock_jwt, mock_jwt_keys=mock_jwt_keys)
         assert not outcome.allowed
         assert outcome.reason == EntryReason.signature
 
+    # verifies that denied when payload uuids are invalid
     async def test_denied_when_payload_uuids_are_invalid(self) -> None:
         mock_jwt, mock_jwt_keys = _make_jwt_mocks(
             payload={
@@ -204,6 +216,7 @@ class TestValidateEntryJwtErrors:
 
 
 class TestValidateEntryContextChecks:
+    # verifies that denied when wrong event
     async def test_denied_when_wrong_event(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -219,11 +232,12 @@ class TestValidateEntryContextChecks:
             mock_jwt_keys=mock_jwt_keys,
             scanner=make_scanner(venue_id=venue_id),
             scanner_venue_id=venue_id,
-            scanner_event_id=other_event,  # different from JWT event_id
+            scanner_event_id=other_event,
         )
         assert not outcome.allowed
         assert outcome.reason == EntryReason.wrong_event
 
+    # verifies that denied when wrong venue
     async def test_denied_when_wrong_venue(self, event_id: uuid.UUID) -> None:
         ticket_id = uuid.uuid4()
         venue_id = uuid.uuid4()
@@ -237,12 +251,13 @@ class TestValidateEntryContextChecks:
             mock_jwt=mock_jwt,
             mock_jwt_keys=mock_jwt_keys,
             scanner=make_scanner(venue_id=other_venue),
-            scanner_venue_id=other_venue,  # different from JWT venue_id
+            scanner_venue_id=other_venue,
             scanner_event_id=event_id,
         )
         assert not outcome.allowed
         assert outcome.reason == EntryReason.wrong_venue
 
+    # verifies that denied when replay
     async def test_denied_when_replay(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -252,7 +267,7 @@ class TestValidateEntryContextChecks:
                 ticket_id=ticket_id, event_id=event_id, venue_id=venue_id
             )
         )
-        redis = _make_redis(set_result=None)  # None = key existed, nx=True rejected
+        redis = _make_redis(set_result=None)
         outcome = await _run(
             mock_jwt=mock_jwt,
             mock_jwt_keys=mock_jwt_keys,
@@ -264,6 +279,7 @@ class TestValidateEntryContextChecks:
         assert not outcome.allowed
         assert outcome.reason == EntryReason.replay
 
+    # verifies that denied when ticket not found
     async def test_denied_when_ticket_not_found(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -284,6 +300,7 @@ class TestValidateEntryContextChecks:
         assert not outcome.allowed
         assert outcome.reason == EntryReason.not_found
 
+    # verifies that denied when ticket belongs to wrong event
     async def test_denied_when_ticket_belongs_to_wrong_event(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -293,7 +310,6 @@ class TestValidateEntryContextChecks:
                 ticket_id=ticket_id, event_id=event_id, venue_id=venue_id
             )
         )
-        # ticket context has a different event_id than the JWT
         tc = make_ticket_ctx(ticket_id=ticket_id, event_id=uuid.uuid4())
         outcome = await _run(
             mock_jwt=mock_jwt,
@@ -306,6 +322,7 @@ class TestValidateEntryContextChecks:
         assert not outcome.allowed
         assert outcome.reason == EntryReason.wrong_owner
 
+    # verifies that denied when ticket state is used
     async def test_denied_when_ticket_state_is_used(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -329,6 +346,7 @@ class TestValidateEntryContextChecks:
         assert not outcome.allowed
         assert outcome.reason == EntryReason.state
 
+    # verifies that denied when lock unavailable
     async def test_denied_when_lock_unavailable(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -356,6 +374,7 @@ class TestValidateEntryContextChecks:
         assert not outcome.allowed
         assert outcome.reason == EntryReason.busy
 
+    # verifies that denied when ticketing call fails
     async def test_denied_when_ticketing_call_fails(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -384,6 +403,7 @@ class TestValidateEntryContextChecks:
 
 
 class TestValidateEntryHappyPath:
+    # verifies that allowed when all checks pass
     async def test_allowed_when_all_checks_pass(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -410,6 +430,7 @@ class TestValidateEntryHappyPath:
         assert outcome.ticket_id == ticket_id
         assert outcome.holder_user_id == owner
 
+    # verifies that allowed when no scanner event id
     async def test_allowed_when_no_scanner_event_id(self, venue_id: uuid.UUID) -> None:
         ticket_id = uuid.uuid4()
         event_id = uuid.uuid4()
@@ -424,11 +445,12 @@ class TestValidateEntryHappyPath:
             mock_jwt_keys=mock_jwt_keys,
             scanner=make_scanner(venue_id=venue_id),
             scanner_venue_id=venue_id,
-            scanner_event_id=None,  # scanner not assigned to a specific event
+            scanner_event_id=None,
             tc_repo_result=tc,
         )
         assert outcome.allowed
 
+    # verifies that entry pending state is allowed
     async def test_entry_pending_state_is_allowed(
         self, event_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:

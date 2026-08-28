@@ -1,49 +1,13 @@
+# defines the ticket state enum and the ticket context projection
 import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, func
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from com.qode.qrew.v1.entry.core.database import Base
-
-
-class Event(Base):
-    """Minimal read-only projection of a catalog event."""
-
-    __tablename__ = "events"
-    __table_args__ = {"schema": "catalog"}
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    organisation_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), nullable=False
-    )
-    venue_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
-
-
-class OrganisationMember(Base):
-    """Minimal read-only projection of a catalog organisation membership."""
-
-    __tablename__ = "organisation_members"
-    __table_args__ = {"schema": "catalog"}
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    organisation_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), nullable=False
-    )
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
-
-
-class User(Base):
-    """Read-only local projection of user identity state."""
-
-    __tablename__ = "users"
-    __table_args__ = {"schema": "identity"}
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    is_active: Mapped[bool] = mapped_column(Boolean)
-    is_admin: Mapped[bool] = mapped_column(Boolean)
 
 
 class TicketState(enum.StrEnum):
@@ -57,8 +21,6 @@ class TicketState(enum.StrEnum):
 
 
 class TicketContext(Base):
-    """Read-only local projection of ticket state, updated via event subscription."""
-
     __tablename__ = "ticket_contexts"
     __table_args__ = {"schema": "entry"}
 

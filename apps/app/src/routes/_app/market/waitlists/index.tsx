@@ -1,3 +1,4 @@
+// implements waitlists
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/_app/market/waitlists/')({
   component: WaitlistsPage,
 })
 
+// renders the waitlist row component
 function WaitlistRow({ eventId }: { eventId: string }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -28,13 +30,16 @@ function WaitlistRow({ eventId }: { eventId: string }) {
   const [leaveOpen, setLeaveOpen] = useState(false)
 
   const leaveQueue = useMutation({
+    // implements mutation fn
     mutationFn: () => marketApi.leaveQueue(eventId),
+    // handles on success
     onSuccess: () => {
       toast.success(t('market.toast.leftWaitlist'))
       setLeaveOpen(false)
       void queryClient.invalidateQueries({ queryKey: ['market', 'queues'] })
       void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
     },
+    // handles on error
     onError: () => toast.error(t('market.toast.leaveFailed')),
   })
 
@@ -138,11 +143,13 @@ function WaitlistRow({ eventId }: { eventId: string }) {
   )
 }
 
+// renders the waitlists page component
 function WaitlistsPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const { data: queues, isLoading } = useMyQueues()
 
+  // implements filtered
   const filtered = (queues ?? []).filter(
     (entry) => !query || entry.event_id.toLowerCase().includes(query.toLowerCase()),
   )

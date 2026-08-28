@@ -1,3 +1,4 @@
+// tests queue panel
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
@@ -9,9 +10,11 @@ import { QueuePanel } from './QueuePanel'
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
+  // renders the toaster component
   Toaster: () => null,
 }))
 
+// implements render panel
 function renderPanel(eventId = 'event-1') {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },

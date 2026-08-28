@@ -1,3 +1,4 @@
+// renders the register form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Turnstile } from '@marsidev/react-turnstile'
 import { Link, useNavigate } from '@tanstack/react-router'
@@ -36,6 +37,7 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>
 
+// renders the register form component
 export function RegisterForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -55,12 +57,15 @@ export function RegisterForm() {
     },
   })
 
+  // handles on submit
   const onSubmit = (values: RegisterFormValues) => {
     register.mutate(values, {
+      // handles on success
       onSuccess: () => {
         toast.success(t('auth.registrationSuccess'))
         navigate({ to: '/login' })
       },
+      // handles on error
       onError: () => {
         turnstileRef.current?.reset()
         form.setValue('captcha_token', '')

@@ -1,3 +1,4 @@
+# settles reservations and market assignments from payments outcomes
 import asyncio
 import uuid
 from typing import Any
@@ -22,6 +23,7 @@ STREAM = "PAYMENTS"
 DURABLE = "sales-payment-handler"
 
 
+# marks a reservation paid or completes a market assignment on success
 async def handle_payment_succeeded(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -30,7 +32,6 @@ async def handle_payment_succeeded(raw: bytes) -> None:
     raw_reservation_id: str | None = data["data"].get("reservation_id")
     raw_assignment_id: str | None = data["data"].get("market_assignment_id")
 
-    # Route to market settlement if this is a market assignment payment
     if raw_assignment_id:
         try:
             payment_intent_id: str = str(data["data"].get("payment_intent_id", ""))
@@ -56,7 +57,6 @@ async def handle_payment_succeeded(raw: bytes) -> None:
         )
         return
 
-    # Standard reservation payment
     if not raw_reservation_id:
         await logger.awarning("payment_events.succeeded.bad_payload")
         return
@@ -71,6 +71,7 @@ async def handle_payment_succeeded(raw: bytes) -> None:
         await logger.ainfo("payment_events.succeeded", reservation_id=str(reservation_id))
 
 
+# cancels a reservation when it is refunded in full
 async def handle_payment_refunded(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -95,6 +96,7 @@ async def handle_payment_refunded(raw: bytes) -> None:
         )
 
 
+# cancels a reservation whose payment was charged back
 async def handle_chargeback_opened(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -123,6 +125,7 @@ _HANDLERS = {
 }
 
 
+# subscribes to every payments event subject and dispatches each message
 async def run_payment_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -146,6 +149,7 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("payment_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             async for msg in psub.messages:  # type: ignore[attr-defined]
                 try:

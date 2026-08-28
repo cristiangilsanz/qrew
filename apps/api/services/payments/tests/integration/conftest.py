@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import os
 import pathlib
 import time
@@ -21,6 +22,7 @@ os.environ.setdefault("NATS_URL", "")
 os.environ.setdefault("PII_ENCRYPTION_KEY", Fernet.generate_key().decode())
 
 
+# handles get test db url
 def _get_test_db_url() -> str | None:
     explicit = os.environ.get("PAYMENTS_TEST_DB_URL") or os.environ.get("DATABASE_URL")
     if explicit:
@@ -49,6 +51,7 @@ def _get_test_db_url() -> str | None:
         return None
 
 
+# verifies that db url
 @pytest.fixture(scope="session")
 def test_db_url() -> str:
     url = _get_test_db_url()
@@ -60,6 +63,7 @@ def test_db_url() -> str:
     return url
 
 
+# provides setup test infrastructure
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_infrastructure(test_db_url: str) -> None:
     import com.qode.qrew.v1.payments.core.database as db_module
@@ -88,13 +92,16 @@ def setup_test_infrastructure(test_db_url: str) -> None:
     alembic_command.upgrade(cfg, "head")
 
 
+# provides fake redis server
 @pytest.fixture(scope="session")
 def fake_redis_server() -> fakeredis.FakeServer:
     return fakeredis.FakeServer()
 
 
+# provides patch redis globally
 @pytest.fixture(scope="session", autouse=True)
 def patch_redis_globally(fake_redis_server: fakeredis.FakeServer):
+    # handles make fake
     def make_fake(url: str, **kwargs: object) -> fakeredis.aioredis.FakeRedis:
         decode = bool(kwargs.get("decode_responses", False))
         return fakeredis.aioredis.FakeRedis(server=fake_redis_server, decode_responses=decode)
@@ -103,6 +110,7 @@ def patch_redis_globally(fake_redis_server: fakeredis.FakeServer):
         yield
 
 
+# verifies that session factory
 @pytest.fixture(scope="session")
 def test_session_factory(setup_test_infrastructure: None) -> async_sessionmaker[AsyncSession]:
     import com.qode.qrew.v1.payments.core.database as db_module
@@ -110,9 +118,10 @@ def test_session_factory(setup_test_infrastructure: None) -> async_sessionmaker[
     return db_module.AsyncSessionLocal
 
 
+# provides mock stripe
 @pytest.fixture
 def mock_stripe() -> AsyncMock:
-    from com.qode.qrew.v1.payments.services.infrastructure.stripe_client import CreatedIntent
+    from com.qode.qrew.v1.payments.services.application.stripe_client import CreatedIntent
 
     mock = AsyncMock()
     mock.create_payment_intent.return_value = CreatedIntent(
@@ -128,6 +137,7 @@ def mock_stripe() -> AsyncMock:
     return mock
 
 
+# provides client
 @pytest_asyncio.fixture
 async def client(
     setup_test_infrastructure: None,
@@ -136,7 +146,7 @@ async def client(
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
     from com.qode.qrew.v1.payments.app import app
     from com.qode.qrew.v1.payments.core.dependencies import get_stripe_client
-    from com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency import (
+    from com.qode.qrew.v1.payments.services.application.webhooks.idempotency import (
         _ClientState,
     )
 
@@ -152,6 +162,7 @@ async def client(
     app.dependency_overrides.pop(get_stripe_client, None)
 
 
+# handles make token
 def _make_token(user_id: _uuid.UUID) -> str:
     import jwt as pyjwt
 
@@ -167,6 +178,7 @@ def _make_token(user_id: _uuid.UUID) -> str:
     )
 
 
+# provides auth headers
 @pytest.fixture
 def auth_headers() -> tuple[_uuid.UUID, dict[str, str]]:
     user_id = _uuid.uuid4()

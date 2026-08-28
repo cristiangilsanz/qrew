@@ -1,3 +1,4 @@
+# exposes the endpoints that report bind attest list and revoke a user's devices
 import contextlib
 import uuid
 
@@ -47,6 +48,7 @@ from ._deps import (
 router = APIRouter(prefix="/devices")
 
 
+# records a device fingerprint for the caller
 @router.post(
     "/fingerprint",
     response_model=FingerprintReportResponse,
@@ -60,7 +62,6 @@ async def report_fingerprint(
     current_user: User = Depends(get_current_user),
     service: FingerprintService = Depends(get_fingerprint_service),
 ) -> FingerprintReportResponse:
-    """Report a device fingerprint for the current user."""
     flagged = await service.report(
         current_user,
         body.fingerprint_hash,
@@ -70,6 +71,7 @@ async def report_fingerprint(
     return FingerprintReportResponse(message="Fingerprint recorded.", flagged=flagged)
 
 
+# starts binding a new device to the caller's account
 @router.post(
     "/bind/begin",
     response_model=DeviceBindBeginResponse,
@@ -82,11 +84,11 @@ async def device_bind_begin(
     current_user: User = Depends(get_current_user),
     service: DeviceBindingService = Depends(get_device_binding_service),
 ) -> DeviceBindBeginResponse:
-    """Begin device binding."""
     challenge = await service.begin(current_user)
     return DeviceBindBeginResponse(challenge=challenge)
 
 
+# completes the binding of a device to the caller's account
 @router.post(
     "/bind/complete",
     response_model=DeviceBindCompleteResponse,
@@ -100,7 +102,6 @@ async def device_bind_complete(
     current_user: User = Depends(get_current_user),
     service: DeviceBindingService = Depends(get_device_binding_service),
 ) -> DeviceBindCompleteResponse:
-    """Complete device binding."""
     try:
         device = await service.complete(current_user, body.name, body.public_key, body.signature)
         return DeviceBindCompleteResponse(
@@ -111,6 +112,7 @@ async def device_bind_complete(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# submits a device integrity attestation
 @router.post(
     "/attest",
     response_model=DeviceAttestResponse,
@@ -124,7 +126,6 @@ async def device_attest(
     current_user: User = Depends(get_current_user),
     service: DeviceAttestationService = Depends(get_device_attestation_service),
 ) -> DeviceAttestResponse:
-    """Submit a device integrity attestation."""
     try:
         result = await service.attest(current_user.id, body.platform, body.token)
         return DeviceAttestResponse(
@@ -135,6 +136,7 @@ async def device_attest(
         raise domain_error(exc.message, exc.field, status.HTTP_403_FORBIDDEN) from exc
 
 
+# lists the caller's bound devices
 @router.get(
     "",
     response_model=Page[DeviceResponse],
@@ -148,7 +150,6 @@ async def list_devices(
     current_session: Session = Depends(get_current_session),
     service: DeviceService = Depends(get_device_service),
 ) -> Page[DeviceResponse]:
-    """List the current user's bound devices."""
     devices = await service.list_devices(current_user)
     items = [
         DeviceResponse(
@@ -163,6 +164,7 @@ async def list_devices(
     return Page[DeviceResponse](items=items, next_cursor=None)
 
 
+# revokes one of the caller's bound devices
 @router.post(
     "/{device_id}/revoke",
     response_model=DeviceRevokeResponse,
@@ -176,7 +178,6 @@ async def revoke_device(
     current_user: User = Depends(get_current_user),
     service: DeviceService = Depends(get_device_service),
 ) -> DeviceRevokeResponse:
-    """Revoke a specific bound device."""
     calling_device_header = request.headers.get("X-Calling-Device-Id")
     calling_device_id: uuid.UUID | None = None
     if calling_device_header:
@@ -189,6 +190,7 @@ async def revoke_device(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# revokes every bound device except the one calling
 @router.post(
     "/revoke-all",
     response_model=DeviceRevokeAllResponse,
@@ -201,7 +203,6 @@ async def revoke_all_devices(
     current_user: User = Depends(get_current_user),
     service: DeviceService = Depends(get_device_service),
 ) -> DeviceRevokeAllResponse:
-    """Revoke every other device and kill all sessions."""
     calling_device_header = request.headers.get("X-Calling-Device-Id")
     calling_device_id: uuid.UUID | None = None
     if calling_device_header:

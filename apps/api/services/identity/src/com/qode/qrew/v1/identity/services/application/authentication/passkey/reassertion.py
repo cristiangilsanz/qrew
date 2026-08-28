@@ -1,3 +1,4 @@
+# reasserts a passkey to refresh how recently a session proved possession
 from datetime import UTC, datetime
 
 import redis.asyncio as aioredis
@@ -30,8 +31,7 @@ logger = structlog.get_logger(__name__)
 
 
 class PasskeyReassertionService:
-    """Verify a fresh passkey assertion for an already-authenticated session."""
-
+    # stores the repositories redis client and audit service the service uses
     def __init__(
         self,
         passkey_repo: PasskeyCredentialRepository,
@@ -44,8 +44,8 @@ class PasskeyReassertionService:
         self._audit = audit
         self._session_repo = session_repo
 
+    # generates the webauthn options for the session's registered passkeys
     async def begin(self, user: User, session_jti: str) -> str:
-        """Generate a short-lived assertion challenge bound to the session."""
         credentials = await self._passkey_repo.get_all_by_user_id(user.id)
         if not credentials:
             raise PasskeyError("No passkey registered for this account")
@@ -58,13 +58,13 @@ class PasskeyReassertionService:
         await logger.ainfo("passkey_reassertion_begin", user_id=str(user.id))
         return webauthn.options_to_json(options)
 
+    # verifies the assertion and stamps the session as freshly reasserted
     async def complete(
         self,
         user: User,
         session: Session,
         request: PasskeyAuthenticationCompleteRequest,
     ) -> datetime:
-        """Verify a re-assertion and stamp the session timestamp."""
         raw_id = base64url_to_bytes(request.raw_id)
         stored = await self._passkey_repo.get_by_credential_id(raw_id)
         if stored is None or stored.user_id != user.id:
@@ -95,8 +95,8 @@ class PasskeyReassertionService:
         await self._audit_safe(user, session)
         return asserted_at
 
+    # reads and deletes the pending reassertion challenge
     async def _consume_challenge(self, session_jti: str) -> bytes:
-        """Pop and return the cached re-assertion challenge."""
         key = assert_challenge_key(session_jti)
         raw_challenge: bytes | None = await self._redis.get(key)
         if raw_challenge is None:
@@ -104,8 +104,8 @@ class PasskeyReassertionService:
         await self._redis.delete(key)
         return raw_challenge
 
+    # records the reassertion without letting a failure interrupt it
     async def _audit_safe(self, user: User, session: Session) -> None:
-        """Record the re-assertion audit event without propagating errors."""
         try:
             await self._audit.record(
                 action=AuditAction.PASSKEY_REASSERTED,

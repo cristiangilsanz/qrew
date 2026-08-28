@@ -1,3 +1,4 @@
+# exposes the endpoints that manage events their lifecycle ticket types and public search
 import uuid
 from datetime import UTC, datetime
 
@@ -48,9 +49,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 _search_service = SearchService()
 
 
-# Helpers
-
-
+# converts an event into its full response
 def _event_response(event: Event) -> EventResponse:
     return EventResponse(
         id=event.id,
@@ -76,6 +75,7 @@ def _event_response(event: Event) -> EventResponse:
     )
 
 
+# converts an event error into a not found or bad request response
 def _event_error(error: EventError) -> HTTPException:
     code = (
         status.HTTP_404_NOT_FOUND
@@ -85,6 +85,7 @@ def _event_error(error: EventError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
+# converts a ticket type into its response
 def _ticket_type_response(ticket_type: TicketType) -> TicketTypeResponse:
     return TicketTypeResponse(
         id=ticket_type.id,
@@ -101,6 +102,7 @@ def _ticket_type_response(ticket_type: TicketType) -> TicketTypeResponse:
     )
 
 
+# converts a ticket type error into the matching http response
 def _ticket_type_error(error: TicketTypeError) -> HTTPException:
     code = (
         status.HTTP_404_NOT_FOUND
@@ -112,9 +114,7 @@ def _ticket_type_error(error: TicketTypeError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
-# Event management
-
-
+# edits the mutable fields of a draft event
 @router.patch(
     "/{event_id}",
     response_model=EventResponse,
@@ -138,6 +138,7 @@ async def update_event(
     return _event_response(event)
 
 
+# publishes a draft event
 @router.post(
     "/{event_id}/publish",
     response_model=EventResponse,
@@ -165,6 +166,7 @@ async def publish_event(
     return _event_response(event)
 
 
+# marks a published event as ongoing
 @router.post(
     "/{event_id}/start",
     response_model=EventResponse,
@@ -192,6 +194,7 @@ async def start_event(
     return _event_response(event)
 
 
+# cancels an event
 @router.post(
     "/{event_id}/cancel",
     response_model=EventResponse,
@@ -219,9 +222,7 @@ async def cancel_event(
     return _event_response(event)
 
 
-# Ticket types
-
-
+# creates a ticket type under an event
 @router.post(
     "/{event_id}/ticket-types",
     response_model=TicketTypeResponse,
@@ -259,6 +260,7 @@ async def create_ticket_type(
     return _ticket_type_response(ticket_type)
 
 
+# lists an event's ticket types
 @router.get(
     "/{event_id}/ticket-types",
     response_model=Page[TicketTypeResponse],
@@ -290,6 +292,7 @@ async def list_ticket_types(
     )
 
 
+# edits a ticket type
 @router.patch(
     "/{event_id}/ticket-types/{ticket_type_id}",
     response_model=TicketTypeResponse,
@@ -325,6 +328,7 @@ async def update_ticket_type(
     return _ticket_type_response(ticket_type)
 
 
+# soft deletes a ticket type
 @router.delete(
     "/{event_id}/ticket-types/{ticket_type_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -354,9 +358,7 @@ async def delete_ticket_type(
         ) from exc
 
 
-# Public catalog
-
-
+# lists or searches published events with cursor pagination
 @router.get(
     "",
     response_model=Page[EventSearchResult],
@@ -404,6 +406,7 @@ async def search_events(
     )
 
 
+# reads a published event with its organisation venue and ticket tiers
 @router.get(
     "/{event_id}",
     response_model=PublicEventDetailResponse,
@@ -479,6 +482,7 @@ async def get_public_event(
     )
 
 
+# reads the lightweight availability projection for an event
 @router.get(
     "/{event_id}/availability",
     response_model=EventAvailabilityResponse,

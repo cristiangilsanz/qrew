@@ -1,3 +1,4 @@
+# registers each websocket channel's key pattern and subscription check
 import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -15,6 +16,7 @@ class ChannelDefinition:
     queue_size: int
     _compiled: re.Pattern[str] = field(init=False, repr=False, compare=False)
 
+    # compiles the key pattern into a regular expression
     def __post_init__(self) -> None:
         escaped = re.escape(self.key_pattern)
         rebuilt = _PLACEHOLDER.sub(
@@ -23,12 +25,15 @@ class ChannelDefinition:
         )
         self._compiled = re.compile(f"^{rebuilt}$")
 
+    # matches a channel key and extracts its named parameters
     def match(self, channel_key: str) -> dict[str, str] | None:
         m = self._compiled.fullmatch(channel_key)
         return m.groupdict() if m else None
 
 
+# registers a function as the subscription check for a channel pattern
 def channel(*, key_pattern: str, queue_size: int = 64) -> Callable[[CanSubscribe], CanSubscribe]:
+    # records the function under its channel pattern
     def decorator(func: CanSubscribe) -> CanSubscribe:
         if key_pattern in _REGISTRY:
             raise ValueError(f"duplicate channel pattern: {key_pattern}")
@@ -42,6 +47,7 @@ def channel(*, key_pattern: str, queue_size: int = 64) -> Callable[[CanSubscribe
     return decorator
 
 
+# resolves a channel key to its definition and parameters
 def resolve(channel_key: str) -> tuple[ChannelDefinition, dict[str, str]] | None:
     for definition in _REGISTRY.values():
         params = definition.match(channel_key)

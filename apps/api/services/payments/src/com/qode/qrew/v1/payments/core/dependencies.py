@@ -1,3 +1,4 @@
+# provides the shared fastapi dependencies for the payments service
 from db import create_redis_dependency
 from fastapi import Depends
 from slowapi import Limiter
@@ -8,7 +9,7 @@ from com.qode.qrew.v1.payments.core.config import settings
 from com.qode.qrew.v1.payments.core.database import get_db
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
 from com.qode.qrew.v1.payments.services.application.payment import PaymentService
-from com.qode.qrew.v1.payments.services.infrastructure.stripe_client import (
+from com.qode.qrew.v1.payments.services.application.stripe_client import (
     StripeClient,
     StripeRealClient,
 )
@@ -20,10 +21,12 @@ get_redis = create_redis_dependency(settings.redis_url)
 _stripe_client: StripeClient = StripeRealClient()
 
 
+# returns the shared stripe client
 def get_stripe_client() -> StripeClient:
     return _stripe_client
 
 
+# builds a payment service for a request
 def get_payment_service(
     db: AsyncSession = Depends(get_db),
     stripe: StripeClient = Depends(get_stripe_client),

@@ -56,13 +56,13 @@ up:
 shutdown:
     docker compose down --volumes --rmi local --remove-orphans
 
-# Seed database
+# Seed database with the fixture catalogue
 db-seed:
     cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py
 
 # Wipe all application data rows (preserves schema/migrations)
 db-truncate:
-    cd {{IDENTITY}} && uv run python ../../../../scripts/clean_db.py
+    cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py --truncate
 
 # Apply pending migrations for all services
 db-upgrade:

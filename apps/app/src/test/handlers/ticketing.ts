@@ -1,3 +1,4 @@
+// implements ticketing
 import { http, HttpResponse } from 'msw'
 
 const TICKETING_URL = 'http://localhost:8000/api/ticketing'
@@ -27,6 +28,7 @@ export const ticketingHandlers = [
 
   http.get(`${TICKETING_URL}/v1/tickets/:ticketId`, ({ params }) => {
     const tickets = [TICKET_1, TICKET_2]
+    // implements ticket
     const ticket = tickets.find((t) => t.id === params.ticketId)
     if (!ticket) return HttpResponse.json({ message: 'Ticket not found' }, { status: 404 })
     return HttpResponse.json(ticket)

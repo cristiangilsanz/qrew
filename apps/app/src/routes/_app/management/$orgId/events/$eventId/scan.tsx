@@ -1,3 +1,4 @@
+// implements scan
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { useEffect } from 'react'
@@ -12,12 +13,14 @@ export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/sc
   component: ScanPage,
 })
 
+// renders the scan page component
 function ScanPage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
   const navigate = useNavigate()
 
   const { data: eventsData } = useOrgEvents(orgId)
+  // implements event
   const event = eventsData?.items.find((e) => e.id === eventId)
 
   const { videoRef, phase, scanResult, scanCount, startScanning } = useScanner({
@@ -26,7 +29,6 @@ function ScanPage() {
     notSupportedMessage: t('organiser.scanner.notSupported'),
   })
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     void startScanning()
   }, [])
@@ -50,7 +52,6 @@ function ScanPage() {
         )}
       </div>
 
-      {/* Camera viewfinder */}
       <div className="relative flex-1 overflow-hidden">
         <video
           ref={videoRef}
@@ -60,7 +61,6 @@ function ScanPage() {
           autoPlay
         />
 
-        {/* Overlay when not scanning */}
         {phase === 'error' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-black/70 px-8">
             <XCircle className="h-12 w-12 text-red-400" />
@@ -81,7 +81,6 @@ function ScanPage() {
           </div>
         )}
 
-        {/* Scanning viewfinder corners */}
         {phase === 'scanning' && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative h-64 w-64">
@@ -93,7 +92,6 @@ function ScanPage() {
           </div>
         )}
 
-        {/* Scan result flash */}
         {phase === 'result' && scanResult && (
           <div
             className={cn(

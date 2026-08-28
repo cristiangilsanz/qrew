@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# exports the openapi schema and event types for every service
 set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -16,7 +17,7 @@ declare -A SERVICES=(
   [gateway]="apps/api/gateway:com.qode.qrew.v1.gateway.app"
 )
 
-# Services that publish domain events (name maps to contracts.events.<name>)
+# maps each service that publishes domain events to its contracts events module
 declare -A SERVICE_EVENTS=(
   [identity]="identity"
   [catalog]="catalog"

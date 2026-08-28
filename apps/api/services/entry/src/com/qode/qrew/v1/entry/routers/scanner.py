@@ -1,3 +1,4 @@
+# exposes the endpoints that create refresh and manage scanners
 import uuid
 from datetime import date as date_type
 from datetime import date as today_date
@@ -10,16 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.entry.core.database import get_db
 from com.qode.qrew.v1.entry.core.dependencies import (
+    event_membership,
     get_admin_user,
     get_current_user,
     get_scanner_service,
     limiter,
-    require_event_member,
 )
-from com.qode.qrew.v1.entry.core.errors import EventNotFoundError, NotEventMemberError
+from com.qode.qrew.v1.entry.core.principals import AuthenticatedUser
 from com.qode.qrew.v1.entry.core.utils.jwt import decode_scanner_token_for_refresh
-from com.qode.qrew.v1.entry.models.projections import User
-from com.qode.qrew.v1.entry.repositories.projections import EventRepository
 from com.qode.qrew.v1.entry.schemas.scanner import (
     ScannerCreateRequest,
     ScannerDeactivateResponse,
@@ -45,6 +44,7 @@ _INVALID_TOKEN = HTTPException(
 )
 
 
+# reads the scanner identity and scope out of a refresh token payload
 def _claims_from(
     payload: dict[str, Any],
 ) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID, date_type]:
@@ -60,13 +60,12 @@ def _claims_from(
     return scanner_id, venue_id, event_id, scan_date
 
 
+# converts a scanner row into its summary response
 def _scanner_summary(scanner: object) -> ScannerSummaryResponse:
     return ScannerSummaryResponse.model_validate(scanner, from_attributes=True)
 
 
-# Scanner endpoints
-
-
+# reissues a scanner's own token before it expires
 @router.post(
     "/refresh",
     response_model=ScannerTokenResponse,
@@ -101,9 +100,7 @@ async def refresh_scanner(
     )
 
 
-# Org member scanner creation
-
-
+# creates a scanner token for a member of the event's organisation
 @router.post(
     "/for-event/{event_id}",
     response_model=ScannerTokenResponse,
@@ -115,33 +112,30 @@ async def create_scanner_for_event(
     request: Request,
     event_id: uuid.UUID,
     body: ScannerForEventRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: AuthenticatedUser = Depends(get_current_user),
     service: ScannerService = Depends(get_scanner_service),
     db: AsyncSession = Depends(get_db),
 ) -> ScannerTokenResponse:
     del request
-    event = await EventRepository(db).get_by_id(event_id)
-    if event is None:
+    membership = await event_membership(event_id, current_user.id)
+    if not membership.event_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"message": "Event not found", "field": "event_id"},
         )
-    if not current_user.is_admin:
-        try:
-            await require_event_member(db, event_id, current_user.id)
-        except EventNotFoundError:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={"message": "Event not found", "field": "event_id"},
-            ) from None
-        except NotEventMemberError:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={"message": "Not a member of this organisation", "field": None},
-            ) from None
+    if not current_user.is_admin and not membership.is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"message": "Not a member of this organisation", "field": None},
+        )
+    if membership.venue_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Event not found", "field": "event_id"},
+        )
     scan_date = body.date if body.date is not None else today_date.today()
     scanner, token = await service.create(
-        current_user.id, body.name, event.venue_id, event_id, scan_date
+        current_user.id, body.name, membership.venue_id, event_id, scan_date
     )
     return ScannerTokenResponse(
         scanner_id=scanner.id,
@@ -150,9 +144,7 @@ async def create_scanner_for_event(
     )
 
 
-# Admin scanner management
-
-
+# registers a scanner and returns its initial credential
 @admin_router.post(
     "",
     response_model=ScannerTokenResponse,
@@ -163,7 +155,7 @@ async def create_scanner_for_event(
 async def create_scanner(
     request: Request,
     body: ScannerCreateRequest,
-    admin: User = Depends(get_admin_user),
+    admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerTokenResponse:
     del request
@@ -177,6 +169,7 @@ async def create_scanner(
     )
 
 
+# lists every registered scanner
 @admin_router.get(
     "",
     response_model=ScannerListResponse,
@@ -186,7 +179,7 @@ async def create_scanner(
 @limiter.limit("60/minute")  # type: ignore[misc]
 async def list_scanners(
     request: Request,
-    _admin: User = Depends(get_admin_user),
+    _admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerListResponse:
     del request
@@ -194,6 +187,7 @@ async def list_scanners(
     return ScannerListResponse(scanners=[_scanner_summary(s) for s in scanners])
 
 
+# reads a single scanner by its identifier
 @admin_router.get(
     "/{scanner_id}",
     response_model=ScannerSummaryResponse,
@@ -204,7 +198,7 @@ async def list_scanners(
 async def get_scanner_by_id(
     request: Request,
     scanner_id: uuid.UUID,
-    _admin: User = Depends(get_admin_user),
+    _admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerSummaryResponse:
     del request
@@ -218,6 +212,7 @@ async def get_scanner_by_id(
     return _scanner_summary(scanner)
 
 
+# mints a fresh credential for an existing scanner
 @admin_router.post(
     "/{scanner_id}/rotate",
     response_model=ScannerTokenResponse,
@@ -229,7 +224,7 @@ async def rotate_scanner(
     request: Request,
     scanner_id: uuid.UUID,
     body: ScannerRotateRequest,
-    admin: User = Depends(get_admin_user),
+    admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerTokenResponse:
     del request
@@ -249,6 +244,7 @@ async def rotate_scanner(
     )
 
 
+# deactivates a scanner so its credential no longer works
 @admin_router.delete(
     "/{scanner_id}",
     response_model=ScannerDeactivateResponse,
@@ -259,7 +255,7 @@ async def rotate_scanner(
 async def deactivate_scanner(
     request: Request,
     scanner_id: uuid.UUID,
-    admin: User = Depends(get_admin_user),
+    admin: AuthenticatedUser = Depends(get_admin_user),
     service: ScannerService = Depends(get_scanner_service),
 ) -> ScannerDeactivateResponse:
     del request

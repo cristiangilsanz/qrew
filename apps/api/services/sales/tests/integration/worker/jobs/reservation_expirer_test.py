@@ -1,3 +1,4 @@
+# tests reservation expirer
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+# verifies that sweep expired marks reservation expired
 @pytest.mark.integration
 async def test_sweep_expired_marks_reservation_expired(
     test_session_factory: async_sessionmaker[AsyncSession],
@@ -71,6 +73,7 @@ async def test_sweep_expired_marks_reservation_expired(
     assert status == "expired"
 
 
+# verifies that sweep expired decrements inventory
 @pytest.mark.integration
 async def test_sweep_expired_decrements_inventory(
     test_session_factory: async_sessionmaker[AsyncSession],

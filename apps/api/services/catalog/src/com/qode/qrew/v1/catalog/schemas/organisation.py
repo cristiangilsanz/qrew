@@ -1,3 +1,4 @@
+# defines the request and response schemas for organisations and their members
 import uuid
 from datetime import datetime
 

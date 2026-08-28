@@ -1,3 +1,4 @@
+// implements tickets
 import { useQueries, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
@@ -14,6 +15,7 @@ export const Route = createFileRoute('/_app/tickets/')({
   component: TicketsPage,
 })
 
+// implements group by reservation
 function groupByReservation(tickets: Ticket[]): Map<string, Ticket[]> {
   const map = new Map<string, Ticket[]>()
   for (const ticket of tickets) {
@@ -24,6 +26,7 @@ function groupByReservation(tickets: Ticket[]): Map<string, Ticket[]> {
   return map
 }
 
+// renders the tickets page component
 function TicketsPage() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -33,6 +36,7 @@ function TicketsPage() {
     void queryClient.invalidateQueries({ queryKey: ['tickets'] })
   }, [])
 
+  // implements sorted
   const sorted = (tickets ?? [])
     .slice()
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -44,11 +48,13 @@ function TicketsPage() {
   const eventQueries = useQueries({
     queries: eventIds.map((id) => ({
       queryKey: ['events', id],
+      // implements query fn
       queryFn: () => eventsApi.getById(id),
       enabled: !ticketsLoading && !!id,
     })),
   })
 
+  // implements events loading
   const eventsLoading = eventQueries.some((q) => q.isLoading)
   const isLoading = ticketsLoading || (eventIds.length > 0 && eventsLoading)
 

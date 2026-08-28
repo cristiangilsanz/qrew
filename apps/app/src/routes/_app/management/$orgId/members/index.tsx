@@ -1,3 +1,4 @@
+// implements members
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Trash2, UserMinus, UserPlus } from 'lucide-react'
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/_app/management/$orgId/members/')({
   component: OrgMembersPage,
 })
 
+// renders the org members page component
 function OrgMembersPage() {
   const { t, i18n } = useTranslation()
   const { orgId } = Route.useParams()
@@ -23,6 +25,7 @@ function OrgMembersPage() {
   const [query, setQuery] = useState('')
 
   const { data: members, isLoading: membersLoading } = useOrgMembers(orgId)
+  // implements member ids
   const memberIds = (members ?? []).map((m) => m.user_id)
   const { data: profiles, isLoading: profilesLoading } = useUserPublicProfiles(memberIds)
   const profileById = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]))
@@ -116,7 +119,6 @@ function OrgMembersPage() {
         </div>
       )}
 
-      {/* Delete member modal */}
       <AnimatePresence>
         {confirmDelete && (
           <motion.div
@@ -176,7 +178,6 @@ function OrgMembersPage() {
         )}
       </AnimatePresence>
 
-      {/* FAB */}
       <Link
         to="/management/$orgId/members/new"
         params={{ orgId }}

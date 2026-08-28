@@ -1,3 +1,4 @@
+# schedules a nightly verification of the audit hash chain
 import asyncio
 
 import structlog
@@ -6,12 +7,12 @@ from com.qode.qrew.v1.audit.services import AuditAction, AuditChainVerifier, Aud
 
 logger = structlog.get_logger(__name__)
 
-_VERIFY_INTERVAL_SECONDS = 86_400  # 24 hours
+_VERIFY_INTERVAL_SECONDS = 86_400
 
 
+# verifies the chain once a day and records the outcome
 async def run_nightly_verify() -> None:
-    """Run the chain verifier once every 24 hours, recording the outcome."""
-    await asyncio.sleep(3600)  # wait 1 hour after startup before first run
+    await asyncio.sleep(3600)
     while True:
         try:
             result = await AuditChainVerifier().verify()

@@ -1,3 +1,4 @@
+# tests auth cleaner
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -8,6 +9,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")
 
 
 class TestCleanupExpiredTokens:
+    # verifies that clears expired email tokens
     async def test_clears_expired_email_tokens(
         self, db_session: AsyncSession, registered_user: dict
     ) -> None:
@@ -17,7 +19,6 @@ class TestCleanupExpiredTokens:
 
         user_id = uuid.UUID(registered_user["user_id"])
 
-        # Plant an expired verification token directly.
         past = datetime.now(UTC) - timedelta(hours=1)
         await db_session.execute(
             update(User)
@@ -32,6 +33,7 @@ class TestCleanupExpiredTokens:
         result = await cleanup_expired_tokens({})
         assert result["cleared"] >= 1
 
+    # verifies that returns zero when nothing expired
     async def test_returns_zero_when_nothing_expired(self, setup_test_infrastructure) -> None:
         from com.qode.qrew.v1.identity.worker.jobs.auth_cleaner import cleanup_expired_tokens
 

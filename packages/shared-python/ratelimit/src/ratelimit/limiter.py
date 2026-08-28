@@ -1,3 +1,4 @@
+# enforces a sliding window rate limit in redis
 import math
 import time
 import uuid
@@ -20,8 +21,7 @@ class Decision:
 
 
 class RateLimiter:
-    """Atomic sliding-window rate limiter backed by Redis and a Lua script."""
-
+    # stores the redis client key prefix and fail open policy
     def __init__(
         self,
         redis_client: aioredis.Redis,  # type: ignore[type-arg]
@@ -34,9 +34,11 @@ class RateLimiter:
         self._fail_open = fail_open
         self._sha: str | None = None
 
+    # builds the redis key for a scope
     def _full_key(self, scope_key: str) -> str:
         return f"{self._key_prefix}:{scope_key}"
 
+    # runs the sliding window script caching its sha for faster reuse
     async def _evaluate(
         self,
         full_key: str,
@@ -58,8 +60,8 @@ class RateLimiter:
             self._sha = None
         return raw  # type: ignore[no-any-return]
 
+    # checks whether a scope is still within its limit for the window
     async def check(self, scope_key: str, limit: int, window_seconds: int) -> Decision:
-        """Record an attempt and return whether it is allowed."""
         now_ms = int(time.time() * 1000)
         window_ms = window_seconds * 1000
         member = f"{now_ms}-{uuid.uuid4().hex}"
@@ -80,8 +82,8 @@ class RateLimiter:
         retry_after_s = math.ceil(retry_after_ms / 1000) if retry_after_ms > 0 else 0
         return Decision(allowed=bool(allowed_flag), retry_after_seconds=retry_after_s)
 
+    # checks every scope and raises for whichever fails with the longest wait
     async def check_many(self, checks: list[tuple[str, int, int]]) -> None:
-        """Apply multiple rate limit checks and raise if any limit is exceeded."""
         worst: RateLimitedError | None = None
         for scope_key, limit, window_seconds in checks:
             decision = await self.check(scope_key, limit, window_seconds)

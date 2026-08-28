@@ -1,9 +1,11 @@
+# defines the response schema for a user's audit trail entries
 import uuid
+from typing import TYPE_CHECKING
 from datetime import datetime
 
 from pydantic import BaseModel
 
-from com.qode.qrew.v1.identity.models.audit import AuditAction, AuditEvent
+from com.qode.qrew.v1.identity.models.audit import AuditAction
 
 _SUMMARIES: dict[str, str] = {
     AuditAction.REGISTER: "Account registered",
@@ -54,8 +56,13 @@ _SUMMARIES: dict[str, str] = {
 }
 
 
+# turns an audit action into a human readable summary
 def summarize(action: str) -> str:
     return _SUMMARIES.get(action, action.replace("_", " ").title())
+
+
+if TYPE_CHECKING:
+    from com.qode.qrew.v1.identity.services.application.trail import AuditTrailEntry
 
 
 class UserAuditEventResponse(BaseModel):
@@ -67,8 +74,9 @@ class UserAuditEventResponse(BaseModel):
     device_fingerprint_hash: str | None
     created_at: datetime
 
+    # converts an audit trail entry into its response
     @classmethod
-    def from_event(cls, event: AuditEvent) -> "UserAuditEventResponse":
+    def from_event(cls, event: "AuditTrailEntry") -> "UserAuditEventResponse":
         return cls(
             id=event.id,
             action=event.action,

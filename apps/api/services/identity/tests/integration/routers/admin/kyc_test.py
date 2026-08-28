@@ -1,3 +1,4 @@
+# tests kyc
 import uuid
 
 import httpx
@@ -8,12 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# register a user and set their KYC status to pending directly in DB
 async def _user_with_pending_kyc(client: httpx.AsyncClient, db_session: AsyncSession) -> str:
-    """Register a user and set their KYC status to pending directly in DB."""
     from com.qode.qrew.v1.identity.models.user import KycStatus, User
 
     email = f"kyc-{uuid.uuid4().hex[:8]}@example.com"
-    phone = f"+316{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}"
+    phone = f"+346{str(int(uuid.uuid4().int % 90_000_000) + 10_000_000)}"
     resp = await client.post(
         "/v1/auth/registration/",
         json={
@@ -36,6 +37,7 @@ async def _user_with_pending_kyc(client: httpx.AsyncClient, db_session: AsyncSes
 
 
 class TestKycReview:
+    # verifies that approve pending user
     async def test_approve_pending_user(
         self,
         client: httpx.AsyncClient,
@@ -51,6 +53,7 @@ class TestKycReview:
         assert resp.status_code == 200
         assert resp.json()["kyc_status"] == "approved"
 
+    # verifies that reject pending user
     async def test_reject_pending_user(
         self,
         client: httpx.AsyncClient,
@@ -66,6 +69,7 @@ class TestKycReview:
         assert resp.status_code == 200
         assert resp.json()["kyc_status"] == "rejected"
 
+    # verifies that nonexistent user returns 400
     async def test_nonexistent_user_returns_400(
         self, client: httpx.AsyncClient, admin_headers: dict
     ) -> None:
@@ -76,6 +80,7 @@ class TestKycReview:
         )
         assert resp.status_code == 400
 
+    # verifies that non admin returns 403
     async def test_non_admin_returns_403(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
@@ -86,6 +91,7 @@ class TestKycReview:
         )
         assert resp.status_code == 403
 
+    # verifies that unauthenticated returns 401
     async def test_unauthenticated_returns_401(self, client: httpx.AsyncClient) -> None:
         resp = await client.post(
             f"/v1/admin/kyc/{uuid.uuid4()}/review",

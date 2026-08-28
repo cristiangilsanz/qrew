@@ -1,3 +1,4 @@
+# scores a purchase against how recently the account was created
 import uuid
 from datetime import datetime, timedelta
 
@@ -7,13 +8,13 @@ from com.qode.qrew.v1.sales.core.config import settings
 
 
 class AccountAgeSignal:
-    """Scores fraud risk based on how recently the account was created, with newer accounts receiving higher scores."""
-
     name = "account_age"
 
+    # stores the lookup of when each user registered
     def __init__(self, registered_at_lookup: dict[uuid.UUID, datetime]) -> None:
         self._lookup = registered_at_lookup
 
+    # scores a purchase higher the younger the account is
     async def evaluate(self, context: PurchaseContext) -> SignalResult:
         registered_at = self._lookup.get(context.user_id)
         if registered_at is None:

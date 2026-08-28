@@ -1,3 +1,4 @@
+# consumes audit events from nats and writes them to the hash chain
 import asyncio
 import json
 import uuid
@@ -14,6 +15,7 @@ STREAM = "AUDIT"
 DURABLE = "audit-events-handler"
 
 
+# decodes a raw message into a json object
 async def _parse(raw: bytes) -> dict[str, Any] | None:
     try:
         data = json.loads(raw.decode())
@@ -24,6 +26,7 @@ async def _parse(raw: bytes) -> dict[str, Any] | None:
         return None
 
 
+# extracts an audit event from a message and records it
 async def handle_audit_event(raw: bytes) -> None:
     envelope = await _parse(raw)
     if envelope is None:
@@ -62,6 +65,7 @@ async def handle_audit_event(raw: bytes) -> None:
         raise
 
 
+# subscribes to the audit events subject and dispatches each message
 async def run_audit_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -83,6 +87,7 @@ async def run_audit_event_subscriber(nats_url: str) -> None:
     psub = await js.subscribe(SUBJECT, durable=DURABLE, config=config, stream=STREAM)  # type: ignore[misc]
     await logger.ainfo("audit_events.subscribed", subject=SUBJECT)
 
+    # acknowledges each message once it has been handled
     async def _consume() -> None:
         async for msg in psub.messages:  # type: ignore[attr-defined]
             try:

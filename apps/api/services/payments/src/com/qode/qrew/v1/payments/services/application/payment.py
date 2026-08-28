@@ -1,3 +1,4 @@
+# creates payment intents from reservations and market assignments and applies stripe outcomes
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -13,7 +14,8 @@ from com.qode.qrew.v1.payments.core.errors import DomainError
 from com.qode.qrew.v1.payments.core.utils import crypto as pii_crypto
 from com.qode.qrew.v1.payments.models.payment import Payment, PaymentStatus
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
-from com.qode.qrew.v1.payments.services.infrastructure.stripe_client import StripeClient
+from com.qode.qrew.v1.payments.services.application.stripe_client import StripeClient
+from com.qode.qrew.v1.payments.services.domain.status import is_terminal, map_intent_status
 
 logger = structlog.get_logger(__name__)
 
@@ -27,6 +29,7 @@ class PaymentExpiredError(DomainError):
 
 
 class WebhookError(Exception):
+    # stores the message describing the webhook failure
     def __init__(self, message: str) -> None:
         self.message = message
         super().__init__(message)
@@ -40,6 +43,7 @@ class _ReservationContext:
     error_code: str | None = None
 
 
+# asks sales whether a market assignment can be charged and for how much
 async def _get_assignment_context(
     assignment_id: uuid.UUID, user_id: uuid.UUID
 ) -> _ReservationContext:
@@ -69,6 +73,7 @@ async def _get_assignment_context(
     return _ReservationContext(amount_cents=0, currency="", is_valid=False, error_code="unknown")
 
 
+# asks sales whether a reservation can be charged and for how much
 async def _get_reservation_context(
     reservation_id: uuid.UUID, user_id: uuid.UUID
 ) -> _ReservationContext:
@@ -98,6 +103,7 @@ async def _get_reservation_context(
     return _ReservationContext(amount_cents=0, currency="", is_valid=False, error_code="unknown")
 
 
+# publishes a payment event onto the shared nats connection
 async def _publish_event(
     subject: str, data: dict[str, Any], *, actor_id: uuid.UUID | None = None
 ) -> None:
@@ -118,6 +124,7 @@ async def _publish_event(
 
 
 class PaymentService:
+    # stores the session repository and stripe client the service uses
     def __init__(
         self,
         session: AsyncSession,
@@ -128,6 +135,7 @@ class PaymentService:
         self._repo = repo
         self._stripe = stripe
 
+    # creates or returns the payment intent for a market assignment
     @traced("payment.initiate_for_assignment")
     async def initiate_for_assignment(
         self, *, actor_id: uuid.UUID, assignment_id: uuid.UUID
@@ -159,7 +167,7 @@ class PaymentService:
         )
         payment.provider_payment_intent_id = intent.intent_id
         payment.client_secret_ciphertext = pii_crypto.encrypt(intent.client_secret)
-        payment.status = _map_intent_status(intent.status)
+        payment.status = map_intent_status(intent.status)
         if existing is None:
             payment = await self._repo.insert(payment)
         else:
@@ -178,6 +186,7 @@ class PaymentService:
         )
         return payment
 
+    # creates or returns the payment intent for a reservation
     @traced("payment.initiate")
     async def initiate(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Payment:
         ctx = await _get_reservation_context(reservation_id, actor_id)
@@ -206,7 +215,7 @@ class PaymentService:
         )
         payment.provider_payment_intent_id = intent.intent_id
         payment.client_secret_ciphertext = pii_crypto.encrypt(intent.client_secret)
-        payment.status = _map_intent_status(intent.status)
+        payment.status = map_intent_status(intent.status)
         if existing is None:
             payment = await self._repo.insert(payment)
         else:
@@ -225,11 +234,13 @@ class PaymentService:
         )
         return payment
 
+    # decrypts the stored client secret of a payment
     def decrypt_client_secret(self, payment: Payment) -> str | None:
         if payment.client_secret_ciphertext is None:
             return None
         return pii_crypto.decrypt(payment.client_secret_ciphertext)
 
+    # marks a payment as succeeded and publishes the outcome
     @traced("payment.apply_succeeded")
     async def apply_succeeded(self, *, intent_id: str) -> None:
         payment = await self._repo.get_by_intent_id(intent_id)
@@ -259,6 +270,7 @@ class PaymentService:
                 },
             )
 
+    # marks a payment as failed and publishes the outcome
     @traced("payment.apply_failed")
     async def apply_failed(
         self,
@@ -285,6 +297,7 @@ class PaymentService:
             },
         )
 
+    # marks a payment as refunded when the refund covers the full amount
     @traced("payment.apply_refund")
     async def apply_refund(
         self, *, intent_id: str, amount_refunded: int, amount_total: int
@@ -308,6 +321,7 @@ class PaymentService:
             },
         )
 
+    # marks a payment as refunded when a chargeback opens against it
     @traced("payment.apply_chargeback")
     async def apply_chargeback(self, *, intent_id: str) -> None:
         payment = await self._repo.get_by_intent_id(intent_id)
@@ -324,6 +338,7 @@ class PaymentService:
             },
         )
 
+    # publishes that a chargeback has closed
     @traced("payment.record_chargeback_closed")
     async def record_chargeback_closed(self, *, intent_id: str) -> None:
         payment = await self._repo.get_by_intent_id(intent_id)
@@ -338,21 +353,23 @@ class PaymentService:
             },
         )
 
+    # updates a payment to a non final stripe status
     async def update_intermediate(self, *, intent_id: str, status: str) -> None:
         payment = await self._repo.get_by_intent_id(intent_id)
         if payment is None:
             return
-        new_status = _map_intent_status(status)
-        if new_status in {PaymentStatus.succeeded, PaymentStatus.failed}:
+        new_status = map_intent_status(status)
+        if is_terminal(new_status):
             return
         payment.status = new_status
         await self._repo.flush()
 
+    # verifies and dispatches an incoming stripe webhook event
     async def handle_webhook(self, payload: bytes, signature: str | None) -> dict[str, str]:
-        from com.qode.qrew.v1.payments.services.infrastructure.webhooks.dispatch import (
+        from com.qode.qrew.v1.payments.services.application.webhooks.dispatch import (
             dispatch_webhook_event,
         )
-        from com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency import (
+        from com.qode.qrew.v1.payments.services.application.webhooks.idempotency import (
             claim_event,
         )
 
@@ -369,15 +386,3 @@ class PaymentService:
             return {"status": "duplicate"}
         await dispatch_webhook_event(self, event)
         return {"status": "ok"}
-
-
-def _map_intent_status(stripe_status: str) -> PaymentStatus:
-    mapping = {
-        "succeeded": PaymentStatus.succeeded,
-        "processing": PaymentStatus.processing,
-        "requires_payment_method": PaymentStatus.requires_action,
-        "requires_confirmation": PaymentStatus.requires_action,
-        "requires_action": PaymentStatus.requires_action,
-        "canceled": PaymentStatus.failed,
-    }
-    return mapping.get(stripe_status, PaymentStatus.requires_action)

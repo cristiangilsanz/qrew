@@ -1,3 +1,4 @@
+# exposes the endpoint that restores an on sale ticket onto a reenrolled device
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -15,6 +16,7 @@ from com.qode.qrew.v1.ticketing.services.application.tickets.restore import (
 router = APIRouter(prefix="/tickets", tags=["ticket-restore"])
 
 
+# converts a ticket restore error into its http response
 def _domain_to_http(error: TicketRestoreError) -> HTTPException:
     code = (
         status.HTTP_404_NOT_FOUND
@@ -29,6 +31,7 @@ def _domain_to_http(error: TicketRestoreError) -> HTTPException:
     )
 
 
+# restores a ticket that was frozen after its device was revoked
 @router.post(
     "/{ticket_id}/restore",
     status_code=status.HTTP_200_OK,
@@ -42,7 +45,6 @@ async def restore_ticket(
     db: AsyncSession = Depends(get_db),
     audit: AuditService = Depends(get_audit_service),
 ) -> dict[str, str]:
-    """Restores an on_sale ticket to active use on a newly enrolled device."""
     del request
     try:
         ticket = await restore_on_sale_ticket(

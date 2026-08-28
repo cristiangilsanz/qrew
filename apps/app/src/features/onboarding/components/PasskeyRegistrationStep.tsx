@@ -1,3 +1,4 @@
+// renders the passkey registration step component
 import { KeyRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -9,6 +10,7 @@ interface Props {
   onSuccess: () => void
 }
 
+// renders the passkey registration step component
 export function PasskeyRegistrationStep({ onSuccess }: Props) {
   const { t } = useTranslation()
   const register = useRegisterPasskey(onSuccess)

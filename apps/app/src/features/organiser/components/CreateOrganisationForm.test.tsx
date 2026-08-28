@@ -1,3 +1,4 @@
+// tests create organisation form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -10,14 +11,17 @@ import { CreateOrganisationForm } from './CreateOrganisationForm'
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
+  // renders the toaster component
   Toaster: () => null,
 }))
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  // provides use navigate
   return { ...actual, useNavigate: () => vi.fn(), Link: actual.Link }
 })
 
+// implements render form
 function renderForm(onSuccess?: (id: string) => void) {
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false } },

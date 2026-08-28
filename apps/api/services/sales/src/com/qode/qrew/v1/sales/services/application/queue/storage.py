@@ -1,3 +1,4 @@
+# stores the event queue in redis and issues its redeem and reservation tokens
 import secrets
 import uuid
 from dataclasses import dataclass
@@ -38,6 +39,7 @@ class _ClientState:
     client: aioredis.Redis | None = None  # type: ignore[type-arg]
 
 
+# returns the shared redis client used by the queue
 def _shared_client() -> aioredis.Redis:  # type: ignore[type-arg]
     if _ClientState.client is None:
         _ClientState.client = aioredis.from_url(  # type: ignore[type-arg]
@@ -46,17 +48,20 @@ def _shared_client() -> aioredis.Redis:  # type: ignore[type-arg]
     return _ClientState.client
 
 
+# closes the shared redis client
 async def close_queue() -> None:
     if _ClientState.client is not None:
         await _ClientState.client.aclose()
     _ClientState.client = None
 
 
+# derives a sortable score that orders arrival time before a random tiebreak
 def _score_for(now_ms: int, tiebreak: int) -> int:
     rand = secrets.randbits(16)
     return (now_ms << 32) | (rand << 16) | (tiebreak & 0xFFFF)
 
 
+# adds a user to an event's queue if they are not already in it
 @traced("queue.join")
 async def join_queue(
     *,
@@ -66,7 +71,6 @@ async def join_queue(
     now_ms: int,
     tiebreak: int,
 ) -> JoinResult | None:
-    """ZADD NX the user; return position or None if already in the queue."""
     redis = _shared_client()
     key = _QUEUE_KEY.format(event_id=event_id)
     score_base = max(sale_start_ms, now_ms)
@@ -80,14 +84,15 @@ async def join_queue(
     return JoinResult(position=int(rank) + 1)
 
 
+# reads a user's rank in an event's queue
 @traced("queue.position")
 async def queue_position(event_id: uuid.UUID, user_id: uuid.UUID) -> int | None:
-    """Return 1-based position, or None if not in queue."""
     redis = _shared_client()
     rank = await redis.zrank(_QUEUE_KEY.format(event_id=event_id), str(user_id))  # type: ignore[misc]
     return None if rank is None else int(rank) + 1
 
 
+# signs a token that lets an admitted user redeem their slot
 def _build_redeem_token(*, event_id: uuid.UUID, user_id: str) -> tuple[str, str]:
     now = datetime.now(UTC)
     jti = uuid.uuid4().hex
@@ -102,6 +107,7 @@ def _build_redeem_token(*, event_id: uuid.UUID, user_id: str) -> tuple[str, str]
     return jwt_keys.sign(jwt_keys.Purpose.QUEUE, payload), jti
 
 
+# signs a token that opens a user's reservation window
 def _build_reservation_token(*, event_id: uuid.UUID, user_id: str) -> tuple[str, str]:
     now = datetime.now(UTC)
     jti = uuid.uuid4().hex
@@ -116,6 +122,7 @@ def _build_reservation_token(*, event_id: uuid.UUID, user_id: str) -> tuple[str,
     return jwt_keys.sign(jwt_keys.Purpose.QUEUE, payload), jti
 
 
+# admits the next batch of queued users and issues their redeem tokens
 @traced("queue.admit")
 async def admit_batch(*, event_id: uuid.UUID, batch_size: int) -> list[AdmittedSlot]:
     if batch_size <= 0:
@@ -136,17 +143,17 @@ async def admit_batch(*, event_id: uuid.UUID, batch_size: int) -> list[AdmittedS
     return admitted
 
 
+# reads the redeem token issued to an admitted user
 @traced("queue.get_redeem_token")
 async def get_redeem_token(event_id: uuid.UUID, user_id: uuid.UUID) -> str | None:
-    """Return the stored redeem token for an admitted user, or None."""
     redis = _shared_client()
     key = _REDEEM_TOKEN_KEY.format(event_id=event_id, user_id=user_id)
     return await redis.get(key)  # type: ignore[no-any-return]
 
 
+# verifies a redeem token and issues a one time reservation window token
 @traced("queue.redeem")
 async def redeem_window_token(*, token: str, user_id: uuid.UUID) -> str:
-    """Verify the redeem token (single-use), return a reservation_window_token."""
     from jwt import InvalidTokenError
 
     payload = jwt_keys.verify(jwt_keys.Purpose.QUEUE, token)
@@ -169,9 +176,9 @@ async def redeem_window_token(*, token: str, user_id: uuid.UUID) -> str:
     return reservation_token
 
 
+# verifies a reservation window token and marks it used
 @traced("queue.consume_reservation")
 async def consume_reservation_token(*, token: str, user_id: uuid.UUID) -> uuid.UUID:
-    """Verify and one-shot-consume a reservation_window_token; return its event_id."""
     from jwt import InvalidTokenError
 
     payload = jwt_keys.verify(jwt_keys.Purpose.QUEUE, token)

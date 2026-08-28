@@ -1,3 +1,4 @@
+# decodes a raw nats message into a json object
 import json
 from typing import Any
 
@@ -6,6 +7,7 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
+# decodes a raw message into a json object
 async def parse(raw: bytes) -> dict[str, Any] | None:
     try:
         data = json.loads(raw.decode())

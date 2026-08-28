@@ -1,3 +1,4 @@
+# tests organisation
 import uuid
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
@@ -12,6 +13,7 @@ from com.qode.qrew.v1.catalog.services.application.organisation import (
 from conftest import make_member, make_org
 
 
+# handles make svc
 def _make_svc(
     *,
     org: object = None,
@@ -31,22 +33,25 @@ def _make_svc(
     member_repo.delete = AsyncMock()
     member_repo.count_owners = AsyncMock(return_value=owner_count)
 
-    user_repo = MagicMock()
-    user_repo.get_by_email = AsyncMock(return_value=invitee)
-
     audit = AsyncMock()
     audit.record = AsyncMock()
+
+    # handles resolver
+    async def resolver(email: str) -> object:
+        del email
+        return getattr(invitee, "id", None)
 
     svc = OrganisationService(
         org_repo=org_repo,
         member_repo=member_repo,
-        user_repo=user_repo,
         audit=audit,
+        user_resolver=resolver,
     )
     return svc, org_repo, member_repo
 
 
 class TestOrganisationServiceCreate:
+    # verifies that raises when slug invalid
     async def test_raises_when_slug_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc()
         with pytest.raises(OrganisationError, match="slug"):
@@ -54,6 +59,7 @@ class TestOrganisationServiceCreate:
                 owner_id=actor_id, slug="A", name="Acme", description=None
             )
 
+    # verifies that raises when slug starts with digit
     async def test_raises_when_slug_starts_with_digit(self, actor_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc()
         with pytest.raises(OrganisationError, match="slug"):
@@ -61,6 +67,7 @@ class TestOrganisationServiceCreate:
                 owner_id=actor_id, slug="1acme", name="Acme", description=None
             )
 
+    # verifies that raises when slug taken
     async def test_raises_when_slug_taken(self, actor_id: uuid.UUID) -> None:
         existing = make_org(slug="acme")
         svc, _, _ = _make_svc(org_by_slug=existing)
@@ -69,6 +76,7 @@ class TestOrganisationServiceCreate:
                 owner_id=actor_id, slug="acme", name="Acme", description=None
             )
 
+    # verifies that creates org and adds owner member
     async def test_creates_org_and_adds_owner_member(self, actor_id: uuid.UUID) -> None:
         svc, org_repo, member_repo = _make_svc(org_by_slug=None)
         result = await svc.create_organisation(
@@ -83,6 +91,7 @@ class TestOrganisationServiceCreate:
 
 
 class TestOrganisationServiceInviteMember:
+    # verifies that raises when inviting as owner
     async def test_raises_when_inviting_as_owner(
         self, actor_id: uuid.UUID, org_id: uuid.UUID
     ) -> None:
@@ -95,6 +104,7 @@ class TestOrganisationServiceInviteMember:
                 role=OrganisationRole.owner,
             )
 
+    # verifies that raises when user not found
     async def test_raises_when_user_not_found(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc(invitee=None)
         with pytest.raises(OrganisationError, match="email"):
@@ -105,6 +115,7 @@ class TestOrganisationServiceInviteMember:
                 role=OrganisationRole.member,
             )
 
+    # verifies that raises when already member
     async def test_raises_when_already_member(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         invitee = SimpleNamespace(id=uuid.uuid4(), email="user@example.com")
         existing_member = make_member(org_id=org_id, user_id=invitee.id)
@@ -117,6 +128,7 @@ class TestOrganisationServiceInviteMember:
                 role=OrganisationRole.member,
             )
 
+    # verifies that adds member
     async def test_adds_member(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         invitee = SimpleNamespace(id=uuid.uuid4(), email="new@example.com")
         svc, _, member_repo = _make_svc(invitee=invitee, member=None)
@@ -133,6 +145,7 @@ class TestOrganisationServiceInviteMember:
 
 
 class TestOrganisationServiceRemoveMember:
+    # verifies that raises when not a member
     async def test_raises_when_not_a_member(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc(member=None)
         with pytest.raises(OrganisationError, match="not a member"):
@@ -142,6 +155,7 @@ class TestOrganisationServiceRemoveMember:
                 member_user_id=uuid.uuid4(),
             )
 
+    # verifies that raises when removing last owner
     async def test_raises_when_removing_last_owner(
         self, actor_id: uuid.UUID, org_id: uuid.UUID
     ) -> None:
@@ -155,6 +169,7 @@ class TestOrganisationServiceRemoveMember:
                 member_user_id=target_id,
             )
 
+    # verifies that allows removing owner when others exist
     async def test_allows_removing_owner_when_others_exist(
         self, actor_id: uuid.UUID, org_id: uuid.UUID
     ) -> None:
@@ -164,6 +179,7 @@ class TestOrganisationServiceRemoveMember:
         await svc.remove_member(actor_id=actor_id, organisation_id=org_id, member_user_id=target_id)
         member_repo.delete.assert_awaited_once_with(org_id, target_id)
 
+    # verifies that removes regular member
     async def test_removes_regular_member(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         target_id = uuid.uuid4()
         member = make_member(org_id=org_id, user_id=target_id, role=OrganisationRole.member)

@@ -1,3 +1,4 @@
+# projects catalog's event lifecycle into the ticketing service's local context
 import asyncio
 import uuid
 from datetime import datetime
@@ -16,6 +17,31 @@ STREAM = "CATALOG"
 DURABLE = "ticketing-catalog-handler"
 
 
+# updates an event's geofence when the message carries venue coordinates
+async def _upsert_geofence(
+    repo: EventVenueContextRepository,
+    data: dict[str, Any],
+    *,
+    event_id: uuid.UUID,
+    venue_id: uuid.UUID,
+) -> None:
+    payload = data["data"]
+    if "latitude" not in payload:
+        return
+    try:
+        await repo.upsert_venue(
+            event_id=event_id,
+            venue_id=venue_id,
+            latitude=Decimal(str(payload["latitude"])),
+            longitude=Decimal(str(payload["longitude"])),
+            geofence_radius_m=int(payload["geofence_radius_m"]),
+            timezone=str(payload["timezone"]),
+        )
+    except (KeyError, ValueError, ArithmeticError):
+        await logger.awarning("catalog_events.geofence.bad_payload", event_id=str(event_id))
+
+
+# projects a published event and cancels tickets that are no longer valid
 async def handle_event_published(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -31,17 +57,20 @@ async def handle_event_published(raw: bytes) -> None:
         await logger.awarning("catalog_events.event_published.bad_payload")
         return
     async with AsyncSessionLocal() as session:
-        await EventVenueContextRepository(session).upsert_event(
+        repo = EventVenueContextRepository(session)
+        await repo.upsert_event(
             event_id=event_id,
             venue_id=venue_id,
             event_status="published",
             starts_at=starts_at,
             ends_at=ends_at,
         )
+        await _upsert_geofence(repo, data, event_id=event_id, venue_id=venue_id)
         await session.commit()
     await logger.ainfo("catalog_events.event_published", event_id=str(event_id))
 
 
+# cancels every active ticket of a cancelled event
 async def handle_event_cancelled(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -89,6 +118,7 @@ async def handle_event_cancelled(raw: bytes) -> None:
     )
 
 
+# projects a draft event's schedule and venue
 async def handle_event_draft(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -114,36 +144,7 @@ async def handle_event_draft(raw: bytes) -> None:
         await session.commit()
 
 
-async def handle_venue_created(raw: bytes) -> None:
-    data = await parse(raw)
-    if data is None:
-        return
-    try:
-        venue_id = uuid.UUID(str(data["data"]["venue_id"]))
-        event_id_raw = data["data"].get("event_id")
-        if event_id_raw is None:
-            return
-        event_id = uuid.UUID(str(event_id_raw))
-        latitude = Decimal(str(data["data"]["latitude"]))
-        longitude = Decimal(str(data["data"]["longitude"]))
-        geofence_radius_m = int(data["data"]["geofence_radius_m"])
-        timezone = str(data["data"]["timezone"])
-    except (KeyError, ValueError):
-        await logger.awarning("catalog_events.venue_created.bad_payload")
-        return
-    async with AsyncSessionLocal() as session:
-        await EventVenueContextRepository(session).upsert_venue(
-            event_id=event_id,
-            venue_id=venue_id,
-            latitude=latitude,
-            longitude=longitude,
-            geofence_radius_m=geofence_radius_m,
-            timezone=timezone,
-        )
-        await session.commit()
-    await logger.ainfo("catalog_events.venue_created", venue_id=str(venue_id))
-
-
+# projects that an event has become ongoing
 async def handle_event_ongoing(raw: bytes) -> None:
     data = await parse(raw)
     if data is None:
@@ -175,10 +176,10 @@ _HANDLERS = {
     "catalog.event.ongoing.v1": handle_event_ongoing,
     "catalog.event.cancelled.v1": handle_event_cancelled,
     "catalog.event.draft.v1": handle_event_draft,
-    "catalog.venue.created.v1": handle_venue_created,
 }
 
 
+# subscribes to every catalog event subject and dispatches each message
 async def run_catalog_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -202,6 +203,7 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("catalog_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             try:
                 async for msg in psub.messages:  # type: ignore[attr-defined]

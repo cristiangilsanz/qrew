@@ -1,3 +1,4 @@
+# tests qr
 import uuid
 from datetime import UTC, datetime
 
@@ -7,6 +8,7 @@ from sqlalchemy import text
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# seed a ticket + event_venue_context + device_context for gate evaluation
 async def _seed_qr_data(
     session_factory,
     *,
@@ -14,7 +16,6 @@ async def _seed_qr_data(
     device_id: uuid.UUID,
     ticket_state: str = "issued",
 ) -> uuid.UUID:
-    """Seed a ticket + event_venue_context + device_context for gate evaluation."""
     ticket_id = uuid.uuid4()
     event_id = uuid.uuid4()
     now = datetime.now(UTC)
@@ -56,6 +57,7 @@ async def _seed_qr_data(
     return ticket_id
 
 
+# verifies that issue qr success
 async def test_issue_qr_success(client, test_session_factory, make_auth_headers):
     user_id = uuid.uuid4()
     device_id = uuid.uuid4()
@@ -77,6 +79,7 @@ async def test_issue_qr_success(client, test_session_factory, make_auth_headers)
     assert body["ticket_id"] == str(ticket_id)
 
 
+# verifies that issue qr no auth
 async def test_issue_qr_no_auth(client):
     response = await client.get(
         f"/v1/tickets/{uuid.uuid4()}/qr",
@@ -86,6 +89,7 @@ async def test_issue_qr_no_auth(client):
     assert response.status_code == 401
 
 
+# verifies that issue qr ticket not found
 async def test_issue_qr_ticket_not_found(client, make_auth_headers):
     user_id = uuid.uuid4()
     device_id = uuid.uuid4()
@@ -100,6 +104,7 @@ async def test_issue_qr_ticket_not_found(client, make_auth_headers):
     assert response.status_code == 404
 
 
+# verifies that issue qr wrong state
 async def test_issue_qr_wrong_state(client, test_session_factory, make_auth_headers):
     user_id = uuid.uuid4()
     device_id = uuid.uuid4()

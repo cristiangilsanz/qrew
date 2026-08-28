@@ -1,3 +1,4 @@
+# renders and dispatches every notification template by its key
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -38,10 +39,12 @@ class RenderedSms:
     body: str
 
 
+# builds the url of the logo shown in every email
 def _logo_url() -> str:
     return f"{settings.base_url}/logo.webp"
 
 
+# renders the email that verifies a new account
 def _verification_link(payload: dict[str, Any]) -> RenderedEmail:
     link = f"{settings.base_url}/verify-email?token={payload['token']}"
     return RenderedEmail(
@@ -55,6 +58,7 @@ def _verification_link(payload: dict[str, Any]) -> RenderedEmail:
     )
 
 
+# renders the email that reports a kyc review outcome
 def _kyc_status(payload: dict[str, Any]) -> RenderedEmail:
     status = str(payload["status"])
     subject = (
@@ -73,6 +77,7 @@ def _kyc_status(payload: dict[str, Any]) -> RenderedEmail:
     )
 
 
+# renders the email that confirms a pending email address change
 def _email_address_confirm(payload: dict[str, Any]) -> RenderedEmail:
     link = f"{settings.base_url}/verify-email-change?token={payload['token']}"
     return RenderedEmail(
@@ -86,6 +91,7 @@ def _email_address_confirm(payload: dict[str, Any]) -> RenderedEmail:
     )
 
 
+# renders the email that alerts of a completed email address change
 def _email_address_changed(payload: dict[str, Any]) -> RenderedEmail:
     return RenderedEmail(
         subject="Your Qrew email was changed",
@@ -97,6 +103,7 @@ def _email_address_changed(payload: dict[str, Any]) -> RenderedEmail:
     )
 
 
+# renders the email that alerts of an unusual sign in
 def _login_anomaly_alert(payload: dict[str, Any]) -> RenderedEmail:
     return RenderedEmail(
         subject="Unusual sign-in to your Qrew account",
@@ -109,6 +116,7 @@ def _login_anomaly_alert(payload: dict[str, Any]) -> RenderedEmail:
     )
 
 
+# renders the email that carries a password reset link
 def _password_reset(payload: dict[str, Any]) -> RenderedEmail:
     link = f"{settings.base_url}/reset-password?token={payload['token']}"
     return RenderedEmail(
@@ -122,6 +130,7 @@ def _password_reset(payload: dict[str, Any]) -> RenderedEmail:
     )
 
 
+# renders the sms that carries a phone verification code
 def _phone_verify(payload: dict[str, Any]) -> RenderedSms:
     return RenderedSms(
         body=verification_otp_sms(
@@ -145,6 +154,7 @@ SMS_TEMPLATES: dict[str, Callable[[dict[str, Any]], RenderedSms]] = {
 }
 
 
+# resolves which channel a template belongs to
 def channel_for_template(template_key: str) -> NotificationChannel:
     if template_key in EMAIL_TEMPLATES:
         return NotificationChannel.email
@@ -153,9 +163,11 @@ def channel_for_template(template_key: str) -> NotificationChannel:
     raise ValueError(f"unknown template_key: {template_key}")
 
 
+# renders an email template by its key
 def render_email(template_key: str, payload: dict[str, Any]) -> RenderedEmail:
     return EMAIL_TEMPLATES[template_key](payload)
 
 
+# renders an sms template by its key
 def render_sms(template_key: str, payload: dict[str, Any]) -> RenderedSms:
     return SMS_TEMPLATES[template_key](payload)

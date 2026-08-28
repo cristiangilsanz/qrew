@@ -1,3 +1,4 @@
+// implements help
 import { createFileRoute } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bug, ChevronRight, HelpCircle, MessageCircle } from 'lucide-react'
@@ -17,6 +18,7 @@ const expandVariants = {
   exit: { height: 0, opacity: 0, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } },
 }
 
+// renders the faq row component
 function FaqRow({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false)
 
@@ -56,6 +58,7 @@ function FaqRow({ question, answer }: { question: string; answer: string }) {
   )
 }
 
+// renders the help page component
 function HelpPage() {
   const { t } = useTranslation()
   const iconClass = 'h-4 w-4 text-muted-foreground'

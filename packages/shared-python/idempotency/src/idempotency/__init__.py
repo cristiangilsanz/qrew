@@ -1,3 +1,4 @@
+# exposes the idempotency decorator middleware and store
 from .decorator import (
     DEFAULT_HEADER_BLACKLIST,
     IdempotencyConfig,

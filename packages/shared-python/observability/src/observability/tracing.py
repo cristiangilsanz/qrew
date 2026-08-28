@@ -1,3 +1,4 @@
+# sets up opentelemetry tracing and instrumentation for a service
 import socket
 from collections.abc import Awaitable, Callable
 from functools import wraps
@@ -23,6 +24,7 @@ _state: dict[str, Any] = {"initialised": False, "provider": None}
 T = TypeVar("T")
 
 
+# builds the resource that identifies a service in its traces
 def _build_resource(service_name: str, version: str, environment: str) -> Resource:
     return Resource.create(
         {
@@ -34,6 +36,7 @@ def _build_resource(service_name: str, version: str, environment: str) -> Resour
     )
 
 
+# configures the tracer provider and instruments the app database and http client
 def setup_tracing(
     *,
     service_name: str,
@@ -45,7 +48,6 @@ def setup_tracing(
     app: FastAPI | None = None,
     extra_processors: list[SpanProcessor] | None = None,
 ) -> None:
-    """Initialises the global tracer provider and auto-instrumentation for a service."""
     if not _state["initialised"]:
         provider = TracerProvider(
             resource=_build_resource(service_name, version, environment)
@@ -72,8 +74,8 @@ def setup_tracing(
         FastAPIInstrumentor.instrument_app(app)
 
 
+# shuts down the tracer provider
 def shutdown_tracing() -> None:
-    """Flushes queued spans and shuts down the tracer provider."""
     provider = _state.get("provider")
     if provider is not None:
         provider.shutdown()
@@ -81,12 +83,14 @@ def shutdown_tracing() -> None:
     _state["provider"] = None
 
 
+# wraps a function in a span that records any exception it raises
 def traced(
     name: str,
 ) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
-    """Wrap an async function in a named tracing span, recording exceptions."""
 
+    # wraps the function with the tracing span
     def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+        # runs the function inside a span recording any exception it raises
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             with tracer.start_as_current_span(name) as span:

@@ -1,3 +1,4 @@
+# scores a purchase against whether its phone number is a voip line
 from typing import cast
 
 import structlog
@@ -15,13 +16,13 @@ _TWILIO_LOOKUP_URL = "https://lookups.twilio.com/v2/PhoneNumbers/{number}"
 
 
 class VoipPhoneSignal:
-    """Score a purchase attempt based on whether the user's phone is a VoIP/throwaway number."""
-
     name = "voip_phone"
 
+    # stores the phone number to look up
     def __init__(self, phone_e164: str | None) -> None:
         self._phone = phone_e164
 
+    # scores a purchase higher when twilio reports a voip carrier
     async def evaluate(self, context: PurchaseContext) -> SignalResult:
         if not self._phone:
             return SignalResult(name=self.name, score=0, reason="no_phone")

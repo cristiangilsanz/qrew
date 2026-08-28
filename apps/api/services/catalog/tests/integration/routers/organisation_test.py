@@ -1,23 +1,28 @@
+# tests organisation
 import uuid
 from datetime import UTC, datetime, timedelta
 
 import httpx
 import pytest
+from fastapi import Depends
 
 from tests.integration.conftest import auth_headers_for
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# handles future
 def _future(days: int) -> str:
     return (datetime.now(UTC) + timedelta(days=days)).isoformat()
 
 
+# handles org payload
 def _org_payload(suffix: str = "") -> dict:
     slug = f"test-org-{uuid.uuid4().hex[:8]}{suffix}"
     return {"slug": slug, "name": f"Test Org {suffix}", "description": "Integration test org"}
 
 
+# handles create venue
 async def _create_venue(client: httpx.AsyncClient, headers: dict) -> str:
     resp = await client.post(
         "/v1/venues",
@@ -37,12 +42,14 @@ async def _create_venue(client: httpx.AsyncClient, headers: dict) -> str:
     return resp.json()["id"]
 
 
+# handles create org
 async def _create_org(client: httpx.AsyncClient, headers: dict) -> dict:
     resp = await client.post("/v1/organisations", json=_org_payload(), headers=headers)
     assert resp.status_code == 201, resp.text
     return resp.json()
 
 
+# handles create event
 async def _create_event(
     client: httpx.AsyncClient,
     org_id: str,
@@ -65,7 +72,7 @@ async def _create_event(
     return resp.json()
 
 
-@pytest.mark.asyncio
+# verifies that create organisation
 async def test_create_organisation(client: httpx.AsyncClient, auth_headers: dict) -> None:
     payload = _org_payload()
     resp = await client.post("/v1/organisations", json=payload, headers=auth_headers)
@@ -76,7 +83,7 @@ async def test_create_organisation(client: httpx.AsyncClient, auth_headers: dict
     assert "id" in body
 
 
-@pytest.mark.asyncio
+# verifies that create organisation duplicate slug
 async def test_create_organisation_duplicate_slug(
     client: httpx.AsyncClient, auth_headers: dict
 ) -> None:
@@ -87,13 +94,13 @@ async def test_create_organisation_duplicate_slug(
     assert r2.status_code == 409
 
 
-@pytest.mark.asyncio
+# verifies that create organisation unauthenticated
 async def test_create_organisation_unauthenticated(client: httpx.AsyncClient) -> None:
     resp = await client.post("/v1/organisations", json=_org_payload())
     assert resp.status_code in {401, 403}
 
 
-@pytest.mark.asyncio
+# verifies that list my organisations
 async def test_list_my_organisations(client: httpx.AsyncClient, auth_headers: dict) -> None:
     org = await _create_org(client, auth_headers)
     resp = await client.get("/v1/organisations", headers=auth_headers)
@@ -102,13 +109,13 @@ async def test_list_my_organisations(client: httpx.AsyncClient, auth_headers: di
     assert org["id"] in ids
 
 
-@pytest.mark.asyncio
+# verifies that list my organisations unauthenticated
 async def test_list_my_organisations_unauthenticated(client: httpx.AsyncClient) -> None:
     resp = await client.get("/v1/organisations")
     assert resp.status_code in {401, 403}
 
 
-@pytest.mark.asyncio
+# verifies that get public organisation
 async def test_get_public_organisation(client: httpx.AsyncClient, auth_headers: dict) -> None:
     org = await _create_org(client, auth_headers)
     resp = await client.get(f"/v1/organisations/{org['id']}")
@@ -116,43 +123,72 @@ async def test_get_public_organisation(client: httpx.AsyncClient, auth_headers: 
     assert resp.json()["id"] == org["id"]
 
 
-@pytest.mark.asyncio
+# verifies that get public organisation not found
 async def test_get_public_organisation_not_found(client: httpx.AsyncClient) -> None:
     resp = await client.get(f"/v1/organisations/{uuid.uuid4()}")
     assert resp.status_code == 404
 
 
-@pytest.mark.asyncio
+# verifies that invite member
 async def test_invite_member(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    from com.qode.qrew.v1.catalog.app import app
+    from com.qode.qrew.v1.catalog.core.dependencies import get_organisation_service
+    from com.qode.qrew.v1.catalog.repositories.organisation import (
+        OrganisationMemberRepository,
+        OrganisationRepository,
+    )
+    from com.qode.qrew.v1.catalog.services.application.audit import AuditService
+    from com.qode.qrew.v1.catalog.services.application.organisation import OrganisationService
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from com.qode.qrew.v1.catalog.core.database import get_db
+
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
 
     invitee_id = uuid.uuid4()
-    invitee_email = f"invitee-{invitee_id.hex[:8]}@example.com"
-    resp = await client.post(
-        f"/v1/organisations/{org['id']}/members",
-        json={"email": invitee_email, "role": "member"},
-        headers=headers,
-    )
-    # 201 if UserRepository finds the email, 400/404 if not (user doesn't exist in catalog DB)
-    assert resp.status_code in {201, 400, 404}
+
+    # handles resolver
+    async def _resolver(email: str) -> uuid.UUID:
+        del email
+        return invitee_id
+
+    # handles service
+    def _service(db: AsyncSession = Depends(get_db)) -> OrganisationService:
+        return OrganisationService(
+            OrganisationRepository(db),
+            OrganisationMemberRepository(db),
+            AuditService(),
+            user_resolver=_resolver,
+        )
+
+    app.dependency_overrides[get_organisation_service] = _service
+    try:
+        resp = await client.post(
+            f"/v1/organisations/{org['id']}/members",
+            json={"email": f"invitee-{invitee_id.hex[:8]}@example.com", "role": "member"},
+            headers=headers,
+        )
+    finally:
+        app.dependency_overrides.pop(get_organisation_service, None)
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["user_id"] == str(invitee_id)
 
 
-@pytest.mark.asyncio
+# verifies that remove member not found
 async def test_remove_member_not_found(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     random_user = uuid.uuid4()
     resp = await client.delete(
         f"/v1/organisations/{org['id']}/members/{random_user}", headers=headers
     )
-    # 204 if removed, 400 if not a member
     assert resp.status_code in {204, 400}
 
 
-@pytest.mark.asyncio
+# verifies that create org event
 async def test_create_org_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     venue_id = await _create_venue(client, headers)
     event = await _create_event(client, org["id"], venue_id, headers)
@@ -161,9 +197,9 @@ async def test_create_org_event(client: httpx.AsyncClient, user_id: uuid.UUID) -
     assert event["status"] == "draft"
 
 
-@pytest.mark.asyncio
+# verifies that list org events
 async def test_list_org_events(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     venue_id = await _create_venue(client, headers)
     event = await _create_event(client, org["id"], venue_id, headers)
@@ -174,9 +210,9 @@ async def test_list_org_events(client: httpx.AsyncClient, user_id: uuid.UUID) ->
     assert event["id"] in ids
 
 
-@pytest.mark.asyncio
+# verifies that get org event
 async def test_get_org_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     venue_id = await _create_venue(client, headers)
     event = await _create_event(client, org["id"], venue_id, headers)
@@ -186,19 +222,19 @@ async def test_get_org_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> N
     assert resp.json()["id"] == event["id"]
 
 
-@pytest.mark.asyncio
+# verifies that get org event not found
 async def test_get_org_event_not_found(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
-    headers = auth_headers_for(user_id)
+    headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, headers)
     resp = await client.get(f"/v1/organisations/{org['id']}/events/{uuid.uuid4()}", headers=headers)
     assert resp.status_code == 404
 
 
-@pytest.mark.asyncio
+# verifies that org events forbidden non member
 async def test_org_events_forbidden_non_member(
     client: httpx.AsyncClient, user_id: uuid.UUID
 ) -> None:
-    owner_headers = auth_headers_for(user_id)
+    owner_headers = auth_headers_for(user_id, is_admin=True)
     org = await _create_org(client, owner_headers)
 
     other_headers = auth_headers_for(uuid.uuid4())

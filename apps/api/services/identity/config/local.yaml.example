@@ -9,6 +9,7 @@ cors_origins:
 
 # ── infrastructure ────────────────────────────────────────────────────────────
 database_url: "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
+trusted_proxy_ip: ""
 redis_url: "redis://localhost:6379/0"
 nats_url: "nats://localhost:4222"
 

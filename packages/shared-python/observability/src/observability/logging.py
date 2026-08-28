@@ -1,15 +1,16 @@
+# stamps a log event with the trace and span of the current context
 from collections.abc import MutableMapping
 from typing import Any
 
 from opentelemetry import trace
 
 
+# adds the current trace and span ids to a log event
 def add_trace_context(
     _logger: Any,
     _method_name: str,
     event_dict: MutableMapping[str, Any],
 ) -> MutableMapping[str, Any]:
-    """Enriches each log record with the active trace and span identifiers."""
     span = trace.get_current_span()
     context = span.get_span_context()
     if context.is_valid:

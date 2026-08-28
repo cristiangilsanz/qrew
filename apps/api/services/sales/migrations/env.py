@@ -1,3 +1,4 @@
+# configures alembic to run migrations against this service's own schema
 import asyncio
 import os
 import sys
@@ -18,6 +19,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
+# restricts migrations to tables that belong to this service's schema
 def include_object(
     object: object,
     name: str,
@@ -31,6 +33,7 @@ def include_object(
     return True
 
 
+# generates migration sql without a live database connection
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -46,6 +49,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+# runs the migrations against an already open connection
 def do_run_migrations(connection: object) -> None:
     context.configure(
         connection=connection,  # type: ignore[arg-type]
@@ -58,6 +62,7 @@ def do_run_migrations(connection: object) -> None:
         context.run_migrations()
 
 
+# opens a database connection and runs the migrations
 async def run_migrations_online() -> None:
     db_url = os.environ.get(
         "DATABASE_URL",

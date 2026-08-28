@@ -1,3 +1,4 @@
+// renders the kyc pending step component
 import { useNavigate } from '@tanstack/react-router'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -11,10 +12,12 @@ interface Props {
   onRetry: () => void
 }
 
+// renders the kyc pending step component
 export function KycPendingStep({ onRetry }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: status } = useOnboardingStatus(10_000)
+  // implements complete setup
   const completeSetup = useCompleteSetup(() => navigate({ to: '/home' }))
 
   if (status?.is_complete) {

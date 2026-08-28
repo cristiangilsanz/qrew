@@ -1,3 +1,4 @@
+// renders the stripe checkout component
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import { CreditCard } from 'lucide-react'
@@ -12,6 +13,7 @@ interface FormProps {
   onSuccess: () => void
 }
 
+// renders the payment form component
 function PaymentForm({ onSuccess }: FormProps) {
   const { t } = useTranslation()
   const stripe = useStripe()
@@ -19,6 +21,7 @@ function PaymentForm({ onSuccess }: FormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // handles handle submit
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!stripe || !elements) return
@@ -67,6 +70,7 @@ interface Props {
   onSuccess: () => void
 }
 
+// renders the stripe checkout component
 export function StripeCheckout({ clientSecret, onSuccess }: Props) {
   return (
     <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>

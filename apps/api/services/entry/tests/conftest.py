@@ -1,6 +1,6 @@
+# provides shared pytest fixtures
 import os
 
-# Must be set before importing any entry service module that calls _load_purpose_keys().
 os.environ.setdefault("DEBUG", "true")
 
 import uuid
@@ -13,26 +13,31 @@ from com.qode.qrew.v1.entry.models.projections import TicketState
 from com.qode.qrew.v1.entry.services.application.audit import AuditService
 
 
+# provides scanner id
 @pytest.fixture
 def scanner_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides venue id
 @pytest.fixture
 def venue_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides event id
 @pytest.fixture
 def event_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides admin id
 @pytest.fixture
 def admin_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides audit
 @pytest.fixture
 def audit() -> AuditService:
     mock = AsyncMock(spec=AuditService)
@@ -40,6 +45,7 @@ def audit() -> AuditService:
     return mock
 
 
+# handles make scanner
 def make_scanner(
     *,
     scanner_id: uuid.UUID | None = None,
@@ -55,6 +61,7 @@ def make_scanner(
     )
 
 
+# handles make ticket ctx
 def make_ticket_ctx(
     *,
     ticket_id: uuid.UUID,

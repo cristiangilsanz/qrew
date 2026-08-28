@@ -20,57 +20,9 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+# creates the identity schema and its tables
 def upgrade() -> None:
-    # --- Schemas ---
     op.execute("CREATE SCHEMA IF NOT EXISTS identity")
-    op.execute("CREATE SCHEMA IF NOT EXISTS audit")
-
-    # --- audit.audit_events ---
-    op.create_table(
-        "audit_events",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("actor_id", sa.UUID(), nullable=True),
-        sa.Column("action", sa.String(length=64), nullable=False),
-        sa.Column("entity_type", sa.String(length=64), nullable=True),
-        sa.Column("entity_id", sa.String(length=255), nullable=True),
-        sa.Column("ip_address", sa.String(length=45), nullable=True),
-        sa.Column("device_fingerprint_hash", sa.String(length=255), nullable=True),
-        sa.Column("user_agent", sa.Text(), nullable=True),
-        sa.Column("payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("prev_hash", sa.LargeBinary(length=32), nullable=True),
-        sa.Column("hash", sa.LargeBinary(length=32), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        schema="audit",
-    )
-    op.create_index(
-        op.f("ix_audit_audit_events_action"),
-        "audit_events",
-        ["action"],
-        unique=False,
-        schema="audit",
-    )
-    op.create_index(
-        op.f("ix_audit_audit_events_actor_id"),
-        "audit_events",
-        ["actor_id"],
-        unique=False,
-        schema="audit",
-    )
-    op.create_index(
-        op.f("ix_audit_audit_events_created_at"),
-        "audit_events",
-        ["created_at"],
-        unique=False,
-        schema="audit",
-    )
-
-    # --- identity.notifications ---
     op.create_table(
         "notifications",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -130,7 +82,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.users ---
     op.create_table(
         "users",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -144,11 +95,11 @@ def upgrade() -> None:
         sa.Column("phone_number_verified", sa.Boolean(), nullable=False),
         sa.Column("email_verification_token", sa.String(length=255), nullable=True),
         sa.Column("email_verification_token_expires_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("phone_number_otp", sa.String(length=10), nullable=True),
+        sa.Column("phone_number_otp", sa.String(length=64), nullable=True),
         sa.Column("phone_number_otp_expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("pending_phone_number_ciphertext", sa.LargeBinary(), nullable=True),
         sa.Column("pending_phone_number_hash", sa.String(length=64), nullable=True),
-        sa.Column("pending_phone_otp", sa.String(length=10), nullable=True),
+        sa.Column("pending_phone_otp", sa.String(length=64), nullable=True),
         sa.Column("pending_phone_otp_expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("pending_email_ciphertext", sa.LargeBinary(), nullable=True),
         sa.Column("pending_email_hash", sa.String(length=64), nullable=True),
@@ -250,7 +201,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.device_fingerprints ---
     op.create_table(
         "device_fingerprints",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -267,6 +217,7 @@ def upgrade() -> None:
         sa.Column("account_count_at_seen", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["identity.users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id", "fingerprint_hash", name="uq_device_fingerprints_user_hash"),
         schema="identity",
     )
     op.create_index(
@@ -284,7 +235,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.devices ---
     op.create_table(
         "devices",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -314,7 +264,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.passkey_credentials ---
     op.create_table(
         "passkey_credentials",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -350,7 +299,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.outbox ---
     op.create_table(
         "outbox",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -392,7 +340,6 @@ def upgrade() -> None:
         schema="identity",
     )
 
-    # --- identity.sessions ---
     op.create_table(
         "sessions",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -443,8 +390,8 @@ def upgrade() -> None:
     )
 
 
+# drops the identity schema and its tables
 def downgrade() -> None:
-    # --- Drop tables in reverse FK dependency order ---
     op.drop_index(op.f("ix_identity_sessions_user_id"), table_name="sessions", schema="identity")
     op.drop_index(op.f("ix_identity_sessions_jti"), table_name="sessions", schema="identity")
     op.drop_index(op.f("ix_identity_sessions_device_id"), table_name="sessions", schema="identity")
@@ -527,18 +474,10 @@ def downgrade() -> None:
     )
     op.drop_table("notifications", schema="identity")
 
-    op.drop_index(
-        op.f("ix_audit_audit_events_created_at"), table_name="audit_events", schema="audit"
-    )
-    op.drop_index(op.f("ix_audit_audit_events_actor_id"), table_name="audit_events", schema="audit")
-    op.drop_index(op.f("ix_audit_audit_events_action"), table_name="audit_events", schema="audit")
-    op.drop_table("audit_events", schema="audit")
+    op.drop_index()
 
-    # --- Drop enum types ---
     sa.Enum(name="kyc_status").drop(op.get_bind(), checkfirst=True)
     sa.Enum(name="notification_status").drop(op.get_bind(), checkfirst=True)
     sa.Enum(name="notification_channel").drop(op.get_bind(), checkfirst=True)
 
-    # --- Drop schemas ---
     op.execute("DROP SCHEMA IF EXISTS identity")
-    op.execute("DROP SCHEMA IF EXISTS audit")

@@ -79,6 +79,14 @@ secrets/
 .idea/
 .idea_modules/
 
+# IDE — VS Code
+*.vsix
+.history/
+.vscode/*.code-snippets
+.vscode/launch.json
+.vscode/settings.json
+.vscode/tasks.json
+
 # IDE — Other
 *.sublime-project
 *.sublime-workspace
@@ -90,14 +98,6 @@ secrets/
 .pydevproject
 .settings/
 .vs/
-
-# IDE — VS Code
-*.vsix
-.history/
-.vscode/*.code-snippets
-.vscode/launch.json
-.vscode/settings.json
-.vscode/tasks.json
 
 # Linux
 *~
@@ -203,6 +203,20 @@ tmp/
 # Testing
 playwright-report/
 test-results/
+
+# Thesis
+thesis/
+main.aux
+main.bbl
+main.bcf
+main.blg
+main.lof
+main.log
+main.lot
+main.out
+main.pdf
+main.run.xml
+main.toc
 
 # Windows
 $RECYCLE.BIN/

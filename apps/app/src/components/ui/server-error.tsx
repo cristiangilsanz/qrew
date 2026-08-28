@@ -1,8 +1,10 @@
+// implements server error
 import { Link } from '@tanstack/react-router'
 import { House } from 'lucide-react'
 
 import serverErrorImg from '@/assets/images/illustrations/server-error.webp'
 
+// renders the server error component
 export function ServerError() {
   return (
     <div className="bg-background text-foreground min-h-screen">

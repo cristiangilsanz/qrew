@@ -1,3 +1,4 @@
+# exposes the ticketing repositories package
 from com.qode.qrew.v1.ticketing.repositories.projections import (
     DeviceContextRepository,
     EventVenueContextRepository,

@@ -1,3 +1,4 @@
+// implements queue
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/_app/events/$eventId/queue')({
   component: QueuePage,
 })
 
+// renders the queue page component
 function QueuePage() {
   const { t } = useTranslation()
   const { eventId } = Route.useParams()

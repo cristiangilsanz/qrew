@@ -1,3 +1,4 @@
+# exposes the passkey application services
 from .assertion import PasskeyError
 from .verifier import PasskeyAuthenticationService
 from .management import PasskeyManagementService

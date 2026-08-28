@@ -1,3 +1,4 @@
+# defines the configuration settings for the catalog service
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -25,6 +26,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
     redis_url: str = "redis://localhost:6379/0"
     nats_url: str = ""
+    identity_url: str = "http://localhost:8001"
+    internal_api_key: str = ""
 
     access_jwt_private_key: str = ""
     access_jwt_previous_public_keys: str = ""
@@ -40,6 +43,7 @@ class Settings(BaseSettings):
     otel_enabled: bool = False
     otel_endpoint: str = "http://localhost:4317"
 
+    # orders the configuration sources so the yaml file can override the defaults
     @classmethod
     def settings_customise_sources(
         cls,

@@ -1,3 +1,4 @@
+// tests ticket card
 import { render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -5,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { TicketCard } from './TicketCard'
 
 vi.mock('@tanstack/react-router', () => ({
+  // renders the link component
   Link: ({
     children,
     to,
@@ -32,15 +34,19 @@ const MOCK_EVENT = {
 }
 
 vi.mock('@/features/events/hooks/useEvent', () => ({
+  // provides use event
   useEvent: () => ({ data: MOCK_EVENT }),
 }))
 
 vi.mock('../hooks/useReservation', () => ({
+  // provides use reservation
   useReservation: () => ({ data: undefined, isLoading: false }),
 }))
 
 vi.mock('react-i18next', () => ({
+  // provides use translation
   useTranslation: () => ({
+    // implements t
     t: (key: string, opts?: Record<string, unknown>) => {
       if (key === 'tickets.ticket.id') return `Ticket #${opts?.id}`
       if (key.startsWith('tickets.ticket.states.')) return key.split('.').pop() ?? key

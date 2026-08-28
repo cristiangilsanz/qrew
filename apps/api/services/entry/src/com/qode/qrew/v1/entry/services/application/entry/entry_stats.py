@@ -1,3 +1,4 @@
+# computes and caches the per event entry rollup
 import json
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -29,10 +30,12 @@ _REASONS: tuple[str, ...] = (
 )
 
 
+# builds the cache key for an event's rollup window
 def _stats_cache_key(event_id: uuid.UUID, since: datetime) -> str:
     return f"entry:stats:{event_id}:{int(since.timestamp())}"
 
 
+# resolves the requested window start or falls back to the default
 def _resolve_since(since: datetime | None) -> datetime:
     if since is not None:
         return since
@@ -41,6 +44,7 @@ def _resolve_since(since: datetime | None) -> datetime:
     )
 
 
+# returns the cached rollup or computes and caches a fresh one
 @traced("entry_stats.compute")
 async def compute_entry_stats(
     db: AsyncSession,
@@ -66,6 +70,7 @@ async def compute_entry_stats(
     return stats
 
 
+# computes the rollup directly from the ticket and entry attempt tables
 async def _compute_uncached(
     db: AsyncSession, *, event_id: uuid.UUID, since: datetime
 ) -> EntryStats:
@@ -116,6 +121,7 @@ async def _compute_uncached(
     )
 
 
+# rebuilds a cached rollup from its stored json payload
 def _deserialise(raw: str | bytes, event_id: uuid.UUID, since: datetime) -> EntryStats:
     data = json.loads(raw)
     last_raw = data.get("last_scan_at")

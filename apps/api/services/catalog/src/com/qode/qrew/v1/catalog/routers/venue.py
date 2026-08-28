@@ -1,3 +1,4 @@
+# exposes the endpoints that create list and read venues
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -19,6 +20,7 @@ from idempotency import idempotent
 router = APIRouter(prefix="/venues", tags=["venues"])
 
 
+# converts a venue into its full response
 def _to_response(venue: Venue) -> VenueResponse:
     return VenueResponse(
         id=venue.id,
@@ -35,6 +37,7 @@ def _to_response(venue: Venue) -> VenueResponse:
     )
 
 
+# converts a venue into its public response
 def _to_public(venue: Venue) -> VenuePublicResponse:
     return VenuePublicResponse(
         id=venue.id,
@@ -48,6 +51,7 @@ def _to_public(venue: Venue) -> VenuePublicResponse:
     )
 
 
+# converts a venue error into a bad request response
 def _bad_request(error: VenueError) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -55,6 +59,7 @@ def _bad_request(error: VenueError) -> HTTPException:
     )
 
 
+# creates a new venue
 @router.post(
     "",
     response_model=VenueResponse,
@@ -88,6 +93,7 @@ async def create_venue(
     return _to_response(venue)
 
 
+# lists venues filtered by city or country
 @router.get(
     "",
     response_model=Page[VenuePublicResponse],
@@ -120,6 +126,7 @@ async def list_venues(
     )
 
 
+# reads a single venue's public details
 @router.get(
     "/{venue_id}",
     response_model=VenuePublicResponse,

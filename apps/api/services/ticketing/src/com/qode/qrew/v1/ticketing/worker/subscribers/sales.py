@@ -1,3 +1,4 @@
+# projects sales reservations and market listings into the tickets they govern
 import asyncio
 import uuid
 from typing import Any
@@ -19,8 +20,8 @@ STREAM = "SALES"
 DURABLE = "ticketing-sales-handler"
 
 
+# creates the reserved tickets a new reservation calls for
 async def handle_reservation_created(raw: bytes) -> None:
-    """Creates tickets in the reserved state when a new reservation is received."""
     data = await parse(raw)
     if data is None:
         return
@@ -63,8 +64,8 @@ async def handle_reservation_created(raw: bytes) -> None:
     )
 
 
+# issues a reservation's tickets and attaches their holders
 async def handle_reservation_paid(raw: bytes) -> None:
-    """Issue tickets when the reservation transitions to paid."""
     data = await parse(raw)
     if data is None:
         return
@@ -102,8 +103,8 @@ async def handle_reservation_paid(raw: bytes) -> None:
     await logger.ainfo("sales_events.tickets_issued", reservation_id=str(reservation_id))
 
 
+# cancels the tickets of a cancelled reservation
 async def handle_reservation_cancelled(raw: bytes) -> None:
-    """Cancel tickets when the reservation is cancelled."""
     data = await parse(raw)
     if data is None:
         return
@@ -116,8 +117,8 @@ async def handle_reservation_cancelled(raw: bytes) -> None:
     await _cancel_tickets_for_reservation(reservation_id, user_id, reason="reservation_cancelled")
 
 
+# expires the still reserved tickets of an expired reservation
 async def handle_reservation_expired(raw: bytes) -> None:
-    """Transition tickets to expired state when the reservation times out without payment."""
     data = await parse(raw)
     if data is None:
         return
@@ -147,6 +148,7 @@ async def handle_reservation_expired(raw: bytes) -> None:
     await logger.ainfo("sales_events.tickets_expired", reservation_id=str(reservation_id))
 
 
+# cancels a reservation's tickets that have not reached a terminal state
 async def _cancel_tickets_for_reservation(
     reservation_id: uuid.UUID,
     user_id: uuid.UUID,
@@ -190,8 +192,8 @@ _MARKET_STREAM = "MARKET"
 _MARKET_DURABLE = "ticketing-market-handler"
 
 
+# freezes an issued ticket once it is listed on the market
 async def handle_ticket_freeze(raw: bytes) -> None:
-    """Puts a ticket on sale when the seller lists it on the market (issued → on_sale)."""
     data = await parse(raw)
     if data is None:
         return
@@ -233,8 +235,8 @@ async def handle_ticket_freeze(raw: bytes) -> None:
     await logger.ainfo("market_events.ticket_on_sale", ticket_id=str(ticket_id))
 
 
+# transfers a listed ticket to its buyer and reissues it
 async def handle_transfer(raw: bytes) -> None:
-    """Transfers ticket ownership to the buyer after a successful market payment (on_sale → issued)."""
     data = await parse(raw)
     if data is None:
         return
@@ -284,8 +286,8 @@ async def handle_transfer(raw: bytes) -> None:
     )
 
 
+# returns an expired listing's ticket to its seller
 async def handle_listing_expired(raw: bytes) -> None:
-    """Returns an on_sale ticket to the seller when the listing expires (on_sale → issued, original owner)."""
     data = await parse(raw)
     if data is None:
         return
@@ -324,6 +326,7 @@ _MARKET_HANDLERS = {
 }
 
 
+# subscribes to every market event subject and dispatches each message
 async def run_market_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -347,6 +350,7 @@ async def run_market_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=_MARKET_STREAM)  # type: ignore[misc]
         await logger.ainfo("market_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             try:
                 async for msg in psub.messages:  # type: ignore[attr-defined]
@@ -377,6 +381,7 @@ async def run_market_event_subscriber(nats_url: str) -> None:
             await logger.awarning("market_events.drain_failed", error=repr(exc))
 
 
+# subscribes to every sales event subject and dispatches each message
 async def run_sales_event_subscriber(nats_url: str) -> None:
     import nats
     from nats.js.api import ConsumerConfig, DeliverPolicy
@@ -400,6 +405,7 @@ async def run_sales_event_subscriber(nats_url: str) -> None:
         psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
         await logger.ainfo("sales_events.subscribed", subject=subject)
 
+        # acknowledges each message once its handler has run
         async def _consume(psub: Any = psub, h: Any = handler) -> None:
             try:
                 async for msg in psub.messages:  # type: ignore[attr-defined]

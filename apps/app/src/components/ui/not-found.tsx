@@ -1,3 +1,4 @@
+// implements not found
 import { type ReactNode } from 'react'
 
 interface Props {
@@ -5,6 +6,7 @@ interface Props {
   action?: ReactNode
 }
 
+// renders the not found component
 export function NotFound({ message, action }: Props) {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 p-6 text-center">

@@ -1,3 +1,4 @@
+# exposes the internal endpoint entry uses to mark a ticket as used
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -25,6 +26,7 @@ class _UseBody(BaseModel):
     actor_id: uuid.UUID
 
 
+# marks a ticket as used at the gate
 @router.post("/{ticket_id}/use", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_ticket_used(
     ticket_id: uuid.UUID,

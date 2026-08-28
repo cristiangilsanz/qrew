@@ -1,3 +1,4 @@
+// renders the change email form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Send } from 'lucide-react'
 import { useState } from 'react'
@@ -31,6 +32,7 @@ interface Props {
 const darkInput =
   'border-white/5 bg-black/30 text-white/70 placeholder:text-white/15 focus-visible:border-white/15 focus-visible:ring-0 focus-visible:ring-offset-0'
 
+// renders the change email form component
 export function ChangeEmailForm({ hideTitle }: Props) {
   const { t } = useTranslation()
   const [sent, setSent] = useState(false)
@@ -40,6 +42,7 @@ export function ChangeEmailForm({ hideTitle }: Props) {
     defaultValues: { new_email: '', current_password: '' },
   })
 
+  // implements change email
   const changeEmail = useChangeEmail(() => setSent(true))
 
   if (sent) {

@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import pathlib
 
 import pytest
@@ -17,10 +18,12 @@ except Exception:
 pytestmark = pytest.mark.integration
 
 
+# handles pytest configure
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "integration: integration tests requiring Docker")
 
 
+# provides postgres container
 @pytest.fixture(scope="session")
 def postgres_container():
     if not _DOCKER_AVAILABLE:
@@ -29,6 +32,7 @@ def postgres_container():
         yield pg
 
 
+# provides engine
 @pytest.fixture(scope="session")
 def engine(postgres_container):
     url = postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
@@ -52,6 +56,7 @@ def engine(postgres_container):
     return create_async_engine(url)
 
 
+# provides session factory
 @pytest.fixture(scope="session")
 def session_factory(engine):
     import com.qode.qrew.v1.audit.services.verifier as verifier_module
@@ -61,6 +66,7 @@ def session_factory(engine):
     return factory
 
 
+# provides db
 @pytest_asyncio.fixture
 async def db(session_factory: async_sessionmaker) -> AsyncSession:  # type: ignore[type-arg]
     async with session_factory() as session:
@@ -68,16 +74,16 @@ async def db(session_factory: async_sessionmaker) -> AsyncSession:  # type: igno
         await session.rollback()
 
 
+# provides client
 @pytest_asyncio.fixture
 async def client(session_factory: async_sessionmaker):  # type: ignore[type-arg]
     from com.qode.qrew.v1.audit.app import app
 
-    # session_factory fixture has already patched verifier_module.AsyncSessionLocal,
-    # so the app uses the test DB without any further dependency overrides.
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
 
 
+# provides internal headers
 @pytest.fixture
 def internal_headers() -> dict[str, str]:
     return {"X-Internal-Key": "test-key"}

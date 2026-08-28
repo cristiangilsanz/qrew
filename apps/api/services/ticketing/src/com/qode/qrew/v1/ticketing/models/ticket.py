@@ -1,3 +1,4 @@
+# defines the ticket state enum and the ticket table
 import enum
 import uuid
 from datetime import datetime

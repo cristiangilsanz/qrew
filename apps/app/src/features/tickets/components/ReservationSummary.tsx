@@ -1,3 +1,4 @@
+// renders the reservation summary component
 import { Clock, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,6 +16,7 @@ interface Props {
   payLoading?: boolean
 }
 
+// provides use countdown
 function useCountdown(expiresAt: string) {
   const [remaining, setRemaining] = useState(() =>
     Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)),
@@ -22,6 +24,7 @@ function useCountdown(expiresAt: string) {
 
   useEffect(() => {
     if (remaining <= 0) return
+    // implements id
     const id = setInterval(() => {
       setRemaining((s) => {
         if (s <= 1) {
@@ -37,12 +40,14 @@ function useCountdown(expiresAt: string) {
   return remaining
 }
 
+// implements format seconds
 function formatSeconds(s: number): string {
   const m = Math.floor(s / 60)
   const sec = s % 60
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+// renders the reservation summary component
 export function ReservationSummary({ reservation, onCancel, onPay, payLoading }: Props) {
   const { t } = useTranslation()
   const remaining = useCountdown(reservation.expires_at)

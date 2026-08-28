@@ -1,3 +1,4 @@
+# admits the next batch of queued users into each active event's sale
 import uuid
 
 import structlog
@@ -21,8 +22,8 @@ _ACTIVE_QUEUES = text(
 )
 
 
+# admits a batch of queued users for every event whose queue is active
 async def admit_next() -> int:
-    """Admits a batch of waiting users into each active queue and returns the total count admitted."""
     admitted_total = 0
     async with AsyncSessionLocal() as session:
         result = await session.execute(_ACTIVE_QUEUES)

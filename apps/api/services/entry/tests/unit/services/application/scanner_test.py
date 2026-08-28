@@ -1,3 +1,4 @@
+# tests scanner
 import uuid
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -16,6 +17,7 @@ _PATCH_CREATE_TOKEN = (
 _PATCH_SETTINGS = "com.qode.qrew.v1.entry.services.application.scanner.settings"
 
 
+# handles make svc
 def _make_svc(
     *,
     scanner: object = None,
@@ -35,6 +37,7 @@ def _make_svc(
     return svc, repo, audit
 
 
+# handles fake settings
 def _fake_settings() -> MagicMock:
     s = MagicMock()
     s.scanner_token_expire_hours = 8
@@ -42,6 +45,7 @@ def _fake_settings() -> MagicMock:
 
 
 class TestScannerServiceCreate:
+    # verifies that creates scanner and returns token
     async def test_creates_scanner_and_returns_token(
         self, admin_id: uuid.UUID, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -56,6 +60,7 @@ class TestScannerServiceCreate:
         mock_token.assert_called_once_with(scanner.id, venue_id, event_id, "2026-08-01")
         repo.create.assert_awaited_once()
 
+    # verifies that audit swallows errors
     async def test_audit_swallows_errors(
         self, admin_id: uuid.UUID, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -69,6 +74,7 @@ class TestScannerServiceCreate:
 
 
 class TestScannerServiceRotate:
+    # verifies that raises when not found
     async def test_raises_when_not_found(
         self, admin_id: uuid.UUID, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -78,6 +84,7 @@ class TestScannerServiceRotate:
                 admin_id, uuid.uuid4(), venue_id, event_id, date(2026, 8, 1)
             )
 
+    # verifies that raises when scanner inactive
     async def test_raises_when_scanner_inactive(
         self, admin_id: uuid.UUID, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -86,14 +93,16 @@ class TestScannerServiceRotate:
         with pytest.raises(ScannerError, match="deactivated"):
             await svc.rotate(admin_id, scanner.id, venue_id, event_id, date(2026, 8, 1))
 
+    # verifies that raises when venue mismatch
     async def test_raises_when_venue_mismatch(
         self, admin_id: uuid.UUID, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
-        scanner = make_scanner(venue_id=uuid.uuid4())  # different venue
+        scanner = make_scanner(venue_id=uuid.uuid4())
         svc, _, _ = _make_svc(scanner=scanner)
         with pytest.raises(ScannerError, match="different venue"):
             await svc.rotate(admin_id, scanner.id, venue_id, event_id, date(2026, 8, 1))
 
+    # verifies that returns scanner and token
     async def test_returns_scanner_and_token(
         self, admin_id: uuid.UUID, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -108,17 +117,20 @@ class TestScannerServiceRotate:
 
 
 class TestScannerServiceDeactivate:
+    # verifies that raises when not found
     async def test_raises_when_not_found(self, admin_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc(scanner=None)
         with pytest.raises(ScannerError, match="not found"):
             await svc.deactivate(admin_id, uuid.uuid4())
 
+    # verifies that raises when already deactivated
     async def test_raises_when_already_deactivated(self, admin_id: uuid.UUID) -> None:
         scanner = make_scanner(is_active=False)
         svc, _, _ = _make_svc(scanner=scanner)
         with pytest.raises(ScannerError, match="already deactivated"):
             await svc.deactivate(admin_id, scanner.id)
 
+    # verifies that returns deactivated scanner
     async def test_returns_deactivated_scanner(self, admin_id: uuid.UUID) -> None:
         scanner = make_scanner(is_active=True)
         svc, repo, _ = _make_svc(scanner=scanner)
@@ -128,6 +140,7 @@ class TestScannerServiceDeactivate:
 
 
 class TestScannerServiceRefreshSelf:
+    # verifies that raises when scanner not found
     async def test_raises_when_scanner_not_found(
         self, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -135,6 +148,7 @@ class TestScannerServiceRefreshSelf:
         with pytest.raises(ScannerError, match="not active"):
             await svc.refresh_self(uuid.uuid4(), venue_id, event_id, date(2026, 8, 1))
 
+    # verifies that raises when scanner inactive
     async def test_raises_when_scanner_inactive(
         self, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -143,12 +157,14 @@ class TestScannerServiceRefreshSelf:
         with pytest.raises(ScannerError, match="not active"):
             await svc.refresh_self(scanner.id, venue_id, event_id, date(2026, 8, 1))
 
+    # verifies that raises when venue mismatch
     async def test_raises_when_venue_mismatch(self, event_id: uuid.UUID) -> None:
         scanner = make_scanner(venue_id=uuid.uuid4())
         svc, _, _ = _make_svc(scanner=scanner)
         with pytest.raises(ScannerError, match="Refresh scope"):
             await svc.refresh_self(scanner.id, uuid.uuid4(), event_id, date(2026, 8, 1))
 
+    # verifies that returns scanner and token
     async def test_returns_scanner_and_token(
         self, venue_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -165,17 +181,20 @@ class TestScannerServiceRefreshSelf:
 
 
 class TestScannerServiceGetById:
+    # verifies that raises when not found
     async def test_raises_when_not_found(self) -> None:
         svc, _, _ = _make_svc(scanner=None)
         with pytest.raises(ScannerError, match="not found"):
             await svc.get_by_id(uuid.uuid4())
 
+    # verifies that returns scanner
     async def test_returns_scanner(self) -> None:
         scanner = make_scanner()
         svc, _, _ = _make_svc(scanner=scanner)
         result = await svc.get_by_id(scanner.id)
         assert result is scanner
 
+    # verifies that token ttl hours from settings
     async def test_token_ttl_hours_from_settings(self) -> None:
         svc, _, _ = _make_svc()
         with patch(_PATCH_SETTINGS, _fake_settings()):

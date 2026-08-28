@@ -1,3 +1,4 @@
+# dispatches a rendered notification to the channel it belongs to
 from collections.abc import Awaitable, Callable
 
 from com.qode.qrew.v1.identity.models.notification import NotificationChannel
@@ -11,6 +12,7 @@ DELIVERERS: dict[NotificationChannel, ChannelDeliverer] = {
 }
 
 
+# delivers a rendered notification through its channel
 async def deliver(
     channel: NotificationChannel,
     *,
@@ -18,7 +20,6 @@ async def deliver(
     template_key: str,
     payload: dict[str, object],
 ) -> None:
-    """Dispatch a single notification to its channel's deliverer."""
     handler = DELIVERERS[channel]
     await handler(destination=destination, template_key=template_key, payload=payload)
 

@@ -1,3 +1,4 @@
+// renders the login form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, KeyRound, Lock, LogIn, Mail } from 'lucide-react'
@@ -28,6 +29,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
+// renders the login form component
 export function LoginForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -40,8 +42,10 @@ export function LoginForm() {
     defaultValues: { email: '', password: '' },
   })
 
+  // handles on submit
   const onSubmit = (values: LoginFormValues) => {
     login.mutate(values, {
+      // handles on success
       onSuccess: (data) => {
         if (data.setup_required) navigate({ to: '/setup' })
         else if (data.totp_required) navigate({ to: '/verify-totp' })
@@ -50,6 +54,7 @@ export function LoginForm() {
     })
   }
 
+  // handles on passkey login
   const onPasskeyLogin = () => {
     const email = form.getValues('email')
     if (!email) {
@@ -57,6 +62,7 @@ export function LoginForm() {
       return
     }
     passkeyLogin.mutate(email, {
+      // handles on success
       onSuccess: (data) => navigate({ to: data.setup_required ? '/setup' : '/home' }),
     })
   }

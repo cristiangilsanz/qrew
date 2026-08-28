@@ -1,6 +1,9 @@
+// implements auth
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+
+import { preferencesStorage } from '@/lib/storage'
 
 interface AuthState {
   accessToken: string | null
@@ -32,36 +35,43 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isSetupPending: false,
       isTotpPending: false,
+      // implements set access token
       setAccessToken: (token) =>
         set((state) => {
           state.accessToken = token
           state.isAuthenticated = true
         }),
+      // implements set tokens
       setTokens: (accessToken, refreshToken) =>
         set((state) => {
           state.accessToken = accessToken
           state.refreshToken = refreshToken
           state.isAuthenticated = true
         }),
+      // implements set setup token
       setSetupToken: (token) =>
         set((state) => {
           state.setupToken = token
           state.isSetupPending = true
         }),
+      // implements set totp token
       setTotpToken: (token) =>
         set((state) => {
           state.totpToken = token
           state.isTotpPending = true
         }),
+      // implements clear totp pending
       clearTotpPending: () =>
         set((state) => {
           state.totpToken = null
           state.isTotpPending = false
         }),
+      // implements set phone number
       setPhoneNumber: (phone) =>
         set((state) => {
           state.phoneNumber = phone
         }),
+      // implements complete setup
       completeSetup: (token) =>
         set((state) => {
           state.accessToken = token
@@ -69,6 +79,7 @@ export const useAuthStore = create<AuthState>()(
           state.setupToken = null
           state.isSetupPending = false
         }),
+      // implements clear session
       clearSession: () =>
         set((state) => {
           state.accessToken = null
@@ -83,7 +94,8 @@ export const useAuthStore = create<AuthState>()(
     })),
     {
       name: 'qrew-auth',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => preferencesStorage),
+      // implements partialize
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
@@ -93,6 +105,7 @@ export const useAuthStore = create<AuthState>()(
         isSetupPending: state.isSetupPending,
         isTotpPending: state.isTotpPending,
       }),
+      // handles on rehydrate storage
       onRehydrateStorage: () => (state) => {
         if (state?.accessToken) state.isAuthenticated = true
       },

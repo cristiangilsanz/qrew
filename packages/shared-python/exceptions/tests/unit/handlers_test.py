@@ -1,3 +1,4 @@
+# tests handlers
 from unittest.mock import MagicMock
 
 from exceptions.handlers import (
@@ -13,31 +14,38 @@ from fastapi.exceptions import RequestValidationError
 
 
 class TestErrorBody:
+    # verifies that without field
     def test_without_field(self) -> None:
         body = _error_body("Something went wrong")
         assert body == {"detail": {"message": "Something went wrong", "field": None}}
 
+    # verifies that with field
     def test_with_field(self) -> None:
         body = _error_body("Required", "email")
         assert body == {"detail": {"message": "Required", "field": "email"}}
 
 
 class TestLocationToField:
+    # verifies that single field
     def test_single_field(self) -> None:
         assert _location_to_field(("body", "email")) == "email"
 
+    # verifies that nested field skips int index
     def test_nested_field_skips_int_index(self) -> None:
         assert _location_to_field(("body", "items", 0, "name")) == "items.name"
 
+    # verifies that only root returns none
     def test_only_root_returns_none(self) -> None:
         assert _location_to_field(("body",)) is None
 
 
 class TestCredentialsException:
+    # verifies that returns 401
     def test_returns_401(self) -> None:
         exc = credentials_exception()
         assert exc.status_code == 401
 
+    # verifies that has www authenticate header
     def test_has_www_authenticate_header(self) -> None:
         exc = credentials_exception()
         assert exc.headers is not None
@@ -45,6 +53,7 @@ class TestCredentialsException:
 
 
 class TestHttpExceptionHandler:
+    # verifies that plain string detail
     async def test_plain_string_detail(self) -> None:
         exc = HTTPException(status_code=404, detail="Not found")
         response = await _http_exception_handler(MagicMock(), exc)
@@ -54,6 +63,7 @@ class TestHttpExceptionHandler:
         body = json.loads(response.body)
         assert body["detail"]["message"] == "Not found"
 
+    # verifies that dict detail preserves message and field
     async def test_dict_detail_preserves_message_and_field(self) -> None:
         exc = HTTPException(
             status_code=422, detail={"message": "Bad input", "field": "email"}
@@ -67,6 +77,7 @@ class TestHttpExceptionHandler:
 
 
 class TestValidationExceptionHandler:
+    # verifies that picks first error and extracts field
     async def test_picks_first_error_and_extracts_field(self) -> None:
         exc = RequestValidationError(
             errors=[
@@ -85,6 +96,7 @@ class TestValidationExceptionHandler:
         assert body["detail"]["message"] == "field required"
         assert body["detail"]["field"] == "email"
 
+    # verifies that empty errors returns generic message
     async def test_empty_errors_returns_generic_message(self) -> None:
         exc = RequestValidationError(errors=[])
         response = await _validation_exception_handler(MagicMock(), exc)
@@ -95,6 +107,7 @@ class TestValidationExceptionHandler:
 
 
 class TestRateLimitHandler:
+    # verifies that returns 429 with detail
     async def test_returns_429_with_detail(self) -> None:
         exc = MagicMock()
         exc.detail = "5 per minute"

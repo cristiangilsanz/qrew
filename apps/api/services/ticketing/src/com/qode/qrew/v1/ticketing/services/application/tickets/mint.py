@@ -1,3 +1,4 @@
+# signs a ticket's rotating qr token and records the outcome
 import secrets
 import uuid
 from dataclasses import dataclass
@@ -25,12 +26,14 @@ class MintedQr:
     expires_at: datetime
 
 
+# decides whether this mint should be sampled into the audit trail
 def _sample_audit(rate: int) -> bool:
     if rate <= 1:
         return True
     return secrets.randbelow(rate) == 0
 
 
+# signs a fresh qr token bound to the caller's device
 async def mint_qr(
     *,
     inputs: GateInputs,
@@ -69,6 +72,7 @@ async def mint_qr(
     return MintedQr(jwt=token, jti=jti, issued_at=now, expires_at=exp)
 
 
+# records why a qr mint was denied
 async def record_denial(
     *,
     audit: AuditService,

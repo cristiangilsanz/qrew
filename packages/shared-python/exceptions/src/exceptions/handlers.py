@@ -1,3 +1,4 @@
+# converts every exception every service can raise into a uniform json response
 from typing import Any
 
 import structlog
@@ -50,10 +51,12 @@ default_responses: dict[int | str, dict[str, Any]] = {
 }
 
 
+# builds the uniform error body every handler returns
 def _error_body(message: str, field: str | None = None) -> dict[str, Any]:
     return {"detail": {"message": message, "field": field}}
 
 
+# converts an http exception into its json response
 async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     del request
     detail: Any = exc.detail
@@ -64,7 +67,7 @@ async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONR
         field_str = str(field_raw) if isinstance(field_raw, str) else None
         body = _error_body(message, field_str)
     else:
-        body = _error_body(str(detail) if detail else "")  # pyright: ignore[reportUnknownArgumentType]
+        body = _error_body(str(detail) if detail else "")
     return JSONResponse(
         status_code=exc.status_code,
         content=body,
@@ -72,11 +75,13 @@ async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONR
     )
 
 
+# converts a validation error location into a field name
 def _location_to_field(loc: tuple[int | str, ...]) -> str | None:
     parts = [str(p) for p in loc[1:] if not isinstance(p, int)]
     return ".".join(parts) if parts else None
 
 
+# converts a request validation error into its json response
 async def _validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
@@ -97,6 +102,7 @@ async def _validation_exception_handler(
     )
 
 
+# converts a rate limit rejection into its json response
 async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     del request
     return JSONResponse(
@@ -105,6 +111,7 @@ async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONR
     )
 
 
+# logs and converts an unexpected exception into a generic json response
 async def _unexpected_exception_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
@@ -120,6 +127,7 @@ async def _unexpected_exception_handler(
     )
 
 
+# builds the standard invalid credentials response
 def credentials_exception() -> HTTPException:
     return HTTPException(
         status_code=HTTP_401_UNAUTHORIZED,
@@ -128,6 +136,7 @@ def credentials_exception() -> HTTPException:
     )
 
 
+# registers every exception handler on the application
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(HTTPException, _http_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(RequestValidationError, _validation_exception_handler)  # type: ignore[arg-type]

@@ -1,3 +1,4 @@
+// tests gateway client
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { GatewayClient, parseUserIdFromToken } from './gatewayClient'
@@ -14,28 +15,34 @@ class MockWebSocket {
   onerror: (() => void) | null = null
   sent: string[] = []
 
+  // stores the values this object needs
   constructor(url: string, protocols?: string[]) {
     this.url = url
     this.protocols = protocols ?? []
     MockWebSocket.instances.push(this)
   }
 
+  // implements send
   send(data: string) {
     this.sent.push(data)
   }
 
+  // implements close
   close(code = 1000) {
     this.onclose?.({ code })
   }
 
+  // implements simulate open
   simulateOpen() {
     this.onopen?.()
   }
 
+  // implements simulate message
   simulateMessage(data: unknown) {
     this.onmessage?.({ data: JSON.stringify(data) })
   }
 
+  // implements simulate close
   simulateClose(code = 1001) {
     this.onclose?.({ code })
   }

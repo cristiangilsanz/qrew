@@ -1,3 +1,4 @@
+# defines the response schema for the per event entry rollup
 import uuid
 from datetime import datetime
 

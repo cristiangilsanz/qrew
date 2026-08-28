@@ -1,3 +1,4 @@
+# exchanges a setup token for a full session once onboarding is complete
 import uuid
 
 import structlog
@@ -23,10 +24,11 @@ logger = structlog.get_logger(__name__)
 
 
 class SetupError(DomainError):
-    """Raised when setup cannot be completed because a required step is missing."""
+    pass
 
 
 class CompleteSetupService:
+    # stores the repositories and audit service the service uses
     def __init__(
         self,
         user_repo: UserRepository,
@@ -39,6 +41,7 @@ class CompleteSetupService:
         self._audit = audit
         self._session_repo = session_repo
 
+    # checks every onboarding step is done and issues a full session
     async def complete(
         self,
         user: User,
@@ -46,7 +49,6 @@ class CompleteSetupService:
         user_agent: str | None = None,
         device_fingerprint: str | None = None,
     ) -> LoginResponse:
-        """Issue full tokens once all onboarding steps are complete."""
         if not user.phone_number_verified:
             await logger.awarning(
                 "setup_incomplete", reason="phone_not_verified", user_id=str(user.id)
@@ -90,6 +92,7 @@ class CompleteSetupService:
 
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
+    # writes the new session tied to its refresh token
     async def _persist_session(
         self,
         user_id: uuid.UUID,

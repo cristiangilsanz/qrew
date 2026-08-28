@@ -1,3 +1,4 @@
+// implements tickets
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -10,10 +11,12 @@ export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/ti
   component: EditTicketsPage,
 })
 
+// renders the edit tickets page component
 function EditTicketsPage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
   const { data, isLoading } = useOrgEvents(orgId)
+  // implements event
   const event = data?.items.find((e) => e.id === eventId)
 
   const effectiveStatus = event?.status

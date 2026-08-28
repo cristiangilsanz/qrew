@@ -1,3 +1,4 @@
+# soft deletes an account by anonymising its personal fields
 from datetime import UTC, datetime
 
 import redis.asyncio as aioredis
@@ -24,10 +25,11 @@ logger = structlog.get_logger(__name__)
 
 
 class AccountDeletionError(DomainError):
-    """Raised when an account deletion cannot be completed."""
+    pass
 
 
 class AccountDeletionService:
+    # stores the repositories redis client and audit service the service uses
     def __init__(
         self,
         user_repo: UserRepository,
@@ -42,8 +44,8 @@ class AccountDeletionService:
         self._redis = redis
         self._audit = audit
 
+    # verifies the password anonymises the account and revokes every session
     async def delete(self, user: User, current_password: str) -> None:
-        """Verifies the current password then permanently removes all user data and active sessions."""
         if user.deleted_at is not None:
             raise AccountDeletionError("Account is already deleted")
 
@@ -73,9 +75,9 @@ class AccountDeletionService:
                 "audit_write_failed", action=AuditAction.ACCOUNT_DELETED, error=repr(exc)
             )
 
+    # overwrites a user's personal fields with tombstone values
     @staticmethod
     def _anonymise(user: User) -> None:
-        """Overwrites all personal data with placeholder values while keeping the account record intact."""
         tombstone = str(user.id)
         user.full_name = "Deleted User"
         user.email = f"deleted-{tombstone}@deleted.local"

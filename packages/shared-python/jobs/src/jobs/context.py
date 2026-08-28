@@ -1,3 +1,4 @@
+# wraps a job handler with tracing structured logging and dead lettering on failure
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -13,16 +14,17 @@ logger = structlog.get_logger(__name__)
 JobRunner = Callable[..., Awaitable[Any]]
 
 
+# recovers the original payload dict from a handler's positional arguments
 def _payload_from_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
     if len(args) == 1 and isinstance(args[0], dict):
         return dict(args[0])  # type: ignore[arg-type]
     return {"args": list(args), "kwargs": kwargs}
 
 
+# extracts the trace carrier from a job's arguments
 def _take_propagation_context(
     args: tuple[Any, ...], kwargs: dict[str, Any]
 ) -> tuple[tuple[Any, ...], dict[str, str] | None]:
-    """Extract and remove the trace propagation carrier from job arguments."""
     if not args:
         return args, take_carrier(kwargs)
     head = args[0]
@@ -32,9 +34,10 @@ def _take_propagation_context(
     return args, take_carrier(kwargs)
 
 
+# wraps a job spec's handler with tracing logging and retry handling
 def wrap_handler(spec: JobSpec) -> JobRunner:
-    """Wrap a job handler with tracing, retry logic, and dead-letter routing."""
 
+    # runs the handler inside a trace span and dead letters it on final failure
     async def runner(ctx: dict[str, Any], *args: Any, **kwargs: Any) -> Any:
         attempt = int(ctx.get("job_try", 1))
         job_id = str(ctx.get("job_id", "unknown"))

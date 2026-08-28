@@ -1,3 +1,4 @@
+# paginates a query by cursor over a sort and identifier column
 from typing import Any
 
 from sqlalchemy import Select, and_, or_
@@ -7,6 +8,7 @@ from sqlalchemy.orm import InstrumentedAttribute
 from pagination import decode_cursor, encode_cursor
 
 
+# runs a query one page past the cursor and returns the next cursor
 async def cursor_paginate(
     session: AsyncSession,
     stmt: Select[Any],
@@ -15,7 +17,6 @@ async def cursor_paginate(
     limit: int,
     cursor: str | None,
 ) -> tuple[list[Any], str | None]:
-    """Executes a paginated database query and returns results with a continuation token."""
     ordered = stmt.order_by(sort_column.desc(), id_column.desc())
     if cursor is not None:
         sort_value, last_id = decode_cursor(cursor)

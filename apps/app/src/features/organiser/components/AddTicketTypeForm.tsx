@@ -1,3 +1,4 @@
+// renders the add ticket type form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -48,6 +49,7 @@ interface Props {
   onClose: () => void
 }
 
+// renders the add ticket type form component
 export function AddTicketTypeForm({ eventId, onClose }: Props) {
   const { t } = useTranslation()
   const createTt = useCreateTicketType(eventId)

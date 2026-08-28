@@ -1,3 +1,4 @@
+# exposes the shared exception handlers and error schemas
 from .handlers import (
     ErrorDetail,
     ErrorResponse,

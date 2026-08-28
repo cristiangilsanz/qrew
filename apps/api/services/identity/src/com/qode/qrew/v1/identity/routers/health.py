@@ -1,3 +1,4 @@
+# exposes the health probe endpoint for the identity service
 from probes import create_probe_router
 from com.qode.qrew.v1.identity.core.database import get_db
 from com.qode.qrew.v1.identity.core.dependencies import get_redis

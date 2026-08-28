@@ -1,3 +1,4 @@
+# exposes the shared cursor pagination helpers
 from .cursor import clamp_limit, decode_cursor, encode_cursor
 from .page import Page
 

@@ -1,3 +1,4 @@
+# builds the liveness and readiness probe router shared by every service
 from collections.abc import AsyncGenerator, Callable
 from typing import Any
 
@@ -9,17 +10,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 
 
+# builds a probe router wired to a service's database and redis dependencies
 def create_probe_router(
     get_db: Callable[..., AsyncGenerator[AsyncSession, None]],
     get_redis: Callable[..., AsyncGenerator[aioredis.Redis, None]],  # type: ignore[type-arg]
 ) -> APIRouter:
-    """Returns a router with /healthz (shallow) and /readyz (deep dependency check)."""
     router = APIRouter(tags=["probes"], include_in_schema=False)
 
+    # reports that the service is running
     @router.get("/healthz")
     async def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
+    # reports whether the database and redis are reachable
     @router.get("/readyz")
     async def readyz(
         db: AsyncSession = Depends(get_db),

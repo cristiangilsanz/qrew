@@ -1,3 +1,4 @@
+# exposes the endpoints that change delete and recover an account's credentials
 from fastapi import APIRouter, Depends, Request, status
 
 from com.qode.qrew.v1.identity.core.dependencies import get_current_user
@@ -52,6 +53,7 @@ from ._deps import (
 router = APIRouter(prefix="/account")
 
 
+# changes the caller's password
 @router.post(
     "/change-password",
     response_model=ChangePasswordResponse,
@@ -65,7 +67,6 @@ async def change_password(
     current_user: User = Depends(get_current_user),
     service: PasswordChangeService = Depends(get_password_change_service),
 ) -> ChangePasswordResponse:
-    """Change the current user's password."""
     try:
         await service.change_password(current_user, body.current_password, body.new_password)
         return ChangePasswordResponse(message="Password changed successfully.")
@@ -73,6 +74,7 @@ async def change_password(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# soft deletes the caller's account
 @router.post(
     "/delete",
     response_model=AccountDeleteResponse,
@@ -86,7 +88,6 @@ async def delete_account(
     current_user: User = Depends(get_current_user),
     service: AccountDeletionService = Depends(get_deletion_service),
 ) -> AccountDeleteResponse:
-    """Soft-delete the current user's account."""
     try:
         await service.delete(current_user, body.current_password)
         return AccountDeleteResponse(message="Account deleted.")
@@ -94,6 +95,7 @@ async def delete_account(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# requests an email address change
 @router.post(
     "/change-email",
     response_model=ChangeEmailResponse,
@@ -107,7 +109,6 @@ async def change_email(
     current_user: User = Depends(get_current_user),
     service: EmailChangeService = Depends(get_email_change_service),
 ) -> ChangeEmailResponse:
-    """Request an email address change."""
     try:
         await service.request_change(current_user, body.new_email, body.current_password)
         return ChangeEmailResponse(message="Confirmation link sent to your new email address.")
@@ -115,6 +116,7 @@ async def change_email(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# confirms a requested email address change
 @router.post(
     "/confirm-email-change",
     response_model=ChangeEmailResponse,
@@ -127,7 +129,6 @@ async def confirm_email_change(
     body: ConfirmEmailChangeRequest,
     service: EmailChangeService = Depends(get_email_change_service),
 ) -> ChangeEmailResponse:
-    """Confirm an email address change."""
     try:
         await service.confirm_change(body.token)
         return ChangeEmailResponse(message="Email address updated successfully.")
@@ -135,6 +136,7 @@ async def confirm_email_change(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# requests a phone number change
 @router.post(
     "/change-phone",
     response_model=ChangePhoneResponse,
@@ -148,7 +150,6 @@ async def change_phone(
     current_user: User = Depends(get_current_user),
     service: PhoneChangeService = Depends(get_phone_change_service),
 ) -> ChangePhoneResponse:
-    """Request a phone number change."""
     try:
         await service.request_change(current_user, body.new_phone_number, body.current_password)
         return ChangePhoneResponse(message="Verification code sent to your new phone number.")
@@ -156,6 +157,7 @@ async def change_phone(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# confirms a requested phone number change
 @router.post(
     "/confirm-phone-change",
     response_model=ChangePhoneResponse,
@@ -169,7 +171,6 @@ async def confirm_phone_change(
     current_user: User = Depends(get_current_user),
     service: PhoneChangeService = Depends(get_phone_change_service),
 ) -> ChangePhoneResponse:
-    """Confirm a phone number change."""
     try:
         await service.confirm_change(current_user, body.new_phone_number, body.otp)
         return ChangePhoneResponse(message="Phone number updated successfully.")
@@ -177,6 +178,7 @@ async def confirm_phone_change(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# requests a password reset link without disclosing whether the email exists
 @router.post(
     "/forgot-password",
     response_model=ForgotPasswordResponse,
@@ -189,13 +191,13 @@ async def forgot_password(
     body: ForgotPasswordRequest,
     service: ForgotPasswordService = Depends(get_forgot_password_service),
 ) -> ForgotPasswordResponse:
-    """Request a password reset link (always returns 200 to prevent email enumeration)."""
     await service.request_reset(body.email)
     return ForgotPasswordResponse(
         message="If an account with that email exists, a reset link has been sent."
     )
 
 
+# resets a password using a reset token
 @router.post(
     "/reset-password",
     response_model=ResetPasswordResponse,
@@ -208,7 +210,6 @@ async def reset_password(
     body: ResetPasswordRequest,
     service: ForgotPasswordService = Depends(get_forgot_password_service),
 ) -> ResetPasswordResponse:
-    """Reset the user's password using a valid reset token."""
     try:
         await service.reset_password(body.token, body.new_password)
         return ResetPasswordResponse(message="Password reset successfully. You can now sign in.")

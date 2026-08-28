@@ -1,3 +1,4 @@
+# reads and writes the local projection of a ticket's state
 import uuid
 from datetime import UTC, datetime
 
@@ -5,64 +6,22 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.entry.models.projections import (
-    Event,
-    OrganisationMember,
-    TicketContext,
-    User,
-)
-
-
-class EventRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def get_by_id(self, event_id: uuid.UUID) -> Event | None:
-        result = await self._session.execute(
-            select(Event).where(Event.id == event_id).limit(1)
-        )
-        return result.scalar_one_or_none()
-
-
-class OrganisationMemberRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def get(
-        self, organisation_id: uuid.UUID, user_id: uuid.UUID
-    ) -> OrganisationMember | None:
-        result = await self._session.execute(
-            select(OrganisationMember)
-            .where(
-                OrganisationMember.organisation_id == organisation_id,
-                OrganisationMember.user_id == user_id,
-            )
-            .limit(1)
-        )
-        return result.scalar_one_or_none()
-
-
-class UserRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def get_by_id(self, user_id: uuid.UUID) -> User | None:
-        result = await self._session.execute(
-            select(User).where(User.id == user_id).limit(1)
-        )
-        return result.scalar_one_or_none()
+from com.qode.qrew.v1.entry.models.projections import TicketContext
 
 
 class TicketContextRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads the projected context of a ticket
     async def get(self, ticket_id: uuid.UUID) -> TicketContext | None:
         result = await self._session.execute(
             select(TicketContext).where(TicketContext.ticket_id == ticket_id).limit(1)
         )
         return result.scalar_one_or_none()
 
+    # creates or refreshes the projected context of a ticket
     async def upsert(
         self,
         ticket_id: uuid.UUID,

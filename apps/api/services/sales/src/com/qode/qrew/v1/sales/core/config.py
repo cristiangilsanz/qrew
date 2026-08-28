@@ -1,3 +1,4 @@
+# defines the configuration settings for the sales service
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -71,6 +72,7 @@ class Settings(BaseSettings):
     idempotency_enabled: bool = True
     idempotency_lock_seconds: int = 30
 
+    # orders the configuration sources so the yaml file can override the defaults
     @classmethod
     def settings_customise_sources(
         cls,

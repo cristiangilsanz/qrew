@@ -1,3 +1,4 @@
+# exposes the websocket endpoint that subscribes a client to a fanout channel
 import asyncio
 import contextlib
 import json
@@ -28,6 +29,7 @@ _PING: dict[str, Any] = {"type": "ping"}
 _MAX_WS_MESSAGE_BYTES = 4096
 
 
+# authenticates authorizes and connects a client to a fanout channel
 @router.websocket("/ws/{channel_key:path}")
 async def channel_socket(websocket: WebSocket, channel_key: str) -> None:
     resolution = resolve(channel_key)
@@ -77,6 +79,7 @@ async def channel_socket(websocket: WebSocket, channel_key: str) -> None:
         await connection.close(WS_CLOSE_NORMAL)
 
 
+# reads client frames and records pongs until the socket disconnects
 async def _read_loop(connection: Connection) -> None:
     while not connection.closed:
         try:
@@ -106,6 +109,7 @@ async def _read_loop(connection: Connection) -> None:
             connection.record_pong(time.monotonic())
 
 
+# pings the client on a fixed interval to detect a dead connection
 async def _heartbeat(connection: Connection) -> None:
     try:
         while not connection.closed:

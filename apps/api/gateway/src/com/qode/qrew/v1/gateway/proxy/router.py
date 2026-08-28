@@ -1,3 +1,4 @@
+# reverse proxies api requests to the domain service named in the path
 import structlog
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import StreamingResponse
@@ -9,7 +10,6 @@ logger = structlog.get_logger(__name__)
 
 router = APIRouter()
 
-# Headers that must not be forwarded verbatim to upstreams
 _HOP_BY_HOP = frozenset(
     [
         "host",
@@ -21,7 +21,6 @@ _HOP_BY_HOP = frozenset(
         "keep-alive",
         "proxy-authenticate",
         "proxy-authorization",
-        # Strip upstream CORS headers
         "access-control-allow-origin",
         "access-control-allow-credentials",
         "access-control-allow-methods",
@@ -41,21 +40,23 @@ _UPSTREAMS: dict[str, str] = {
 }
 
 
+# returns the shared http client used to reach every upstream
 def _get_client(request: Request) -> AsyncClient:
     return request.app.state.proxy_client  # type: ignore[no-any-return]
 
 
+# strips hop by hop headers and adds the forwarded client address
 def _build_upstream_headers(request: Request) -> dict[str, str]:
     headers: dict[str, str] = {
         k: v for k, v in request.headers.items() if k.lower() not in _HOP_BY_HOP
     }
-    # Add forwarding headers
     client_host = request.client.host if request.client else "unknown"
     headers["x-forwarded-for"] = client_host
     headers["x-forwarded-proto"] = request.url.scheme
     return headers
 
 
+# forwards a request to its upstream service and streams back the response
 @router.api_route(
     "/api/{service}/{path:path}",
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
@@ -69,7 +70,6 @@ async def proxy(service: str, path: str, request: Request) -> Response:
             media_type="text/plain",
         )
 
-    # Strip service prefix from URL
     qs = request.url.query
     target = f"{upstream}/{path}"
     if qs:

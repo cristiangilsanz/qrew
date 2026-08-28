@@ -1,12 +1,14 @@
+# flags a login as anomalous when travel or a concurrent device looks impossible
 from datetime import UTC, datetime, timedelta
 
 import redis.asyncio as aioredis
 import structlog
 
-from com.qode.qrew.v1.identity.models.audit import AuditAction, AuditEvent
+from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.repositories.session import SessionRepository
 from com.qode.qrew.v1.identity.services.application.audit import AuditService
+from com.qode.qrew.v1.identity.services.application.trail import AuditTrailEntry
 from com.qode.qrew.v1.identity.core.utils.geoip import GeoIpService
 from com.qode.qrew.v1.identity.services.application.notification.dispatcher import (
     NotificationDispatcher,
@@ -19,6 +21,7 @@ logger = structlog.get_logger(__name__)
 
 
 class LoginAnomalyService:
+    # stores the collaborators the anomaly checks need
     def __init__(
         self,
         geoip: GeoIpService,
@@ -33,13 +36,13 @@ class LoginAnomalyService:
         self._notifier = notifier
         self._redis = redis
 
+    # runs every anomaly check and alerts the user if one fires
     async def check(
         self,
         user: User,
         ip_address: str | None,
         device_fingerprint: str | None,
     ) -> None:
-        """Run anomaly detection checks for a login event."""
         reasons: list[str] = []
 
         if ip_address:
@@ -95,6 +98,7 @@ class LoginAnomalyService:
                 "notification_failed", action="login_anomaly_alert", error=repr(exc)
             )
 
+    # flags a login whose location implies impossible travel from the last one
     async def _check_impossible_travel(self, user: User, current_ip: str) -> str | None:
         current_loc = self._geoip.locate(current_ip)
         if current_loc is None:
@@ -113,10 +117,11 @@ class LoginAnomalyService:
             return None
         return self._travel_anomaly_reason(current_loc, prev_events[0])
 
+    # computes whether the distance and elapsed time imply impossible travel
     def _travel_anomaly_reason(
         self,
         current_loc: tuple[float, float],
-        prev_event: AuditEvent,
+        prev_event: AuditTrailEntry,
     ) -> str | None:
         prev_ip = prev_event.ip_address
         if not prev_ip:
@@ -140,6 +145,7 @@ class LoginAnomalyService:
             )
         return None
 
+    # flags a login from a device while another device's session is still active
     async def _check_concurrent_device(self, user: User, current_fingerprint: str) -> str | None:
         try:
             sessions = await self._session_repo.get_all_by_user_id(user.id)

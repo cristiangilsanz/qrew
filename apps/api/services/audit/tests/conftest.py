@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import uuid
 from datetime import UTC, datetime
 
@@ -7,8 +8,10 @@ from com.qode.qrew.v1.audit.models.event import AuditAction, AuditEvent
 from com.qode.qrew.v1.audit.repositories.audit import build_event
 
 
+# provides make chain
 @pytest.fixture
 def make_chain():
+    # handles factory
     def _factory(n: int, *, action: str = AuditAction.LOGIN) -> list[AuditEvent]:
         events: list[AuditEvent] = []
         prev_hash: bytes | None = None

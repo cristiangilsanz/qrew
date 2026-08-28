@@ -1,3 +1,4 @@
+// implements tickets api
 import { paymentsClient } from '@/lib/paymentsApi'
 import { salesClient } from '@/lib/salesApi'
 import { ticketingClient } from '@/lib/ticketingApi'
@@ -74,14 +75,17 @@ export interface QrToken {
 }
 
 export const ticketsApi = {
+  // implements join queue
   joinQueue: (eventId: string) =>
     salesClient.post<QueueJoinResponse>(`/v1/events/${eventId}/queue/join`).then((r) => r.data),
 
+  // implements get queue position
   getQueuePosition: (eventId: string) =>
     salesClient
       .get<QueuePositionResponse>(`/v1/events/${eventId}/queue/position`)
       .then((r) => r.data),
 
+  // implements redeem queue
   redeemQueue: (eventId: string, redeemWindowToken: string) =>
     salesClient
       .post<QueueRedeemResponse>(`/v1/events/${eventId}/queue/redeem`, {
@@ -89,30 +93,38 @@ export const ticketsApi = {
       })
       .then((r) => r.data),
 
+  // implements create reservation
   createReservation: (
     eventId: string,
     data: { ticket_type_id: string; quantity: number; reservation_window_token?: string },
   ) => salesClient.post<Reservation>(`/v1/events/${eventId}/reserve`, data).then((r) => r.data),
 
+  // implements get reservation
   getReservation: (reservationId: string) =>
     salesClient.get<Reservation>(`/v1/reservations/${reservationId}`).then((r) => r.data),
 
+  // implements cancel reservation
   cancelReservation: (reservationId: string) =>
     salesClient.post<Reservation>(`/v1/reservations/${reservationId}/cancel`).then((r) => r.data),
 
+  // implements initiate payment
   initiatePayment: (reservationId: string) =>
     paymentsClient.post<Payment>(`/v1/reservations/${reservationId}/payment`).then((r) => r.data),
 
+  // implements list tickets
   listTickets: () => ticketingClient.get<Ticket[]>('/v1/tickets').then((r) => r.data),
 
+  // implements get ticket
   getTicket: (ticketId: string) =>
     ticketingClient.get<Ticket>(`/v1/tickets/${ticketId}`).then((r) => r.data),
 
+  // implements get qr
   getQr: (ticketId: string, latitude: number, longitude: number) =>
     ticketingClient
       .get<QrToken>(`/v1/tickets/${ticketId}/qr`, { params: { latitude, longitude } })
       .then((r) => r.data),
 
+  // implements set holders
   setHolders: (reservationId: string, holders: HolderInput[]) =>
     salesClient.put(`/v1/reservations/${reservationId}/holders`, { holders }).then((r) => r.data),
 }

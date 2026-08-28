@@ -1,3 +1,4 @@
+// implements onboarding api
 import { apiClient } from '@/lib/api'
 
 export interface OnboardingStatus {
@@ -23,24 +24,29 @@ export interface CompleteSetupResponse {
 }
 
 export const onboardingApi = {
+  // implements get status
   getStatus: () =>
     apiClient.get<OnboardingStatus>('/v1/auth/profile/onboarding-status').then((r) => r.data),
 
+  // implements verify email
   verifyEmail: (data: { token: string }) =>
     apiClient
       .post<{ message: string }>('/v1/auth/registration/verify-email', data)
       .then((r) => r.data),
 
+  // implements verify phone
   verifyPhone: (data: { phone_number: string; otp: string }) =>
     apiClient
       .post<{ message: string }>('/v1/auth/registration/verify-phone', data)
       .then((r) => r.data),
 
+  // implements resend phone otp
   resendPhoneOtp: (data: { phone_number: string }) =>
     apiClient
       .post<{ message: string }>('/v1/auth/registration/resend-phone-otp', data)
       .then((r) => r.data),
 
+  // implements upload kyc
   uploadKyc: (file: File) => {
     const formData = new FormData()
     formData.append('document', file)
@@ -51,12 +57,15 @@ export const onboardingApi = {
       .then((r) => r.data)
   },
 
+  // implements complete setup
   completeSetup: () =>
     apiClient.post<CompleteSetupResponse>('/v1/auth/setup/complete-setup').then((r) => r.data),
 
+  // implements passkey register begin
   passkeyRegisterBegin: () =>
     apiClient.post('/v1/auth/passkeys/register/begin').then((r) => r.data),
 
+  // implements passkey register complete
   passkeyRegisterComplete: (credential: object) =>
     apiClient
       .post<{ message: string }>('/v1/auth/passkeys/register/complete', credential)

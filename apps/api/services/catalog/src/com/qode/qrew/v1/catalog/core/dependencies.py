@@ -1,7 +1,9 @@
+# provides the shared fastapi dependencies for the catalog service
 import uuid
 from collections.abc import Awaitable, Callable
 
-from fastapi import Depends, HTTPException, Path, status
+from fastapi import Depends, Header, HTTPException, Path, status
+from security import matches_internal_key
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +16,6 @@ from com.qode.qrew.v1.catalog.models.organisation import (
     role_rank,
 )
 from com.qode.qrew.v1.catalog.repositories.events.event import EventRepository
-from com.qode.qrew.v1.catalog.repositories.identity import UserRepository
 from com.qode.qrew.v1.catalog.repositories.organisation import (
     OrganisationMemberRepository,
     OrganisationRepository,
@@ -31,6 +32,14 @@ from com.qode.qrew.v1.catalog.core.config import settings
 from db import create_redis_dependency
 
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
+limiter.enabled = settings.ratelimit_enabled
+
+
+# rejects a request without a valid internal api key
+def verify_internal_key(x_internal_key: str = Header(alias="X-Internal-Key")) -> None:
+    if not matches_internal_key(x_internal_key, settings.internal_api_key):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
 
 _FORBIDDEN = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
@@ -42,9 +51,11 @@ _NOT_FOUND = HTTPException(
 )
 
 
+# builds a dependency that requires membership of the path's organisation
 def get_org_member(
     minimum_role: OrganisationRole = OrganisationRole.member,
 ) -> Callable[..., Awaitable[OrganisationMember]]:
+    # resolves the caller's membership of the requested organisation
     async def _dependency(
         organisation_id: uuid.UUID = Path(...),
         current_user: AuthenticatedUser = Depends(get_current_user),
@@ -73,9 +84,11 @@ _NOT_EVENT_MANAGER = HTTPException(
 )
 
 
+# builds a dependency that requires managing the path's event
 def get_event_member(
     minimum_role: OrganisationRole = OrganisationRole.manager,
 ) -> Callable[..., Awaitable[OrganisationMember]]:
+    # resolves the caller's membership of the event's organisation
     async def _dependency(
         event_id: uuid.UUID = Path(...),
         current_user: AuthenticatedUser = Depends(get_current_user),
@@ -95,15 +108,16 @@ def get_event_member(
 get_redis = create_redis_dependency(settings.redis_url)
 
 
+# builds an organisation service for a request
 def get_organisation_service(db: AsyncSession = Depends(get_db)) -> OrganisationService:
     return OrganisationService(
         OrganisationRepository(db),
         OrganisationMemberRepository(db),
-        UserRepository(db),
         AuditService(),
     )
 
 
+# builds an event service for a request
 def get_event_service(db: AsyncSession = Depends(get_db)) -> EventService:
     return EventService(
         db,
@@ -114,9 +128,11 @@ def get_event_service(db: AsyncSession = Depends(get_db)) -> EventService:
     )
 
 
+# builds a ticket type service for a request
 def get_ticket_type_service(db: AsyncSession = Depends(get_db)) -> TicketTypeService:
     return TicketTypeService(EventRepository(db), TicketTypeRepository(db), AuditService())
 
 
+# builds a venue service for a request
 def get_venue_service(db: AsyncSession = Depends(get_db)) -> VenueService:
     return VenueService(VenueRepository(db), AuditService())

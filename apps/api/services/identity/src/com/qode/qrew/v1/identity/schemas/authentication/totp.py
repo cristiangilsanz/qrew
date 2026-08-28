@@ -1,3 +1,4 @@
+# defines the request and response schemas for totp setup and verification
 from pydantic import BaseModel, Field
 
 

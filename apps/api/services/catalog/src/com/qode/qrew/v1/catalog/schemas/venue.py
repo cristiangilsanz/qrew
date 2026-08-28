@@ -1,3 +1,4 @@
+# defines the request and response schemas for venues
 import uuid
 from datetime import datetime
 from decimal import Decimal

@@ -1,3 +1,4 @@
+# entry point that starts the audit background worker
 import asyncio
 
 import structlog
@@ -11,6 +12,7 @@ from com.qode.qrew.v1.audit.worker.events import run_audit_event_subscriber
 logger = structlog.get_logger(__name__)
 
 
+# ensures the genesis event exists and starts the nats subscribers
 async def main() -> None:
     await logger.ainfo("audit_worker.startup")
     await AuditService().ensure_genesis()
@@ -22,6 +24,7 @@ async def main() -> None:
     )
 
 
+# runs the worker main coroutine until it stops
 def run() -> None:
     asyncio.run(main())
 

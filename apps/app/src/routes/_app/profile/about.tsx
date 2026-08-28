@@ -1,3 +1,4 @@
+// implements about
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight, FileText, Shield, Tag } from 'lucide-react'
 import { type ReactNode } from 'react'
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/_app/profile/about')({
 
 const APP_VERSION = '0.1.0'
 
+// renders the static row component
 function StaticRow({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 px-4 py-4">
@@ -23,6 +25,7 @@ function StaticRow({ icon, label, value }: { icon: ReactNode; label: string; val
   )
 }
 
+// renders the link row component
 function LinkRow({ icon, label, to }: { icon: ReactNode; label: string; to: string }) {
   return (
     <Link to={to} className="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-white/5">
@@ -35,6 +38,7 @@ function LinkRow({ icon, label, to }: { icon: ReactNode; label: string; to: stri
   )
 }
 
+// renders the about page component
 function AboutPage() {
   const { t } = useTranslation()
   const iconClass = 'h-4 w-4 text-muted-foreground'

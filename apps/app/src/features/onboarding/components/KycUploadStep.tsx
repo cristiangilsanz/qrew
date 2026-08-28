@@ -1,3 +1,4 @@
+// renders the kyc upload step component
 import { Upload } from 'lucide-react'
 import { type ChangeEvent, type FormEvent, type KeyboardEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -11,6 +12,7 @@ interface Props {
   onSuccess: (data: KycUploadResponse) => void
 }
 
+// renders the kyc upload step component
 export function KycUploadStep({ onSuccess }: Props) {
   const { t } = useTranslation()
   const [file, setFile] = useState<File | null>(null)
@@ -18,6 +20,7 @@ export function KycUploadStep({ onSuccess }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const upload = useKycUpload(onSuccess)
 
+  // handles handle file change
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0]
     if (!selected) return
@@ -29,11 +32,13 @@ export function KycUploadStep({ onSuccess }: Props) {
     }
   }
 
+  // handles handle submit
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (file) upload.mutate(file)
   }
 
+  // handles handle dropzone key down
   const handleDropzoneKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()

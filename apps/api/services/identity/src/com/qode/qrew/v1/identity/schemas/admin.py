@@ -1,3 +1,4 @@
+# defines the request and response schemas for the admin console
 import enum
 import uuid
 from datetime import datetime

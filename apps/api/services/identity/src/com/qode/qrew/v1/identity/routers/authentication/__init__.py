@@ -1,3 +1,4 @@
+# assembles the authentication routers under a common prefix
 from fastapi import APIRouter
 
 from ._deps import (

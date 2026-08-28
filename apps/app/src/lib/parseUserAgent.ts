@@ -1,3 +1,4 @@
+// implements parse user agent
 export type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
 export interface ParsedUA {
@@ -7,6 +8,7 @@ export interface ParsedUA {
   label: string
 }
 
+// implements parse user agent
 export function parseUserAgent(ua: string | null): ParsedUA {
   if (!ua)
     return {
@@ -23,6 +25,7 @@ export function parseUserAgent(ua: string | null): ParsedUA {
   return { browser, os, deviceType, label: `${browser} on ${os}` }
 }
 
+// implements detect browser
 function detectBrowser(ua: string): string {
   if (/Edg\//.test(ua)) return 'Edge'
   if (/OPR\/|Opera\//.test(ua)) return 'Opera'
@@ -33,6 +36,7 @@ function detectBrowser(ua: string): string {
   return 'Browser'
 }
 
+// implements detect os
 function detectOS(ua: string): string {
   if (/iPhone/.test(ua)) return 'iPhone'
   if (/iPad/.test(ua)) return 'iPad'
@@ -43,6 +47,7 @@ function detectOS(ua: string): string {
   return 'Unknown OS'
 }
 
+// implements detect device type
 function detectDeviceType(ua: string): DeviceType {
   if (/iPad/.test(ua)) return 'tablet'
   if (/iPhone|Android.*Mobile|Mobile/.test(ua)) return 'mobile'

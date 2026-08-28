@@ -1,3 +1,4 @@
+# defines the lua script that implements a sliding window rate limit
 LUA_SCRIPT = """
 local key = KEYS[1]
 local now_ms = tonumber(ARGV[1])

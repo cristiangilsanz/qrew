@@ -1,3 +1,4 @@
+# tests reservation
 import uuid
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -24,6 +25,7 @@ _PATCH_CONSUME_TOKEN = (
 _PATCH_SETTINGS = "com.qode.qrew.v1.sales.services.application.reservation.settings"
 
 
+# handles make redlock
 def _make_redlock() -> MagicMock:
     cm = MagicMock()
     cm.__aenter__ = AsyncMock(return_value=None)
@@ -31,6 +33,7 @@ def _make_redlock() -> MagicMock:
     return cm
 
 
+# handles make fake settings
 def _make_fake_settings() -> MagicMock:
     s = MagicMock()
     s.redis_url = "redis://localhost:6379"
@@ -38,18 +41,22 @@ def _make_fake_settings() -> MagicMock:
     return s
 
 
+# handles allow
 def _allow() -> FraudEvaluation:
     return FraudEvaluation(score=0, decision=FraudDecision.allow, signals=[])
 
 
+# handles review
 def _review() -> FraudEvaluation:
     return FraudEvaluation(score=50, decision=FraudDecision.review, signals=[])
 
 
+# handles block
 def _block() -> FraudEvaluation:
     return FraudEvaluation(score=90, decision=FraudDecision.block, signals=[])
 
 
+# build a ReservationService with fully mocked dependencies
 def _make_service(
     *,
     reservation: object = None,
@@ -57,10 +64,6 @@ def _make_service(
     inventory: object = None,
     held: int = 0,
 ) -> tuple[ReservationService, MagicMock]:
-    """Build a ReservationService with fully mocked dependencies.
-
-    session.get() is used by _lock_inventory_nowait — pass `inventory` to control its return value.
-    """
     session = MagicMock()
     session.get = AsyncMock(return_value=inventory)
     session.flush = AsyncMock()
@@ -90,6 +93,7 @@ def _make_service(
 
 
 class TestReservationServiceReserve:
+    # verifies that raises when quantity less than one
     async def test_raises_when_quantity_less_than_one(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -107,6 +111,7 @@ class TestReservationServiceReserve:
                 quantity=0,
             )
 
+    # verifies that raises when fraud blocked
     async def test_raises_when_fraud_blocked(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -125,6 +130,7 @@ class TestReservationServiceReserve:
                 quantity=1,
             )
 
+    # verifies that raises when invalid reservation window token
     async def test_raises_when_invalid_reservation_window_token(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -146,6 +152,7 @@ class TestReservationServiceReserve:
                 reservation_window_token="bad",
             )
 
+    # verifies that raises when token for different event
     async def test_raises_when_token_for_different_event(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -167,6 +174,7 @@ class TestReservationServiceReserve:
                 reservation_window_token="tok",
             )
 
+    # verifies that raises when event not found
     async def test_raises_when_event_not_found(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -186,6 +194,7 @@ class TestReservationServiceReserve:
                 quantity=1,
             )
 
+    # verifies that raises when event not published
     async def test_raises_when_event_not_published(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -206,6 +215,7 @@ class TestReservationServiceReserve:
                 quantity=1,
             )
 
+    # verifies that raises when quantity exceeds per user max
     async def test_raises_when_quantity_exceeds_per_user_max(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -226,6 +236,7 @@ class TestReservationServiceReserve:
                 quantity=5,
             )
 
+    # verifies that raises when sale window not configured
     async def test_raises_when_sale_window_not_configured(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -248,6 +259,7 @@ class TestReservationServiceReserve:
                 quantity=1,
             )
 
+    # verifies that raises when sale window closed
     async def test_raises_when_sale_window_closed(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -273,6 +285,7 @@ class TestReservationServiceReserve:
                 quantity=1,
             )
 
+    # verifies that raises when queue required and no token
     async def test_raises_when_queue_required_and_no_token(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -294,6 +307,7 @@ class TestReservationServiceReserve:
                 reservation_window_token=None,
             )
 
+    # verifies that raises when no capacity
     async def test_raises_when_no_capacity(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -320,6 +334,7 @@ class TestReservationServiceReserve:
                 quantity=2,
             )
 
+    # verifies that raises when user held plus new exceeds limit
     async def test_raises_when_user_held_plus_new_exceeds_limit(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -341,6 +356,7 @@ class TestReservationServiceReserve:
                 quantity=2,
             )
 
+    # verifies that happy path creates reservation
     async def test_happy_path_creates_reservation(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -369,6 +385,7 @@ class TestReservationServiceReserve:
         assert inventory.reserved_count == 2
         session.commit.assert_awaited()
 
+    # verifies that review flag set when fraud review
     async def test_review_flag_set_when_fraud_review(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -393,11 +410,13 @@ class TestReservationServiceReserve:
 
 
 class TestReservationServiceCancel:
+    # verifies that raises when reservation not found
     async def test_raises_when_reservation_not_found(self, user_id: uuid.UUID) -> None:
         svc, _ = _make_service(reservation=None)
         with pytest.raises(ReservationError, match="not found"):
             await svc.cancel(actor_id=user_id, reservation_id=uuid.uuid4())
 
+    # verifies that raises when owned by other
     async def test_raises_when_owned_by_other(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -408,6 +427,7 @@ class TestReservationServiceCancel:
         with pytest.raises(ReservationError, match="not found"):
             await svc.cancel(actor_id=user_id, reservation_id=reservation.id)
 
+    # verifies that returns early when already cancelled
     async def test_returns_early_when_already_cancelled(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -422,6 +442,7 @@ class TestReservationServiceCancel:
         assert result is reservation
         session.commit.assert_not_awaited()
 
+    # verifies that returns early when expired
     async def test_returns_early_when_expired(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -436,6 +457,7 @@ class TestReservationServiceCancel:
         assert result is reservation
         session.commit.assert_not_awaited()
 
+    # verifies that raises when paid
     async def test_raises_when_paid(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -449,6 +471,7 @@ class TestReservationServiceCancel:
         with pytest.raises(ReservationError, match="refunded"):
             await svc.cancel(actor_id=user_id, reservation_id=reservation.id)
 
+    # verifies that cancels and restores inventory
     async def test_cancels_and_restores_inventory(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -462,7 +485,6 @@ class TestReservationServiceCancel:
         inventory = make_inventory(
             ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=10
         )
-        # session.get returns inventory for _lock_inventory_nowait
         svc, session = _make_service(reservation=reservation, inventory=inventory)
         with (
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
@@ -475,11 +497,13 @@ class TestReservationServiceCancel:
 
 
 class TestReservationServiceGetForUser:
+    # verifies that raises when not found
     async def test_raises_when_not_found(self, user_id: uuid.UUID) -> None:
         svc, _ = _make_service(reservation=None)
         with pytest.raises(ReservationError, match="not found"):
             await svc.get_for_user(actor_id=user_id, reservation_id=uuid.uuid4())
 
+    # verifies that raises when owned by other
     async def test_raises_when_owned_by_other(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -490,6 +514,7 @@ class TestReservationServiceGetForUser:
         with pytest.raises(ReservationError, match="not found"):
             await svc.get_for_user(actor_id=user_id, reservation_id=reservation.id)
 
+    # verifies that returns reservation for owner
     async def test_returns_reservation_for_owner(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:

@@ -1,3 +1,4 @@
+// provides use scanner
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { scannerApi } from '@/features/scanner/api'
@@ -11,7 +12,6 @@ export type ScanResult = {
 
 export type ScanPhase = 'init' | 'scanning' | 'result' | 'error'
 
-// BarcodeDetector is not in lib.dom.d.ts yet
 interface BarcodeDetector {
   detect(image: ImageBitmapSource): Promise<Array<{ rawValue: string }>>
 }
@@ -27,6 +27,7 @@ interface UseScannerOptions {
   notSupportedMessage: string
 }
 
+// provides use scanner
 export function useScanner({ eventId, eventName, notSupportedMessage }: UseScannerOptions) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -40,6 +41,7 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
   const [errorMsg, setErrorMsg] = useState('')
   const [scanCount, setScanCount] = useState(0)
 
+  // implements stop camera
   const stopCamera = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
@@ -47,11 +49,13 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
 
   useEffect(() => () => stopCamera(), [stopCamera])
 
+  // implements start detect loop
   function startDetectLoop() {
     if (!detectorRef.current || !videoRef.current) return
     const detector = detectorRef.current
     const video = videoRef.current
 
+    // implements tick
     async function tick() {
       if (processingRef.current) return
       if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
@@ -70,6 +74,7 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
     rafRef.current = requestAnimationFrame(tick)
   }
 
+  // handles handle scan
   const handleScan = useCallback(
     async (raw: string) => {
       if (processingRef.current || !scannerTokenRef.current) return
@@ -106,6 +111,7 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
     [],
   )
 
+  // implements start scanning
   async function startScanning() {
     try {
       const tok = await scannerApi.createForEvent(eventId, `${eventName} scanner`)

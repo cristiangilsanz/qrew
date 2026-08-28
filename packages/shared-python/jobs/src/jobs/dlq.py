@@ -1,3 +1,4 @@
+# parks a job that exhausted its retries in the dead letter queue
 import json
 import traceback
 from datetime import UTC, datetime
@@ -6,10 +7,12 @@ from typing import Any
 import redis.asyncio as aioredis
 
 
+# builds the redis key for a job's dead letter queue
 def dlq_key(job_name: str) -> str:
     return f"dlq:{job_name}"
 
 
+# records a failed job's payload and traceback in the dead letter queue
 async def push_to_dlq(
     redis_client: aioredis.Redis,  # type: ignore[type-arg]
     *,
@@ -18,7 +21,6 @@ async def push_to_dlq(
     payload: dict[str, Any],
     error: BaseException,
 ) -> None:
-    """Records a job that exhausted its retry budget into the dead-letter queue."""
     entry = {
         "job_id": job_id,
         "job_name": job_name,

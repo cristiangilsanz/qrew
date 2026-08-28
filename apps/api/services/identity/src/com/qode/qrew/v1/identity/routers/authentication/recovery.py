@@ -1,3 +1,4 @@
+# exposes the endpoints that recover an account with a national identity document
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
@@ -23,16 +24,18 @@ router = APIRouter(prefix="/recovery")
 
 _MAX_FILE_BYTES = 10 * 1024 * 1024
 _ALLOWED_MAGIC = [
-    b"\xff\xd8\xff",  # JPEG
-    b"\x89PNG\r\n\x1a\n",  # PNG
-    b"%PDF-",  # PDF
+    b"\xff\xd8\xff",
+    b"\x89PNG\r\n\x1a\n",
+    b"%PDF-",
 ]
 
 
+# checks that an uploaded file matches an accepted document type
 def _is_allowed_file(content: bytes) -> bool:
     return any(content.startswith(magic) for magic in _ALLOWED_MAGIC)
 
 
+# verifies a national identity document and starts account recovery
 @router.post(
     "/begin",
     response_model=RecoveryBeginResponse,
@@ -46,7 +49,6 @@ async def recovery_begin(
     document: Annotated[UploadFile, File()],
     service: RecoveryService = Depends(get_recovery_service),
 ) -> RecoveryBeginResponse:
-    """Begin account recovery."""
     content = await document.read()
     if len(content) > _MAX_FILE_BYTES:
         raise HTTPException(
@@ -68,6 +70,7 @@ async def recovery_begin(
     )
 
 
+# completes account recovery by registering a new passkey
 @router.post(
     "/complete",
     response_model=RecoveryCompleteResponse,
@@ -81,7 +84,6 @@ async def recovery_complete(
     current_user: User = Depends(get_recovery_user),
     service: RecoveryService = Depends(get_recovery_service),
 ) -> RecoveryCompleteResponse:
-    """Complete account recovery."""
     try:
         await service.complete(current_user, body)
         return RecoveryCompleteResponse(message="Account recovery complete.")

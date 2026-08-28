@@ -1,3 +1,4 @@
+// renders the ticket type list component
 import { AnimatePresence, motion } from 'framer-motion'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -15,6 +16,7 @@ interface Props {
   eventStatus?: 'draft' | 'published' | 'ongoing' | 'cancelled'
 }
 
+// renders the ticket type list component
 export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
   const { t } = useTranslation()
   const { data, isLoading } = useOrgTicketTypes(eventId)
@@ -58,12 +60,10 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
             onClose={() => setEditingId(null)}
           />
         ) : (
-          /* Ticket-shaped card — white background with top/bottom notch semicircles */
           <div
             key={tt.id}
             className="relative flex overflow-hidden rounded-2xl bg-white text-gray-900 shadow-sm"
           >
-            {/* Notch semicircles */}
             <div
               className="absolute top-0 z-10 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full"
               style={{ left: 'calc(100% - 5rem)', backgroundColor: 'hsl(0, 0%, 10%)' }}
@@ -73,7 +73,6 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
               style={{ left: 'calc(100% - 5rem)', backgroundColor: 'hsl(0, 0%, 10%)' }}
             />
 
-            {/* Left section: info + action buttons */}
             <div className="flex min-w-0 flex-1 items-center gap-2 py-6 pr-3 pl-5">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold capitalize">{tt.name}</p>
@@ -104,10 +103,8 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
               )}
             </div>
 
-            {/* Dashed vertical separator */}
             <div className="my-4 border-l border-dashed border-gray-400" />
 
-            {/* Price column */}
             <div className="flex w-20 shrink-0 flex-col items-center justify-center px-2 py-6">
               {tt.price_cents === 0 ? (
                 <p className="text-xs font-semibold text-green-600">
@@ -126,7 +123,6 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
         ),
       )}
 
-      {/* Delete confirmation modal */}
       <AnimatePresence>
         {confirmDeleteId && (
           <motion.div
@@ -183,7 +179,6 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Add ticket type */}
       {canAdd &&
         (showAdd ? (
           <AddTicketTypeForm eventId={eventId} onClose={() => setShowAdd(false)} />

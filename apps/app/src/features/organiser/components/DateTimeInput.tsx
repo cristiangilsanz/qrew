@@ -1,13 +1,16 @@
+// renders the date time input component
 interface Props {
   value: string
   onChange: (value: string) => void
 }
 
+// implements to date part
 function toDatePart(iso: string): string {
   if (!iso) return ''
   return iso.slice(0, 10)
 }
 
+// implements to time part
 function toTimePart(iso: string): string {
   if (!iso) return ''
 
@@ -15,11 +18,13 @@ function toTimePart(iso: string): string {
   return t.length === 5 ? t : ''
 }
 
+// implements combine
 function combine(date: string, time: string): string {
   if (!date) return ''
   return `${date}T${time || '00:00'}`
 }
 
+// renders the date time input component
 export function DateTimeInput({ value, onChange }: Props) {
   const datePart = toDatePart(value)
   const timePart = toTimePart(value)

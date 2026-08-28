@@ -1,3 +1,4 @@
+# assembles the entry service routers under a common prefix
 from fastapi import APIRouter
 
 from com.qode.qrew.v1.entry.routers.entry import entry_router, events_router

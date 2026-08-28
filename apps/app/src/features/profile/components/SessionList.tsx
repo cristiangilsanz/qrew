@@ -1,3 +1,4 @@
+// renders the session list component
 import { Monitor, Smartphone, Tablet, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -11,6 +12,7 @@ import { useRevokeAllSessions } from '../hooks/useRevokeAllSessions'
 import { useRevokeSession } from '../hooks/useRevokeSession'
 import { useSessions } from '../hooks/useSessions'
 
+// renders the device icon component
 function DeviceIcon({ type }: { type: 'mobile' | 'tablet' | 'desktop' }) {
   const cls = 'text-muted-foreground h-4 w-4 shrink-0'
   if (type === 'mobile') return <Smartphone className={cls} />
@@ -18,6 +20,7 @@ function DeviceIcon({ type }: { type: 'mobile' | 'tablet' | 'desktop' }) {
   return <Monitor className={cls} />
 }
 
+// renders the session list component
 export function SessionList() {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useSessions()

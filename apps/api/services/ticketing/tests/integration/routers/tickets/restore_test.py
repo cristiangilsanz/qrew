@@ -1,3 +1,4 @@
+# tests restore
 import uuid
 from datetime import UTC, datetime
 
@@ -7,6 +8,7 @@ from sqlalchemy import text
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# handles seed on sale ticket
 async def _seed_on_sale_ticket(
     session_factory,
     *,
@@ -33,6 +35,7 @@ async def _seed_on_sale_ticket(
     return ticket_id
 
 
+# handles seed device
 async def _seed_device(session_factory, *, device_id: uuid.UUID, user_id: uuid.UUID) -> None:
     now = datetime.now(UTC)
     async with session_factory() as session, session.begin():
@@ -46,6 +49,7 @@ async def _seed_device(session_factory, *, device_id: uuid.UUID, user_id: uuid.U
         )
 
 
+# verifies that restore frozen ticket success
 async def test_restore_frozen_ticket_success(client, test_session_factory, make_auth_headers):
     user_id = uuid.uuid4()
     old_device_id = uuid.uuid4()
@@ -66,12 +70,14 @@ async def test_restore_frozen_ticket_success(client, test_session_factory, make_
     assert body["state"] == "issued"
 
 
+# verifies that restore ticket no auth
 async def test_restore_ticket_no_auth(client):
     response = await client.post(f"/v1/tickets/{uuid.uuid4()}/restore")
 
     assert response.status_code == 401
 
 
+# verifies that restore ticket not found
 async def test_restore_ticket_not_found(client, make_auth_headers):
     user_id = uuid.uuid4()
     device_id = uuid.uuid4()

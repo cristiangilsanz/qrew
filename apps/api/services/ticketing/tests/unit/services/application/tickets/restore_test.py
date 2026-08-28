@@ -1,3 +1,4 @@
+# tests restore
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Generator
@@ -28,20 +29,22 @@ _FAKE_SETTINGS = type(
 )()
 
 
+# provides fake settings
 @pytest.fixture
 def fake_settings() -> Generator[None, None, None]:
     with patch(_PATCH_SETTINGS, _FAKE_SETTINGS):
         yield
 
 
+# a last_asserted_at value that is within the reassertion window right now
 @pytest.fixture
 def fresh_asserted_at() -> datetime:
-    """A last_asserted_at value that is within the reassertion window right now."""
     from datetime import datetime
 
     return datetime.now(UTC)
 
 
+# handles make db
 def _make_db(
     ticket: object = None,
     device: object = None,
@@ -49,6 +52,7 @@ def _make_db(
     from com.qode.qrew.v1.ticketing.models.projections import DeviceContext
     from com.qode.qrew.v1.ticketing.models.ticket import Ticket
 
+    # handles get
     async def _get(model: type, pk: object) -> object:
         if model is Ticket:
             return ticket
@@ -63,6 +67,7 @@ def _make_db(
 
 
 class TestRestoreFrozenTicket:
+    # verifies that raises when ticket not found
     async def test_raises_when_ticket_not_found(
         self,
         fake_settings: None,
@@ -82,6 +87,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when ticket owned by other
     async def test_raises_when_ticket_owned_by_other(
         self,
         fake_settings: None,
@@ -102,6 +108,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when ticket not frozen
     async def test_raises_when_ticket_not_frozen(
         self,
         fake_settings: None,
@@ -122,6 +129,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when no device in session
     async def test_raises_when_no_device_in_session(
         self,
         fake_settings: None,
@@ -141,6 +149,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when same device as bound
     async def test_raises_when_same_device_as_bound(
         self,
         fake_settings: None,
@@ -163,6 +172,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when no reassertion
     async def test_raises_when_no_reassertion(
         self,
         fake_settings: None,
@@ -182,6 +192,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when reassertion expired
     async def test_raises_when_reassertion_expired(
         self,
         fake_settings: None,
@@ -203,6 +214,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when device not found
     async def test_raises_when_device_not_found(
         self,
         fake_settings: None,
@@ -223,6 +235,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when device owned by other
     async def test_raises_when_device_owned_by_other(
         self,
         fake_settings: None,
@@ -244,6 +257,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when device revoked
     async def test_raises_when_device_revoked(
         self,
         fake_settings: None,
@@ -265,6 +279,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when device not attested
     async def test_raises_when_device_not_attested(
         self,
         fake_settings: None,
@@ -286,6 +301,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that raises when attestation stale
     async def test_raises_when_attestation_stale(
         self,
         fake_settings: None,
@@ -310,6 +326,7 @@ class TestRestoreFrozenTicket:
                 audit=audit,
             )
 
+    # verifies that happy path transitions and rebinds
     async def test_happy_path_transitions_and_rebinds(
         self,
         fake_settings: None,
@@ -335,6 +352,7 @@ class TestRestoreFrozenTicket:
         assert result is ticket
         assert ticket.bound_device_id == device_id
 
+    # verifies that audit failure does not raise
     async def test_audit_failure_does_not_raise(
         self,
         fake_settings: None,

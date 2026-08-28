@@ -1,3 +1,4 @@
+# signs and verifies the urls used to upload and download storage objects
 import hashlib
 import hmac
 import time
@@ -17,11 +18,13 @@ class SignedUrl:
     content_type: str | None
 
 
+# computes the signature that binds a request to its key and expiry
 def _digest(secret: str, method: str, key: str, content_type: str, expires_at: int) -> str:
     payload = f"{method}|{key}|{content_type}|{expires_at}".encode()
     return hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
 
 
+# signs a request and returns its expiry and signature
 def sign(
     *,
     secret: str,
@@ -31,13 +34,13 @@ def sign(
     ttl_seconds: int,
     now: int | None = None,
 ) -> tuple[int, str]:
-    """Produce an expiry and HMAC for a signed URL."""
     issued_at = now if now is not None else int(time.time())
     expires_at = issued_at + ttl_seconds
     signature = _digest(secret, method.upper(), key, content_type, expires_at)
     return expires_at, signature
 
 
+# verifies a request's signature and rejects it once it has expired
 def verify(
     *,
     secret: str,
@@ -48,7 +51,6 @@ def verify(
     signature: str,
     now: int | None = None,
 ) -> None:
-    """Validate the signature and expiry of a signed URL."""
     current = now if now is not None else int(time.time())
     if expires_at < current:
         raise SignatureExpiredError("signed url expired")

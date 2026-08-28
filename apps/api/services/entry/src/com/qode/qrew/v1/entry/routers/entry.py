@@ -1,3 +1,4 @@
+# exposes the endpoints that validate a ticket at the gate and report entry stats
 import uuid
 from datetime import datetime
 from typing import Annotated
@@ -17,8 +18,8 @@ from com.qode.qrew.v1.entry.core.dependencies import (
     require_event_member,
 )
 from com.qode.qrew.v1.entry.core.errors import EventNotFoundError, NotEventMemberError
+from com.qode.qrew.v1.entry.core.principals import AuthenticatedUser
 from com.qode.qrew.v1.entry.core.utils.jwt import decode_scanner_token
-from com.qode.qrew.v1.entry.models.projections import User
 from com.qode.qrew.v1.entry.models.scanner import Scanner
 from com.qode.qrew.v1.entry.schemas.entry.entry import (
     EntryValidateRequest,
@@ -36,10 +37,12 @@ events_router = APIRouter(prefix="/events", tags=["entry"])
 _bearer = HTTPBearer(auto_error=True)
 
 
+# builds an audit service for a request
 def _audit_service() -> AuditService:
     return AuditService()
 
 
+# resolves the venue and event a scanner token is scoped to
 def _claims_or_401(token: str) -> tuple[uuid.UUID | None, uuid.UUID]:
     try:
         payload = decode_scanner_token(token)
@@ -66,6 +69,7 @@ def _claims_or_401(token: str) -> tuple[uuid.UUID | None, uuid.UUID]:
     return event_id, venue_id
 
 
+# validates a ticket qr against the scanner's scope
 @entry_router.post(
     "/validate",
     response_model=EntryValidateResponse,
@@ -102,9 +106,7 @@ async def validate_entry_endpoint(
     )
 
 
-# Entry statistics
-
-
+# returns the entry rollup for an event to a member of its organisation
 @events_router.get(
     "/{event_id}/entry-stats",
     response_model=EntryStatsResponse,
@@ -116,13 +118,13 @@ async def get_entry_stats(
     request: Request,
     event_id: uuid.UUID,
     since: datetime | None = Query(default=None),
-    current_user: User = Depends(get_current_user),
+    current_user: AuthenticatedUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     redis: Annotated[aioredis.Redis, Depends(get_redis)] = ...,  # type: ignore[type-arg, assignment]
 ) -> EntryStatsResponse:
     del request
     try:
-        await require_event_member(db, event_id, current_user.id)
+        await require_event_member(event_id, current_user.id)
     except EventNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

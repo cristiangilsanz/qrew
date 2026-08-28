@@ -1,3 +1,4 @@
+# defines the response schemas for listing and revoking sessions
 from datetime import datetime
 
 from pydantic import BaseModel

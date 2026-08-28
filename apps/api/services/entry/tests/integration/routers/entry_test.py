@@ -1,3 +1,4 @@
+# tests entry
 import uuid
 from unittest.mock import patch
 
@@ -7,18 +8,18 @@ from tests.integration.conftest import (
     _noop_redlock,
     _noop_ticketing_use,
     make_access_token,
+    make_principal,
     make_scanner_token,
     make_ticket_qr_jwt,
-    seed_event,
-    seed_org_member,
+    membership,
     seed_scanner,
     seed_ticket_context,
-    seed_user,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# provides base ids
 @pytest.fixture
 async def base_ids():
     return {
@@ -28,17 +29,13 @@ async def base_ids():
     }
 
 
-# ---------------------------------------------------------------------------
-# POST /v1/entry/validate
-# ---------------------------------------------------------------------------
-
-
+# verifies that validate entry success
 async def test_validate_entry_success(client, db, fake_redis, base_ids):
     event_id = base_ids["event_id"]
     venue_id = base_ids["venue_id"]
     owner_user_id = base_ids["owner_user_id"]
 
-    user = await seed_user(db)
+    user = make_principal()
     scanner = await seed_scanner(db, created_by=user.id, venue_id=venue_id)
     tc = await seed_ticket_context(
         db, event_id=event_id, venue_id=venue_id, owner_user_id=owner_user_id
@@ -70,6 +67,7 @@ async def test_validate_entry_success(client, db, fake_redis, base_ids):
     assert data["ticket_id"] == str(tc.ticket_id)
 
 
+# verifies that validate entry no auth
 async def test_validate_entry_no_auth(client):
     response = await client.post(
         "/v1/entry/validate",
@@ -78,12 +76,13 @@ async def test_validate_entry_no_auth(client):
     assert response.status_code == 401
 
 
+# verifies that validate entry replay
 async def test_validate_entry_replay(client, db, fake_redis, base_ids):
     event_id = base_ids["event_id"]
     venue_id = base_ids["venue_id"]
     owner_user_id = base_ids["owner_user_id"]
 
-    user = await seed_user(db)
+    user = make_principal()
     scanner = await seed_scanner(db, created_by=user.id, venue_id=venue_id)
     tc = await seed_ticket_context(
         db, event_id=event_id, venue_id=venue_id, owner_user_id=owner_user_id
@@ -119,12 +118,13 @@ async def test_validate_entry_replay(client, db, fake_redis, base_ids):
     assert r2.json()["reason"] == "replay"
 
 
+# verifies that validate entry ticket used state
 async def test_validate_entry_ticket_used_state(client, db, fake_redis, base_ids):
     event_id = base_ids["event_id"]
     venue_id = base_ids["venue_id"]
     owner_user_id = base_ids["owner_user_id"]
 
-    user = await seed_user(db)
+    user = make_principal()
     scanner = await seed_scanner(db, created_by=user.id, venue_id=venue_id)
     tc = await seed_ticket_context(
         db,
@@ -159,55 +159,52 @@ async def test_validate_entry_ticket_used_state(client, db, fake_redis, base_ids
     assert data["reason"] == "state"
 
 
-# ---------------------------------------------------------------------------
-# GET /v1/events/{event_id}/entry-stats
-# ---------------------------------------------------------------------------
+# verifies that entry stats success
+async def test_entry_stats_success(client):
+    user = make_principal()
+    event_id = uuid.uuid4()
+    token = make_access_token(user.id, is_admin=user.is_admin)
 
-
-async def test_entry_stats_success(client, db):
-    org_id = uuid.uuid4()
-    user = await seed_user(db)
-    event = await seed_event(db, organisation_id=org_id)
-    await seed_org_member(db, organisation_id=org_id, user_id=user.id)
-
-    token = make_access_token(user.id)
-    response = await client.get(
-        f"/v1/events/{event.id}/entry-stats",
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    with membership(is_member=True):
+        response = await client.get(
+            f"/v1/events/{event_id}/entry-stats",
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     assert response.status_code == 200
     data = response.json()
-    assert data["event_id"] == str(event.id)
+    assert data["event_id"] == str(event_id)
     assert data["total_issued"] == 0
 
 
-async def test_entry_stats_not_member(client, db):
-    org_id = uuid.uuid4()
-    user = await seed_user(db)
-    other_user = await seed_user(db)
-    event = await seed_event(db, organisation_id=org_id)
-    await seed_org_member(db, organisation_id=org_id, user_id=other_user.id)
+# verifies that entry stats not member
+async def test_entry_stats_not_member(client):
+    user = make_principal()
+    token = make_access_token(user.id, is_admin=user.is_admin)
 
-    token = make_access_token(user.id)
-    response = await client.get(
-        f"/v1/events/{event.id}/entry-stats",
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    with membership(is_member=False):
+        response = await client.get(
+            f"/v1/events/{uuid.uuid4()}/entry-stats",
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     assert response.status_code == 403
 
 
+# verifies that entry stats no auth
 async def test_entry_stats_no_auth(client):
     response = await client.get(f"/v1/events/{uuid.uuid4()}/entry-stats")
     assert response.status_code == 401
 
 
-async def test_entry_stats_event_not_found(client, db):
-    user = await seed_user(db)
-    token = make_access_token(user.id)
-    response = await client.get(
-        f"/v1/events/{uuid.uuid4()}/entry-stats",
-        headers={"Authorization": f"Bearer {token}"},
-    )
+# verifies that entry stats event not found
+async def test_entry_stats_event_not_found(client):
+    user = make_principal()
+    token = make_access_token(user.id, is_admin=user.is_admin)
+
+    with membership(event_exists=False, is_member=False):
+        response = await client.get(
+            f"/v1/events/{uuid.uuid4()}/entry-stats",
+            headers={"Authorization": f"Bearer {token}"},
+        )
     assert response.status_code == 404

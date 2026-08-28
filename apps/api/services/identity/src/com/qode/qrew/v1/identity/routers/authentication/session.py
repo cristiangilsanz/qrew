@@ -1,3 +1,4 @@
+# exposes the endpoints that list and revoke a user's sessions
 from fastapi import APIRouter, Depends, Path, Request, status
 
 from pagination import Page
@@ -19,6 +20,7 @@ from ._deps import domain_error, get_session_service
 router = APIRouter(prefix="/sessions")
 
 
+# lists the caller's active sessions
 @router.get(
     "",
     response_model=Page[SessionResponse],
@@ -32,11 +34,11 @@ async def list_sessions(
     current_session: Session = Depends(get_current_session),
     service: SessionService = Depends(get_session_service),
 ) -> Page[SessionResponse]:
-    """List all active sessions for the current user."""
     sessions = await service.list_sessions(current_user.id, current_jti=current_session.jti)
     return Page[SessionResponse](items=sessions, next_cursor=None)
 
 
+# revokes one of the caller's sessions
 @router.delete(
     "/{jti}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -49,13 +51,13 @@ async def revoke_session(
     current_user: User = Depends(get_current_user),
     service: SessionService = Depends(get_session_service),
 ) -> None:
-    """Revoke a specific session."""
     try:
         await service.revoke_session(jti, current_user.id)
     except SessionError as exc:
         raise domain_error(exc.message, exc.field, status.HTTP_404_NOT_FOUND) from exc
 
 
+# revokes every session of the caller
 @router.post(
     "/revoke-all",
     response_model=RevokeAllResponse,
@@ -68,6 +70,5 @@ async def revoke_all_sessions(
     current_user: User = Depends(get_current_user),
     service: SessionService = Depends(get_session_service),
 ) -> RevokeAllResponse:
-    """Revoke all sessions for the current user."""
     await service.revoke_all(current_user.id)
     return RevokeAllResponse(message="All sessions have been revoked.")

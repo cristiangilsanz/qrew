@@ -1,3 +1,4 @@
+// tests back button
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -6,6 +7,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
+    // renders the link component
     Link: ({ children, to }: { children: unknown; to: string }) => <a href={to}>{children}</a>,
   }
 })

@@ -1,3 +1,4 @@
+// implements ticket id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -37,6 +38,7 @@ export const Route = createFileRoute('/_app/tickets/$ticketId')({
   component: TicketDetailPage,
 })
 
+// implements fmt
 function fmt(iso: string) {
   return new Date(iso).toLocaleString('en-GB', {
     day: 'numeric',
@@ -47,6 +49,7 @@ function fmt(iso: string) {
   })
 }
 
+// renders the ticket detail page component
 function TicketDetailPage() {
   const { ticketId } = Route.useParams()
   const { t } = useTranslation()
@@ -61,6 +64,7 @@ function TicketDetailPage() {
       return
     }
     if (saleCountdown <= 0) return
+    // implements timer
     const timer = setTimeout(() => setSaleCountdown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
   }, [saleConfirmOpen, saleCountdown])
@@ -83,13 +87,16 @@ function TicketDetailPage() {
   const { data: existingListing } = useMarketListing(ticketId, canListForResale)
 
   const listForResale = useMutation({
+    // implements mutation fn
     mutationFn: () => marketApi.listTicket(ticketId),
+    // handles on success
     onSuccess: () => {
       toast.success(t('tickets.toast.listSuccess'))
       void queryClient.invalidateQueries({ queryKey: ['market', 'listing', ticketId] })
       void queryClient.invalidateQueries({ queryKey: ['tickets'] })
       setTimeout(() => window.location.reload(), 300)
     },
+    // handles on error
     onError: () => toast.error(t('tickets.toast.listFailed')),
   })
 
@@ -111,9 +118,9 @@ function TicketDetailPage() {
 
   const imageUrl = getEventImageUrl(event?.image_url)
   const startDate = event?.starts_at ? new Date(event.starts_at) : null
+  // implements ticket type
   const ticketType = event?.ticket_types.find((tt) => tt.id === ticket.ticket_type_id)
 
-  // Build timeline
   type TLStatus = 'done' | 'pending' | 'error'
   interface TLItem {
     label: string
@@ -150,7 +157,6 @@ function TicketDetailPage() {
   } else if (ticket.state === 'reserved') {
     // Pending issuance
   } else {
-    // issued, scanning, redeemed, on_sale, flagged
     timeline.push({
       label: t('tickets.ticket.timeline.issued'),
       date: ticket.issued_at ? fmt(ticket.issued_at) : null,
@@ -185,7 +191,6 @@ function TicketDetailPage() {
 
       <div className="mx-auto max-w-sm rounded-[2.5rem] bg-neutral-800 p-5">
         <div className="overflow-hidden rounded-3xl bg-white shadow-2xl">
-          {/* Event image with name + venue overlaid at bottom center */}
           <div className="relative h-64 overflow-hidden rounded-t-3xl bg-black">
             <ImageWithSkeleton
               src={imageUrl}
@@ -208,7 +213,6 @@ function TicketDetailPage() {
             </div>
           </div>
 
-          {/* Holder strip */}
           {(ticket.holder_name || ticket.holder_dni || ticket.state === 'expired') && (
             <div className="px-5 pt-4 pb-3 text-center">
               <p className="text-base font-bold text-gray-800">
@@ -220,7 +224,6 @@ function TicketDetailPage() {
             </div>
           )}
 
-          {/* ID strip */}
           <div className="bg-white px-5 pt-3 pb-5">
             {ticketType && (
               <div className="mb-2 flex items-center justify-between">
@@ -240,7 +243,6 @@ function TicketDetailPage() {
             </div>
           </div>
 
-          {/* Info grid */}
           <div className="grid grid-cols-2 gap-px">
             <div className="flex flex-col items-center gap-1 px-4 py-4">
               <Calendar className="h-4 w-4 text-gray-400" />
@@ -271,7 +273,6 @@ function TicketDetailPage() {
             </div>
           </div>
 
-          {/* History */}
           <div className="mx-4 mt-4 mb-5 overflow-hidden rounded-2xl border border-gray-100">
             <button
               onClick={() => setTimelineOpen((o) => !o)}
@@ -329,7 +330,6 @@ function TicketDetailPage() {
             )}
           </div>
 
-          {/* Perforation */}
           <div className="relative mt-4 flex items-center">
             <div className="h-5 w-5 shrink-0 -translate-x-1/2 rounded-full bg-neutral-800 shadow-inner" />
             <div className="flex-1 border-t-2 border-dashed border-gray-200" />

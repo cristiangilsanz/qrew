@@ -1,3 +1,4 @@
+# reads and writes an event's ticket types
 import uuid
 
 from sqlalchemy import Select, select
@@ -7,9 +8,11 @@ from com.qode.qrew.v1.catalog.models.ticket_type import TicketType
 
 
 class TicketTypeRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads a ticket type by its identifier
     async def get_by_id(self, ticket_type_id: uuid.UUID) -> TicketType | None:
         result = await self._session.execute(
             select(TicketType).where(
@@ -19,6 +22,7 @@ class TicketTypeRepository:
         )
         return result.scalar_one_or_none()
 
+    # reads a ticket type by its event and name
     async def get_by_event_and_name(self, event_id: uuid.UUID, name: str) -> TicketType | None:
         result = await self._session.execute(
             select(TicketType).where(
@@ -29,15 +33,18 @@ class TicketTypeRepository:
         )
         return result.scalar_one_or_none()
 
+    # writes a new ticket type to the database
     async def insert(self, ticket_type: TicketType) -> TicketType:
         self._session.add(ticket_type)
         await self._session.flush()
         await self._session.refresh(ticket_type)
         return ticket_type
 
+    # flushes pending changes to the database
     async def flush(self) -> None:
         await self._session.flush()
 
+    # builds the query that lists an event's ticket types in order
     def list_for_event_query(self, event_id: uuid.UUID) -> Select[tuple[TicketType]]:
         return (
             select(TicketType)

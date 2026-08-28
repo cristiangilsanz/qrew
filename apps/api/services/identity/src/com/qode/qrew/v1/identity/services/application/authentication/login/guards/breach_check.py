@@ -1,3 +1,4 @@
+# checks a login password against known breaches and records the outcome
 import uuid
 
 import structlog
@@ -12,18 +13,17 @@ logger = structlog.get_logger(__name__)
 
 
 class PasswordBreachChecker:
-    """Flag passwords that appear in known breach data."""
-
+    # stores the audit service the checker uses
     def __init__(self, audit: AuditService) -> None:
         self._audit = audit
 
+    # checks a password against have i been pwned and records a match
     async def is_compromised(
         self,
         user_id: uuid.UUID,
         password: str,
         ip_address: str | None,
     ) -> bool:
-        """Check a password against known breach data and audit a hit."""
         try:
             compromised = await is_password_pwned(password)
         except Exception as exc:
@@ -35,8 +35,8 @@ class PasswordBreachChecker:
         await self._audit_safe(user_id, ip_address)
         return True
 
+    # records the compromised password without letting a failure interrupt the login
     async def _audit_safe(self, user_id: uuid.UUID, ip_address: str | None) -> None:
-        """Record the compromised-password audit event without raising."""
         try:
             await self._audit.record(
                 action=AuditAction.LOGIN_COMPROMISED_PASSWORD,

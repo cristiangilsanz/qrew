@@ -1,3 +1,4 @@
+# tests payment
 import uuid
 from unittest.mock import AsyncMock, patch
 
@@ -12,6 +13,7 @@ from com.qode.qrew.v1.payments.services.application.payment import _ReservationC
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# provides clean payments
 @pytest_asyncio.fixture(autouse=True)
 async def clean_payments(test_session_factory: async_sessionmaker[AsyncSession]) -> None:
     async with test_session_factory() as session, session.begin():
@@ -24,6 +26,7 @@ _WEBHOOK_URL = "/v1/payments/webhook"
 _VALID_CTX = _ReservationContext(amount_cents=2000, currency="EUR", is_valid=True)
 
 
+# handles patch sales
 def _patch_sales(ctx: _ReservationContext):
     return patch(
         "com.qode.qrew.v1.payments.services.application.payment._get_reservation_context",
@@ -31,6 +34,7 @@ def _patch_sales(ctx: _ReservationContext):
     )
 
 
+# verifies that initiate payment success
 @pytest.mark.integration
 async def test_initiate_payment_success(
     client: httpx.AsyncClient,
@@ -53,6 +57,7 @@ async def test_initiate_payment_success(
     mock_stripe.create_payment_intent.assert_called_once()
 
 
+# verifies that initiate payment no auth
 @pytest.mark.integration
 async def test_initiate_payment_no_auth(client: httpx.AsyncClient) -> None:
     reservation_id = uuid.uuid4()
@@ -60,6 +65,7 @@ async def test_initiate_payment_no_auth(client: httpx.AsyncClient) -> None:
     assert resp.status_code in (401, 403)
 
 
+# verifies that initiate payment reservation not found
 @pytest.mark.integration
 async def test_initiate_payment_reservation_not_found(
     client: httpx.AsyncClient,
@@ -77,6 +83,7 @@ async def test_initiate_payment_reservation_not_found(
     mock_stripe.create_payment_intent.assert_not_called()
 
 
+# verifies that initiate payment expired
 @pytest.mark.integration
 async def test_initiate_payment_expired(
     client: httpx.AsyncClient,
@@ -94,6 +101,7 @@ async def test_initiate_payment_expired(
     mock_stripe.create_payment_intent.assert_not_called()
 
 
+# verifies that initiate payment idempotent
 @pytest.mark.integration
 async def test_initiate_payment_idempotent(
     client: httpx.AsyncClient,
@@ -113,12 +121,14 @@ async def test_initiate_payment_idempotent(
     mock_stripe.create_payment_intent.assert_called_once()
 
 
+# verifies that webhook missing signature
 @pytest.mark.integration
 async def test_webhook_missing_signature(client: httpx.AsyncClient) -> None:
     resp = await client.post(_WEBHOOK_URL, content=b'{"id":"evt_1"}')
     assert resp.status_code == 400
 
 
+# verifies that webhook success event
 @pytest.mark.integration
 async def test_webhook_success_event(
     client: httpx.AsyncClient,
@@ -142,6 +152,7 @@ async def test_webhook_success_event(
     mock_stripe.verify_webhook.assert_called_once()
 
 
+# verifies that webhook refund event
 @pytest.mark.integration
 async def test_webhook_refund_event(
     client: httpx.AsyncClient,

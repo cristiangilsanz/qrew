@@ -1,3 +1,4 @@
+// renders the forgot password form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
@@ -27,12 +28,15 @@ const schema = z.object({
 
 type Values = z.infer<typeof schema>
 
+// renders the forgot password form component
 export function ForgotPasswordForm() {
   const { t } = useTranslation()
   const [sent, setSent] = useState(false)
 
   const mutation = useMutation({
+    // implements mutation fn
     mutationFn: (data: Values) => authApi.forgotPassword(data.email),
+    // handles on success
     onSuccess: () => setSent(true),
   })
 

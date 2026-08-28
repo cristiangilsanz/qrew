@@ -1,3 +1,4 @@
+# exposes the endpoints that list and read a user's tickets
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -16,6 +17,7 @@ _QR_ELIGIBLE_STATES = {"issued", "scanning"}
 _LIMIT_COUNTING_STATES = {"reserved", "issued", "scanning", "on_sale", "flagged"}
 
 
+# converts a ticket into its response including derived flags
 def _to_response(ticket: object) -> TicketResponse:
     from com.qode.qrew.v1.ticketing.models.ticket import Ticket
 
@@ -38,6 +40,7 @@ def _to_response(ticket: object) -> TicketResponse:
     )
 
 
+# lists every ticket the caller owns
 @router.get(
     "",
     response_model=list[TicketResponse],
@@ -55,6 +58,7 @@ async def list_tickets(
     return [_to_response(t) for t in tickets]
 
 
+# reads a single ticket the caller owns
 @router.get(
     "/{ticket_id}",
     response_model=TicketResponse,

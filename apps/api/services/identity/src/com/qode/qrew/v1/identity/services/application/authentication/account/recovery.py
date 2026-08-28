@@ -1,3 +1,4 @@
+# recovers an account by verifying a national identity document and a new passkey
 import hashlib
 import uuid
 from datetime import timedelta
@@ -49,12 +50,11 @@ _BLACKLIST_JTI_PREFIX = "blacklist:jti:"
 
 
 class RecoveryError(DomainError):
-    """Raised when an account recovery operation cannot be completed."""
+    pass
 
 
 class RecoveryService:
-    """Account recovery via national-ID verification and passkey re-enrolment."""
-
+    # stores the repositories redis client notifier ocr and audit service the service uses
     def __init__(
         self,
         user_repo: UserRepository,
@@ -73,8 +73,8 @@ class RecoveryService:
         self._audit = audit
         self._ocr = ocr
 
+    # verifies identity and starts registering a replacement passkey
     async def begin(self, email: str, document: bytes) -> tuple[str | None, str]:
-        """Begin account recovery by verifying identity from a document."""
         user = await self._verify_identity(email, document)
         if user is None:
             return None, ""
@@ -91,12 +91,12 @@ class RecoveryService:
         await self._audit_safe(AuditAction.RECOVERY_BEGIN, user.id)
         return token, webauthn.options_to_json(options)
 
+    # verifies the new passkey kills every session and replaces the old ones
     async def complete(
         self,
         user: User,
         request: PasskeyRegistrationCompleteRequest,
     ) -> None:
-        """Complete account recovery by registering a fresh passkey."""
         raw_challenge = await self._consume_challenge(user.id)
         verification = self._verify_attestation(raw_challenge, request)
         await self._kill_sessions(user.id)
@@ -105,8 +105,8 @@ class RecoveryService:
         await logger.ainfo("recovery_completed", user_id=str(user.id))
         await self._audit_safe(AuditAction.RECOVERY_COMPLETED, user.id)
 
+    # matches the document's national identity number against the account
     async def _verify_identity(self, email: str, document: bytes) -> User | None:
-        """Match the document holder to the account or audit a failure."""
         try:
             id_number = self._ocr.extract_national_id(document)
         except OcrError:
@@ -120,8 +120,8 @@ class RecoveryService:
             return None
         return user
 
+    # builds the webauthn options for the replacement passkey
     def _generate_registration_options(self, user: User) -> PublicKeyCredentialCreationOptions:
-        """Build WebAuthn registration options for the recovering user."""
         return webauthn.generate_registration_options(
             rp_id=settings.rp_id,
             rp_name=settings.rp_name,
@@ -133,8 +133,8 @@ class RecoveryService:
             ),
         )
 
+    # reads and deletes the pending registration challenge
     async def _consume_challenge(self, user_id: uuid.UUID) -> bytes:
-        """Pop and return the cached recovery challenge."""
         key = _CHALLENGE_PREFIX + str(user_id)
         raw_challenge: bytes | None = await self._redis.get(key)
         if raw_challenge is None:
@@ -142,12 +142,12 @@ class RecoveryService:
         await self._redis.delete(key)
         return raw_challenge
 
+    # verifies the webauthn registration response against the challenge
     def _verify_attestation(
         self,
         raw_challenge: bytes,
         request: PasskeyRegistrationCompleteRequest,
     ) -> VerifiedRegistration:
-        """Verify the passkey attestation submitted during recovery."""
         credential = RegistrationCredential(
             id=request.id,
             raw_id=base64url_to_bytes(request.raw_id),
@@ -173,17 +173,17 @@ class RecoveryService:
             )
             raise RecoveryError(msg) from exc
 
+    # revokes and blacklists every session of the account
     async def _kill_sessions(self, user_id: uuid.UUID) -> None:
-        """Revoke every active session for the recovering user."""
         jtis = await self._session_repo.delete_all_by_user_id(user_id)
         ttl = int(timedelta(days=settings.refresh_token_expire_days).total_seconds())
         for jti in jtis:
             await self._redis.setex(_BLACKLIST_JTI_PREFIX + jti, ttl, "1")
 
+    # replaces every existing passkey with the newly verified one
     async def _replace_passkey(
         self, user_id: uuid.UUID, verification: VerifiedRegistration
     ) -> None:
-        """Wipe existing passkeys and persist the freshly registered credential."""
         await self._passkey_repo.delete_all_by_user_id(user_id)
         await self._passkey_repo.create(
             PasskeyCredential(
@@ -196,11 +196,12 @@ class RecoveryService:
             )
         )
 
+    # notifies the user that their account was recovered
     async def _notify_recovery(self, user: User) -> None:
-        """Placeholder — account recovery notification removed."""
+        pass
 
+    # records why a recovery attempt failed
     async def _audit_failed(self, actor_id: uuid.UUID | None, reason: str) -> None:
-        """Record a recovery failure audit event."""
         await logger.awarning("recovery_failed", reason=reason)
         try:
             await self._audit.record(
@@ -215,8 +216,8 @@ class RecoveryService:
                 "audit_write_failed", action=AuditAction.RECOVERY_FAILED, error=repr(exc)
             )
 
+    # records a recovery audit event without letting a failure interrupt the caller
     async def _audit_safe(self, action: AuditAction, user_id: uuid.UUID) -> None:
-        """Record a successful recovery audit event without raising."""
         try:
             await self._audit.record(
                 action=action,

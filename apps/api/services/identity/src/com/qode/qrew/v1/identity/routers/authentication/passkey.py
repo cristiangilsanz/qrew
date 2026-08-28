@@ -1,8 +1,12 @@
+# exposes the endpoints that register authenticate reassert and manage passkeys
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from pagination import Page
+from middleware import client_ip
+
+from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.core.dependencies import (
     get_current_session,
     get_current_user,
@@ -41,6 +45,7 @@ from ._deps import (
 router = APIRouter(prefix="/passkeys")
 
 
+# starts registering a new passkey for the caller
 @router.post(
     "/register/begin",
     status_code=status.HTTP_200_OK,
@@ -52,11 +57,11 @@ async def passkey_register_begin(
     current_user: User = Depends(get_setup_or_full_user),
     service: PasskeyRegistrationService = Depends(get_passkey_registration_service),
 ) -> Response:
-    """Generate passkey registration options for the current user."""
     options_json = await service.begin(current_user)
     return Response(content=options_json, media_type="application/json")
 
 
+# completes registering a new passkey for the caller
 @router.post(
     "/register/complete",
     response_model=PasskeyRegistrationCompleteResponse,
@@ -70,7 +75,6 @@ async def passkey_register_complete(
     current_user: User = Depends(get_setup_or_full_user),
     service: PasskeyRegistrationService = Depends(get_passkey_registration_service),
 ) -> PasskeyRegistrationCompleteResponse:
-    """Complete passkey registration."""
     try:
         await service.complete(current_user, body)
         return PasskeyRegistrationCompleteResponse(message="Passkey registered successfully.")
@@ -78,6 +82,7 @@ async def passkey_register_complete(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# starts signing in with a passkey
 @router.post(
     "/authenticate/begin",
     status_code=status.HTTP_200_OK,
@@ -89,7 +94,6 @@ async def passkey_authenticate_begin(
     body: PasskeyAuthenticationBeginRequest,
     service: PasskeyAuthenticationService = Depends(get_passkey_authentication_service),
 ) -> Response:
-    """Generate passkey assertion options for an email address."""
     try:
         options_json = await service.begin(body.email)
         return Response(content=options_json, media_type="application/json")
@@ -97,6 +101,7 @@ async def passkey_authenticate_begin(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# completes signing in with a passkey
 @router.post(
     "/authenticate/complete",
     response_model=LoginResponse,
@@ -109,8 +114,7 @@ async def passkey_authenticate_complete(
     body: PasskeyAuthenticationCompleteRequest,
     service: PasskeyAuthenticationService = Depends(get_passkey_authentication_service),
 ) -> LoginResponse:
-    """Complete passkey authentication and return access tokens."""
-    ip_address = request.client.host if request.client else None
+    ip_address = client_ip(request, settings.trusted_proxy_ip)
     user_agent = request.headers.get("User-Agent")
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:
@@ -119,6 +123,7 @@ async def passkey_authenticate_complete(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# starts reasserting a passkey for the current session
 @router.post(
     "/assert/begin",
     response_model=PasskeyAssertBeginResponse,
@@ -132,7 +137,6 @@ async def passkey_assert_begin(
     current_session: Session = Depends(get_current_session),
     service: PasskeyReassertionService = Depends(get_passkey_reassertion_service),
 ) -> PasskeyAssertBeginResponse:
-    """Begin a passkey re-assertion for the current session."""
     try:
         options = await service.begin(current_user, current_session.jti)
         return PasskeyAssertBeginResponse(options=options)
@@ -140,6 +144,7 @@ async def passkey_assert_begin(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# completes a passkey reassertion and stamps the session
 @router.post(
     "/assert/complete",
     response_model=PasskeyAssertCompleteResponse,
@@ -154,7 +159,6 @@ async def passkey_assert_complete(
     current_session: Session = Depends(get_current_session),
     service: PasskeyReassertionService = Depends(get_passkey_reassertion_service),
 ) -> PasskeyAssertCompleteResponse:
-    """Complete a passkey re-assertion and stamp the session."""
     try:
         asserted_at = await service.complete(current_user, current_session, body)
         return PasskeyAssertCompleteResponse(asserted_at=asserted_at)
@@ -162,6 +166,7 @@ async def passkey_assert_complete(
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 
 
+# lists the caller's passkeys
 @router.get(
     "/",
     response_model=Page[PasskeyResponse],
@@ -174,11 +179,11 @@ async def list_passkeys(
     current_user: User = Depends(get_current_user),
     service: PasskeyManagementService = Depends(get_passkey_management_service),
 ) -> Page[PasskeyResponse]:
-    """List all passkeys for the current user."""
     listing = await service.list_passkeys(current_user.id)
     return Page[PasskeyResponse](items=listing.passkeys, next_cursor=None)
 
 
+# deletes one of the caller's passkeys
 @router.delete(
     "/{passkey_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -191,7 +196,6 @@ async def delete_passkey(
     current_user: User = Depends(get_current_user),
     service: PasskeyManagementService = Depends(get_passkey_management_service),
 ) -> None:
-    """Remove a passkey if it is not the user's last one."""
     try:
         pk_id = uuid.UUID(passkey_id)
     except ValueError as exc:
@@ -208,6 +212,7 @@ async def delete_passkey(
         raise domain_error(exc.message, exc.field, http_status) from exc
 
 
+# renames one of the caller's passkeys
 @router.patch(
     "/{passkey_id}",
     response_model=PasskeyResponse,
@@ -222,7 +227,6 @@ async def rename_passkey(
     current_user: User = Depends(get_current_user),
     service: PasskeyManagementService = Depends(get_passkey_management_service),
 ) -> PasskeyResponse:
-    """Rename a passkey."""
     try:
         pk_id = uuid.UUID(passkey_id)
     except ValueError as exc:

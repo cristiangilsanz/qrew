@@ -1,3 +1,4 @@
+# builds and verifies the webauthn assertions passkey flows exchange
 import uuid
 
 import structlog
@@ -32,28 +33,28 @@ ASSERT_CHALLENGE_PREFIX = "webauthn:assert:challenge:"
 
 
 class PasskeyError(DomainError):
-    """Raised when a passkey operation cannot be completed."""
+    pass
 
 
+# builds the redis key for a registration challenge
 def challenge_key(user_id: uuid.UUID) -> str:
-    """Return the Redis key for a pending registration challenge."""
     return f"{CHALLENGE_PREFIX}{user_id}"
 
 
+# builds the redis key for an authentication challenge
 def auth_challenge_key(user_id: uuid.UUID) -> str:
-    """Return the Redis key for a pending authentication challenge."""
     return f"{AUTH_CHALLENGE_PREFIX}{user_id}"
 
 
+# builds the redis key for a reassertion challenge
 def assert_challenge_key(session_jti: str) -> str:
-    """Return the Redis key for a pending re-assertion challenge."""
     return f"{ASSERT_CHALLENGE_PREFIX}{session_jti}"
 
 
+# builds the webauthn options offering an account's registered credentials
 def build_authentication_options(
     credentials: list[PasskeyCredential],
 ) -> PublicKeyCredentialRequestOptions:
-    """Generate WebAuthn assertion options for a user's credentials."""
     allowed = [
         PublicKeyCredentialDescriptor(
             id=c.credential_id,
@@ -68,10 +69,10 @@ def build_authentication_options(
     )
 
 
+# converts a request payload into a webauthn assertion credential
 def build_assertion_credential(
     request: PasskeyAuthenticationCompleteRequest,
 ) -> AuthenticationCredential:
-    """Build a WebAuthn assertion credential from a request body."""
     raw_id = base64url_to_bytes(request.raw_id)
     user_handle = (
         base64url_to_bytes(request.response.user_handle) if request.response.user_handle else None
@@ -89,12 +90,12 @@ def build_assertion_credential(
     )
 
 
+# verifies a webauthn assertion against its stored credential
 def verify_assertion_response(
     credential: AuthenticationCredential,
     expected_challenge: bytes,
     stored: PasskeyCredential,
 ) -> VerifiedAuthentication:
-    """Verify a passkey assertion against the stored public key."""
     expected_origins: str | list[str] = (
         [settings.rp_expected_origin] + settings.rp_expected_origins
         if settings.rp_expected_origins
@@ -111,8 +112,8 @@ def verify_assertion_response(
     )
 
 
+# builds an error message that only reveals detail in debug mode
 def assertion_error_message(exc: Exception, action_label: str) -> str:
-    """Build a passkey assertion error message tuned to the debug flag."""
     return (
         f"Passkey {action_label} failed: {exc}"
         if settings.debug

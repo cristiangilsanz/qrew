@@ -1,3 +1,4 @@
+# defines the request and response schemas for a signed upload
 from pydantic import BaseModel, Field
 
 

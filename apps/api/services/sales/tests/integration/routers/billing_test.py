@@ -1,3 +1,4 @@
+# tests billing
 import uuid
 
 import httpx
@@ -8,6 +9,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="session")
 _INTERNAL_HEADERS = {"X-Internal-Key": "test-internal-key"}
 
 
+# verifies that create charge success
 @pytest.mark.integration
 async def test_create_charge_success(
     client: httpx.AsyncClient,
@@ -31,10 +33,11 @@ async def test_create_charge_success(
     )
     assert charge_resp.status_code == 200
     data = charge_resp.json()
-    assert data["amount_cents"] == 3000  # 1500 * 2
+    assert data["amount_cents"] == 3000
     assert data["currency"] == "EUR"
 
 
+# verifies that create charge no internal key
 @pytest.mark.integration
 async def test_create_charge_no_internal_key(
     client: httpx.AsyncClient,
@@ -58,6 +61,7 @@ async def test_create_charge_no_internal_key(
     assert charge_resp.status_code == 401
 
 
+# verifies that create charge not found
 @pytest.mark.integration
 async def test_create_charge_not_found(
     client: httpx.AsyncClient,

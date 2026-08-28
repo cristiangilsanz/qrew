@@ -1,3 +1,4 @@
+// renders the bottom dock component
 import { Link, useRouterState } from '@tanstack/react-router'
 import type { LucideIcon } from 'lucide-react'
 import { ArrowLeftRight, Building2, Compass, Home, Ticket, User } from 'lucide-react'
@@ -19,6 +20,7 @@ const baseTabs = [
 
 const organiserTab = { to: '/management' as const, icon: Building2, labelKey: 'nav.organiser' }
 
+// renders the dock tab component
 function DockTab({
   to,
   icon: Icon,
@@ -31,6 +33,7 @@ function DockTab({
   badge?: number
 }) {
   const { t } = useTranslation()
+  // implements select
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isActive = pathname.startsWith(to)
 
@@ -61,6 +64,7 @@ function DockTab({
   )
 }
 
+// renders the bottom dock component
 export function BottomDock() {
   const { data: profile, isLoading: profileLoading } = useProfile()
   const { data: orgsData, isLoading: orgsLoading } = useMyOrganisations()

@@ -1,3 +1,4 @@
+# defines the response schema for a kyc document upload
 from pydantic import BaseModel
 
 

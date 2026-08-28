@@ -1,3 +1,4 @@
+// renders the edit ticket type form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { RefreshCw } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -54,6 +55,7 @@ interface EditProps {
   onClose: () => void
 }
 
+// renders the edit ticket type form component
 export function EditTicketTypeForm({ ttId, eventId, defaultValues, onClose }: EditProps) {
   const { t } = useTranslation()
   const updateTt = useUpdateTicketType(eventId)
@@ -158,6 +160,7 @@ interface CapacityEditProps {
   onClose: () => void
 }
 
+// renders the capacity edit ticket type form component
 export function CapacityEditTicketTypeForm({
   ttId,
   eventId,

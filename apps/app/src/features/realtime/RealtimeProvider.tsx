@@ -1,3 +1,4 @@
+// renders the realtime provider component
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -16,7 +17,9 @@ const TICKET_TOASTS: Record<string, string> = {
   PAYMENT_SUCCEEDED: 'realtime.paymentSucceeded',
 }
 
+// provides use personal channel
 function usePersonalChannel() {
+  // implements token
   const token = useAuthStore((s) => s.accessToken)
   return useMemo(() => {
     if (!token) return ''
@@ -25,10 +28,12 @@ function usePersonalChannel() {
   }, [token])
 }
 
+// renders the realtime consumer component
 function RealtimeConsumer() {
   const { t } = useTranslation()
   const channel = usePersonalChannel()
 
+  // implements status
   const status = useWebSocket(channel, (msg: GatewayMessage) => {
     if (msg.type !== 'audit_event_created') return
     const action = msg.action as string | undefined
@@ -46,7 +51,9 @@ function RealtimeConsumer() {
   return null
 }
 
+// renders the realtime provider component
 export function RealtimeProvider({ children }: { children: ReactNode }) {
+  // implements is authenticated
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   return (
     <>

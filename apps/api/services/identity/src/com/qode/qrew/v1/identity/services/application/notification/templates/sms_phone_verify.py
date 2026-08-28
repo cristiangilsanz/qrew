@@ -1,3 +1,5 @@
+# renders the sms body of the phone verification code
+# renders the sms body carrying the phone verification code
 def verification_otp_sms(otp: str, expire_minutes: int) -> str:
     return (
         f"Your Qrew verification code is: {otp}\n"

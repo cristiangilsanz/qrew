@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import uuid
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -10,51 +11,54 @@ from com.qode.qrew.v1.catalog.models.event import EventStatus
 from com.qode.qrew.v1.catalog.models.organisation import OrganisationRole
 
 
+# provides actor id
 @pytest.fixture
 def actor_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides org id
 @pytest.fixture
 def org_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides venue id
 @pytest.fixture
 def venue_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides event id
 @pytest.fixture
 def event_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides ticket type id
 @pytest.fixture
 def ticket_type_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
-# ── Time helpers ──────────────────────────────────────────────────────────────
-
-
+# handles future
 def future(*, hours: int = 0, days: int = 0) -> datetime:
     return datetime.now(UTC) + timedelta(hours=hours, days=days)
 
 
+# handles past
 def past(*, hours: int = 0, days: int = 0) -> datetime:
     return datetime.now(UTC) - timedelta(hours=hours, days=days)
 
 
-# ── Model factories ───────────────────────────────────────────────────────────
-
-
+# handles make org
 def make_org(
     *, org_id: uuid.UUID | None = None, slug: str = "acme", name: str = "Acme"
 ) -> SimpleNamespace:
     return SimpleNamespace(id=org_id or uuid.uuid4(), slug=slug, name=name, description=None)
 
 
+# handles make venue
 def make_venue(*, venue_id: uuid.UUID | None = None, city: str = "Amsterdam") -> SimpleNamespace:
     return SimpleNamespace(
         id=venue_id or uuid.uuid4(),
@@ -69,6 +73,7 @@ def make_venue(*, venue_id: uuid.UUID | None = None, city: str = "Amsterdam") ->
     )
 
 
+# handles make event
 def make_event(
     *,
     event_id: uuid.UUID | None = None,
@@ -100,6 +105,7 @@ def make_event(
     )
 
 
+# handles make ticket type
 def make_ticket_type(
     *,
     ticket_type_id: uuid.UUID | None = None,
@@ -124,6 +130,7 @@ def make_ticket_type(
     )
 
 
+# handles make member
 def make_member(
     *,
     org_id: uuid.UUID,
@@ -137,9 +144,7 @@ def make_member(
     )
 
 
-# ── Shared redlock helper ─────────────────────────────────────────────────────
-
-
+# handles make redlock cm
 def make_redlock_cm() -> MagicMock:
     cm = MagicMock()
     cm.__aenter__ = AsyncMock(return_value=None)
@@ -147,6 +152,7 @@ def make_redlock_cm() -> MagicMock:
     return cm
 
 
+# handles make fake settings
 def make_fake_settings() -> MagicMock:
     s = MagicMock()
     s.redis_url = "redis://localhost:6379"

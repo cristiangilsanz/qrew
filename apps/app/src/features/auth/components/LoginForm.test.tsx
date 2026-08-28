@@ -1,3 +1,4 @@
+// tests login form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -20,6 +21,7 @@ vi.mock('@simplewebauthn/browser', () => ({
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
+  // renders the toaster component
   Toaster: () => null,
 }))
 
@@ -27,7 +29,9 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
+    // provides use navigate
     useNavigate: () => mockNavigate,
+    // renders the link component
     Link: ({ children, to }: { children: unknown; to: string }) => <a href={to}>{children}</a>,
   }
 })
@@ -38,6 +42,7 @@ import { LoginForm } from './LoginForm'
 
 const mockNavigate = vi.fn()
 
+// implements render login form
 function renderLoginForm() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },

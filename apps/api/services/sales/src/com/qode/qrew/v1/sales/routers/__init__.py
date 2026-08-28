@@ -1,3 +1,4 @@
+# assembles the sales service routers under a common prefix
 from fastapi import APIRouter
 
 from com.qode.qrew.v1.sales.routers.billing import router as billing_router

@@ -1,3 +1,4 @@
+# stores and locks idempotent responses in redis
 import base64
 import json
 from dataclasses import dataclass
@@ -28,20 +29,24 @@ class LockResult:
     cached: StoredResponse | None
 
 
+# builds the redis key prefix for a scope
 def _scope_prefix(scope: str, user_id: str | None) -> str:
     if scope == "user":
         return f"u:{user_id}" if user_id else "u:anon"
     return "g"
 
 
+# builds the redis key that stores a cached response
 def _result_key(scope: str, user_id: str | None, key: str) -> str:
     return f"{_RESULT_PREFIX}:{_scope_prefix(scope, user_id)}:{key}"
 
 
+# builds the redis key that locks a request in flight
 def _lock_key(scope: str, user_id: str | None, key: str) -> str:
     return f"{_LOCK_PREFIX}:{_scope_prefix(scope, user_id)}:{key}"
 
 
+# serializes a stored response for redis
 def _serialise(response: StoredResponse) -> str:
     return json.dumps(
         {
@@ -53,6 +58,7 @@ def _serialise(response: StoredResponse) -> str:
     )
 
 
+# deserializes a stored response from redis
 def _deserialise(raw: bytes | str) -> StoredResponse:
     payload = json.loads(raw)
     return StoredResponse(
@@ -64,8 +70,7 @@ def _deserialise(raw: bytes | str) -> StoredResponse:
 
 
 class IdempotencyStore:
-    """Read, write, and lock idempotency records in Redis."""
-
+    # stores the redis client and lock ttl the store uses
     def __init__(
         self,
         redis_client: aioredis.Redis,  # type: ignore[type-arg]
@@ -75,8 +80,8 @@ class IdempotencyStore:
         self._redis = redis_client
         self._lock_seconds = lock_seconds
 
+    # locks a request in flight and returns any already cached response
     async def acquire(self, scope: str, user_id: str | None, key: str) -> LockResult:
-        """Acquire the processing lock and return any existing cached response."""
         lock_key = _lock_key(scope, user_id, key)
         acquired = await self._redis.set(  # type: ignore[misc]
             lock_key, b"1", ex=self._lock_seconds, nx=True
@@ -87,15 +92,16 @@ class IdempotencyStore:
         cached = await self.fetch(scope, user_id, key)
         return LockResult(acquired=False, cached=cached)
 
+    # reads a cached response if one exists
     async def fetch(
         self, scope: str, user_id: str | None, key: str
     ) -> StoredResponse | None:
-        """Return the cached response for a key, if any."""
         raw = await self._redis.get(_result_key(scope, user_id, key))  # type: ignore[misc]
         if raw is None:
             return None
         return _deserialise(raw)
 
+    # caches a response and releases the in flight lock
     async def save(
         self,
         scope: str,
@@ -105,7 +111,6 @@ class IdempotencyStore:
         *,
         ttl_seconds: int,
     ) -> None:
-        """Persist a response for replay and release the in-flight lock."""
         await self._redis.set(  # type: ignore[misc]
             _result_key(scope, user_id, key),
             _serialise(response),
@@ -113,10 +118,11 @@ class IdempotencyStore:
         )
         await self._release(scope, user_id, key)
 
+    # releases the in flight lock
     async def release(self, scope: str, user_id: str | None, key: str) -> None:
-        """Drop the in-flight lock without saving a response."""
         await self._release(scope, user_id, key)
 
+    # deletes the in flight lock without letting a failure interrupt the caller
     async def _release(self, scope: str, user_id: str | None, key: str) -> None:
         try:
             await self._redis.delete(_lock_key(scope, user_id, key))  # type: ignore[misc]
@@ -124,17 +130,17 @@ class IdempotencyStore:
             await logger.awarning("idempotency_lock_release_failed", error=repr(exc))
 
 
+# strips the headers that must never be replayed from a cached response
 def sanitise_response_headers(
     raw: dict[str, str],
     extra_blacklist: frozenset[str] | None = None,
 ) -> dict[str, str]:
-    """Strip security-sensitive headers before caching a response."""
     blacklist = DEFAULT_HEADER_BLACKLIST | (extra_blacklist or frozenset())
     return {k: v for k, v in raw.items() if k.lower() not in blacklist}
 
 
+# converts a stored response into a json serializable payload
 def encode_for_replay(response: StoredResponse) -> dict[str, Any]:
-    """Shape used by tests to inspect a stored response."""
     return {
         "status_code": response.status_code,
         "headers": dict(response.headers),

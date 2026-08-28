@@ -1,3 +1,4 @@
+// implements dialog
 import { X } from 'lucide-react'
 import { type ReactNode, useEffect } from 'react'
 
@@ -12,6 +13,7 @@ interface DialogProps {
   size?: 'default' | 'lg'
 }
 
+// renders the dialog component
 export function Dialog({
   open,
   onClose,
@@ -22,6 +24,7 @@ export function Dialog({
 }: DialogProps) {
   useEffect(() => {
     if (!open) return
+    // handles handler
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
@@ -33,14 +36,12 @@ export function Dialog({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      {/* Backdrop */}
       <button
         type="button"
         aria-label="Close"
         className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      {/* Panel */}
       <div
         className={cn(
           'bg-card relative z-10 w-full rounded-t-2xl p-5 shadow-xl sm:rounded-2xl',

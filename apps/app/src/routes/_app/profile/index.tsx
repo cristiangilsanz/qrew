@@ -1,3 +1,4 @@
+// implements profile
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronRight, Globe, HelpCircle, Info, LogOut, Shield, User } from 'lucide-react'
 import { useState } from 'react'
@@ -19,20 +20,25 @@ const SUPPORTED_LANGS = [
   { code: 'es', label: 'ES' },
 ]
 
+// renders the profile page component
 function ProfilePage() {
   const { t } = useTranslation()
   useProfile()
+  // implements clear session
   const clearSession = useAuthStore((s) => s.clearSession)
+  // implements refresh token
   const refreshToken = useAuthStore((s) => s.refreshToken)
   const navigate = useNavigate()
   const [currentLang, setCurrentLang] = useState(i18n.language.split('-')[0])
 
+  // implements change language
   const changeLanguage = (lang: string) => {
     void i18n.changeLanguage(lang)
     localStorage.setItem('qrew_lang', lang)
     setCurrentLang(lang)
   }
 
+  // handles handle logout
   const handleLogout = () => {
     if (refreshToken) {
       void authApi.logout(refreshToken).catch(() => {})
@@ -45,7 +51,6 @@ function ProfilePage() {
     <div className="min-h-screen space-y-6 px-4 pt-5 pb-28">
       <h1 className="text-2xl font-bold">{t('profile.myProfile')}</h1>
 
-      {/* Main sections */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <Link
           to="/profile/account"
@@ -72,7 +77,6 @@ function ProfilePage() {
         </Link>
       </div>
 
-      {/* Help & About */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <Link
           to="/profile/help"
@@ -99,7 +103,6 @@ function ProfilePage() {
         </Link>
       </div>
 
-      {/* Language */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <div className="flex items-center gap-3 px-4 py-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
@@ -125,7 +128,6 @@ function ProfilePage() {
         </div>
       </div>
 
-      {/* Log out */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <button
           onClick={handleLogout}
@@ -138,7 +140,6 @@ function ProfilePage() {
         </button>
       </div>
 
-      {/* Delete account */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-red-500/20 bg-red-500/5">
         <DeleteAccountDialog />
       </div>

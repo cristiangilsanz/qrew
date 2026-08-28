@@ -1,3 +1,4 @@
+# tests dlq
 import json
 from unittest.mock import AsyncMock, MagicMock
 
@@ -5,14 +6,17 @@ from jobs.dlq import dlq_key, push_to_dlq
 
 
 class TestDlqKey:
+    # verifies that format
     def test_format(self) -> None:
         assert dlq_key("my.job") == "dlq:my.job"
 
+    # verifies that different names differ
     def test_different_names_differ(self) -> None:
         assert dlq_key("job.a") != dlq_key("job.b")
 
 
 class TestPushToDlq:
+    # verifies that pushes json entry
     async def test_pushes_json_entry(self) -> None:
         redis = MagicMock()
         redis.lpush = AsyncMock()
@@ -33,6 +37,7 @@ class TestPushToDlq:
         assert "ValueError" in entry["error"]
         assert "failed_at" in entry
 
+    # verifies that payload is stored
     async def test_payload_is_stored(self) -> None:
         redis = MagicMock()
         redis.lpush = AsyncMock()

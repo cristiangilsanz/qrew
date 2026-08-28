@@ -1,9 +1,11 @@
+// implements app
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 
 import { BottomDock } from '@/components/layout/BottomDock'
 import { RealtimeProvider } from '@/features/realtime/RealtimeProvider'
 import { useAuthStore } from '@/store/auth'
 
+// renders the app layout component
 function AppLayout() {
   return (
     <RealtimeProvider>
@@ -17,6 +19,7 @@ function AppLayout() {
   )
 }
 
+// renders the route error component
 function RouteError({ error }: { error: unknown }) {
   const message = error instanceof Error ? error.message : 'Something went wrong'
   return (
@@ -27,6 +30,7 @@ function RouteError({ error }: { error: unknown }) {
 }
 
 export const Route = createFileRoute('/_app')({
+  // implements before load
   beforeLoad: () => {
     if (!useAuthStore.getState().isAuthenticated) {
       throw redirect({ to: '/login' })

@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -7,7 +8,6 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from starlette.testclient import TestClient
 
-# Generate keypairs before patching settings
 _ec_private = ec.generate_private_key(ec.SECP256R1())
 _EC_PRIVATE_PEM = _ec_private.private_bytes(
     serialization.Encoding.PEM,
@@ -22,7 +22,6 @@ _RSA_PRIVATE_PEM = _rsa_private.private_bytes(
     serialization.NoEncryption(),
 ).decode()
 
-# Patch settings BEFORE importing app so lifespan doesn't raise
 from com.qode.qrew.v1.gateway.core.config import settings  # noqa: E402
 
 settings.debug = True
@@ -42,8 +41,10 @@ scanner_public_keys.cache_clear()
 from com.qode.qrew.v1.gateway.app import app  # noqa: E402
 
 
+# provides access token factory
 @pytest.fixture(scope="session")
 def access_token_factory() -> object:
+    # handles make
     def _make(user_id: str) -> str:
         now = datetime.now(UTC)
         return jwt.encode(
@@ -60,8 +61,10 @@ def access_token_factory() -> object:
     return _make
 
 
+# provides scanner token factory
 @pytest.fixture(scope="session")
 def scanner_token_factory() -> object:
+    # handles make
     def _make(scanner_id: uuid.UUID, venue_id: uuid.UUID, event_id: uuid.UUID) -> str:
         now = datetime.now(UTC)
         return jwt.encode(
@@ -82,6 +85,7 @@ def scanner_token_factory() -> object:
     return _make
 
 
+# provides client
 @pytest.fixture(scope="session")
 def client() -> TestClient:
     with TestClient(app, raise_server_exceptions=False) as c:

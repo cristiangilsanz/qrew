@@ -1,3 +1,4 @@
+# defines the outbox table used to publish events transactionally
 import uuid
 from datetime import datetime
 
@@ -9,8 +10,6 @@ from com.qode.qrew.v1.identity.core.database import Base
 
 
 class OutboxEvent(Base):
-    """One pending side effect to enqueue once the surrounding transaction commits."""
-
     __tablename__ = "outbox"
     __table_args__ = {"schema": "identity"}
 
@@ -31,5 +30,6 @@ class OutboxEvent(Base):
     dlq_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
+# builds the query that lists events stuck in the dead letter queue
 def dlq_query() -> Select[tuple[OutboxEvent]]:
     return select(OutboxEvent).where(OutboxEvent.dlq_reason.is_not(None))

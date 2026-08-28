@@ -1,3 +1,4 @@
+// implements checkout
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import axios from 'axios'
 import { Minus, Plus, Ticket } from 'lucide-react'
@@ -24,11 +25,13 @@ export const Route = createFileRoute('/_app/events/$eventId/checkout')({
   component: CheckoutPage,
 })
 
+// implements format price
 function formatPrice(cents: number, currency: string): string {
   if (cents === 0) return 'Free'
   return `${currency === 'EUR' ? '€' : currency}${(cents / 100).toFixed(2)}`
 }
 
+// renders the checkout page component
 function CheckoutPage() {
   const { t } = useTranslation()
   const { eventId } = Route.useParams()
@@ -50,7 +53,6 @@ function CheckoutPage() {
     return <NotFound message={t('events.notFound')} />
   }
 
-  // Queue flow: redirect to queue unless admitted
   if (event.queue_required && !admitted) {
     return (
       <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">
@@ -71,12 +73,15 @@ function CheckoutPage() {
     )
   }
 
+  // implements ticket types
   const ticketTypes = event.ticket_types.slice().sort((a, b) => a.position - b.position)
+  // implements total selected
   const totalSelected = Object.values(quantities).reduce((sum, q) => sum + q, 0)
   const alreadyHeld =
     myTickets?.filter((t) => t.event_id === eventId && t.counts_toward_limit).length ?? 0
   const maxTotal = Math.max(0, event.max_tickets_per_user - alreadyHeld)
 
+  // handles handle increment
   const handleIncrement = (id: string, available: number) => {
     if (available === 0) return
     const current = quantities[id] ?? 0
@@ -85,6 +90,7 @@ function CheckoutPage() {
     setQuantities((prev) => ({ ...prev, [id]: current + 1 }))
   }
 
+  // handles handle decrement
   const handleDecrement = (id: string) => {
     const current = quantities[id] ?? 0
     if (current <= 0) return
@@ -99,14 +105,17 @@ function CheckoutPage() {
     })
   }
 
+  // implements total cents
   const totalCents = ticketTypes.reduce((sum, tt) => {
     return sum + tt.price_cents * (quantities[tt.id] ?? 0)
   }, 0)
 
+  // implements selected types
   const selectedTypes = ticketTypes.filter((tt) => (quantities[tt.id] ?? 0) > 0)
   const currency = selectedTypes[0]?.currency ?? 'EUR'
   const canReserve = totalSelected > 0 && !isPending
 
+  // handles handle reserve
   const handleReserve = async () => {
     if (!canReserve) return
     setIsPending(true)
@@ -145,7 +154,6 @@ function CheckoutPage() {
 
   return (
     <div className="mx-auto min-h-screen max-w-[430px] space-y-6 px-4 pt-5 pb-28">
-      {/* Header */}
       <div>
         <BackButton
           onClick={() => void navigate({ to: '/events/$eventId', params: { eventId } })}
@@ -155,7 +163,6 @@ function CheckoutPage() {
         <p className="text-muted-foreground text-sm">{event.organisation.name}</p>
       </div>
 
-      {/* Ticket type cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">{t('events.ticketTypes')}</h2>
@@ -191,7 +198,6 @@ function CheckoutPage() {
               )}
             >
               <div className="flex items-center gap-3">
-                {/* Info */}
                 <div className="min-w-0 flex-1">
                   <p className="leading-tight font-semibold">{tt.name}</p>
                   {tt.description && (
@@ -208,7 +214,6 @@ function CheckoutPage() {
                   )}
                 </div>
 
-                {/* Stepper */}
                 {tt.available > 0 && (
                   <div className="flex shrink-0 items-center gap-2">
                     <button
@@ -249,7 +254,6 @@ function CheckoutPage() {
         })}
       </div>
 
-      {/* Bottom bar */}
       <div className="fixed inset-x-0 bottom-24 z-40">
         <div className="mx-auto max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
           {totalSelected > 0 && (

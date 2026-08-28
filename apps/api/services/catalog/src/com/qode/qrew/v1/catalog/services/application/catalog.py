@@ -1,3 +1,4 @@
+# reads the parts of the catalog visible to the public
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +14,7 @@ from com.qode.qrew.v1.catalog.repositories.venue import VenueRepository
 
 
 class PublicCatalogService:
+    # stores the session and repositories the service reads through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
         self._event_repo = EventRepository(session)
@@ -22,6 +24,7 @@ class PublicCatalogService:
 
     _VISIBLE_STATUSES = {EventStatus.published, EventStatus.ongoing}
 
+    # reads a published event with its organisation and venue
     async def get_published_event(
         self, event_id: uuid.UUID
     ) -> tuple[Event, Organisation, Venue] | None:
@@ -34,11 +37,13 @@ class PublicCatalogService:
             return None
         return event, org, venue
 
+    # reads an event's ticket types in order
     async def get_ticket_types(self, event_id: uuid.UUID) -> list[TicketType]:
         stmt = self._ticket_type_repo.list_for_event_query(event_id)
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
+    # reads a published event with its ticket type availability
     async def get_published_event_availability(
         self, event_id: uuid.UUID
     ) -> tuple[Event, list[TicketType]] | None:

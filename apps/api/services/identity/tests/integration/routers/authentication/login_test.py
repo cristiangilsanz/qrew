@@ -1,3 +1,4 @@
+# tests login
 import httpx
 import pytest
 
@@ -5,6 +6,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")
 
 
 class TestLogin:
+    # verifies that valid credentials return tokens
     async def test_valid_credentials_return_tokens(
         self, client: httpx.AsyncClient, registered_user: dict
     ) -> None:
@@ -17,6 +19,7 @@ class TestLogin:
         assert body["access_token"]
         assert body["token_type"] == "bearer"
 
+    # verifies that wrong password returns 401
     async def test_wrong_password_returns_401(
         self, client: httpx.AsyncClient, registered_user: dict
     ) -> None:
@@ -26,6 +29,7 @@ class TestLogin:
         )
         assert resp.status_code == 401
 
+    # verifies that unknown email returns 401
     async def test_unknown_email_returns_401(self, client: httpx.AsyncClient) -> None:
         resp = await client.post(
             "/v1/auth/login",
@@ -33,11 +37,12 @@ class TestLogin:
         )
         assert resp.status_code == 401
 
-    async def test_unverified_email_returns_setup_required(self, client: httpx.AsyncClient) -> None:
+    # verifies that unverified email is rejected
+    async def test_unverified_email_is_rejected(self, client: httpx.AsyncClient) -> None:
         import uuid
 
         email = f"unverified-{uuid.uuid4().hex[:8]}@example.com"
-        phone = f"+316{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}"
+        phone = f"+346{str(int(uuid.uuid4().int % 90_000_000) + 10_000_000)}"
         await client.post(
             "/v1/auth/registration/",
             json={
@@ -53,11 +58,11 @@ class TestLogin:
             "/v1/auth/login",
             json={"email": email, "password": "StrongP@ss1!"},
         )
-        assert resp.status_code == 200
-        assert resp.json()["setup_required"] is True
+        assert resp.status_code == 401
 
 
 class TestRefresh:
+    # verifies that valid refresh token rotates
     async def test_valid_refresh_token_rotates(
         self, client: httpx.AsyncClient, registered_user: dict
     ) -> None:
@@ -74,12 +79,14 @@ class TestRefresh:
         assert body["access_token"]
         assert body["refresh_token"]
 
+    # verifies that invalid refresh token returns 401
     async def test_invalid_refresh_token_returns_401(self, client: httpx.AsyncClient) -> None:
         resp = await client.post("/v1/auth/refresh", json={"refresh_token": "bad.token.here"})
         assert resp.status_code == 401
 
 
 class TestLogout:
+    # verifies that logout invalidates refresh token
     async def test_logout_invalidates_refresh_token(
         self, client: httpx.AsyncClient, registered_user: dict
     ) -> None:
@@ -92,6 +99,5 @@ class TestLogout:
         logout_resp = await client.post("/v1/auth/logout", json={"refresh_token": refresh_token})
         assert logout_resp.status_code == 200
 
-        # Second refresh should now fail.
         refresh_resp = await client.post("/v1/auth/refresh", json={"refresh_token": refresh_token})
         assert refresh_resp.status_code == 401

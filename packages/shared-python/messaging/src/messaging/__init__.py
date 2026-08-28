@@ -1,3 +1,4 @@
+# exposes the shared nats client publisher and subscriber
 from .client import NatsClient, close_nats, get_nats, init_nats
 from .publisher import publish
 from .subscriber import subscribe

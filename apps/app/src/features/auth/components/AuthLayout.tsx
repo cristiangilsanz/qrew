@@ -1,3 +1,4 @@
+// renders the auth layout component
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 
@@ -10,6 +11,7 @@ interface AuthLayoutProps {
   children: ReactNode
 }
 
+// renders the auth layout component
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-start px-4 pt-12">

@@ -1,3 +1,4 @@
+# defines the event status enum and the event table
 import enum
 import uuid
 from datetime import datetime

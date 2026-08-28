@@ -1,3 +1,4 @@
+# defines the device table that names a user's registered devices
 import uuid
 from datetime import datetime
 

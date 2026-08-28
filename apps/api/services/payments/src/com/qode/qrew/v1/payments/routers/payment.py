@@ -1,3 +1,4 @@
+# exposes the endpoints that initiate a payment and receive the stripe webhook
 import uuid
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
@@ -23,6 +24,7 @@ market_router = APIRouter(prefix="/market-assignments", tags=["payments"])
 webhooks_router = APIRouter(prefix="/payments", tags=["payments"])
 
 
+# creates or returns the payment intent for a reservation
 @router.post(
     "/{reservation_id}/payment",
     response_model=PaymentInitiateResponse,
@@ -66,6 +68,7 @@ async def initiate_payment(
     )
 
 
+# creates or returns the payment intent for a market assignment
 @market_router.post(
     "/{assignment_id}/payment",
     response_model=PaymentInitiateResponse,
@@ -111,6 +114,7 @@ async def initiate_assignment_payment(
     )
 
 
+# verifies and dispatches an incoming stripe webhook
 @webhooks_router.post(
     "/webhook",
     status_code=status.HTTP_200_OK,

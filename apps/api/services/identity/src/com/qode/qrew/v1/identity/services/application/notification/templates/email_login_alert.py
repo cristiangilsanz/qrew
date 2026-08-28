@@ -1,6 +1,8 @@
+# renders the html body of the unusual sign in alert
 from com.qode.qrew.v1.identity.services.application.notification.templates._base import base_email
 
 
+# renders the email body alerting of an unusual sign in
 def login_anomaly_alert_email(
     full_name: str,
     ip_address: str,

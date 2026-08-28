@@ -1,3 +1,4 @@
+# creates updates and deletes an event's ticket types
 import re
 import uuid
 from datetime import UTC, datetime
@@ -19,6 +20,7 @@ from com.qode.qrew.v1.catalog.repositories.ticket_type import TicketTypeReposito
 logger = structlog.get_logger(__name__)
 
 
+# publishes a ticket type event onto the shared nats connection
 async def _publish_nats(subject: str, ticket_type: TicketType) -> None:
     try:
         from messaging.publisher import publish  # type: ignore[import-not-found]
@@ -52,21 +54,25 @@ class TicketTypeError(DomainError):
     pass
 
 
+# rejects a ticket type name outside the allowed pattern
 def _validate_name(name: str) -> None:
     if not _NAME_PATTERN.match(name):
         raise TicketTypeError("Name must be lowercase letters, digits or underscores", field="name")
 
 
+# rejects a capacity outside the allowed range
 def _validate_capacity(capacity: int) -> None:
     if capacity < 1 or capacity > 100_000:
         raise TicketTypeError("Capacity must be between 1 and 100000", field="capacity")
 
 
+# rejects a price outside the allowed range
 def _validate_price(price_cents: int) -> None:
     if price_cents < 0 or price_cents > 10_000_000:
         raise TicketTypeError("Price must be between 0 and 10000000 cents", field="price_cents")
 
 
+# rejects a currency outside the allowed set
 def _validate_currency(currency: str) -> None:
     if currency not in _ALLOWED_CURRENCIES:
         raise TicketTypeError(
@@ -75,6 +81,7 @@ def _validate_currency(currency: str) -> None:
 
 
 class TicketTypeService:
+    # stores the repositories and audit service the ticket type service uses
     def __init__(
         self,
         event_repo: EventRepository,
@@ -85,9 +92,11 @@ class TicketTypeService:
         self._repo = repo
         self._audit = audit
 
+    # builds the query that lists an event's ticket types
     def list_for_event_query(self, event_id: uuid.UUID) -> Select[tuple[TicketType]]:
         return self._repo.list_for_event_query(event_id)
 
+    # creates a ticket type for an event that can still change
     @traced("ticket_type.create")
     async def create(
         self,
@@ -138,6 +147,7 @@ class TicketTypeService:
             await _publish_nats("catalog.ticket_type.created.v1", ticket_type)
             return ticket_type
 
+    # updates the mutable fields of a ticket type
     @traced("ticket_type.update")
     async def update(
         self,
@@ -193,6 +203,7 @@ class TicketTypeService:
             await _publish_nats("catalog.ticket_type.updated.v1", ticket_type)
             return ticket_type
 
+    # soft deletes a ticket type that has no live reservations
     @traced("ticket_type.delete")
     async def delete(
         self,
@@ -227,6 +238,7 @@ class TicketTypeService:
                 payload={"event_id": str(event_id)},
             )
 
+    # records an audit event without letting a failure interrupt the caller
     async def _record(
         self,
         action: str,

@@ -1,3 +1,4 @@
+# defines the request and response schemas for ticket types
 import uuid
 from datetime import datetime
 

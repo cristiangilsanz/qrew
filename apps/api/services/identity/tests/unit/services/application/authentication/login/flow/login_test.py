@@ -1,3 +1,4 @@
+# tests login
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -17,10 +18,12 @@ _MOD = "com.qode.qrew.v1.identity.services.application.authentication.login.flow
 _PATCH_VERIFY = f"{_MOD}.verify_password"
 
 
+# handles make request
 def _make_request(*, email: str = "user@example.com", password: str = "Pass1234!") -> LoginRequest:
     return LoginRequest(email=email, password=password)
 
 
+# handles make svc
 def _make_svc(
     *,
     user: object = None,
@@ -51,6 +54,7 @@ def _make_svc(
 
 
 class TestLoginUnknownEmail:
+    # verifies that raises for unknown email
     async def test_raises_for_unknown_email(self) -> None:
         svc = _make_svc(user=None)
         with (
@@ -61,6 +65,7 @@ class TestLoginUnknownEmail:
 
 
 class TestLoginWrongPassword:
+    # verifies that raises for wrong password
     async def test_raises_for_wrong_password(self) -> None:
         user = make_user()
         svc = _make_svc(user=user)
@@ -70,6 +75,7 @@ class TestLoginWrongPassword:
         ):
             await svc.login(_make_request())
 
+    # verifies that records failure with lockout
     async def test_records_failure_with_lockout(self) -> None:
         user = make_user()
         lockout = MagicMock()
@@ -89,6 +95,7 @@ class TestLoginWrongPassword:
 
 
 class TestLoginLockout:
+    # verifies that raises lockout error when locked
     async def test_raises_lockout_error_when_locked(self) -> None:
         user = make_user()
         lockout = MagicMock()
@@ -105,6 +112,7 @@ class TestLoginLockout:
 
 
 class TestLoginEmailNotVerified:
+    # verifies that raises for unverified email
     async def test_raises_for_unverified_email(self) -> None:
         user = make_user(email_verified=False)
         svc = _make_svc(user=user)
@@ -116,6 +124,7 @@ class TestLoginEmailNotVerified:
 
 
 class TestLoginInactiveAccount:
+    # verifies that raises for inactive account
     async def test_raises_for_inactive_account(self) -> None:
         user = make_user(is_active=False)
         svc = _make_svc(user=user)
@@ -127,6 +136,7 @@ class TestLoginInactiveAccount:
 
 
 class TestLoginSetupIncomplete:
+    # verifies that returns setup token when phone not verified
     async def test_returns_setup_token_when_phone_not_verified(self) -> None:
         user = make_user(phone_number_verified=False)
         svc = _make_svc(user=user)
@@ -135,6 +145,7 @@ class TestLoginSetupIncomplete:
         assert response.setup_required is True
         assert response.refresh_token is None
 
+    # verifies that returns setup token when kyc not submitted
     async def test_returns_setup_token_when_kyc_not_submitted(self) -> None:
         user = make_user(kyc_status=KycStatus.not_submitted)
         svc = _make_svc(user=user, has_passkey=True)
@@ -142,6 +153,7 @@ class TestLoginSetupIncomplete:
             response = await svc.login(_make_request())
         assert response.setup_required is True
 
+    # verifies that returns setup token when no passkey
     async def test_returns_setup_token_when_no_passkey(self) -> None:
         user = make_user()
         svc = _make_svc(user=user, has_passkey=False)
@@ -151,6 +163,7 @@ class TestLoginSetupIncomplete:
 
 
 class TestLoginSetupComplete:
+    # verifies that returns full session tokens
     async def test_returns_full_session_tokens(self) -> None:
         user = make_user()
         svc = _make_svc(user=user, has_passkey=True)
@@ -160,6 +173,7 @@ class TestLoginSetupComplete:
         assert response.access_token
         assert response.refresh_token
 
+    # verifies that password compromised flag propagates
     async def test_password_compromised_flag_propagates(self) -> None:
         user = make_user()
         breach_checker = MagicMock()
@@ -170,6 +184,7 @@ class TestLoginSetupComplete:
             response = await svc.login(_make_request())
         assert response.password_compromised is True
 
+    # verifies that audit failure does not break login
     async def test_audit_failure_does_not_break_login(self) -> None:
         user = make_user()
         svc = _make_svc(user=user, has_passkey=True)

@@ -1,9 +1,7 @@
+# provides shared pytest fixtures
 import os
 import uuid as _uuid
 
-from cryptography.fernet import Fernet
-
-# Must be set before any identity app imports so settings + JWT keys pick them up.
 os.environ.setdefault("DEBUG", "true")
 os.environ.setdefault("CAPTCHA_ENABLED", "false")
 os.environ.setdefault("HIBP_ENABLED", "false")
@@ -16,13 +14,6 @@ os.environ.setdefault("NOTIFICATION_ENABLED", "false")
 os.environ.setdefault("OTEL_ENABLED", "false")
 os.environ.setdefault("KYC_AUTO_APPROVE", "false")
 os.environ.setdefault("INTERNAL_API_KEY", "test-internal-key")
-# Fernet-format keys required by PII crypto and national-ID encryption.
-_FERNET_KEY = Fernet.generate_key().decode()
-os.environ.setdefault("PII_ENCRYPTION_KEY", _FERNET_KEY)
-os.environ.setdefault("NATIONAL_ID_ENCRYPTION_KEY", _FERNET_KEY)
-# Storage signing key — arbitrary secret used for HMAC URL signing.
-os.environ.setdefault("STORAGE_SIGNING_KEY", _uuid.uuid4().hex * 2)
-# JWT: empty → ephemeral EC keys auto-generated when debug=True (see jwt.py).
 
 import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
@@ -31,16 +22,10 @@ from httpx import ASGITransport  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine  # noqa: E402
 
 
-# ---------------------------------------------------------------------------
-# Infrastructure helpers
-# ---------------------------------------------------------------------------
-
-
+# return the test Postgres URL from env var or by starting a container
 def _get_test_db_url() -> str | None:
-    """Return the test Postgres URL from env var or by starting a container."""
     explicit = os.environ.get("IDENTITY_TEST_DB_URL") or os.environ.get("DATABASE_URL")
     if explicit:
-        # Ensure asyncpg driver.
         for old, new in (
             ("postgresql+psycopg2://", "postgresql+asyncpg://"),
             ("postgresql://", "postgresql+asyncpg://"),
@@ -49,7 +34,6 @@ def _get_test_db_url() -> str | None:
                 return explicit.replace(old, new, 1)
         return explicit
 
-    # Try testcontainers (requires Docker).
     try:
         from testcontainers.postgres import PostgresContainer  # noqa: PLC0415
 
@@ -68,8 +52,8 @@ def _get_test_db_url() -> str | None:
         return None
 
 
+# return the test Redis URL from env var or by starting a container
 def _get_test_redis_url() -> str | None:
-    """Return the test Redis URL from env var or by starting a container."""
     explicit = os.environ.get("IDENTITY_TEST_REDIS_URL") or os.environ.get("REDIS_URL")
     if explicit:
         return explicit
@@ -79,16 +63,14 @@ def _get_test_redis_url() -> str | None:
 
         _r = RedisContainer("redis:7-alpine")
         _r.start()
-        return _r.get_connection_url()
+        host = _r.get_container_host_ip()
+        port = _r.get_exposed_port(6379)
+        return f"redis://{host}:{port}/0"
     except Exception:
         return None
 
 
-# ---------------------------------------------------------------------------
-# Session-scoped infrastructure
-# ---------------------------------------------------------------------------
-
-
+# verifies that db url
 @pytest.fixture(scope="session")
 def test_db_url() -> str:
     url = _get_test_db_url()
@@ -100,6 +82,7 @@ def test_db_url() -> str:
     return url
 
 
+# verifies that redis url
 @pytest.fixture(scope="session")
 def test_redis_url() -> str:
     url = _get_test_redis_url()
@@ -111,9 +94,9 @@ def test_redis_url() -> str:
     return url
 
 
+# patch settings + engine and run Alembic migrations once per session
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
-    """Patch settings + engine and run Alembic migrations once per session."""
     from com.qode.qrew.v1.identity.core.config import settings
     import com.qode.qrew.v1.identity.core.database as db_module
 
@@ -124,33 +107,36 @@ def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
     db_module.engine = new_engine
     db_module.AsyncSessionLocal = async_sessionmaker(new_engine, expire_on_commit=False)
 
+    import sys
+
+    for module in list(sys.modules.values()):
+        name = getattr(module, "__name__", "")
+        if name.startswith("com.qode.qrew") and hasattr(module, "AsyncSessionLocal"):
+            module.AsyncSessionLocal = db_module.AsyncSessionLocal
+
     import pathlib
     from alembic.config import Config
     from alembic import command as alembic_command
 
-    alembic_ini = str(pathlib.Path(__file__).parents[3] / "alembic.ini")
-    cfg = Config(alembic_ini)
+    service_root = pathlib.Path(__file__).parents[2]
+    cfg = Config(str(service_root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(service_root / "migrations"))
     cfg.set_main_option("sqlalchemy.url", test_db_url)
     alembic_command.upgrade(cfg, "head")
 
 
-# ---------------------------------------------------------------------------
-# Per-test fixtures: session, client, helpers
-# ---------------------------------------------------------------------------
-
-
+# provide a live DB session for direct DB reads inside fixtures
 @pytest_asyncio.fixture
 async def db_session(setup_test_infrastructure: None) -> AsyncSession:
-    """Provide a live DB session for direct-DB reads inside fixtures."""
     import com.qode.qrew.v1.identity.core.database as db_module
 
     async with db_module.AsyncSessionLocal() as session:
         yield session
 
 
+# aSGI test client wired to the real FastAPI app
 @pytest_asyncio.fixture
 async def client(setup_test_infrastructure: None) -> httpx.AsyncClient:
-    """ASGI test client wired to the real FastAPI app."""
     from com.qode.qrew.v1.identity.app import app
 
     async with httpx.AsyncClient(
@@ -160,18 +146,21 @@ async def client(setup_test_infrastructure: None) -> httpx.AsyncClient:
         yield c
 
 
+# handles unique email
 def _unique_email() -> str:
     return f"user-{_uuid.uuid4().hex[:10]}@example.com"
 
 
+# handles unique phone
 def _unique_phone() -> str:
-    suffix = str(int(_uuid.uuid4().int % 9_000_000) + 1_000_000)
-    return f"+316{suffix}"
+    suffix = str(int(_uuid.uuid4().int % 90_000_000) + 10_000_000)
+    return f"+346{suffix}"
 
 
 _DEFAULT_PASSWORD = "StrongP@ss1!"
 
 
+# handles register
 async def _register(client: httpx.AsyncClient, email: str, phone: str) -> dict:
     resp = await client.post(
         "/v1/auth/registration/",
@@ -188,30 +177,69 @@ async def _register(client: httpx.AsyncClient, email: str, phone: str) -> dict:
     return resp.json()
 
 
-async def _verify_email(client: httpx.AsyncClient, db: AsyncSession, user_id: str) -> None:
-    from sqlalchemy import select
-    from com.qode.qrew.v1.identity.models.user import User
-
-    result = await db.execute(select(User).where(User.id == _uuid.UUID(user_id)))
-    user = result.scalar_one()
-    token = user.email_verification_token
+# handles verify email
+async def _verify_email(client: httpx.AsyncClient, db: AsyncSession, email: str) -> None:
+    token = await _issued_token(db, email, "email_account_verify", "token")
     resp = await client.post("/v1/auth/registration/verify-email", json={"token": token})
     assert resp.status_code == 200, resp.text
 
 
+# read a single use secret from the notification issued to that destination
+async def _issued_token(db: AsyncSession, destination: str, template_key: str, field: str) -> str:
+    from sqlalchemy import select
+    from com.qode.qrew.v1.identity.models.notification import Notification
+
+    result = await db.execute(
+        select(Notification)
+        .where(Notification.template_key == template_key)
+        .order_by(Notification.created_at.desc())
+        .limit(50)
+    )
+    for notification in result.scalars():
+        if notification.destination == destination:
+            return str(notification.payload[field])
+    raise AssertionError(f"no {template_key} notification issued to {destination}")
+
+
+# bring the account to the state that login requires for a full session
+async def _complete_setup(db: AsyncSession, user_id: _uuid.UUID) -> None:
+    import os as _os
+
+    from sqlalchemy import update
+    from com.qode.qrew.v1.identity.models.passkey import PasskeyCredential
+    from com.qode.qrew.v1.identity.models.user import KycStatus, User
+
+    await db.execute(
+        update(User)
+        .where(User.id == user_id)
+        .values(phone_number_verified=True, kyc_status=KycStatus.approved)
+    )
+    db.add(
+        PasskeyCredential(
+            user_id=user_id,
+            credential_id=_os.urandom(32),
+            public_key=_os.urandom(64),
+            aaguid=str(_uuid.uuid4()),
+            name="test-passkey",
+        )
+    )
+    await db.commit()
+
+
+# register, verify email and finish onboarding
 @pytest_asyncio.fixture
 async def registered_user(client: httpx.AsyncClient, db_session: AsyncSession) -> dict:
-    """Register + verify email. Returns {email, phone, password, user_id}."""
     email = _unique_email()
     phone = _unique_phone()
     data = await _register(client, email, phone)
-    await _verify_email(client, db_session, data["id"])
+    await _verify_email(client, db_session, email)
+    await _complete_setup(db_session, _uuid.UUID(data["id"]))
     return {"email": email, "phone": phone, "password": _DEFAULT_PASSWORD, "user_id": data["id"]}
 
 
+# log in and return Authorization headers for a regular user
 @pytest_asyncio.fixture
 async def auth_headers(client: httpx.AsyncClient, registered_user: dict) -> dict:
-    """Log in and return Authorization headers for a regular user."""
     resp = await client.post(
         "/v1/auth/login",
         json={"email": registered_user["email"], "password": registered_user["password"]},
@@ -220,9 +248,9 @@ async def auth_headers(client: httpx.AsyncClient, registered_user: dict) -> dict
     return {"Authorization": f"Bearer {resp.json()['access_token']}"}
 
 
+# create an admin user and return Authorization headers
 @pytest_asyncio.fixture
 async def admin_headers(client: httpx.AsyncClient, db_session: AsyncSession) -> dict:
-    """Create an admin user and return Authorization headers."""
     from sqlalchemy import update
     from com.qode.qrew.v1.identity.models.user import User
 
@@ -235,6 +263,7 @@ async def admin_headers(client: httpx.AsyncClient, db_session: AsyncSession) -> 
         update(User).where(User.id == user_id).values(is_admin=True, email_verified=True)
     )
     await db_session.commit()
+    await _complete_setup(db_session, user_id)
 
     resp = await client.post(
         "/v1/auth/login",

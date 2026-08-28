@@ -1,3 +1,4 @@
+// renders the email verification step component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -27,6 +28,7 @@ interface Props {
   onSuccess: () => void
 }
 
+// renders the email verification step component
 export function EmailVerificationStep({ onSuccess }: Props) {
   const { t } = useTranslation()
   const verify = useVerifyEmail(onSuccess)

@@ -1,3 +1,4 @@
+// renders the org card component
 import { Link } from '@tanstack/react-router'
 import { Building2, ChevronRight } from 'lucide-react'
 
@@ -11,6 +12,7 @@ interface Props {
   org: OrgCardItem
 }
 
+// renders the org card component
 export function OrgCard({ org }: Props) {
   return (
     <Link

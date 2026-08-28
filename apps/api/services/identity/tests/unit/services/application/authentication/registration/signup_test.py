@@ -1,3 +1,4 @@
+# tests signup
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -15,6 +16,7 @@ _PATCH_PWNED = f"{_MOD}.is_password_pwned"
 _PATCH_BUILD_USER = f"{_MOD}._build_user"
 
 
+# handles make request
 def _make_request(
     *,
     email: str = "new@example.com",
@@ -31,6 +33,7 @@ def _make_request(
     )
 
 
+# handles make svc
 def _make_svc(
     *,
     email_exists: bool = False,
@@ -61,6 +64,7 @@ def _make_svc(
 
 
 class TestRegistrationService:
+    # verifies that raises when captcha invalid
     async def test_raises_when_captcha_invalid(self) -> None:
         svc, _ = _make_svc(captcha_raises=RegistrationError("Invalid captcha"))
         with (
@@ -69,6 +73,7 @@ class TestRegistrationService:
         ):
             await svc.register(_make_request(), ip_address="1.2.3.4")
 
+    # verifies that raises when email taken
     async def test_raises_when_email_taken(self) -> None:
         svc, _ = _make_svc(email_exists=True)
         with (
@@ -77,6 +82,7 @@ class TestRegistrationService:
         ):
             await svc.register(_make_request(), ip_address="1.2.3.4")
 
+    # verifies that raises when phone taken
     async def test_raises_when_phone_taken(self) -> None:
         svc, _ = _make_svc(phone_exists=True)
         with (
@@ -85,6 +91,7 @@ class TestRegistrationService:
         ):
             await svc.register(_make_request(), ip_address="1.2.3.4")
 
+    # verifies that raises when password breached
     async def test_raises_when_password_breached(self) -> None:
         svc, _ = _make_svc()
         with (
@@ -93,6 +100,7 @@ class TestRegistrationService:
         ):
             await svc.register(_make_request(), ip_address="1.2.3.4")
 
+    # verifies that happy path creates user
     async def test_happy_path_creates_user(self) -> None:
         svc, repo = _make_svc()
         built = make_user()
@@ -104,6 +112,7 @@ class TestRegistrationService:
         repo.create.assert_awaited_once()
         assert "Registration successful" in response.message
 
+    # verifies that sends email and sms notifications
     async def test_sends_email_and_sms_notifications(self) -> None:
         svc, _ = _make_svc()
         built = make_user()
@@ -115,6 +124,7 @@ class TestRegistrationService:
         svc._notifier.send_email_verification_link.assert_awaited_once()
         svc._notifier.send_sms_otp.assert_awaited_once()
 
+    # verifies that audit failure does not break registration
     async def test_audit_failure_does_not_break_registration(self) -> None:
         svc, _ = _make_svc()
         svc._audit.record = AsyncMock(side_effect=RuntimeError("audit down"))
@@ -126,6 +136,7 @@ class TestRegistrationService:
             response = await svc.register(_make_request(), ip_address="1.2.3.4")
         assert response.message
 
+    # verifies that response contains user id
     async def test_response_contains_user_id(self) -> None:
         svc, _ = _make_svc()
         built = make_user()

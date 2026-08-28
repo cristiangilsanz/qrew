@@ -1,3 +1,4 @@
+# defines the configuration settings for the entry service
 from pathlib import Path
 
 from pydantic_settings import (
@@ -32,6 +33,7 @@ class Settings(BaseSettings):
 
     internal_api_key: str = ""
     ticketing_url: str = "http://localhost:8004"
+    catalog_url: str = "http://localhost:8002"
 
     access_jwt_private_key: str = ""
     access_jwt_previous_public_keys: str = ""
@@ -55,6 +57,7 @@ class Settings(BaseSettings):
 
     ratelimit_enabled: bool = True
 
+    # orders the configuration sources so the yaml file can override the defaults
     @classmethod
     def settings_customise_sources(
         cls,

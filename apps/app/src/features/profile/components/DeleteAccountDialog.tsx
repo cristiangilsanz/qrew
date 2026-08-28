@@ -1,3 +1,4 @@
+// renders the delete account dialog component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Trash2 } from 'lucide-react'
@@ -26,6 +27,7 @@ const darkInput =
 
 const COUNTDOWN = 10
 
+// renders the delete account dialog component
 export function DeleteAccountDialog() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -39,11 +41,13 @@ export function DeleteAccountDialog() {
 
   const deleteAccount = useDeleteAccount()
 
+  // implements open modal
   const openModal = () => {
     setSeconds(COUNTDOWN)
     setOpen(true)
   }
 
+  // implements close modal
   const closeModal = () => {
     setOpen(false)
     form.reset()

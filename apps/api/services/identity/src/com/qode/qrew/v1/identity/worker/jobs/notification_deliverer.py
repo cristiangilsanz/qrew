@@ -1,3 +1,4 @@
+# delivers a queued notification retrying and recording failures until it succeeds
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -18,9 +19,9 @@ from com.qode.qrew.v1.identity.core.config import settings
 logger = structlog.get_logger(__name__)
 
 
+# delivers a queued notification through its channel
 @job("notification.deliver")
 async def deliver(ctx: dict[str, Any], payload: dict[str, Any]) -> None:
-    """Deliver one persisted notification, marking the row and retrying on failure."""
     notification_id = uuid.UUID(payload["notification_id"])
     attempt = int(ctx.get("job_try", 1))
     async with AsyncSessionLocal() as session, session.begin():

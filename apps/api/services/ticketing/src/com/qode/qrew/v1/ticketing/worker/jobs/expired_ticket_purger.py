@@ -1,3 +1,4 @@
+# deletes expired tickets on a periodic schedule
 from typing import cast
 
 import structlog
@@ -10,8 +11,8 @@ logger = structlog.get_logger(__name__)
 _DELETE_EXPIRED = text("DELETE FROM ticketing.tickets WHERE state = 'expired'")
 
 
+# deletes every expired ticket and returns how many were removed
 async def purge_expired() -> int:
-    """Hard-deletes tickets in the expired state, keeping the tickets list clean."""
     async with AsyncSessionLocal() as session, session.begin():
         raw = await session.execute(_DELETE_EXPIRED)
         deleted = cast(int, raw.rowcount)  # type: ignore[union-attr]

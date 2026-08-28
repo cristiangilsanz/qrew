@@ -70,7 +70,7 @@ flowchart TB
 </div>
 
 > [!NOTE]
-> This is a simple picture of the system. The full dive into the topic is in [ARCHITECTURE.md](docs/architecture/overview.md).
+> This is a very simple picture of the system. The full dive into the topic is [here](docs/architecture/overview.md).
 
 # 📁 **Project Structure**
 

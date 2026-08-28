@@ -1,3 +1,4 @@
+// tests qr display
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -7,14 +8,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { QrDisplay } from './QrDisplay'
 
 vi.mock('react-i18next', () => ({
+  // provides use translation
+  // implements t
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 
 vi.mock('react-qr-code', () => ({
+  // implements default
   default: ({ value }: { value: string }) => <div data-testid="qr-code">{value}</div>,
 }))
 
 vi.mock('@/store/auth', () => ({
+  // implements get state
   useAuthStore: { getState: () => ({ accessToken: 'mock-token' }) },
 }))
 
@@ -31,8 +36,10 @@ vi.mock('@capacitor/geolocation', () => ({
   },
 }))
 
+// implements make client
 const makeClient = () => new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
+// implements wrapper
 const wrapper = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={makeClient()}>{children}</QueryClientProvider>
 )
@@ -43,6 +50,7 @@ describe('QrDisplay', () => {
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
+        // implements json
         json: () =>
           Promise.resolve({
             jwt: 'test.jwt.token',
@@ -88,6 +96,7 @@ describe('QrDisplay', () => {
       'fetch',
       vi.fn().mockResolvedValue({
         ok: false,
+        // implements json
         json: () =>
           Promise.resolve({
             detail: { field: 'geofence' },

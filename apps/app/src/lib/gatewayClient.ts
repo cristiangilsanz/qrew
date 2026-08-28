@@ -1,3 +1,4 @@
+// implements gateway client
 import { env } from '@/config/env'
 
 export type GatewayMessage = Record<string, unknown>
@@ -17,16 +18,19 @@ export class GatewayClient {
   private attempt = 0
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
+  // stores the values this object needs
   constructor(
     private readonly channel: string,
     private readonly token: string,
   ) {}
 
+  // implements start
   start(): void {
     this.stopped = false
     this._connect()
   }
 
+  // implements stop
   stop(): void {
     this.stopped = true
     if (this.reconnectTimer !== null) {
@@ -45,20 +49,24 @@ export class GatewayClient {
     this._emitStatus('closed')
   }
 
+  // handles on message
   onMessage(handler: MessageHandler): () => void {
     this.messageHandlers.add(handler)
     return () => this.messageHandlers.delete(handler)
   }
 
+  // handles on status
   onStatus(handler: StatusHandler): () => void {
     this.statusHandlers.add(handler)
     return () => this.statusHandlers.delete(handler)
   }
 
+  // implements emit status
   private _emitStatus(status: WsStatus): void {
     for (const h of this.statusHandlers) h(status)
   }
 
+  // implements connect
   _connect(): void {
     if (this.stopped) return
     const url = `${env.GATEWAY_URL}/ws/${this.channel}`
@@ -95,6 +103,7 @@ export class GatewayClient {
     }
   }
 
+  // implements schedule reconnect
   private _scheduleReconnect(): void {
     if (this.stopped) return
     const delay = Math.min(RECONNECT_BASE_MS * RECONNECT_FACTOR ** this.attempt, RECONNECT_MAX_MS)
@@ -106,6 +115,7 @@ export class GatewayClient {
   }
 }
 
+// implements parse user id from token
 export function parseUserIdFromToken(token: string): string | null {
   try {
     const payload = token.split('.')[1]

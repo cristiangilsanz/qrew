@@ -1,3 +1,4 @@
+// configures capacitor for the native app shell
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {

@@ -1,3 +1,4 @@
+// implements privacy
 import { createFileRoute } from '@tanstack/react-router'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/_app/profile/privacy')({
   component: PrivacyPage,
 })
 
+// renders the section component
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-8">
@@ -17,6 +19,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
+// renders the privacy en component
 function PrivacyEN() {
   return (
     <>
@@ -90,6 +93,7 @@ function PrivacyEN() {
   )
 }
 
+// renders the privacy es component
 function PrivacyES() {
   return (
     <>
@@ -168,6 +172,7 @@ function PrivacyES() {
   )
 }
 
+// renders the privacy page component
 function PrivacyPage() {
   const { i18n } = useTranslation()
   const isES = i18n.language.startsWith('es')

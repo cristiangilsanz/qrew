@@ -1,3 +1,4 @@
+# exposes the shared tracing and log context helpers
 from .logging import add_trace_context
 from .propagation import (
     CARRIER_KEY,

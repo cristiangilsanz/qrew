@@ -1,3 +1,4 @@
+// renders the qr display component
 import { Geolocation } from '@capacitor/geolocation'
 import { Loader2, MapPin, QrCode, RefreshCw, ShieldX } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -19,10 +20,12 @@ type QrState =
   | { status: 'denied'; reason: string }
   | { status: 'error' }
 
+// provides use countdown
 function useCountdown(targetIso: string | null): number {
   const [secondsLeft, setSecondsLeft] = useState(0)
   useEffect(() => {
     if (!targetIso) return
+    // implements update
     const update = () => {
       const diff = Math.max(0, Math.floor((new Date(targetIso).getTime() - Date.now()) / 1000))
       setSecondsLeft(diff)
@@ -34,6 +37,7 @@ function useCountdown(targetIso: string | null): number {
   return secondsLeft
 }
 
+// renders the qr display component
 export function QrDisplay({ ticketId }: Props) {
   const { t } = useTranslation()
   const [state, setState] = useState<QrState>({ status: 'idle' })
@@ -42,6 +46,7 @@ export function QrDisplay({ ticketId }: Props) {
   const expiresAt = state.status === 'streaming' ? state.expiresAt : null
   const secondsLeft = useCountdown(expiresAt)
 
+  // implements fetch qr
   const fetchQr = useCallback(
     async (latitude: number, longitude: number) => {
       if (!activeRef.current) return
@@ -64,7 +69,6 @@ export function QrDisplay({ ticketId }: Props) {
         const data = await res.json()
         setState({ status: 'streaming', jwt: data.jwt, expiresAt: data.expires_at })
 
-        // Schedule refresh ~3s before expiry
         const msUntilExpiry = new Date(data.expires_at).getTime() - Date.now()
         const refreshIn = Math.max(1000, msUntilExpiry - 3000)
         refreshTimerRef.current = setTimeout(() => {
@@ -77,6 +81,7 @@ export function QrDisplay({ ticketId }: Props) {
     [ticketId],
   )
 
+  // implements start stream
   const startStream = async () => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
     activeRef.current = true
@@ -111,7 +116,6 @@ export function QrDisplay({ ticketId }: Props) {
             </Button>
           </div>
         </div>
-        {/* spacer to match countdown text height */}
         <div className="h-10" />
       </div>
     )
@@ -189,7 +193,6 @@ export function QrDisplay({ ticketId }: Props) {
       <div className="rounded-2xl bg-white p-4 shadow-md">
         <QRCode value={state.jwt} size={200} />
       </div>
-      {/* Countdown to next rotation */}
       <div className="flex flex-col items-center gap-0.5">
         <p className="font-mono text-2xl font-bold text-gray-900 tabular-nums">
           {mins}:{secs}

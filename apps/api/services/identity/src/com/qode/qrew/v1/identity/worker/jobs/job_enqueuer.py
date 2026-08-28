@@ -1,3 +1,4 @@
+# enqueues a named job onto the shared arq queue carrying the trace context
 from typing import Any
 
 from arq.jobs import Job
@@ -8,13 +9,13 @@ from observability import CARRIER_KEY, inject_current_context
 from com.qode.qrew.v1.identity.core.config import settings
 
 
+# enqueues a job with its trace context attached
 async def enqueue(
     job_name: str,
     payload: dict[str, Any] | None = None,
     *,
     defer_seconds: int | None = None,
 ) -> Job | None:
-    """Enqueue a registered job, propagating the current trace context."""
     spec = get_spec(job_name)
     pool = await get_pool(redis_settings_from_url(settings.redis_url))
     body = dict(payload or {})

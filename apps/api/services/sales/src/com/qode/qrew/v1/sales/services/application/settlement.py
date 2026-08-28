@@ -1,3 +1,4 @@
+# marks reservations as paid or cancelled and publishes the outcome
 import uuid
 from datetime import UTC, datetime
 
@@ -15,11 +16,13 @@ logger = structlog.get_logger(__name__)
 
 
 class SettlementService:
+    # stores the session and repositories the settlement service uses
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
         self._reservations = ReservationRepository(session)
         self._inventory = TicketTypeInventoryRepository(session)
 
+    # marks a reservation as paid and publishes its holders
     async def mark_paid(self, reservation_id: uuid.UUID) -> Reservation | None:
         async with redlock(
             f"reservation:{reservation_id}:lifecycle",
@@ -49,6 +52,7 @@ class SettlementService:
         await _publish_paid(reservation, holders)
         return reservation
 
+    # cancels a reservation and releases the inventory it held
     async def cancel(self, reservation_id: uuid.UUID, *, reason: str) -> Reservation | None:
         async with redlock(
             f"reservation:{reservation_id}:lifecycle",
@@ -69,6 +73,7 @@ class SettlementService:
         return reservation
 
 
+# publishes that a reservation was paid onto the shared nats connection
 async def _publish_paid(reservation: Reservation, holders: list[ReservationHolder]) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
@@ -102,6 +107,7 @@ async def _publish_paid(reservation: Reservation, holders: list[ReservationHolde
         )
 
 
+# publishes that a reservation was cancelled onto the shared nats connection
 async def _publish_cancelled(reservation: Reservation, *, reason: str) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]

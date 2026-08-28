@@ -1,3 +1,4 @@
+// implements account
 import { useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -30,6 +31,7 @@ const expandVariants = {
   exit: { height: 0, opacity: 0, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } },
 }
 
+// renders the verified chip component
 function VerifiedChip({ verified }: { verified: boolean }) {
   const { t } = useTranslation()
   return (
@@ -40,11 +42,13 @@ function VerifiedChip({ verified }: { verified: boolean }) {
   )
 }
 
+// renders the kyc status chip component
 function KycStatusChip({ status }: { status: KycStatus }) {
   const { t } = useTranslation()
   return <StatusChip label={t(`profile.kycStatus.${status}`)} variant={status} />
 }
 
+// renders the row component
 function Row({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return (
     <div className="flex items-center gap-3 px-4 py-4">
@@ -57,6 +61,7 @@ function Row({ icon, label, children }: { icon: ReactNode; label: string; childr
   )
 }
 
+// renders the expandable row component
 function ExpandableRow({
   icon,
   label,
@@ -121,6 +126,7 @@ function ExpandableRow({
   )
 }
 
+// renders the account page component
 function AccountPage() {
   const { t, i18n } = useTranslation()
   const { data: profile, isLoading } = useProfile()
@@ -128,6 +134,7 @@ function AccountPage() {
   const [expanded, setExpanded] = useState<ExpandedRow>(null)
   const queryClient = useQueryClient()
 
+  // implements toggle
   const toggle = (row: ExpandedRow) => setExpanded((prev) => (prev === row ? null : row))
 
   const allLoading = isLoading || onboardingLoading
@@ -161,7 +168,6 @@ function AccountPage() {
 
           <div className="mx-4 border-t border-white/10" />
 
-          {/* KYC identity row */}
           {profile.kyc_status === 'rejected' || profile.kyc_status === 'not_submitted' ? (
             <>
               <button

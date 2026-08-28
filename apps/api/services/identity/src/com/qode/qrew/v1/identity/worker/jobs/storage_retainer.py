@@ -1,3 +1,4 @@
+# deletes kyc documents past their retention window on a nightly schedule
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -15,9 +16,9 @@ from com.qode.qrew.v1.identity.core.config import settings
 logger = structlog.get_logger(__name__)
 
 
+# deletes rejected or deleted accounts kyc documents past their retention window
 @job("storage.kyc_retention", cron=parse_crontab("0 4 * * *"), max_attempts=1)
 async def purge_old_kyc_documents(ctx: dict[str, Any]) -> dict[str, int]:
-    """Delete KYC documents older than the configured retention window."""
     del ctx
     days = settings.kyc_document_retention_days
     cutoff = datetime.now(UTC) - timedelta(days=days)

@@ -1,3 +1,4 @@
+# entry point that starts the catalog arq worker
 import asyncio
 
 from db.redis import redis_settings_from_url
@@ -10,6 +11,7 @@ import com.qode.qrew.v1.catalog.worker.jobs.search_reindexer  # noqa: F401  # py
 WorkerSettings = build_worker_settings(redis_settings_from_url(settings.redis_url))
 
 
+# runs the arq worker loop
 def main() -> None:
     from arq import run_worker
 

@@ -1,3 +1,4 @@
+// renders the passkey list component
 import { useQueryClient } from '@tanstack/react-query'
 import { KeyRound, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -13,12 +14,14 @@ import { useDeletePasskey } from '../hooks/useDeletePasskey'
 import { usePasskeys } from '../hooks/usePasskeys'
 import { useRenamePasskey } from '../hooks/useRenamePasskey'
 
+// renders the passkey list component
 export function PasskeyList() {
   const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
   const { data, isLoading } = usePasskeys()
   const deletePasskey = useDeletePasskey()
   const renamePasskey = useRenamePasskey()
+  // implements register passkey
   const registerPasskey = useRegisterPasskey(() => {
     void queryClient.invalidateQueries({ queryKey: ['passkeys'] })
     void queryClient.invalidateQueries({ queryKey: ['onboarding-status'] })
@@ -83,6 +86,7 @@ export function PasskeyList() {
                       if (editName.trim()) {
                         renamePasskey.mutate(
                           { id: pk.id, name: editName.trim() },
+                          // handles on success
                           { onSuccess: () => setEditingId(null) },
                         )
                       }

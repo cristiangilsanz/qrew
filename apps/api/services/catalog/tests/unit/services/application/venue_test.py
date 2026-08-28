@@ -1,3 +1,4 @@
+# tests venue
 import uuid
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
@@ -14,6 +15,7 @@ from com.qode.qrew.v1.catalog.services.application.venue import (
 )
 
 
+# handles make svc
 def _make_svc(*, venue: object = None) -> tuple[VenueService, MagicMock]:
     repo = MagicMock()
     repo.insert = AsyncMock(side_effect=lambda v: v)
@@ -27,22 +29,27 @@ def _make_svc(*, venue: object = None) -> tuple[VenueService, MagicMock]:
 
 
 class TestValidateCoordinates:
+    # verifies that raises when latitude too low
     def test_raises_when_latitude_too_low(self) -> None:
         with pytest.raises(VenueError, match="Latitude"):
             _validate_coordinates(Decimal("-91"), Decimal("0"))
 
+    # verifies that raises when latitude too high
     def test_raises_when_latitude_too_high(self) -> None:
         with pytest.raises(VenueError, match="Latitude"):
             _validate_coordinates(Decimal("91"), Decimal("0"))
 
+    # verifies that raises when longitude too low
     def test_raises_when_longitude_too_low(self) -> None:
         with pytest.raises(VenueError, match="Longitude"):
             _validate_coordinates(Decimal("0"), Decimal("-181"))
 
+    # verifies that raises when longitude too high
     def test_raises_when_longitude_too_high(self) -> None:
         with pytest.raises(VenueError, match="Longitude"):
             _validate_coordinates(Decimal("0"), Decimal("181"))
 
+    # verifies that valid passes
     def test_valid_passes(self) -> None:
         _validate_coordinates(Decimal("52.370"), Decimal("4.895"))
         _validate_coordinates(Decimal("90"), Decimal("180"))
@@ -50,44 +57,53 @@ class TestValidateCoordinates:
 
 
 class TestValidateRadius:
+    # verifies that raises when below minimum
     def test_raises_when_below_minimum(self) -> None:
         with pytest.raises(VenueError, match="50"):
             _validate_radius(49)
 
+    # verifies that raises when above maximum
     def test_raises_when_above_maximum(self) -> None:
         with pytest.raises(VenueError, match="5000"):
             _validate_radius(5001)
 
+    # verifies that boundary values pass
     def test_boundary_values_pass(self) -> None:
         _validate_radius(50)
         _validate_radius(5000)
 
 
 class TestValidateTimezone:
+    # verifies that raises when unknown
     def test_raises_when_unknown(self) -> None:
         with pytest.raises(VenueError, match="timezone"):
             _validate_timezone("Moon/Crater")
 
+    # verifies that valid timezone passes
     def test_valid_timezone_passes(self) -> None:
         _validate_timezone("Europe/Amsterdam")
         _validate_timezone("UTC")
 
 
 class TestValidateCountry:
+    # verifies that raises when not two letters
     def test_raises_when_not_two_letters(self) -> None:
         with pytest.raises(VenueError, match="ISO"):
             _validate_country("NLD")
 
+    # verifies that raises when contains digit
     def test_raises_when_contains_digit(self) -> None:
         with pytest.raises(VenueError, match="ISO"):
             _validate_country("N1")
 
+    # verifies that valid passes
     def test_valid_passes(self) -> None:
         _validate_country("NL")
         _validate_country("GB")
 
 
 class TestVenueServiceCreate:
+    # verifies that raises when country invalid
     async def test_raises_when_country_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(VenueError, match="ISO"):
@@ -104,6 +120,7 @@ class TestVenueServiceCreate:
                 description=None,
             )
 
+    # verifies that raises when coordinates invalid
     async def test_raises_when_coordinates_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(VenueError, match="Latitude"):
@@ -120,6 +137,7 @@ class TestVenueServiceCreate:
                 description=None,
             )
 
+    # verifies that raises when radius invalid
     async def test_raises_when_radius_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(VenueError, match="50"):
@@ -136,6 +154,7 @@ class TestVenueServiceCreate:
                 description=None,
             )
 
+    # verifies that raises when timezone invalid
     async def test_raises_when_timezone_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(VenueError, match="timezone"):
@@ -152,6 +171,7 @@ class TestVenueServiceCreate:
                 description=None,
             )
 
+    # verifies that creates venue
     async def test_creates_venue(self, actor_id: uuid.UUID) -> None:
         svc, repo = _make_svc()
         result = await svc.create_venue(
@@ -167,9 +187,10 @@ class TestVenueServiceCreate:
             description=None,
         )
         assert result.name == "Stadium"
-        assert result.country == "NL"  # uppercased
+        assert result.country == "NL"
         repo.insert.assert_awaited_once()
 
+    # verifies that audit error is swallowed
     async def test_audit_error_is_swallowed(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         svc._audit.record = AsyncMock(side_effect=RuntimeError("audit down"))

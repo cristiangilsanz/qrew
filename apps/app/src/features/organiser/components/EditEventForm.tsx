@@ -1,3 +1,4 @@
+// renders the edit event form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, RefreshCw, Users } from 'lucide-react'
 import { useState } from 'react'
@@ -23,6 +24,7 @@ import { CreateVenueForm } from './CreateVenueForm'
 import { DateTimeInput } from './DateTimeInput'
 import { EventImageUploader } from './EventImageUploader'
 
+// implements schema
 const schema = z
   .object({
     name: z.string().min(1),
@@ -47,6 +49,7 @@ const schema = z
 
 type Values = z.infer<typeof schema>
 
+// implements to local iso
 function toLocalIso(iso: string): string {
   if (!iso) return ''
   return new Date(iso).toISOString().slice(0, 16)
@@ -60,6 +63,7 @@ interface Props {
 const frostedInput =
   'w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5 text-sm text-white/50 outline-none transition-all duration-150 placeholder:text-white/20 focus:border-primary/50 focus:bg-white/8 focus:text-white'
 
+// renders the edit event form component
 export function EditEventForm({ event, orgId }: Props) {
   const { t } = useTranslation()
   const { data: venuesData, isLoading: venuesLoading } = useVenues()

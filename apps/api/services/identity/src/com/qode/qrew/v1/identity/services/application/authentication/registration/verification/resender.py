@@ -1,5 +1,7 @@
+# resends an email or phone verification code without disclosing whether the account exists
 import structlog
 
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.services.application.authentication.token.security import (
     email_verification_token_expiry,
     generate_otp,
@@ -16,31 +18,32 @@ logger = structlog.get_logger(__name__)
 
 
 class ResendError(DomainError):
-    """Raised when a verification resend cannot be completed."""
+    pass
 
 
 class ResendEmailVerificationService:
+    # stores the repository and notifier the service uses
     def __init__(self, repo: UserRepository, notifier: NotificationDispatcher) -> None:
         self._repo = repo
         self._notifier = notifier
 
+    # resends the email verification link if the account is not already verified
     async def resend(self, email: str) -> None:
-        """Generates a new email verification credential and sends it to the user."""
         user = await self._repo.get_by_email(email)
 
         if user is None:
-            await logger.awarning("resend_email_failed", reason="user_not_found")
-            raise ResendError("No account found with that email address", field="email")
+            await logger.awarning("resend_email_skipped", reason="user_not_found")
+            return
         if user.email_verified:
             await logger.awarning(
-                "resend_email_failed",
+                "resend_email_skipped",
                 reason="already_verified",
                 user_id=str(user.id),
             )
-            raise ResendError("This email address is already verified", field="email")
+            return
 
         token = generate_token()
-        user.email_verification_token = token
+        user.email_verification_token = pii_crypto.hash_lookup(token)
         user.email_verification_token_expires_at = email_verification_token_expiry()
         await self._repo.save(user)
 
@@ -49,27 +52,28 @@ class ResendEmailVerificationService:
 
 
 class ResendPhoneOtpService:
+    # stores the repository and notifier the service uses
     def __init__(self, repo: UserRepository, notifier: NotificationDispatcher) -> None:
         self._repo = repo
         self._notifier = notifier
 
+    # resends the phone verification otp if the account is not already verified
     async def resend(self, phone_number: str) -> None:
-        """Generate a fresh OTP and dispatch it via SMS."""
         user = await self._repo.get_by_phone_number(phone_number)
 
         if user is None:
-            await logger.awarning("resend_otp_failed", reason="user_not_found")
-            raise ResendError("No account found with that phone number", field="phone_number")
+            await logger.awarning("resend_otp_skipped", reason="user_not_found")
+            return
         if user.phone_number_verified:
             await logger.awarning(
-                "resend_otp_failed",
+                "resend_otp_skipped",
                 reason="already_verified",
                 user_id=str(user.id),
             )
-            raise ResendError("This phone number is already verified", field="phone_number")
+            return
 
         otp = generate_otp()
-        user.phone_number_otp = otp
+        user.phone_number_otp = pii_crypto.hash_lookup(otp)
         user.phone_number_otp_expires_at = phone_number_otp_expiry()
         await self._repo.save(user)
 

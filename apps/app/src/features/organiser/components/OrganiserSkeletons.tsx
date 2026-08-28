@@ -1,5 +1,7 @@
+// renders the organiser skeletons component
 import { Skeleton } from '@/components/ui/skeleton'
 
+// renders the event manage skeleton component
 export function EventManageSkeleton() {
   return (
     <div className="pb-28">
@@ -25,6 +27,7 @@ export function EventManageSkeleton() {
   )
 }
 
+// renders the org card skeleton component
 export function OrgCardSkeleton() {
   return (
     <div className="bg-card border-border overflow-hidden rounded-2xl border bg-white/5">
@@ -40,6 +43,7 @@ export function OrgCardSkeleton() {
   )
 }
 
+// renders the ticket type list skeleton component
 export function TicketTypeListSkeleton() {
   return (
     <div className="space-y-4">
@@ -62,6 +66,7 @@ export function TicketTypeListSkeleton() {
   )
 }
 
+// renders the form page skeleton component
 export function FormPageSkeleton() {
   return (
     <div className="space-y-4">

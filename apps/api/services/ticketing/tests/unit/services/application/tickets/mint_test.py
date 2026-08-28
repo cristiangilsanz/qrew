@@ -1,3 +1,4 @@
+# tests mint
 import uuid
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
@@ -17,6 +18,7 @@ _PATCH_SIGN = "com.qode.qrew.v1.ticketing.services.application.tickets.mint.jwt_
 _PATCH_SETTINGS = "com.qode.qrew.v1.ticketing.services.application.tickets.mint.settings"
 
 
+# provides fake settings
 @pytest.fixture
 def fake_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
@@ -34,18 +36,22 @@ def fake_settings(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class TestSampleAudit:
+    # verifies that rate one always true
     def test_rate_one_always_true(self) -> None:
         assert all(_sample_audit(1) for _ in range(100))
 
+    # verifies that rate zero always true
     def test_rate_zero_always_true(self) -> None:
         assert all(_sample_audit(0) for _ in range(100))
 
+    # verifies that large rate can return false
     def test_large_rate_can_return_false(self) -> None:
         results = [_sample_audit(10_000) for _ in range(1000)]
         assert any(r is False for r in results)
 
 
 class TestMintQr:
+    # verifies that returns minted qr
     async def test_returns_minted_qr(
         self,
         fake_settings: None,
@@ -68,6 +74,7 @@ class TestMintQr:
         assert result.issued_at == now
         assert result.expires_at == now + timedelta(seconds=20)
 
+    # verifies that expires at uses ttl from settings
     async def test_expires_at_uses_ttl_from_settings(
         self,
         fake_settings: None,
@@ -87,6 +94,7 @@ class TestMintQr:
 
         assert result.expires_at - result.issued_at == timedelta(seconds=20)
 
+    # verifies that binds device when different
     async def test_binds_device_when_different(
         self,
         fake_settings: None,
@@ -108,6 +116,7 @@ class TestMintQr:
 
         assert inputs.ticket.bound_device_id == device_id
 
+    # verifies that does not rebind when already bound
     async def test_does_not_rebind_when_already_bound(
         self,
         fake_settings: None,
@@ -125,6 +134,7 @@ class TestMintQr:
 
         assert inputs.ticket.bound_device_id == device_id
 
+    # verifies that audit recorded when sample rate 1
     async def test_audit_recorded_when_sample_rate_1(
         self,
         fake_settings: None,
@@ -142,6 +152,7 @@ class TestMintQr:
 
         audit.record.assert_awaited_once()  # type: ignore[attr-defined]
 
+    # verifies that audit failure does not raise
     async def test_audit_failure_does_not_raise(
         self,
         fake_settings: None,
@@ -168,6 +179,7 @@ class TestMintQr:
 
 
 class TestRecordDenial:
+    # verifies that records denial with device
     async def test_records_denial_with_device(
         self,
         user_id: uuid.UUID,
@@ -187,6 +199,7 @@ class TestRecordDenial:
         assert call_kwargs["payload"]["reason"] == "state"
         assert call_kwargs["payload"]["device_id"] == str(device_id)
 
+    # verifies that records denial without device
     async def test_records_denial_without_device(
         self,
         user_id: uuid.UUID,
@@ -202,6 +215,7 @@ class TestRecordDenial:
         call_kwargs = audit.record.call_args.kwargs  # type: ignore[attr-defined]
         assert call_kwargs["payload"]["device_id"] is None
 
+    # verifies that audit failure does not raise
     async def test_audit_failure_does_not_raise(
         self,
         user_id: uuid.UUID,

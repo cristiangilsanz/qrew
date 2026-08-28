@@ -1,3 +1,4 @@
+# tests account
 import httpx
 import pytest
 
@@ -8,6 +9,7 @@ _NEW_PASSWORD = "NewStrongP@ss2!"
 
 
 class TestChangePassword:
+    # verifies that valid change returns 200
     async def test_valid_change_returns_200(
         self, client: httpx.AsyncClient, auth_headers: dict, registered_user: dict
     ) -> None:
@@ -21,6 +23,7 @@ class TestChangePassword:
         )
         assert resp.status_code == 200
 
+    # verifies that wrong current password returns 400
     async def test_wrong_current_password_returns_400(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
@@ -31,6 +34,7 @@ class TestChangePassword:
         )
         assert resp.status_code == 400
 
+    # verifies that unauthenticated returns 401
     async def test_unauthenticated_returns_401(self, client: httpx.AsyncClient) -> None:
         resp = await client.post(
             "/v1/auth/account/change-password",
@@ -40,10 +44,10 @@ class TestChangePassword:
 
 
 class TestDeleteAccount:
+    # verifies that valid deletion returns 200
     async def test_valid_deletion_returns_200(
         self, client: httpx.AsyncClient, registered_user: dict
     ) -> None:
-        # Use fresh login so deleting this account doesn't affect other tests.
         login_resp = await client.post(
             "/v1/auth/login",
             json={
@@ -60,6 +64,7 @@ class TestDeleteAccount:
         )
         assert resp.status_code == 200
 
+    # verifies that wrong password returns 400
     async def test_wrong_password_returns_400(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
@@ -72,6 +77,7 @@ class TestDeleteAccount:
 
 
 class TestChangeEmail:
+    # verifies that change email request returns 200
     async def test_change_email_request_returns_200(
         self, client: httpx.AsyncClient, auth_headers: dict, registered_user: dict
     ) -> None:
@@ -88,6 +94,7 @@ class TestChangeEmail:
         )
         assert resp.status_code == 200
 
+    # verifies that invalid token confirm returns 400
     async def test_invalid_token_confirm_returns_400(self, client: httpx.AsyncClient) -> None:
         resp = await client.post(
             "/v1/auth/account/confirm-email-change",
@@ -97,12 +104,13 @@ class TestChangeEmail:
 
 
 class TestChangePhone:
+    # verifies that change phone request returns 200
     async def test_change_phone_request_returns_200(
         self, client: httpx.AsyncClient, auth_headers: dict, registered_user: dict
     ) -> None:
         import uuid
 
-        new_phone = f"+317{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}"
+        new_phone = f"+3471{str(int(uuid.uuid4().int % 9_000_000) + 1_000_000)}"
         resp = await client.post(
             "/v1/auth/account/change-phone",
             headers=auth_headers,

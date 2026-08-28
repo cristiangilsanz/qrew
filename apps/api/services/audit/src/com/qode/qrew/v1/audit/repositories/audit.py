@@ -1,3 +1,4 @@
+# builds and persists audit events as a tamper evident hash chain
 import hashlib
 import json
 import uuid
@@ -9,14 +10,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from com.qode.qrew.v1.audit.models.event import AuditAction, AuditEvent
 
 
+# serializes event data into a deterministic byte string
 def _canonical_json(data: dict[str, object]) -> bytes:
     return json.dumps(data, sort_keys=True, default=str, separators=(",", ":")).encode()
 
 
+# derives the hash that chains an event to the previous one
 def compute_hash(prev_hash: bytes | None, event_data: dict[str, object]) -> bytes:
     return hashlib.sha256((prev_hash or b"") + _canonical_json(event_data)).digest()
 
 
+# converts an audit event into the fields that feed the hash
 def event_to_hashable(event: AuditEvent) -> dict[str, object]:
     return {
         "id": str(event.id),
@@ -32,6 +36,7 @@ def event_to_hashable(event: AuditEvent) -> dict[str, object]:
     }
 
 
+# assembles a new audit event linked to the previous hash
 def build_event(
     action: str,
     actor_id: uuid.UUID | None,
@@ -63,9 +68,11 @@ def build_event(
 
 
 class AuditRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads the hash of the most recent audit event
     async def get_last_hash(self) -> bytes | None:
         result = await self._session.execute(
             select(AuditEvent.hash)
@@ -74,17 +81,20 @@ class AuditRepository:
         )
         return result.scalar_one_or_none()
 
+    # writes an audit event to the database
     async def insert(self, event: AuditEvent) -> AuditEvent:
         self._session.add(event)
         await self._session.flush()
         return event
 
+    # checks whether the chain already has its genesis event
     async def has_genesis(self) -> bool:
         result = await self._session.execute(
             select(AuditEvent.id).where(AuditEvent.action == AuditAction.GENESIS).limit(1)
         )
         return result.scalar_one_or_none() is not None
 
+    # reads every audit event in chronological order
     async def get_all_ordered(self) -> list[AuditEvent]:
         result = await self._session.execute(
             select(AuditEvent).order_by(AuditEvent.created_at.asc(), AuditEvent.id.asc())

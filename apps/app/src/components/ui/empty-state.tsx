@@ -1,3 +1,4 @@
+// implements empty state
 import { type ReactNode } from 'react'
 
 interface EmptyStateProps {
@@ -8,6 +9,7 @@ interface EmptyStateProps {
   action?: ReactNode
 }
 
+// renders the empty state component
 export function EmptyState({ image, imageAlt, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 px-6 text-center">

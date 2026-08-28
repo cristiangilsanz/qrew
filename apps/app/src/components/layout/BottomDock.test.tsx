@@ -1,3 +1,4 @@
+// tests bottom dock
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -7,13 +8,17 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
+    // renders the link component
     Link: ({ children, to }: { children: unknown; to: string }) => <a href={to}>{children}</a>,
+    // provides use router state
     useRouterState: ({ select }: { select: (s: { location: { pathname: string } }) => string }) =>
       select({ location: { pathname: '/home' } }),
   }
 })
 
 vi.mock('react-i18next', () => ({
+  // provides use translation
+  // implements t
   useTranslation: () => ({ t: (k: string) => k }),
 }))
 

@@ -18,6 +18,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+# creates the audit schema and its tables
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS audit")
 
@@ -74,6 +75,7 @@ def upgrade() -> None:
     )
 
 
+# drops the audit schema and its tables
 def downgrade() -> None:
     op.drop_index("ix_audit_events_created_at", table_name="audit_events", schema="audit")
     op.drop_index("ix_audit_events_action", table_name="audit_events", schema="audit")

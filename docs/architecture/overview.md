@@ -1,62 +1,35 @@
 # Architecture
 
-## Introduction
+This document is the architectural reference for the system.
 
-This document is the authoritative architectural reference for the system.
+QREW is a mobile-first ticketing platform that covers the operational lifecycle of a live
+event, with fraud prevention and anti-speculation as first-class constraints.
 
-1. [Context & Scope](#context--scope)
-2. [Architectural Principles](#architectural-principles)
-3. [System Overview](#system-overview)
-4. [Architectural Views](#architectural-views)
-5. [Components Breakdown](#components-breakdown)
-6. [Communication](#communication)
-7. [Data Architecture](#data-architecture)
-8. [Cross-Cutting Concerns](#cross-cutting-concerns)
-9. [Infrastructure & Deployment](#infrastructure--deployment)
+1. [System Architecture](#system-architecture)
+   - [Style](#style)
+   - [Decision Records](#decision-records)
+2. [View Model](#view-model)
+3. [Server Design](#server-design)
+   - [Architecture of a Service](#architecture-of-a-service)
+   - [Services](#services)
+   - [Workers](#workers)
+   - [Technologies](#technologies)
+4. [Client Design](#client-design)
+   - [Architecture of the App](#architecture-of-the-app)
+   - [Technologies](#technologies)
+5. [Communication](#communication)
+   - [Protocols, Temporality and Formats](#protocols-temporality-and-formats)
+   - [Server Communication](#server-communication)
+   - [Client Communication](#client-communication)
+   - [Client and Server Communication](#client-and-server-communication)
+6. [Security](#security)
+7. [Observability](#observability)
 
-It is written for technical leads making design decisions and for engineers contributing to the codebase.
+## System Architecture
 
-## Context & Scope
-
-### Context
-
-QREW is a mobile-first ticketing and event management platform covering the full operational lifecycle of a live event with fraud prevention and anti-speculation as first-class constraints.
-
-### Scope
-
-QREW is designed and implemented as a production-ready system that ensures the reliability characteristics expected of a deployed product.
-
-
-## Architectural Principles
-
-The following 5 software design principles shape every structural decision in the system:
-
-<dl>
-<dt>• <strong><em>Separation of Concerns.</em></strong></dt>
-<dd>Every component addresses one well-defined concern and does not reach into the responsibility of another.</dd>
-<dt>• <strong><em>Single Responsibility Principle.</em></strong></dt>
-<dd>Every service, worker, and layer does exactly one thing, keeping each unit narrow and independently replaceable.</dd>
-<dt>• <strong><em>Loose Coupling.</em></strong></dt>
-<dd>Every component is independent at the code, data, and deployment level, so the failure of one does not propagate to others.</dd>
-<dt>• <strong><em>Principle of Least Privilege.</em></strong></dt>
-<dd>Every component is granted only the access it strictly requires to perform its function.</dd>
-<dt>• <strong><em>Design for Failure.</em></strong></dt>
-<dd>Every component is built under the assumption that it will eventually fail, and the system degrades gracefully when it does.</dd>
-</dl>
-
-
-## System Design
-
-### High-Level Architecture
-
-The system is organised into 6 layers:
-
-- **Client**
-- **Edge**
-- **Domain**
-- **Workers**
-- **Infrastructure**
-- **Third-Party Services**
+The system splits into three blocks, the interface the actors handle, the server that resolves
+the logic and keeps the state, and the third-party services it delegates to for whatever
+carries no differential value.
 
 The following diagram shows the full topology of the system:
 
@@ -65,41 +38,43 @@ The following diagram shows the full topology of the system:
 ```mermaid
 %%{init: {"flowchart": {"rankSpacing": 80, "nodeSpacing": 20}}}%%
 flowchart TB
-    subgraph Clients
+    subgraph Client
         app["Mobile App"]:::client
     end
 
-    subgraph Edge
-        gw["API Gateway :8000"]:::edge
+    subgraph Server
+        subgraph Presentation
+            gw["API Gateway :8000"]:::edge
+        end
+
+        subgraph Business
+            identity["Identity :8001"]:::svc
+            catalog["Catalog :8002"]:::svc
+            sales["Sales :8003"]:::svc
+            payments["Payments :8004"]:::svc
+            ticketing["Ticketing :8005"]:::svc
+            entry["Entry :8006"]:::svc
+            audit["Audit :8007"]:::svc
+        end
+
+        subgraph Processing
+            id_worker["Identity Worker"]:::worker
+            cat_worker["Catalog Worker"]:::worker
+            sales_worker["Sales Worker"]:::worker
+            tick_worker["Ticketing Worker"]:::worker
+            pay_worker["Payments Worker"]:::worker
+            entry_worker["Entry Worker"]:::worker
+            audit_worker["Audit Worker"]:::worker
+        end
+
+        subgraph Infrastructure
+            pg[("PostgreSQL 16")]:::db
+            redis[("Redis 7")]:::db
+            nats[["NATS JetStream"]]:::bus
+        end
     end
 
-    subgraph Domain
-        identity["Identity :8001"]:::svc
-        catalog["Catalog :8002"]:::svc
-        sales["Sales :8003"]:::svc
-        payments["Payments :8004"]:::svc
-        ticketing["Ticketing :8005"]:::svc
-        entry["Entry :8006"]:::svc
-        audit["Audit :8007"]:::svc
-    end
-
-    subgraph Workers
-        id_worker["Identity Worker"]:::worker
-        cat_worker["Catalog Worker"]:::worker
-        sales_worker["Sales Worker"]:::worker
-        tick_worker["Ticketing Worker"]:::worker
-        pay_worker["Payments Worker"]:::worker
-        entry_worker["Entry Worker"]:::worker
-        audit_worker["Audit Worker"]:::worker
-    end
-
-    subgraph Infrastructure
-        pg[("PostgreSQL 16")]:::db
-        redis[("Redis 7")]:::db
-        nats[["NATS JetStream"]]:::bus
-    end
-
-    subgraph Third-Party Services
+    subgraph Third-Party
         stripe(["Stripe"]):::ext
         twilio(["Twilio"]):::ext
         maps(["Google Maps"]):::ext
@@ -113,6 +88,7 @@ flowchart TB
     gw -->|"HTTP :8002"| catalog
     gw -->|"HTTP :8003"| sales
     gw -->|"HTTP :8004"| payments
+    gw -->|"HTTP :8005"| ticketing
     gw -->|"HTTP :8006"| entry
 
     identity  -->|"Read/Write"| pg
@@ -131,37 +107,26 @@ flowchart TB
     identity  -->|"Publish"| nats
     catalog   -->|"Publish"| nats
     sales     -->|"Publish"| nats
+    ticketing -->|"Publish"| nats
+    payments  -->|"Publish"| nats
     entry     -->|"Publish"| nats
 
+    nats -->|"Subscribe"| id_worker
+    nats -->|"Subscribe"| cat_worker
+    nats -->|"Subscribe"| sales_worker
     nats -->|"Subscribe"| tick_worker
     nats -->|"Subscribe"| pay_worker
     nats -->|"Subscribe"| entry_worker
     nats -->|"Subscribe"| audit_worker
-    nats -->|"Subscribe"| cat_worker
-    nats -->|"Subscribe"| sales_worker
-    nats -->|"Subscribe"| id_worker
 
-    identity  -.-|"Spawns"| id_worker
-    catalog   -.-|"Spawns"| cat_worker
-    sales     -.-|"Spawns"| sales_worker
-    ticketing -.-|"Spawns"| tick_worker
-    payments  -.-|"Spawns"| pay_worker
-    entry     -.-|"Spawns"| entry_worker
-    audit     -.-|"Spawns"| audit_worker
+    id_worker -->|"Send"| twilio
+    catalog   -->|"Resolve"| maps
+    identity  -->|"Verify"| turnstile
+    identity  -->|"Check"| hibp
+    payments  -->|"Create Intent"| stripe
+    stripe    -->|"Webhook"| gw
 
-    payments  <-->|"Webhook"| stripe
-    id_worker  -->|"Send"| twilio
-    catalog    -->|"Resolve"| maps
-    identity   -->|"Verify"| turnstile
-    identity   -->|"Check"| hibp
-
-    app ~~~ gw
-    gw ~~~ identity
-    identity ~~~ id_worker
-    id_worker ~~~ pg
-    pg ~~~ stripe
-
-    classDef client fill:#111,color:#fff,stroke:#fff,stroke-width:2px
+    classDef client fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:2px,font-weight:bold
     classDef edge   fill:#222,color:#fff,stroke:#aaa,stroke-width:2px,font-weight:bold
     classDef svc    fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:1px
     classDef worker fill:#111,color:#fff,stroke:#666,stroke-width:1px,stroke-dasharray:3
@@ -172,30 +137,152 @@ flowchart TB
 
 </div>
 
-### Technology Stack
+The client is a single mobile application for Android and iOS, whose job is limited to showing
+information, collecting what the user decides and keeping the credential on the device,
+without resolving any business rule of its own.
 
-#### Client
+The server is structured in layers. The presentation layer is the API Gateway, the only door
+from the outside, which authenticates every call, routes it to whoever must serve it and holds
+the channel the notices later arrive through.
 
-- [TypeScript](https://www.typescriptlang.org/)
-- [React](https://react.dev/)
-- [Vite](https://vitejs.dev/)
-- [Capacitor](https://capacitorjs.com/)
-- [TanStack Router](https://tanstack.com/router)
-- [TanStack Query](https://tanstack.com/query)
-- [Zustand](https://zustand-demo.pmnd.rs/)
-- [Immer](https://immerjs.github.io/immer/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Radix UI](https://www.radix-ui.com/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [React Hook Form](https://react-hook-form.com/)
-- [Zod](https://zod.dev/)
-- [Axios](https://axios-http.com/)
-- [react-i18next](https://react.i18next.com/)
-- [SimpleWebAuthn](https://simplewebauthn.dev/)
-- [Stripe Elements](https://stripe.com/docs/stripe-js)
-- [Lucide React](https://lucide.dev/)
-- [Sonner](https://sonner.emilkowal.ski/)
-- [date-fns](https://date-fns.org/)
+The business layer gathers the seven services, delimited by the responsibility they take on,
+each owning its data and deployable on its own. None of them calls another to serve a request;
+each decides with what it already holds, and whatever the rest need to know travels afterwards
+as a published event.
+
+The infrastructure layer provides the durable messaging the domain events travel on, the
+auxiliary memory that supplies the distributed lock and the relational store that keeps the
+state alongside the outbox.
+
+The processing layer gathers the workers, which consume those notices, run whatever needs no
+immediate answer and refresh the local projections.
+
+The third block is the third-party services, which take on payment, message delivery and the
+checks the platform does not perform itself. The server calls almost all of them, and whatever
+comes back enters through the API Gateway, so no call escapes authentication.
+
+### Style
+
+The structure above answers to a recognisable style, an **event-driven microservice
+architecture with choreography**, and each term of that name rules out a family of
+alternatives.
+
+- [Microservices](https://microservices.io/patterns/microservices.html)
+- [Event-driven architecture](https://microservices.io/patterns/data/event-driven-architecture.html)
+- [Choreography](https://learn.microsoft.com/en-us/azure/architecture/patterns/choreography)
+
+### Decision Records
+
+The full dive into the topic is in [ADR](adr.md).
+
+## View Model
+
+The 4+1 model explains the system through four views, each answering one question, and a
+fifth that checks the other four hold together.
+
+<div align="center">
+
+| View | Question it answers | Document |
+|---|---|---|
+| Logical | What the platform does and how responsibilities split | [Logical](views/logical.md) |
+| Process | What runs concurrently and how it synchronises | [Process](views/process.md) |
+| Development | How the code is laid out and what depends on what | [Development](views/development.md) |
+| Physical | What runs where, as it stands today | [Physical](views/physical.md) |
+| Scenarios | How the pieces meet on the critical journeys | [Scenarios](views/scenarios.md) |
+
+</div>
+
+## Server Design
+
+### Architecture of a Service
+
+Every service shares the same internal layout, a layered architecture with an isolated
+domain, where dependencies always point inwards and no inner layer knows its caller.
+
+<div align="center">
+
+```mermaid
+flowchart TB
+    subgraph Inbound
+        routers["routers"]:::edge
+        worker["worker"]:::edge
+    end
+
+    schemas["schemas"]:::contract
+
+    subgraph Application
+        app["services/application"]:::app
+    end
+
+    subgraph Domain
+        domain["services/domain"]:::domain
+    end
+
+    subgraph Persistence
+        repositories["repositories"]:::infra
+        models["models"]:::infra
+    end
+
+    core["core"]:::core
+
+    routers -->|"Validated request"| app
+    worker -->|"Consumed event"| app
+    routers -.->|"Validates with"| schemas
+    app -->|"Applies"| domain
+    app -->|"Reads and writes"| repositories
+    repositories -->|"Maps"| models
+    core -.->|"Provides settings and dependencies"| routers
+    core -.-> app
+    core -.-> repositories
+
+    classDef edge     fill:#222,color:#fff,stroke:#aaa,stroke-width:2px,font-weight:bold
+    classDef app      fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:1px
+    classDef domain   fill:#111,color:#fff,stroke:#999,stroke-width:2px
+    classDef infra    fill:#0a0a0a,color:#fff,stroke:#666,stroke-width:1px
+    classDef contract fill:#111,color:#fff,stroke:#777,stroke-width:1px,stroke-dasharray:3
+    classDef core     fill:#0d0d1a,color:#aaaaff,stroke:#4444aa,stroke-width:1px,stroke-dasharray:4
+```
+
+</div>
+
+### Services
+
+<div align="center">
+
+| Service | Documents |
+|---|---|
+| API Gateway | [Overview](apps/api/services/gateway/overview.md) |
+| Identity | [Overview](apps/api/services/identity/overview.md) · [Schema](apps/api/services/identity/schema.md) · [Events](apps/api/services/identity/events.md) |
+| Catalog | [Overview](apps/api/services/catalog/overview.md) · [Schema](apps/api/services/catalog/schema.md) · [Events](apps/api/services/catalog/events.md) |
+| Sales | [Overview](apps/api/services/sales/overview.md) · [Schema](apps/api/services/sales/schema.md) · [Events](apps/api/services/sales/events.md) |
+| Payments | [Overview](apps/api/services/payments/overview.md) · [Schema](apps/api/services/payments/schema.md) · [Events](apps/api/services/payments/events.md) |
+| Ticketing | [Overview](apps/api/services/ticketing/overview.md) · [Schema](apps/api/services/ticketing/schema.md) · [Events](apps/api/services/ticketing/events.md) |
+| Entry | [Overview](apps/api/services/entry/overview.md) · [Schema](apps/api/services/entry/schema.md) · [Events](apps/api/services/entry/events.md) |
+| Audit | [Overview](apps/api/services/audit/overview.md) · [Schema](apps/api/services/audit/schema.md) |
+
+</div>
+
+### Workers
+
+A worker is a process that runs beside its service and serves no request. It wakes on a clock
+to sweep what has expired, and reacts to the events other services publish to refresh its
+local projections.
+
+<div align="center">
+
+| Worker | Document |
+|---|---|
+| Identity | [Events](apps/api/services/identity/events.md) |
+| Catalog | [Events](apps/api/services/catalog/events.md) |
+| Sales | [Events](apps/api/services/sales/events.md) |
+| Ticketing | [Events](apps/api/services/ticketing/events.md) |
+| Entry | [Events](apps/api/services/entry/events.md) |
+| Payments | [Events](apps/api/services/payments/events.md) |
+| Audit | [Overview](apps/api/services/audit/overview.md) |
+
+</div>
+
+### Technologies
 
 #### Edge
 
@@ -241,7 +328,7 @@ flowchart TB
 - [Docker Compose](https://docs.docker.com/compose/)
 - [Jaeger](https://www.jaegertracing.io/)
 
-#### Third-Party Services
+#### Third-party Services
 
 - [Stripe](https://stripe.com/docs)
 - [Twilio](https://www.twilio.com/docs)
@@ -264,426 +351,162 @@ flowchart TB
 - [commitlint](https://commitlint.js.org/)
 - [pre-commit](https://pre-commit.com/)
 
-
-## Architectural Views
-
-### Logical View
-
-> [!NOTE]
-> The logical view describes the primary domain abstractions and the bounded context decomposition of the platform.
-
-The system is partitioned into 7 bounded contexts, each owning its own data model and enforcing its own invariants independently.
-
-The following diagram shows every domain event flow between bounded contexts in the system:
-
-<div align="center">
-
-```mermaid
-flowchart TB
-    identity["Identity"]:::ctx
-    catalog["Catalog"]:::ctx
-    sales["Sales"]:::ctx
-    payments["Payments"]:::ctx
-    ticketing["Ticketing"]:::ctx
-    entry["Entry"]:::ctx
-    audit["Audit"]:::ctx
-
-    catalog   -->|"TierAvailabilityChanged"| sales
-    sales     -->|"OrderCreated"| payments
-    payments  -->|"PaymentConfirmed / PaymentRefunded"| sales
-    sales     -->|"OrderConfirmed"| ticketing
-    payments  -->|"PaymentConfirmed / PaymentRefunded"| ticketing
-    ticketing -->|"TicketIssued / TicketTransferred / TicketCancelled"| entry
-    sales     -->|"OrderConfirmed"| catalog
-
-    identity  -->|"UserRegistered / UserVerified / PasswordChanged"| audit
-    catalog   -->|"EventPublished / TierAvailabilityChanged"| audit
-    sales     -->|"OrderCreated / OrderConfirmed / QueueJoined / QueueAdvanced"| audit
-    payments  -->|"PaymentConfirmed / PaymentRefunded"| audit
-    ticketing -->|"TicketIssued / TicketTransferred / TicketCancelled"| audit
-    entry     -->|"EntryGranted / EntryDenied"| audit
-
-    classDef ctx fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:1px
-```
-
-</div>
-
-### Development View
-
-> [!NOTE]
-> The development view describes how the system is organised as source code.
-
-#### **Frontend**
-
-All code resides under `apps/app`, organised by feature module:
-
-```
-apps/app/
-  src/
-    routes/        Route Definitions
-    features/      Feature Modules
-    components/    Shared UI Primitives
-    hooks/         Shared Hooks
-    i18n/          Translations
-    store/         Global State
-    lib/           Utilities And Helpers
-    config/        App Configuration
-    assets/        Static Assets
-    styles/        Global Styles
-    test/          Tests
-```
-
-#### **Backend**:
-
-All code resides under `apps/api`, with the gateway at `apps/api/gateway` and the seven domain services under `apps/api/services`, organised by an identical internal structure:
-
-```
-services/<name>/
-  config/                           Environment Config
-  migrations/                       Schema Migrations
-  src/com/qode/qrew/v1/<name>/
-    routers/                        Route Handlers
-    services/                       Business Logic
-    models/                         Persistence Models
-    repositories/                   Data Access
-    schemas/                        Request/Response Contracts
-    worker/                         Background Jobs
-    core/                           Shared Setup
-  tests/                            Tests
-```
-
-
-### Process View
-
-> [!NOTE]
-> The process view describes the runtime model, covering how services and workers run as separate processes and how they communicate through shared infrastructure.
-
-The follwoing diagram shows how services handle requests, how workers handle asynchronous work, and the communication channels each one maintains in the system:
-
-<div align="center">
-
-```mermaid
-flowchart LR
-    svc(["Service Process"]):::svc
-
-    pg[("PostgreSQL")]:::db
-    redis[("Redis")]:::db
-    nats{{"NATS JetStream"}}:::bus
-    ext(["Third-Party"]):::ext
-
-    worker(["Worker Process"]):::worker
-
-    svc -->|"Read / Write"| pg
-    svc -->|"Cache / Lock"| redis
-    svc -->|"Publish"| nats
-    svc -->|"Enqueue"| redis
-
-    nats -->|"Subscribe"| worker
-    redis -->|"Dequeue"| worker
-    worker -->|"Write"| pg
-    worker -->|"Outbound"| ext
-
-    classDef svc    fill:#222,color:#fff,stroke:#aaa,stroke-width:2px
-    classDef worker fill:#111,color:#fff,stroke:#666,stroke-width:1px,stroke-dasharray:3
-    classDef db     fill:#0a0a0a,color:#fff,stroke:#666,stroke-width:1px
-    classDef bus    fill:#111,color:#fff,stroke:#999,stroke-width:1px
-    classDef ext    fill:#222,color:#fff,stroke:#777,stroke-width:1px
-```
-
-</div>
-
-### Physical View
-
-> [!NOTE]
-> The physical view describes how software components map to infrastructure at deployment time.
-
-The following diagram shows the recommended production setup for the system:
-
-<div align="center">
-
-```mermaid
-flowchart TB
-    internet(["Internet"]):::ext
-
-    subgraph Edge["Edge Layer"]
-        cdn["CDN / DDoS Protection"]:::edge
-        lb["Load Balancer"]:::edge
-        ingress["Ingress Controller"]:::edge
-    end
-
-    subgraph Cluster["Multi-AZ Kubernetes Cluster"]
-        gw["API Gateway"]:::svc
-
-        subgraph Services["Domain Services"]
-            identity["Identity"]:::svc
-            catalog["Catalog"]:::svc
-            sales["Sales"]:::svc
-            payments["Payments"]:::svc
-            ticketing["Ticketing"]:::svc
-            entry["Entry"]:::svc
-            audit["Audit"]:::svc
-        end
-
-        workers["Workers × 7"]:::worker
-
-        subgraph StatefulSets["Stateful Infrastructure"]
-            pg[("PostgreSQL")]:::db
-            redis[("Redis")]:::db
-            nats[["NATS JetStream"]]:::bus
-        end
-
-        subgraph Observability["Observability"]
-            metrics["Prometheus + Grafana"]:::obs
-            logs["Loki"]:::obs
-            tracing["OpenTelemetry Collector"]:::obs
-        end
-    end
-
-    subgraph ThirdParty["Third-Party Services"]
-        stripe(["Stripe"]):::ext
-        twilio(["Twilio"]):::ext
-        maps(["Google Maps"]):::ext
-        turnstile(["Cloudflare Turnstile"]):::ext
-        hibp(["HIBP"]):::ext
-    end
-
-    internet -->|"HTTPS"| cdn
-    cdn -->|"Filtered Traffic"| lb
-    lb -->|"TLS Terminated"| ingress
-    ingress -->|"Routed Request"| gw
-    stripe -->|"Webhook"| ingress
-    gw -->|"HTTP Internal"| Services
-    Services -->|"Read / Write"| StatefulSets
-    workers -->|"Read / Write"| StatefulSets
-    workers -->|"Outbound API"| ThirdParty
-    Services -.->|"Telemetry"| Observability
-    workers -.->|"Telemetry"| Observability
-
-    classDef edge   fill:#222,color:#fff,stroke:#aaa,stroke-width:2px,font-weight:bold
-    classDef svc    fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:1px
-    classDef worker fill:#111,color:#fff,stroke:#666,stroke-width:1px,stroke-dasharray:3
-    classDef db     fill:#0a0a0a,color:#fff,stroke:#666,stroke-width:1px
-    classDef bus    fill:#111,color:#fff,stroke:#999,stroke-width:1px
-    classDef obs    fill:#0d0d1a,color:#aaaaff,stroke:#4444aa,stroke-width:1px,stroke-dasharray:4
-    classDef ext    fill:#222,color:#fff,stroke:#777,stroke-width:1px
-```
-
-</div>
-
-The following table describes what the production deployment would recommend for each layer and element shown above, from the public internet entry point down to the external providers the platform integrates with in the system.
-
-<div align="center">
-
-| Component | Description |
-|---|---|
-| CDN / DDoS Protection | Should absorb volumetric attacks and cache static assets at the network edge before traffic reaches the cluster. |
-| Load Balancer | Should serve as the cloud-managed TLS termination point, distributing inbound connections across Ingress Controller replicas. |
-| Ingress Controller | Should route HTTP traffic to internal services, manage certificate lifecycle via Cert-Manager, and enforce per-route rate limiting. |
-| API Gateway | Should be the sole application-level entry point, validating JWT tokens and routing each request to the correct domain service. |
-| Domain Services | Should each run with a minimum of two replicas spread across availability zones, scaled individually via HPA. |
-| Workers | Should run as independent deployments, one per domain service, consuming events and job queues asynchronously. |
-| PostgreSQL | Should run as a primary with read replicas, fronted by PgBouncer for connection pooling and backed by daily off-cluster backups. |
-| Redis | Should operate in Sentinel mode, serving distributed locking, session caching, and the asynchronous job queue. |
-| NATS JetStream | Should run as a clustered deployment with stream replication, carrying all cross-context domain events durably. |
-| Prometheus + Grafana | Should scrape metrics from all workloads and provide alerting rules and on-call routing. |
-| Loki | Should aggregate structured logs from all workloads, indexed for query and incident investigation. |
-| OpenTelemetry Collector | Should receive distributed traces from all services and forward them to a compatible tracing backend. |
-| Stripe | Should handle payment processing, with outbound calls from the Payments worker and inbound webhooks through the Ingress Controller. |
-| Twilio | Should deliver SMS and transactional email, called exclusively by the Identity worker. |
-| Google Maps | Should provide venue geocoding, called exclusively by the Catalog service. |
-| Cloudflare Turnstile | Should verify bot prevention challenge tokens at registration, called exclusively by the Identity service. |
-| HIBP | Should screen credentials against the breached password database at registration and password change, called exclusively by the Identity service. |
-
-</div>
-
-### Scenario View
-
-> [!NOTE]
-> The scenario view illustrates key system behaviours end to end, demonstrating how the architectural layers collaborate under realistic conditions.
-
-The following situations present representative sequences that illustrate how the architectural layers collaborate under realistic conditions, covering the 3 core flows of the system.
-
-**User Registration**
-
-The following sequence traces an example of the full account creation flow, from the initial client request through external verification and asynchronous email dispatch.
-
-<div align="center">
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant App as Mobile App
-    participant GW as API Gateway
-    participant ID as Identity
-    participant TS as Cloudflare Turnstile
-    participant HI as HIBP
-    participant PG as PostgreSQL
-    participant NA as NATS JetStream
-    participant RE as Redis
-    participant IW as Identity Worker
-    participant TW as Twilio
-
-    App->>GW: POST /auth/register (email, password, challenge token)
-    GW->>ID: Forward registration request
-    ID->>TS: Verify Turnstile challenge token
-    TS-->>ID: Token valid
-    ID->>HI: k-anonymity prefix check (SHA-1 prefix)
-    HI-->>ID: Prefix match list
-    ID->>ID: Reject if password hash suffix found in list
-    ID->>PG: Hash password with Argon2id and persist account
-    ID->>NA: Publish UserRegistered event
-    ID-->>GW: 201 Created
-    GW-->>App: 201 Created
-    NA-->>IW: Consume UserRegistered event
-    IW->>RE: Enqueue verification email job
-    IW->>TW: Dispatch verification email
-```
-
-</div>
-
-**Ticket Purchase**
-
-The following sequence traces the full ticket purchase flow, from order submission through distributed lock acquisition, payment initiation, webhook confirmation, and asynchronous ticket issuance.
-
-<div align="center">
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant App as Mobile App
-    participant GW as API Gateway
-    participant SA as Sales
-    participant RE as Redis
-    participant PG as PostgreSQL
-    participant NA as NATS JetStream
-    participant PW as Payments Worker
-    participant ST as Stripe
-    participant PA as Payments
-    participant TW as Ticketing Worker
-
-    App->>GW: POST /orders (tier ID, quantity)
-    GW->>SA: Forward order request (with X-User-ID header)
-    SA->>RE: Acquire distributed lock on tier capacity (Redlock)
-    RE-->>SA: Lock acquired
-    SA->>PG: Validate tier availability and create order record
-    SA->>RE: Release distributed lock
-    SA->>NA: Publish OrderCreated event
-    SA-->>GW: 202 Accepted (order ID)
-    GW-->>App: 202 Accepted (order ID)
-    NA-->>PW: Consume OrderCreated event
-    PW->>ST: Create Stripe checkout session
-    ST-->>PW: Checkout session URL
-    PW->>App: Push checkout URL via WebSocket
-    App->>ST: Complete payment on Stripe-hosted page
-    ST->>GW: POST /webhooks/stripe (PaymentIntent confirmed)
-    GW->>PA: Forward webhook
-    PA->>NA: Publish PaymentConfirmed event
-    NA-->>TW: Consume PaymentConfirmed event
-    TW->>PG: Generate QR code and persist ticket
-    TW->>App: Push ticket issuance confirmation via WebSocket
-```
-
-</div>
-
-**Entry Scanning**
-
-The following sequence traces the admission flow, from QR code scan at the venue through capacity enforcement, event publishing, and real-time confirmation.
-
-<div align="center">
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Org as Organiser App
-    participant GW as API Gateway
-    participant EN as Entry
-    participant RE as Redis
-    participant PG as PostgreSQL
-    participant NA as NATS JetStream
-    participant AW as Audit Worker
-
-    Org->>GW: POST /entry/scan (QR code payload)
-    GW->>EN: Forward scan request (with X-User-ID header)
-    EN->>PG: Validate ticket against local read model
-    PG-->>EN: Ticket valid and not yet used
-    EN->>RE: Acquire distributed lock on venue capacity (Redlock)
-    RE-->>EN: Lock acquired
-    EN->>PG: Increment venue capacity counter and persist EntryGranted record
-    EN->>RE: Release distributed lock
-    EN->>NA: Publish EntryGranted event
-    EN-->>GW: 200 OK (admission result)
-    GW-->>Org: 200 OK (admission result)
-    NA-->>AW: Consume EntryGranted event
-    AW->>PG: Append immutable audit log entry
-```
-
-</div>
-
-## Components Breakdown
-
-### Frontend
-
-- [App](../apps/app/overview.md)
-
-### Backend
-
-#### API Gateway
-
-- [Gateway](../apps/api/services/gateway/overview.md)
-
-#### Domain Services
-
-- [Identity](../apps/api/services/identity/overview.md)
-- [Catalog](../apps/api/services/catalog/overview.md)
-- [Sales](../apps/api/services/sales/overview.md)
-- [Payments](../apps/api/services/payments/overview.md)
-- [Ticketing](../apps/api/services/ticketing/overview.md)
-- [Entry](../apps/api/services/entry/overview.md)
-- [Audit](../apps/api/services/audit/overview.md)
-
+## Client Design
+
+### Architecture of the App
+
+The full dive into the topic is in [App](apps/app/overview.md).
+
+### Technologies
+
+- [TypeScript](https://www.typescriptlang.org/)
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Capacitor](https://capacitorjs.com/)
+- [TanStack Router](https://tanstack.com/router)
+- [TanStack Query](https://tanstack.com/query)
+- [Zustand](https://zustand-demo.pmnd.rs/)
+- [Immer](https://immerjs.github.io/immer/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Radix UI](https://www.radix-ui.com/)
+- [Framer Motion](https://www.framer.com/motion/)
+- [React Hook Form](https://react-hook-form.com/)
+- [Zod](https://zod.dev/)
+- [Axios](https://axios-http.com/)
+- [react-i18next](https://react.i18next.com/)
+- [SimpleWebAuthn](https://simplewebauthn.dev/)
+- [Stripe Elements](https://stripe.com/docs/stripe-js)
+- [Lucide React](https://lucide.dev/)
+- [Sonner](https://sonner.emilkowal.ski/)
+- [date-fns](https://date-fns.org/)
 
 ## Communication
 
-### APIs
+Communication happens in three scenarios, and each one raises the same four questions: what
+travels, how it is delivered, what keeps both sides from telling contradictory stories, and
+what happens when something fails.
 
-- **Style:** REST
-- **Format:** JSON
-- **Versioning:** `/v1`
-- **Auth:** Bearer token
+<div align="center">
 
-### Protocols
+| | On the server | On the client | Between the two |
+|---|---|---|---|
+| **Messages** | Domain events with a versioned contract | Session state and cache entries | Interface resources and notices |
+| **Delivery** | Publish and subscribe over durable messaging | Shared store and notice provider | Request and response, plus a permanent channel |
+| **Consistency** | Outbox, retry and operation key | Invalidation by key after every write | Versioning, idempotency and credential renewal |
+| **Errors** | Retry and dead letter queue | Surfaced as an interruption | Status codes and problem details |
+
+</div>
+
+Failures fall into the same three categories wherever they arise. A **domain** failure says the
+operation does not apply, and repeating it changes nothing. An **infrastructure** failure says
+something is not answering, and there a retry helps, since unavailability is usually passing. A
+**contract** failure says what arrived does not match what was declared, which betrays a defect
+or an uncoordinated deployment, so retrying would only repeat it.
+
+### Protocols, Temporality and Formats
+
+#### Protocols
 
 <div align="center">
 
 ```mermaid
 flowchart LR
-    client["Mobile App"]
-    gw["API Gateway"]
-    services["Domain Services"]
-    nats["NATS JetStream"]
-    infra["Infrastructure"]
+    device["Mobile App"]:::client
+    gw["API Gateway"]:::edge
+    services["Domain Services"]:::svc
+    nats[["NATS JetStream"]]:::bus
 
-    client   -->|"HTTPS · WebSocket"| gw
-    gw       -->|"HTTP"| services
-    services -->|"Pub/Sub"| nats
-    nats     -->|"Pub/Sub"| services
-    services -->|"TCP"| infra
+    device <-->|"HTTP over TLS · REST /v1 · JSON · Bearer token"| gw
+    gw -->|"WebSocket over TLS · JSON"| device
+    gw <-->|"HTTP · REST /v1 · JSON"| services
+    services -->|"Publish · EventEnvelope"| nats
+    nats -->|"Subscribe · EventEnvelope"| services
+
+    classDef client fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:2px,font-weight:bold
+    classDef edge   fill:#222,color:#fff,stroke:#aaa,stroke-width:2px,font-weight:bold
+    classDef svc    fill:#1a1a1a,color:#fff,stroke:#888,stroke-width:1px
+    classDef bus    fill:#111,color:#fff,stroke:#999,stroke-width:1px
 ```
 
 </div>
 
-### Internal Communication
+**HTTP** joins the device with the API Gateway and carries whatever the user asks for or
+sends. It is used because every action of theirs starts with a gesture and expects an answer
+at once, which is exactly the request and response model, and because its methods and status
+codes already say what happened, with no need to invent a language of one's own.
 
-#### Event Messaging
+**TLS** wraps the traffic between the device and the API Gateway, both the requests and the
+notices. It is used because credentials and personal data travel there, which without
+encryption would be legible to anyone listening on the network, and only the local
+environment goes without it, for lack of certificates.
 
-- **Broker:** NATS JetStream
-- **Delivery:** At-least-once
-- **Subject format:** `<context>.<entity>.<event>`
-- **Envelope:** `<type> | <version> | <timestamp> | <service> | <correlation_id>`
-- **Acknowledgment:** On success
-- **Failure:** Retry
+**HTTP** reappears, this time unencrypted, between the API Gateway and each service, when the
+already verified request is forwarded. It is kept, rather than adopting a faster binary
+protocol, because it avoids translating formats at the boundary and allows following one
+request end to end with the same tools, at the cost of an efficiency that inside a single
+network goes unnoticed.
 
-### External Interfaces
+**WebSocket** holds an open connection between the API Gateway and the device through which
+the server speaks first. It is used because some news answers no question, such as a payment
+being confirmed or a turn coming up in the queue, and asking every few seconds would drain the
+battery and still arrive late when it matters most.
+
+**NATS JetStream** joins the services to one another, which never call each other and instead
+publish what happens to them for whoever has an interest. It is used because JetStream keeps
+those events in streams until every recipient consumes them, so a service that is down or
+mid-deployment loses nothing and finds on its return everything that happened while it was
+away.
+
+#### Temporality
+
+Synchronous calls serve any operation whose result is needed to carry on, and whoever makes
+them waits for the answer before continuing.
+
+Asynchronous messaging serves everything that must happen because of an operation but with
+nobody waiting for it, and whoever publishes the event moves on.
+
+#### Formats
+
+Everything that travels through the system, both the request and its response and the event a
+service publishes, goes in JSON, which both ends read without translation and anyone can
+inspect while debugging.
+
+The shape of that content is not taken on trust but checked at every boundary, since the
+server declares each field and its type in models that validate what comes in and trim what
+goes out, while the client does the same with equivalent schemas in its own language, and
+neither check is optional, so malformed data stops where it appears instead of spreading.
+
+The normalised description of the interface comes from those same models and the server
+generates it on its own, so the documentation is neither written apart nor able to fall behind
+the code, because changing a field changes both the validation and what is published about it.
+
+Event contracts get identical treatment, with the particularity of being declared once in a
+shared package that both publisher and consumer depend on, so the two use literally the same
+definition instead of two copies that would drift apart over time.
+
+### Server Communication
+
+What travels between services are domain events, facts that already happened, published to
+durable streams and picked up by whoever has an interest.
+
+The full dive into the topic is in [Messaging](apps/api/messaging/messaging.md),
+[Streams](apps/api/messaging/streams.md) and [Subjects](apps/api/messaging/subjects.md).
+
+### Client Communication
+
+What travels inside the device is session state, which survives a restart, and the server
+cache, held under a key and invalidated after every write.
+
+The full dive into the topic is in [App](apps/app/overview.md).
+
+### Client and Server Communication
+
+What travels between the device and the server are interface resources, which arrive on
+request, and notices, which the server sends on its own through the permanent channel.
+
+#### External Interfaces
+
+<div align="center">
 
 | Provider | Protocol | Direction |
 |---|---|---|
@@ -693,120 +516,12 @@ flowchart LR
 | Cloudflare Turnstile | REST | Outbound |
 | HIBP | REST · K-Anonymity | Outbound |
 
-## Data Architecture
-
-### Data Ownership
-
-<dl>
-<dt>• <strong><em>Schema Isolation.</em></strong></dt>
-<dd>Each service owns a dedicated PostgreSQL schema, shared with no other service.</dd>
-<dt>• <strong><em>Autonomous Evolution.</em></strong></dt>
-<dd>Each service manages its own Alembic migration history independently.</dd>
-<dt>• <strong><em>Exclusive Write Authority.</em></strong></dt>
-<dd>Each service is the sole writer to its own schema.</dd>
-<dt>• <strong><em>No Cross-Service Reads.</em></strong></dt>
-<dd>Each service accesses foreign data exclusively through published domain events, never by querying another service's schema directly.</dd>
-<dt>• <strong><em>Event-Driven Projection.</em></strong></dt>
-<dd>Each service projects the read models it needs from domain events into its own schema.</dd>
-<dt>• <strong><em>Eventual Consistency.</em></strong></dt>
-<dd>Each service boundary is kept consistent asynchronously through the event stream, without distributed transactions.</dd>
-</dl>
-
-### Data Storage
-
-| Store | Technology | Role |
-|---|---|---|
-| Primary Database | PostgreSQL 16 | Transactional State |
-| Cache / Queue / Lock | Redis 7 | Session Cache · Redlock Distributed Locks · Arq Job Queue  |
-| Message Bus | NATS JetStream | Durable Event Streaming |
-
-
-### Data Model
-
-The following documents describe the database schema for each bounded context in the system:
-
-- [Identity](../apps/api/services/identity/schema.md)
-- [Catalog](../apps/api/services/catalog/schema.md)
-- [Sales](../apps/api/services/sales/schema.md)
-- [Payments](../apps/api/services/payments/schema.md)
-- [Ticketing](../apps/api/services/ticketing/schema.md)
-- [Entry](../apps/api/services/entry/schema.md)
-- [Audit](../apps/api/services/audit/schema.md)
-
-
-### Data Flow
-
-<div align="center">
-
-```mermaid
-sequenceDiagram
-    participant App
-    participant Gateway
-    participant Service
-    participant PostgreSQL
-    participant Redis
-    participant NATS
-    participant Worker
-    participant ThirdParty
-
-    Note over App, PostgreSQL: HTTP Flow
-    App->>Gateway: HTTPS request
-    Gateway->>Gateway: Validate JWT
-    Gateway->>Gateway: Inject Identity Headers
-    Gateway->>Service: Forward request
-    Service->>PostgreSQL: Read / Write
-    Service->>Redis: Cache / Lock
-    Service-->>App: Response
-
-    Note over App, Gateway: WebSocket Flow
-    App->>Gateway: Upgrade connection
-    Worker->>Gateway: Emit notification
-    Gateway-->>App: Push to client
-
-    Note over Service, Worker: Event Flow
-    Service->>PostgreSQL: Write state
-    Service->>NATS: Publish domain event
-    NATS->>Worker: Deliver event
-    Worker->>PostgreSQL: Write projected state
-    Worker->>Redis: Invalidate cache
-
-    Note over ThirdParty, Worker: Webhook Flow
-    ThirdParty->>Gateway: POST webhook
-    Gateway->>Service: Forward
-    Service->>NATS: Publish domain event
-    NATS->>Worker: Deliver event
-    Worker->>PostgreSQL: Write state
-
-    Note over Service, ThirdParty: Outbound Integration Flow
-    Service->>ThirdParty: API call
-    ThirdParty-->>Service: Response
-    Service->>PostgreSQL: Persist result
-
-    Note over Worker, ThirdParty: Background Job Flow
-    Service->>Redis: Enqueue job
-    Worker->>Redis: Dequeue job
-    Worker->>ThirdParty: Execute outbound task
-    Worker->>PostgreSQL: Write result
-```
-
 </div>
 
-## Cross-Cutting Concerns
+## Security
 
-### Security
+The full dive into the topic is in [Security](apps/api/security.md).
 
-The full dive into the topic is in [Security](cross-cutting/security.md).
+## Observability
 
-### Observability
-
-The full dive into the topic is in [Observability](cross-cutting/observability.md).
-
-## Infrastructure & Deployment
-
-<div align="center">
-
-*⏳ Pending...*
-
-</div>
-
-
+The full dive into the topic is in [Observability](apps/api/observability.md).

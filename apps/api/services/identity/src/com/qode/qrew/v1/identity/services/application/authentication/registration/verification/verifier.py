@@ -1,7 +1,9 @@
+# confirms a pending email or phone verification token
 from datetime import UTC, datetime
 
 import structlog
 
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.repositories.user import UserRepository
@@ -11,16 +13,17 @@ logger = structlog.get_logger(__name__)
 
 
 class VerificationError(DomainError):
-    """Raised when a verification token or one-time password is invalid."""
+    pass
 
 
 class EmailVerificationService:
+    # stores the repository and audit service the service uses
     def __init__(self, repo: UserRepository, audit: AuditService) -> None:
         self._repo = repo
         self._audit = audit
 
+    # confirms an email address using its still valid verification token
     async def verify(self, token: str) -> None:
-        """Verify an email address with the provided verification token."""
         user = await self._repo.get_by_email_verification_token(token)
 
         if user is None:
@@ -66,15 +69,16 @@ class EmailVerificationService:
 
 
 class PhoneVerificationService:
+    # stores the repository and audit service the service uses
     def __init__(self, repo: UserRepository, audit: AuditService) -> None:
         self._repo = repo
         self._audit = audit
 
+    # confirms a phone number using its still valid otp
     async def verify(self, phone_number: str, otp: str) -> None:
-        """Verify a phone number with the provided one-time password."""
         user = await self._repo.get_by_phone_number(phone_number)
 
-        if user is None or user.phone_number_otp != otp:
+        if user is None or user.phone_number_otp != pii_crypto.hash_lookup(otp):
             await logger.awarning("phone_number_verification_failed", reason="invalid_otp")
             raise VerificationError("Invalid or expired verification OTP", field="otp")
         if user.phone_number_verified:

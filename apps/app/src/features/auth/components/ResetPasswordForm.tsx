@@ -1,3 +1,4 @@
+// renders the reset password form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
@@ -33,17 +34,21 @@ interface Props {
   token: string
 }
 
+// renders the reset password form component
 export function ResetPasswordForm({ token }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
 
   const mutation = useMutation({
+    // implements mutation fn
     mutationFn: (data: Values) => authApi.resetPassword(token, data.new_password),
+    // handles on success
     onSuccess: () => {
       toast.success(t('auth.resetPasswordSuccess'))
       navigate({ to: '/login' })
     },
+    // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
       const message = extractErrorMessage(
         error.response?.data?.detail,

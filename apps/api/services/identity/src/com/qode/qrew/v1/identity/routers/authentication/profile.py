@@ -1,3 +1,4 @@
+# exposes the endpoints that read a user's profile onboarding status and audit trail
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query, Request, status
@@ -27,6 +28,7 @@ router = APIRouter(prefix="/profile")
 _AUDIT_PAGE_SIZE = 50
 
 
+# returns the caller's own profile
 @router.get(
     "/me",
     response_model=UserProfileResponse,
@@ -38,7 +40,6 @@ async def get_me(
     request: Request,
     current_user: User = Depends(get_current_user),
 ) -> UserProfileResponse:
-    """Return the current user's profile."""
     return UserProfileResponse(
         id=current_user.id,
         email=current_user.email,
@@ -52,6 +53,7 @@ async def get_me(
     )
 
 
+# returns which onboarding steps the caller has completed
 @router.get(
     "/onboarding-status",
     response_model=OnboardingStatusResponse,
@@ -64,10 +66,10 @@ async def get_onboarding_status(
     current_user: User = Depends(get_setup_or_full_user),
     profile_svc: ProfileService = Depends(get_profile_service),
 ) -> OnboardingStatusResponse:
-    """Return which onboarding steps the user has completed."""
     return await profile_svc.get_onboarding_status(current_user)
 
 
+# lists the caller's audit history
 @router.get(
     "/audit",
     response_model=Page[UserAuditEventResponse],
@@ -85,10 +87,8 @@ async def list_user_audit(
     current_user: User = Depends(get_current_user),
     profile_svc: ProfileService = Depends(get_profile_service),
 ) -> Page[UserAuditEventResponse]:
-    """Return the current user's audit history."""
     page_limit = clamp_limit(limit, default=_AUDIT_PAGE_SIZE)
     events, next_cursor = await profile_svc.paginate_audit(
-        db,
         current_user.id,
         action=action,
         since=since,
@@ -101,6 +101,7 @@ async def list_user_audit(
     )
 
 
+# returns the public name only profiles of a list of users
 @router.post(
     "/users/public",
     response_model=list[UserPublicProfile],

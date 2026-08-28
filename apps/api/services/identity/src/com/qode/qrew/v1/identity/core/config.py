@@ -1,3 +1,4 @@
+# defines the configuration settings for the identity service
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -25,6 +26,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
     redis_url: str = "redis://localhost:6379/0"
+    trusted_proxy_ip: str = ""
     nats_url: str = ""
 
     access_jwt_private_key: str = ""
@@ -72,6 +74,7 @@ class Settings(BaseSettings):
     android_package_name: str = ""
     android_app_cert_digest_sha256: str = ""
 
+    ratelimit_enabled: bool = True
     captcha_enabled: bool = False
     captcha_secret_key: str = ""
 
@@ -113,8 +116,10 @@ class Settings(BaseSettings):
     outbox_max_attempts: int = 5
     outbox_backoff_delays_seconds: list[int] = [1, 5, 25, 125, 625]
 
+    audit_url: str = "http://localhost:8007"
     internal_api_key: str = ""
 
+    # orders the configuration sources so the yaml file can override the defaults
     @classmethod
     def settings_customise_sources(
         cls,

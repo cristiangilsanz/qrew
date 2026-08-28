@@ -1,3 +1,4 @@
+// implements events
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Calendar, MapPin, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/_app/management/$orgId/events/')({
   component: OrgEventsPage,
 })
 
+// renders the org events page component
 function OrgEventsPage() {
   const { t, i18n } = useTranslation()
   const { orgId } = Route.useParams()
@@ -33,7 +35,6 @@ function OrgEventsPage() {
         <BackButton to="/management/$orgId" params={{ orgId }} />
         <h1 className="text-2xl font-semibold">{t('organiser.events.title')}</h1>
 
-        {/* Search bar */}
         <div className="relative">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <input
@@ -71,7 +72,6 @@ function OrgEventsPage() {
               className="block"
             >
               <article className="bg-card border-border hover:border-primary overflow-hidden rounded-xl border transition-colors">
-                {/* Image */}
                 <div className="relative h-44 w-full overflow-hidden bg-[#111]">
                   <ImageWithSkeleton
                     src={imageUrl}
@@ -86,7 +86,6 @@ function OrgEventsPage() {
                   )}
                 </div>
 
-                {/* Text */}
                 <div className="space-y-2 p-4">
                   <div className="flex items-start justify-between gap-2">
                     <h2 className="text-base leading-snug font-semibold">{event.name}</h2>
@@ -117,7 +116,6 @@ function OrgEventsPage() {
         })}
       </div>
 
-      {/* FAB */}
       <Link
         to="/management/$orgId/events/new"
         params={{ orgId }}

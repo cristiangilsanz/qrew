@@ -1,3 +1,4 @@
+# exposes the health and readiness probes for the gateway
 from fastapi import APIRouter, Response, status
 
 from com.qode.qrew.v1.gateway.hub.hub import get_hub
@@ -5,14 +6,15 @@ from com.qode.qrew.v1.gateway.hub.hub import get_hub
 router = APIRouter(tags=["probes"])
 
 
+# reports that the service is running
 @router.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+# reports whether the connection hub is up
 @router.get("/ready")
 async def ready(response: Response) -> dict[str, str]:
-    """Reports unavailable until the hub is fully started."""
     try:
         get_hub()
     except RuntimeError:

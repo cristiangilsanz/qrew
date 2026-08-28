@@ -1,3 +1,4 @@
+# defines the websocket close codes the gateway uses
 WS_CLOSE_NORMAL = 1000
 WS_CLOSE_INTERNAL = 1011
 

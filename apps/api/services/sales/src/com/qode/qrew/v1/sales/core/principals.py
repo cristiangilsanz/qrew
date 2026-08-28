@@ -1,3 +1,4 @@
+# signs and verifies access and queue tokens for the sales service
 import hashlib
 import uuid
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ class AuthenticatedUser:
     id: uuid.UUID
 
 
+# creates a throwaway signing key for local development
 def _gen_ephemeral_pem() -> str:
     key = generate_private_key(SECP256R1())
     return key.private_bytes(
@@ -41,6 +43,7 @@ def _gen_ephemeral_pem() -> str:
     ).decode()
 
 
+# loads the configured signing key for a token purpose and derives its public key
 def _load_key(purpose: Purpose) -> tuple[str, str]:
     if purpose == Purpose.ACCESS:
         pem = settings.access_jwt_private_key
@@ -63,23 +66,27 @@ def _load_key(purpose: Purpose) -> tuple[str, str]:
 _KEY_CACHE: dict[Purpose, tuple[str, str]] = {}
 
 
+# returns the cached key pair for a token purpose loading it once
 def _get(purpose: Purpose) -> tuple[str, str]:
     if purpose not in _KEY_CACHE:
         _KEY_CACHE[purpose] = _load_key(purpose)
     return _KEY_CACHE[purpose]
 
 
+# signs a payload with the key configured for a token purpose
 def sign(purpose: Purpose, payload: dict[str, Any]) -> str:
     private_pem, public_pem = _get(purpose)
     kid = hashlib.sha256(public_pem.encode()).hexdigest()[:16]
     return jwt.encode(payload, private_pem, algorithm=ALGORITHM, headers={"kid": kid})
 
 
+# verifies a token against the key configured for a token purpose
 def verify(purpose: Purpose, token: str) -> dict[str, Any]:
     _, public_pem = _get(purpose)
     return _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[return-value]
 
 
+# verifies a token against whichever of the given purposes matches
 def verify_any(purposes: tuple[Purpose, ...], token: str) -> tuple[Purpose, dict[str, Any]]:
     for purpose in purposes:
         try:
@@ -89,6 +96,7 @@ def verify_any(purposes: tuple[Purpose, ...], token: str) -> tuple[Purpose, dict
     raise jwt.InvalidTokenError("Token invalid for all attempted purposes")
 
 
+# resolves the authenticated user from the request headers or bearer token
 def get_current_user(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),

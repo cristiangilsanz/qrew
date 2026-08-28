@@ -1,3 +1,4 @@
+// renders the ticket card component
 import { Link } from '@tanstack/react-router'
 import { Calendar, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -16,6 +17,7 @@ interface Props {
   ticket: Ticket
 }
 
+// renders the ticket card component
 export function TicketCard({ ticket }: Props) {
   const { t } = useTranslation()
   const { data: event } = useEvent(ticket.event_id)
@@ -39,7 +41,6 @@ export function TicketCard({ ticket }: Props) {
           'bg-card border-border hover:border-primary overflow-hidden rounded-xl border transition-colors',
         )}
       >
-        {/* Image */}
         <div className="relative h-44 w-full overflow-hidden bg-[#111]">
           {!event ? (
             <Skeleton className="h-full w-full rounded-none" />
@@ -58,7 +59,6 @@ export function TicketCard({ ticket }: Props) {
           )}
         </div>
 
-        {/* Text section */}
         <div className="space-y-1.5 p-4">
           {!event ? (
             <>

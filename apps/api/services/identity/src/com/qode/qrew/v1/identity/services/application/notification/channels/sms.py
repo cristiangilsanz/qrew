@@ -1,3 +1,4 @@
+# delivers a rendered sms through twilio or logs it in development
 import httpx
 import structlog
 
@@ -10,8 +11,8 @@ from com.qode.qrew.v1.identity.core.config import settings
 logger = structlog.get_logger(__name__)
 
 
+# renders and sends an sms or logs it when twilio is disabled
 async def deliver(*, destination: str, template_key: str, payload: dict[str, object]) -> None:
-    """Render and send an SMS, or log to the stub when Twilio is disabled."""
     rendered = render_sms(template_key, dict(payload))
     if not settings.twilio_enabled:
         await logger.ainfo("sms_stub", to=mask_phone(destination), template=template_key)

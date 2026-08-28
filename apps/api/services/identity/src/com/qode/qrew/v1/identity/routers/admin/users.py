@@ -1,3 +1,4 @@
+# exposes the admin endpoints that search list and unlock users
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Request, status
@@ -22,6 +23,7 @@ router = APIRouter(prefix="/users")
 _DEFAULT_LIMIT = 20
 
 
+# searches users by partial email
 @router.get(
     "/search",
     response_model=list[UserSearchResult],
@@ -40,6 +42,7 @@ async def search_users(
     return [UserSearchResult(id=u.id, email=u.email, full_name=u.full_name) for u in users]
 
 
+# lists and filters users by search term and kyc status
 @router.get(
     "",
     response_model=Page[UserSummaryResponse],
@@ -57,7 +60,6 @@ async def list_users(
     db: AsyncSession = Depends(get_db),
     repo: UserRepository = Depends(get_user_repository),
 ) -> Page[UserSummaryResponse]:
-    """List and search users, newest first."""
     page_limit = clamp_limit(limit, default=_DEFAULT_LIMIT)
     stmt = repo.search_query(search=search, kyc_status=kyc_status)
     users, next_cursor = await cursor_paginate(
@@ -86,6 +88,7 @@ async def list_users(
     )
 
 
+# clears a user's login lockout
 @router.post(
     "/{user_id}/unlock",
     status_code=status.HTTP_200_OK,
@@ -98,6 +101,5 @@ async def unlock_user(
     admin: User = Depends(get_admin_user),
     lockout: LoginLockoutService = Depends(get_login_lockout_service),
 ) -> dict[str, str]:
-    """Clear a per-account login lockout."""
     await lockout.admin_unlock(user_id, admin.id)
     return {"message": "User account unlocked."}

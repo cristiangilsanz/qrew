@@ -1,5 +1,7 @@
+# creates organisations and manages their membership
 import re
 import uuid
+from collections.abc import Awaitable, Callable
 
 import structlog
 from sqlalchemy import Select
@@ -12,7 +14,10 @@ from com.qode.qrew.v1.catalog.models.organisation import (
     OrganisationMember,
     OrganisationRole,
 )
-from com.qode.qrew.v1.catalog.repositories.identity import UserRepository
+from com.qode.qrew.v1.catalog.services.application.identity import (
+    IdentityUnavailableError,
+    resolve_user_id,
+)
 from com.qode.qrew.v1.catalog.repositories.organisation import (
     MemberRow,
     OrganisationMemberRepository,
@@ -29,30 +34,36 @@ class OrganisationError(DomainError):
 
 
 class OrganisationService:
+    # stores the repositories audit service and user resolver the service uses
     def __init__(
         self,
         org_repo: OrganisationRepository,
         member_repo: OrganisationMemberRepository,
-        user_repo: UserRepository,
         audit: AuditService,
+        user_resolver: Callable[[str], Awaitable[uuid.UUID | None]] = resolve_user_id,
     ) -> None:
         self._orgs = org_repo
         self._members = member_repo
-        self._users = user_repo
         self._audit = audit
+        self._resolve_user = user_resolver
 
+    # builds the query that lists a user's organisations
     def list_for_user_query(self, user_id: uuid.UUID) -> Select[tuple[Organisation]]:
         return self._orgs.list_for_user_query(user_id)
 
+    # reads an organisation by its identifier
     async def get_by_id(self, organisation_id: uuid.UUID) -> Organisation | None:
         return await self._orgs.get_by_id(organisation_id)
 
+    # searches organisations by name or slug
     async def search(self, q: str, *, limit: int = 20) -> list[Organisation]:
         return await self._orgs.search(q, limit=limit)
 
+    # lists an organisation's members
     async def list_members(self, organisation_id: uuid.UUID) -> list[MemberRow]:
         return await self._members.list_members(organisation_id)
 
+    # creates an organisation with its owner as the first member
     @traced("organisation.create")
     async def create_organisation(
         self,
@@ -80,6 +91,7 @@ class OrganisationService:
         )
         return org
 
+    # invites a user by email to join an organisation
     @traced("organisation.invite_member")
     async def invite_member(
         self,
@@ -91,23 +103,27 @@ class OrganisationService:
     ) -> OrganisationMember:
         if role == OrganisationRole.owner:
             raise OrganisationError("Owners are promoted, not invited", field="role")
-        invitee = await self._users.get_by_email(invitee_email)
-        if invitee is None:
+        try:
+            invitee_id = await self._resolve_user(invitee_email)
+        except IdentityUnavailableError as exc:
+            raise OrganisationError("The directory is unavailable", field=None) from exc
+        if invitee_id is None:
             raise OrganisationError("No user with this email", field="email")
-        existing = await self._members.get(organisation_id, invitee.id)
+        existing = await self._members.get(organisation_id, invitee_id)
         if existing is not None:
             raise OrganisationError("User is already a member of this organisation", field="email")
         member = await self._members.insert(
-            organisation_id=organisation_id, user_id=invitee.id, role=role
+            organisation_id=organisation_id, user_id=invitee_id, role=role
         )
         await self._audit_safe(
             "organisation_member_added",
             actor_id=actor_id,
             organisation_id=organisation_id,
-            payload={"member_user_id": str(invitee.id), "role": str(role)},
+            payload={"member_user_id": str(invitee_id), "role": str(role)},
         )
         return member
 
+    # adds an already known user to an organisation
     @traced("organisation.add_member")
     async def add_member(
         self,
@@ -135,6 +151,7 @@ class OrganisationService:
         )
         return member
 
+    # removes a member unless doing so would leave the organisation without an owner
     @traced("organisation.remove_member")
     async def remove_member(
         self,
@@ -160,6 +177,7 @@ class OrganisationService:
             payload={"member_user_id": str(member_user_id)},
         )
 
+    # soft deletes an organisation
     @traced("organisation.delete")
     async def delete_organisation(
         self,
@@ -177,6 +195,7 @@ class OrganisationService:
             payload={},
         )
 
+    # records an audit event without letting a failure interrupt the caller
     async def _audit_safe(
         self,
         action: str,

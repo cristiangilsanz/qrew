@@ -1,3 +1,4 @@
+// implements events
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/_app/events/')({
   component: EventsPage,
 })
 
+// renders the events page component
 function EventsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()

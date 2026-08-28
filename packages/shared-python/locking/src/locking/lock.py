@@ -1,3 +1,4 @@
+# provides a redis backed distributed lock with a safe compare and delete release
 import asyncio
 import random
 import uuid
@@ -21,6 +22,7 @@ class _ClientState:
     url: str | None = None
 
 
+# returns the shared redis client reconnecting when the url changes
 def _shared_client(redis_url: str) -> aioredis.Redis:  # type: ignore[type-arg]
     if _ClientState.client is None or _ClientState.url != redis_url:
         _ClientState.url = redis_url
@@ -30,21 +32,21 @@ def _shared_client(redis_url: str) -> aioredis.Redis:  # type: ignore[type-arg]
     return _ClientState.client
 
 
+# closes the shared redis client
 async def close_locking() -> None:
-    """Closes the shared Redis client used for distributed locking."""
     if _ClientState.client is not None:
         await _ClientState.client.aclose()
     _ClientState.client = None
     _ClientState.url = None
 
 
+# builds the redis key for a lock
 def _full_key(key: str) -> str:
     return f"{_KEY_PREFIX}:{key}"
 
 
 class RedisLock:
-    """Acquire-and-release cycle for a Redis-backed distributed mutex."""
-
+    # stores the key ttl and redis client the lock uses
     def __init__(
         self,
         key: str,
@@ -58,8 +60,8 @@ class RedisLock:
         self._redis = redis_client
         self._sha: str | None = None
 
+    # tries to acquire the lock retrying with jitter until it gives up
     async def acquire(self, *, retry_attempts: int, retry_delay_ms: int) -> bool:
-        """Acquire the lock with jittered retries up to the configured limit."""
         nonce = uuid.uuid4().hex
         ttl_ms = int(self.ttl_seconds * 1000)
         for attempt in range(retry_attempts + 1):
@@ -74,8 +76,8 @@ class RedisLock:
             await asyncio.sleep(random.uniform(0, retry_delay_ms) / 1000)  # noqa: S311
         return False
 
+    # releases the lock without letting a failure interrupt the caller
     async def release(self) -> None:
-        """Releases the lock only when the current ownership token still matches."""
         if self.nonce is None:
             return
         try:
@@ -85,6 +87,7 @@ class RedisLock:
         finally:
             self.nonce = None
 
+    # runs the release script caching its sha for faster reuse
     async def _eval_release(self) -> None:
         full = _full_key(self.key)
         nonce = (self.nonce or "").encode()
@@ -102,6 +105,7 @@ class RedisLock:
             self._sha = None
 
 
+# acquires a lock for the duration of the context manager
 @asynccontextmanager
 async def redlock(
     key: str,
@@ -112,7 +116,6 @@ async def redlock(
     retry_delay_ms: int = 200,
     redis_client: aioredis.Redis | None = None,  # type: ignore[type-arg]
 ) -> AsyncGenerator[RedisLock, None]:
-    """Acquires a distributed Redis mutex and releases it when the context exits."""
     lock = RedisLock(
         key,
         ttl_seconds=ttl_seconds,

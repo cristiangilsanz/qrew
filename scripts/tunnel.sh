@@ -1,12 +1,5 @@
 #!/bin/bash
-# Starts the named Cloudflare tunnel for qrew-dev.uk and re-launches
-# the identity + gateway services with the tunnel domain injected.
-#
-# Usage:
-#   npm run dev:tunnel
-#
-# The tunnel URL is always https://qrew-dev.uk (named tunnel, permanent).
-# Requires ~/.cloudflared/config.yml and the tunnel credentials JSON.
+# starts the named cloudflare tunnel and restarts the identity and gateway services with the tunnel domain injected
 
 set -e
 
@@ -23,8 +16,6 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "  Tunnel URL: ${TUNNEL_URL}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-
-# ── restart services with tunnel config ──────────────────────────────────────
 
 if [ "$1" = "--restart" ]; then
   echo "Restarting identity service..."
@@ -60,8 +51,7 @@ echo ""
 echo "Press Ctrl+C to stop the tunnel."
 echo ""
 
-# ── cleanup ───────────────────────────────────────────────────────────────────
-
+# stops the tunnel and any services it restarted
 cleanup() {
   echo ""
   echo "Stopping tunnel..."
@@ -71,8 +61,6 @@ cleanup() {
   echo "Done."
 }
 trap cleanup EXIT INT TERM
-
-# ── start named tunnel ────────────────────────────────────────────────────────
 
 "${CLOUDFLARED}" tunnel run qrew-dev &
 CF_PID=$!

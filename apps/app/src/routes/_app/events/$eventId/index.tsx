@@ -1,3 +1,4 @@
+// implements event id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -21,6 +22,7 @@ export const Route = createFileRoute('/_app/events/$eventId/')({
   component: EventDetailPage,
 })
 
+// implements format date
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', {
     weekday: 'short',
@@ -32,10 +34,12 @@ function formatDate(iso: string): string {
   })
 }
 
+// provides use countdown
 function useCountdown(targetIso: string | null): number {
   const [secondsLeft, setSecondsLeft] = useState(0)
   useEffect(() => {
     if (!targetIso) return
+    // implements update
     const update = () => {
       setSecondsLeft(Math.max(0, Math.floor((new Date(targetIso).getTime() - Date.now()) / 1000)))
     }
@@ -46,6 +50,7 @@ function useCountdown(targetIso: string | null): number {
   return secondsLeft
 }
 
+// implements format countdown
 function formatCountdown(s: number): string {
   const d = Math.floor(s / 86400)
   const h = Math.floor((s % 86400) / 3600)
@@ -56,6 +61,7 @@ function formatCountdown(s: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+// renders the event detail page component
 function EventDetailPage() {
   const { t } = useTranslation()
   const { eventId } = Route.useParams()
@@ -78,22 +84,28 @@ function EventDetailPage() {
   )
 
   const joinQueue = useMutation({
+    // implements mutation fn
     mutationFn: () => marketApi.joinQueue(eventId),
+    // handles on success
     onSuccess: () => {
       toast.success(t('market.toast.joinSuccess'))
       void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
     },
+    // handles on error
     onError: () => toast.error(t('market.toast.joinFailed')),
   })
 
   const leaveQueue = useMutation({
+    // implements mutation fn
     mutationFn: () => marketApi.leaveQueue(eventId),
+    // handles on success
     onSuccess: () => {
       toast.success(t('market.toast.leftWaitlist'))
       setLeaveOpen(false)
       void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
       void queryClient.invalidateQueries({ queryKey: ['market', 'queues'] })
     },
+    // handles on error
     onError: () => toast.error(t('market.toast.leaveFailed')),
   })
 
@@ -119,7 +131,6 @@ function EventDetailPage() {
 
   return (
     <div className="pb-24">
-      {/* Hero */}
       <div className="relative h-64 overflow-hidden bg-[#111]">
         <ImageWithSkeleton
           src={imageUrl}
@@ -129,21 +140,17 @@ function EventDetailPage() {
             event.image_url ? 'object-cover opacity-80' : 'object-contain p-8 opacity-60',
           )}
         />
-        {/* top gradient overlay */}
         {event.image_url && (
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent" />
         )}
-        {/* bottom fade to background */}
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent" />
 
-        {/* Back button */}
         <BackButton
           onClick={() => void navigate({ to: '/events' })}
           className="absolute top-4 left-4"
         />
       </div>
 
-      {/* Content */}
       <div className="space-y-5 px-4 py-4">
         <div>
           <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
@@ -152,12 +159,10 @@ function EventDetailPage() {
           <h1 className="text-2xl font-bold">{event.name}</h1>
         </div>
 
-        {/* Description */}
         {event.description && (
           <p className="text-muted-foreground text-sm leading-relaxed">{event.description}</p>
         )}
 
-        {/* Start date */}
         <div className="text-muted-foreground text-sm">
           <span className="flex items-center gap-2">
             <Calendar className="h-4 w-4 shrink-0" />
@@ -165,7 +170,6 @@ function EventDetailPage() {
           </span>
         </div>
 
-        {/* Location */}
         <div className="space-y-2">
           <h2 className="text-base font-semibold">Location</h2>
           <span className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -183,7 +187,6 @@ function EventDetailPage() {
           </div>
         </div>
 
-        {/* Sale countdown */}
         {saleNotStarted && (
           <div className="text-center">
             <p className="text-muted-foreground mb-0.5 text-xs">Tickets on sale in</p>
@@ -193,7 +196,6 @@ function EventDetailPage() {
           </div>
         )}
 
-        {/* Resale queue info */}
         {showResaleQueue && (
           <div className="mt-8 flex flex-col items-center space-y-2">
             <Ticket className="h-7 w-7 text-white/20" />
@@ -204,7 +206,6 @@ function EventDetailPage() {
         )}
       </div>
 
-      {/* FAB */}
       {!saleNotStarted &&
         (showResaleQueue ? (
           inQueue ? (
@@ -247,7 +248,6 @@ function EventDetailPage() {
           </button>
         ))}
 
-      {/* Leave queue confirmation modal */}
       <AnimatePresence>
         {leaveOpen && (
           <motion.div
@@ -303,6 +303,7 @@ function EventDetailPage() {
   )
 }
 
+// renders the queue waiting room component
 function QueueWaitingRoom({
   eventId,
   eventName,

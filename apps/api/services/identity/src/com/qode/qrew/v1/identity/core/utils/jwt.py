@@ -1,3 +1,4 @@
+# signs and verifies the tokens issued for every purpose in the identity service
 import hashlib
 from dataclasses import dataclass, field
 from typing import Final
@@ -30,6 +31,7 @@ class _PurposeKeys:
     verifiers: dict[str, str] = field(default_factory=lambda: {})
 
 
+# creates a throwaway signing key for local development
 def _generate_ephemeral_keypair() -> tuple[str, str]:
     private = ec.generate_private_key(ec.SECP256R1())
     private_pem = private.private_bytes(
@@ -48,6 +50,7 @@ def _generate_ephemeral_keypair() -> tuple[str, str]:
     return private_pem, public_pem
 
 
+# derives the public key that matches a private key
 def _derive_public_pem(private_pem: str) -> str:
     key = serialization.load_pem_private_key(private_pem.encode(), password=None)
     return (
@@ -60,25 +63,29 @@ def _derive_public_pem(private_pem: str) -> str:
     )
 
 
+# derives a stable identifier for a public key
 def _kid_for(public_pem: str) -> str:
     return hashlib.sha256(public_pem.encode()).hexdigest()[:16]
 
 
+# splits a concatenated string of public keys into individual keys
 def _split_pems(raw: str) -> list[str]:
     parts = [chunk.strip() for chunk in raw.split("-----END PUBLIC KEY-----")]
     return [f"{p}\n-----END PUBLIC KEY-----\n" for p in parts if p.strip()]
 
 
+# names the settings field that holds a purpose's private key
 def _settings_attr(purpose: str) -> str:
     return f"{purpose}_jwt_private_key"
 
 
+# names the settings field that holds a purpose's previous public keys
 def _previous_settings_attr(purpose: str) -> str:
     return f"{purpose}_jwt_previous_public_keys"
 
 
+# loads the signing and verification keys configured for a token purpose
 def _load_purpose_keys(purpose: str) -> _PurposeKeys:
-    """Load the signing keypair plus any previous verify-only keys."""
     raw: str = getattr(settings, _settings_attr(purpose), "") or ""
     private_pem = raw.strip()
     if not private_pem:
@@ -105,13 +112,13 @@ def _load_purpose_keys(purpose: str) -> _PurposeKeys:
 _KEYS: dict[str, _PurposeKeys] = {p: _load_purpose_keys(p) for p in PURPOSES}
 
 
+# returns the signing key identifier used for a token purpose
 def kid_for(purpose: str) -> str:
-    """Return the active key identifier for a token purpose."""
     return _KEYS[purpose].kid
 
 
+# signs claims with the key configured for a token purpose
 def sign(purpose: str, claims: dict[str, object]) -> str:
-    """Sign a token for a given purpose."""
     keys = _KEYS[purpose]
     return jwt.encode(
         claims,
@@ -121,8 +128,8 @@ def sign(purpose: str, claims: dict[str, object]) -> str:
     )
 
 
+# verifies a token against the key its header names
 def verify(purpose: str, token: str) -> dict[str, object]:
-    """Verify a token against the keypair for a given purpose."""
     keys = _KEYS[purpose]
     header = _sec_jwt.decode_unverified_header(token)
     kid = header.get("kid")
@@ -136,8 +143,8 @@ def verify(purpose: str, token: str) -> dict[str, object]:
     )
 
 
+# verifies a token against whichever of the given purposes matches
 def verify_any(purposes: tuple[str, ...], token: str) -> tuple[str, dict[str, object]]:
-    """Verify a token against any of the given purposes."""
     header = _sec_jwt.decode_unverified_header(token)
     kid = header.get("kid")
     if not isinstance(kid, str):

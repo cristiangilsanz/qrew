@@ -1,3 +1,4 @@
+# exposes the health probe endpoint for the payments service
 from probes import create_probe_router
 
 from com.qode.qrew.v1.payments.core.database import get_db

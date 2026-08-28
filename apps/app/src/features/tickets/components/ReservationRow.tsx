@@ -1,3 +1,4 @@
+// renders the reservation row component
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Calendar, Clock, CreditCard, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils'
 
 import type { Ticket, TicketState } from '../api'
 
+// implements format seconds
 function formatSeconds(s: number): string {
   const m = Math.floor(s / 60)
   const sec = s % 60
@@ -26,6 +28,7 @@ interface StubProps {
   hasRealImage: boolean
 }
 
+// renders the ticket stub component
 function TicketStub({ ticket, index, total, imageUrl, hasRealImage }: StubProps) {
   const { t } = useTranslation()
   const { data: reservation, isLoading: resLoading } = useReservation(
@@ -47,7 +50,6 @@ function TicketStub({ ticket, index, total, imageUrl, hasRealImage }: StubProps)
           'bg-card border-border hover:border-primary w-44 overflow-hidden rounded-xl border transition-colors',
         )}
       >
-        {/* Image strip */}
         <div className="relative h-28 w-full overflow-hidden bg-[#111]">
           <ImageWithSkeleton
             src={imageUrl}
@@ -59,7 +61,6 @@ function TicketStub({ ticket, index, total, imageUrl, hasRealImage }: StubProps)
           )}
         </div>
 
-        {/* Stub info */}
         <div className="space-y-1 px-3 py-2.5">
           <div className="flex items-center justify-between gap-1">
             <p className="text-muted-foreground font-mono text-xs">
@@ -88,8 +89,10 @@ interface Props {
   event: EventDetail | undefined
 }
 
+// renders the reservation row component
 export function ReservationRow({ tickets, event }: Props) {
   const navigate = useNavigate()
+  // implements sorted
   const sorted = tickets
     .slice()
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
@@ -106,7 +109,6 @@ export function ReservationRow({ tickets, event }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Event header */}
       <div>
         <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
           {event?.organisation?.name ?? 'Qrew'}
@@ -135,7 +137,6 @@ export function ReservationRow({ tickets, event }: Props) {
         </div>
       </div>
 
-      {/* Payment banner for reserved rows */}
       {awaitingPayment && (
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
@@ -169,7 +170,6 @@ export function ReservationRow({ tickets, event }: Props) {
         </div>
       )}
 
-      {/* Carousel */}
       <div className="flex scrollbar-none gap-3 overflow-x-auto pb-1">
         {sorted.map((ticket, i) => (
           <TicketStub

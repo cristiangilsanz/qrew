@@ -1,3 +1,4 @@
+# declares the full text search configuration for events
 from com.qode.qrew.v1.catalog.repositories.events.search.config import (
     SearchConfig,
     SearchField,

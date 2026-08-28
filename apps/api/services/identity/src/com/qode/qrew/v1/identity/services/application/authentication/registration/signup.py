@@ -1,3 +1,4 @@
+# creates a new account after validating its captcha email phone and password
 import uuid
 from datetime import UTC, datetime
 
@@ -17,6 +18,7 @@ from com.qode.qrew.v1.identity.services.application.authentication.registration.
     CaptchaService,
 )
 from com.qode.qrew.v1.identity.models.audit import AuditAction
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.repositories.user import UserRepository
 from com.qode.qrew.v1.identity.schemas.registration import (
@@ -32,15 +34,17 @@ logger = structlog.get_logger(__name__)
 
 
 class RegistrationError(DomainError):
-    """A business-rule violation raised when a registration cannot be completed."""
+    pass
 
 
+# builds the new user row with its hashed password and verification tokens
 def _build_user(
     request: RegisterRequest,
     ip_address: str,
     device_fingerprint: str | None,
+    email_token: str,
+    phone_otp: str,
 ) -> User:
-    """Builds a new user record from the registration request data."""
     now = datetime.now(UTC)
     return User(
         id=uuid.uuid4(),
@@ -50,9 +54,9 @@ def _build_user(
         hashed_password=hash_password(request.password),
         email_verified=False,
         phone_number_verified=False,
-        email_verification_token=generate_token(),
+        email_verification_token=pii_crypto.hash_lookup(email_token),
         email_verification_token_expires_at=email_verification_token_expiry(),
-        phone_number_otp=generate_otp(),
+        phone_number_otp=pii_crypto.hash_lookup(phone_otp),
         phone_number_otp_expires_at=phone_number_otp_expiry(),
         terms_accepted_at=now,
         registration_ip=ip_address,
@@ -62,6 +66,7 @@ def _build_user(
 
 
 class RegistrationService:
+    # stores the repository notifier captcha service and audit service the service uses
     def __init__(
         self,
         repo: UserRepository,
@@ -74,6 +79,7 @@ class RegistrationService:
         self._captcha = captcha
         self._audit = audit
 
+    # validates the request creates the account and sends its verification codes
     @traced("auth.register")
     async def register(
         self,
@@ -81,17 +87,18 @@ class RegistrationService:
         ip_address: str,
         device_fingerprint: str | None = None,
     ) -> RegisterResponse:
-        """Create a new user account."""
         await self._assert_captcha_valid(request.captcha_token, ip_address)
 
         await self._assert_email_available(request.email)
         await self._assert_phone_available(request.phone_number)
         await self._assert_password_not_breached(request.password)
 
-        user = _build_user(request, ip_address, device_fingerprint)
+        email_token = generate_token()
+        phone_otp = generate_otp()
+        user = _build_user(request, ip_address, device_fingerprint, email_token, phone_otp)
         created = await self._repo.create(user)
 
-        await self._dispatch_verifications(created)
+        await self._dispatch_verifications(created, email_token, phone_otp)
 
         await logger.ainfo(
             "user_registered",
@@ -120,6 +127,7 @@ class RegistrationService:
             message="Registration successful. Check your email to verify your account.",
         )
 
+    # publishes that a user registered onto the shared nats connection
     async def _publish_registered(self, user: User) -> None:
         try:
             from datetime import UTC, datetime
@@ -148,24 +156,24 @@ class RegistrationService:
                 error=repr(exc),
             )
 
+    # rejects the request unless the captcha passes
     async def _assert_captcha_valid(self, token: str, ip_address: str) -> None:
-        """Verifies the captcha response and raises an error if it is invalid."""
         await self._captcha.verify(token, ip_address)
 
+    # rejects the request if the email is already registered
     async def _assert_email_available(self, email: str) -> None:
-        """Raises an error if the email address is already in use."""
         if await self._repo.exists_by_email(email):
             await logger.awarning("registration_failed", reason="email_taken")
             raise RegistrationError("Email already registered", field="email")
 
+    # rejects the request if the phone number is already registered
     async def _assert_phone_available(self, phone_number: str) -> None:
-        """Raises an error if the phone number is already in use."""
         if await self._repo.exists_by_phone(phone_number):
             await logger.awarning("registration_failed", reason="phone_number_taken")
             raise RegistrationError("Phone number already registered", field="phone_number")
 
+    # rejects the request if the password appears in a known breach
     async def _assert_password_not_breached(self, password: str) -> None:
-        """Raises an error if the password has been exposed in a known data breach."""
         if await is_password_pwned(password):
             await logger.awarning("registration_failed", reason="password_breached")
             raise RegistrationError(
@@ -173,16 +181,14 @@ class RegistrationService:
                 field="password",
             )
 
-    async def _dispatch_verifications(self, user: User) -> None:
-        """Send verification link and OTP to the newly registered user."""
-        assert user.email_verification_token is not None
-        assert user.phone_number_otp is not None
+    # sends the email and phone verification codes
+    async def _dispatch_verifications(self, user: User, email_token: str, phone_otp: str) -> None:
         await self._notifier.send_email_verification_link(
             user.email,
             user.full_name,
-            user.email_verification_token,
+            email_token,
         )
         await self._notifier.send_sms_otp(
             user.phone_number,
-            user.phone_number_otp,
+            phone_otp,
         )

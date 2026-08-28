@@ -1,3 +1,4 @@
+// renders the event detail card component
 import { Link } from '@tanstack/react-router'
 import { Calendar, MapPin, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +11,7 @@ interface Props {
   event: EventDetail
 }
 
+// implements format date
 function formatDate(isoString: string): string {
   return new Date(isoString).toLocaleDateString('en-GB', {
     weekday: 'long',
@@ -21,11 +23,13 @@ function formatDate(isoString: string): string {
   })
 }
 
+// implements format price
 function formatPrice(priceCents: number, currency: string): string {
   if (priceCents === 0) return 'Free'
   return `${(priceCents / 100).toFixed(2)} ${currency}`
 }
 
+// renders the event detail card component
 export function EventDetailCard({ event }: Props) {
   const { t } = useTranslation()
 

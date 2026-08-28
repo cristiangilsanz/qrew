@@ -1,3 +1,4 @@
+# re exports the dependencies the authentication routers share
 from com.qode.qrew.v1.identity.core.dependencies import (
     domain_error,
     get_deletion_service,

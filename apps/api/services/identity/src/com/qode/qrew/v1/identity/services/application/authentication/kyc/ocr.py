@@ -1,3 +1,4 @@
+# extracts a national identity number from a scanned document image
 import io
 import re
 
@@ -18,12 +19,12 @@ ID_PATTERN = re.compile(
 
 
 class OcrError(DomainError):
-    """Raised when a document cannot be read or no identifier is found."""
+    pass
 
 
 class OcrService:
+    # reads and cleans up an image then extracts its national identity number
     def extract_national_id(self, content: bytes) -> str:
-        """Extract a national identifier from an uploaded document."""
         try:
             pil_image = Image.open(io.BytesIO(content)).convert("RGB")
         except Exception as exc:

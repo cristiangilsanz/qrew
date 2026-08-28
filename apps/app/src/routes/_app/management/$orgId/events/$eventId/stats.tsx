@@ -1,3 +1,4 @@
+// implements stats
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/st
   component: EntryStatsPage,
 })
 
+// renders the stat card skeleton component
 function StatCardSkeleton() {
   return (
     <div className="px-4 py-5 text-center">
@@ -19,12 +21,14 @@ function StatCardSkeleton() {
   )
 }
 
+// renders the entry stats page component
 function EntryStatsPage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
 
   const { data: stats, isLoading } = useQuery({
     queryKey: queryKeys.entryStats.detail(eventId),
+    // implements query fn
     queryFn: () => scannerApi.getEntryStats(eventId),
     refetchInterval: 30_000,
   })
@@ -42,7 +46,6 @@ function EntryStatsPage() {
       </div>
 
       <div className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
-        {/* Issued, Entered, Remaining */}
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
           <div className="grid grid-cols-3 divide-x divide-white/10">
             {isLoading ? (
@@ -75,7 +78,6 @@ function EntryStatsPage() {
             )}
           </div>
 
-          {/* Entry rate progress bar */}
           <div className="border-t border-white/10 px-4 py-3">
             {isLoading ? (
               <div className="space-y-1.5">
@@ -104,7 +106,6 @@ function EntryStatsPage() {
           </div>
         </div>
 
-        {/* Last scan */}
         <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
           {isLoading ? (
             <div className="flex items-center justify-between">

@@ -1,3 +1,4 @@
+# defines the response schemas for listing and revoking devices
 import uuid
 from datetime import datetime
 

@@ -1,3 +1,4 @@
+# assembles the payments service routers under a common prefix
 from fastapi import APIRouter
 
 from com.qode.qrew.v1.payments.routers.payment import market_router

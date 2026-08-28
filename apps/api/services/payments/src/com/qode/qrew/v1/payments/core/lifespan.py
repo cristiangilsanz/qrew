@@ -1,3 +1,4 @@
+# manages startup and shutdown for the payments service
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -8,13 +9,14 @@ from observability import setup_tracing, shutdown_tracing
 
 from com.qode.qrew.v1.payments.core.config import settings
 from com.qode.qrew.v1.payments.core.database import engine
-from com.qode.qrew.v1.payments.services.infrastructure.webhooks.idempotency import (
+from com.qode.qrew.v1.payments.services.application.webhooks.idempotency import (
     close_webhook_idempotency,
 )
 
 logger = structlog.get_logger(__name__)
 
 
+# wires tracing and messaging on startup and releases them on shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_tracing(

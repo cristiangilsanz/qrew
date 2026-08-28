@@ -1,3 +1,4 @@
+# assigns pending market listings to a random eligible queue member
 from datetime import UTC, datetime, timedelta
 
 import structlog
@@ -16,8 +17,8 @@ from locking import LockUnavailableError, redlock
 logger = structlog.get_logger(__name__)
 
 
+# assigns each available listing without an active assignment to a buyer
 async def assign_pending() -> int:
-    """Assigns a random queue member to each unassigned listing. Returns the count assigned."""
     assigned = 0
     async with AsyncSessionLocal() as session:
         repo = MarketRepository(session)
@@ -33,7 +34,6 @@ async def assign_pending() -> int:
                 async with AsyncSessionLocal() as session:
                     repo = MarketRepository(session)
 
-                    # Refetch under lock
                     fresh = await repo.get_listing_by_id(listing.id)
                     if fresh is None or fresh.state != MarketListingState.available:
                         continue
@@ -42,7 +42,6 @@ async def assign_pending() -> int:
                     if active is not None:
                         continue
 
-                    # Get the event's max_tickets_per_user
                     result = await session.execute(
                         text(
                             "SELECT max_tickets_per_user FROM sales.event_context WHERE event_id = :eid"
@@ -98,6 +97,7 @@ async def assign_pending() -> int:
     return assigned
 
 
+# publishes that a market assignment was created onto the shared nats connection
 async def _publish_assigned(*, assignment_id: object, buyer_user_id: object) -> None:
     try:
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]

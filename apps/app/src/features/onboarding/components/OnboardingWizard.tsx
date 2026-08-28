@@ -1,3 +1,4 @@
+// renders the onboarding wizard component
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -15,6 +16,7 @@ import { PhoneVerificationStep } from './PhoneVerificationStep'
 const STEPS = ['email', 'phone', 'kyc', 'passkey'] as const
 type Step = (typeof STEPS)[number]
 
+// renders the step indicator component
 function StepIndicator({ current }: { current: Step | 'pending' }) {
   const { t } = useTranslation()
   const labels: Record<Step, string> = {
@@ -59,6 +61,7 @@ function StepIndicator({ current }: { current: Step | 'pending' }) {
   )
 }
 
+// renders the onboarding wizard component
 export function OnboardingWizard() {
   const { t } = useTranslation()
   const { data: status, isLoading, refetch } = useOnboardingStatus()
@@ -66,11 +69,13 @@ export function OnboardingWizard() {
 
   const currentStep: Step | 'pending' = kycRetry ? 'kyc' : (status?.current_step ?? 'email')
 
+  // handles handle step success
   const handleStepSuccess = () => {
     setKycRetry(false)
     void refetch()
   }
 
+  // handles handle kyc success
   const handleKycSuccess = (data: KycUploadResponse) => {
     if (data.kyc_status !== 'not_submitted') {
       setKycRetry(false)

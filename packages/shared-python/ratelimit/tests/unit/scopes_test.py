@@ -1,3 +1,4 @@
+# tests scopes
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -6,14 +7,17 @@ from ratelimit.scopes import build_scope_key, resolve_scope_value
 
 
 class TestBuildScopeKey:
+    # verifies that formats key
     def test_formats_key(self) -> None:
         assert build_scope_key("ip", "1.2.3.4") == "ip:1.2.3.4"
 
+    # verifies that user scope
     def test_user_scope(self) -> None:
         assert build_scope_key("user", "uuid-abc") == "user:uuid-abc"
 
 
 class TestResolveScopeValue:
+    # handles make request
     def _make_request(
         self,
         *,
@@ -40,41 +44,49 @@ class TestResolveScopeValue:
         req.path_params = {"organisation_id": org_id} if org_id else {}
         return req
 
+    # verifies that ip from forwarded header
     async def test_ip_from_forwarded_header(self) -> None:
         req = self._make_request(forwarded="10.0.0.1, 172.0.0.1")
         result = await resolve_scope_value("ip", req)
         assert result == "10.0.0.1"
 
+    # verifies that ip from client
     async def test_ip_from_client(self) -> None:
         req = self._make_request(client_host="5.5.5.5")
         result = await resolve_scope_value("ip", req)
         assert result == "5.5.5.5"
 
+    # verifies that user scope with user
     async def test_user_scope_with_user(self) -> None:
         req = self._make_request(user_id="uid-123")
         result = await resolve_scope_value("user", req)
         assert result == "uid-123"
 
+    # verifies that user scope no user
     async def test_user_scope_no_user(self) -> None:
         req = self._make_request(user_id=None)
         result = await resolve_scope_value("user", req)
         assert result is None
 
+    # verifies that device scope
     async def test_device_scope(self) -> None:
         req = self._make_request(device_id="dev-456")
         result = await resolve_scope_value("device", req)
         assert result == "dev-456"
 
+    # verifies that fingerprint scope
     async def test_fingerprint_scope(self) -> None:
         req = self._make_request(fingerprint="fp-abc")
         result = await resolve_scope_value("fingerprint", req)
         assert result == "fp-abc"
 
+    # verifies that org scope
     async def test_org_scope(self) -> None:
         req = self._make_request(org_id="org-789")
         result = await resolve_scope_value("org", req)
         assert result == "org-789"
 
+    # verifies that unknown scope raises
     async def test_unknown_scope_raises(self) -> None:
         req = self._make_request()
         with pytest.raises(ValueError, match="unknown"):

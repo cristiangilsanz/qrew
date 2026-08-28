@@ -1,3 +1,4 @@
+# records a notification and enqueues its delivery
 import uuid
 from typing import Any
 
@@ -22,6 +23,7 @@ logger = structlog.get_logger(__name__)
 _JOB_NAME = "notification.deliver"
 
 
+# resolves the destination address a notification should be sent to
 def _resolve_destination(
     channel: NotificationChannel,
     user: User | None,
@@ -37,8 +39,7 @@ def _resolve_destination(
 
 
 class NotificationService:
-    """Persist notifications and enqueue their delivery."""
-
+    # records a notification per channel and enqueues each for delivery
     async def send(
         self,
         *,
@@ -48,7 +49,6 @@ class NotificationService:
         user: User | None = None,
         destinations: dict[NotificationChannel, str] | None = None,
     ) -> list[uuid.UUID]:
-        """Persist one row per channel and schedule its delivery."""
         target_channels = channels or [channel_for_template(template_key)]
         ids: list[uuid.UUID] = []
         async with AsyncSessionLocal() as session, session.begin():

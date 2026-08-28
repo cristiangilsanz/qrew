@@ -24,6 +24,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+# creates the ticketing schema and its tables
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS ticketing")
 
@@ -86,6 +87,7 @@ def upgrade() -> None:
     )
 
 
+# drops the ticketing schema and its tables
 def downgrade() -> None:
     op.execute("DROP TABLE IF EXISTS ticketing.device_context")
     op.execute("DROP TABLE IF EXISTS ticketing.event_venue_context")

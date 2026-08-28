@@ -1,3 +1,4 @@
+# tests scanner
 import uuid
 from datetime import date
 
@@ -5,22 +6,18 @@ import pytest
 
 from tests.integration.conftest import (
     make_access_token,
+    make_principal,
     make_scanner_token,
     seed_scanner,
-    seed_user,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
-# ---------------------------------------------------------------------------
-# POST /v1/admin/scanners — create
-# ---------------------------------------------------------------------------
-
-
+# verifies that create scanner
 async def test_create_scanner(client, db):
-    admin = await seed_user(db, is_admin=True)
-    token = make_access_token(admin.id)
+    admin = make_principal(is_admin=True)
+    token = make_access_token(admin.id, is_admin=admin.is_admin)
     venue_id = uuid.uuid4()
     event_id = uuid.uuid4()
 
@@ -42,9 +39,10 @@ async def test_create_scanner(client, db):
     assert data["expires_in_hours"] > 0
 
 
+# verifies that create scanner not admin
 async def test_create_scanner_not_admin(client, db):
-    user = await seed_user(db, is_admin=False)
-    token = make_access_token(user.id)
+    user = make_principal(is_admin=False)
+    token = make_access_token(user.id, is_admin=user.is_admin)
     venue_id = uuid.uuid4()
     event_id = uuid.uuid4()
 
@@ -62,6 +60,7 @@ async def test_create_scanner_not_admin(client, db):
     assert response.status_code == 403
 
 
+# verifies that create scanner no auth
 async def test_create_scanner_no_auth(client):
     response = await client.post(
         "/v1/admin/scanners",
@@ -75,17 +74,13 @@ async def test_create_scanner_no_auth(client):
     assert response.status_code == 401
 
 
-# ---------------------------------------------------------------------------
-# GET /v1/admin/scanners — list
-# ---------------------------------------------------------------------------
-
-
+# verifies that list scanners
 async def test_list_scanners(client, db):
-    admin = await seed_user(db, is_admin=True)
+    admin = make_principal(is_admin=True)
     venue_id = uuid.uuid4()
     await seed_scanner(db, created_by=admin.id, venue_id=venue_id)
 
-    token = make_access_token(admin.id)
+    token = make_access_token(admin.id, is_admin=admin.is_admin)
     response = await client.get(
         "/v1/admin/scanners",
         headers={"Authorization": f"Bearer {token}"},
@@ -97,17 +92,13 @@ async def test_list_scanners(client, db):
     assert isinstance(data["scanners"], list)
 
 
-# ---------------------------------------------------------------------------
-# GET /v1/admin/scanners/{scanner_id}
-# ---------------------------------------------------------------------------
-
-
+# verifies that get scanner by id
 async def test_get_scanner_by_id(client, db):
-    admin = await seed_user(db, is_admin=True)
+    admin = make_principal(is_admin=True)
     venue_id = uuid.uuid4()
     scanner = await seed_scanner(db, created_by=admin.id, venue_id=venue_id)
 
-    token = make_access_token(admin.id)
+    token = make_access_token(admin.id, is_admin=admin.is_admin)
     response = await client.get(
         f"/v1/admin/scanners/{scanner.id}",
         headers={"Authorization": f"Bearer {token}"},
@@ -119,9 +110,10 @@ async def test_get_scanner_by_id(client, db):
     assert data["is_active"] is True
 
 
+# verifies that get scanner not found
 async def test_get_scanner_not_found(client, db):
-    admin = await seed_user(db, is_admin=True)
-    token = make_access_token(admin.id)
+    admin = make_principal(is_admin=True)
+    token = make_access_token(admin.id, is_admin=admin.is_admin)
 
     response = await client.get(
         f"/v1/admin/scanners/{uuid.uuid4()}",
@@ -131,18 +123,14 @@ async def test_get_scanner_not_found(client, db):
     assert response.status_code == 404
 
 
-# ---------------------------------------------------------------------------
-# POST /v1/admin/scanners/{scanner_id}/rotate
-# ---------------------------------------------------------------------------
-
-
+# verifies that rotate scanner
 async def test_rotate_scanner(client, db):
-    admin = await seed_user(db, is_admin=True)
+    admin = make_principal(is_admin=True)
     venue_id = uuid.uuid4()
     scanner = await seed_scanner(db, created_by=admin.id, venue_id=venue_id)
     event_id = uuid.uuid4()
 
-    token = make_access_token(admin.id)
+    token = make_access_token(admin.id, is_admin=admin.is_admin)
     response = await client.post(
         f"/v1/admin/scanners/{scanner.id}/rotate",
         json={
@@ -159,17 +147,13 @@ async def test_rotate_scanner(client, db):
     assert "token" in data
 
 
-# ---------------------------------------------------------------------------
-# DELETE /v1/admin/scanners/{scanner_id}
-# ---------------------------------------------------------------------------
-
-
+# verifies that deactivate scanner
 async def test_deactivate_scanner(client, db):
-    admin = await seed_user(db, is_admin=True)
+    admin = make_principal(is_admin=True)
     venue_id = uuid.uuid4()
     scanner = await seed_scanner(db, created_by=admin.id, venue_id=venue_id)
 
-    token = make_access_token(admin.id)
+    token = make_access_token(admin.id, is_admin=admin.is_admin)
     response = await client.delete(
         f"/v1/admin/scanners/{scanner.id}",
         headers={"Authorization": f"Bearer {token}"},
@@ -179,13 +163,9 @@ async def test_deactivate_scanner(client, db):
     assert response.json()["message"] == "Scanner deactivated."
 
 
-# ---------------------------------------------------------------------------
-# POST /v1/scanners/refresh
-# ---------------------------------------------------------------------------
-
-
+# verifies that refresh scanner
 async def test_refresh_scanner(client, db):
-    admin = await seed_user(db, is_admin=True)
+    admin = make_principal(is_admin=True)
     venue_id = uuid.uuid4()
     event_id = uuid.uuid4()
     scanner = await seed_scanner(db, created_by=admin.id, venue_id=venue_id)
@@ -202,6 +182,7 @@ async def test_refresh_scanner(client, db):
     assert "token" in data
 
 
+# verifies that refresh scanner invalid token
 async def test_refresh_scanner_invalid_token(client):
     response = await client.post(
         "/v1/scanners/refresh",

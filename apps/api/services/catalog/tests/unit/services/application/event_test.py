@@ -1,3 +1,4 @@
+# tests event
 import uuid
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -25,6 +26,7 @@ _PATCH_SETTINGS = f"{_MOD}.settings"
 _PATCH_REINDEX = f"{_MOD}.EventService._reindex"
 
 
+# handles make svc
 def _make_svc(
     *,
     event: object = None,
@@ -54,10 +56,8 @@ def _make_svc(
     return svc, repo
 
 
-# ── Pure function tests ───────────────────────────────────────────────────────
-
-
 class TestValidateWindows:
+    # verifies that raises when starts after ends
     def test_raises_when_starts_after_ends(self) -> None:
         now = datetime.now(UTC)
         with pytest.raises(EventError, match="start before it ends"):
@@ -68,6 +68,7 @@ class TestValidateWindows:
                 sale_ends_at=now + timedelta(hours=1),
             )
 
+    # verifies that raises when sale starts after sale ends
     def test_raises_when_sale_starts_after_sale_ends(self) -> None:
         now = datetime.now(UTC)
         with pytest.raises(EventError, match="Sale must start before"):
@@ -78,6 +79,7 @@ class TestValidateWindows:
                 sale_ends_at=now + timedelta(days=1),
             )
 
+    # verifies that raises when sale closes after event starts
     def test_raises_when_sale_closes_after_event_starts(self) -> None:
         now = datetime.now(UTC)
         with pytest.raises(EventError, match="Sale must close before"):
@@ -85,9 +87,10 @@ class TestValidateWindows:
                 starts_at=now + timedelta(days=2),
                 ends_at=now + timedelta(days=2, hours=4),
                 sale_starts_at=now,
-                sale_ends_at=now + timedelta(days=3),  # closes after event starts
+                sale_ends_at=now + timedelta(days=3),
             )
 
+    # verifies that valid windows pass
     def test_valid_windows_pass(self) -> None:
         now = datetime.now(UTC)
         _validate_windows(
@@ -99,24 +102,25 @@ class TestValidateWindows:
 
 
 class TestValidateMaxTickets:
+    # verifies that raises when zero
     def test_raises_when_zero(self) -> None:
         with pytest.raises(EventError, match="between 1 and 20"):
             _validate_max_tickets(0)
 
+    # verifies that raises when above 20
     def test_raises_when_above_20(self) -> None:
         with pytest.raises(EventError, match="between 1 and 20"):
             _validate_max_tickets(21)
 
+    # verifies that valid values pass
     def test_valid_values_pass(self) -> None:
         _validate_max_tickets(1)
         _validate_max_tickets(10)
         _validate_max_tickets(20)
 
 
-# ── EventService tests ────────────────────────────────────────────────────────
-
-
 class TestEventServiceCreate:
+    # verifies that raises when windows invalid
     async def test_raises_when_windows_invalid(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -130,13 +134,14 @@ class TestEventServiceCreate:
                 name="Bad",
                 description=None,
                 starts_at=now + timedelta(hours=1),
-                ends_at=now,  # ends before starts
+                ends_at=now,
                 sale_starts_at=now,
                 sale_ends_at=now + timedelta(minutes=30),
                 max_tickets_per_user=4,
                 image_url=None,
             )
 
+    # verifies that raises when max tickets out of range
     async def test_raises_when_max_tickets_out_of_range(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -157,6 +162,7 @@ class TestEventServiceCreate:
                 image_url=None,
             )
 
+    # verifies that raises when org not found
     async def test_raises_when_org_not_found(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -177,6 +183,7 @@ class TestEventServiceCreate:
                 image_url=None,
             )
 
+    # verifies that raises when venue not found
     async def test_raises_when_venue_not_found(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -197,6 +204,7 @@ class TestEventServiceCreate:
                 image_url=None,
             )
 
+    # verifies that creates event with draft status
     async def test_creates_event_with_draft_status(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
@@ -223,17 +231,20 @@ class TestEventServiceCreate:
 
 
 class TestEventServiceUpdate:
+    # verifies that raises when not found
     async def test_raises_when_not_found(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         svc, _ = _make_svc(event=None)
         with pytest.raises(EventError, match="not found"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
+    # verifies that raises when cancelled
     async def test_raises_when_cancelled(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.cancelled)
         svc, _ = _make_svc(event=event)
         with pytest.raises(EventError, match="Cancelled"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
+    # verifies that raises when unknown fields
     async def test_raises_when_unknown_fields(
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -246,11 +257,11 @@ class TestEventServiceUpdate:
                 changes={"organisation_id": uuid.uuid4()},
             )
 
+    # verifies that raises when updated windows invalid
     async def test_raises_when_updated_windows_invalid(
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
-        # Set ends_at to before starts_at via change
         svc, _ = _make_svc(event=event)
         with pytest.raises(EventError):
             await svc.update_event(
@@ -259,6 +270,7 @@ class TestEventServiceUpdate:
                 changes={"ends_at": event.starts_at - timedelta(hours=1)},
             )
 
+    # verifies that updates name and flushes
     async def test_updates_name_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
         svc, repo = _make_svc(event=event)
@@ -270,6 +282,7 @@ class TestEventServiceUpdate:
 
 
 class TestEventServicePublish:
+    # verifies that raises when not found
     async def test_raises_when_not_found(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         svc, _ = _make_svc(event=None)
         with (
@@ -280,6 +293,7 @@ class TestEventServicePublish:
         ):
             await svc.publish_event(actor_id=actor_id, event_id=event_id)
 
+    # verifies that returns early when already published
     async def test_returns_early_when_already_published(
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -294,6 +308,7 @@ class TestEventServicePublish:
         assert result is event
         repo.flush.assert_not_awaited()
 
+    # verifies that raises when not draft
     async def test_raises_when_not_draft(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.cancelled)
         svc, _ = _make_svc(event=event)
@@ -305,6 +320,7 @@ class TestEventServicePublish:
         ):
             await svc.publish_event(actor_id=actor_id, event_id=event_id)
 
+    # verifies that publishes and flushes
     async def test_publishes_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
         svc, repo = _make_svc(event=event)
@@ -320,6 +336,7 @@ class TestEventServicePublish:
 
 
 class TestEventServiceCancel:
+    # verifies that raises when not found
     async def test_raises_when_not_found(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         svc, _ = _make_svc(event=None)
         with (
@@ -330,6 +347,7 @@ class TestEventServiceCancel:
         ):
             await svc.cancel_event(actor_id=actor_id, event_id=event_id)
 
+    # verifies that returns early when already cancelled
     async def test_returns_early_when_already_cancelled(
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -344,6 +362,7 @@ class TestEventServiceCancel:
         assert result is event
         repo.flush.assert_not_awaited()
 
+    # verifies that cancels and flushes
     async def test_cancels_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.published)
         svc, repo = _make_svc(event=event)
@@ -356,3 +375,46 @@ class TestEventServiceCancel:
         assert result.status == EventStatus.cancelled
         assert result.cancelled_at is not None
         repo.flush.assert_awaited()
+
+
+class TestGeofenceTravelsWithTheAnnouncement:
+    # verifies that the published event carries the venue geofence
+    @pytest.mark.asyncio
+    async def test_the_published_event_carries_the_venue_geofence(self) -> None:
+        venue = make_venue()
+        event = make_event(status=EventStatus.draft, venue_id=venue.id)
+        svc, _ = _make_svc(event=event, venue=venue)
+        publish = AsyncMock()
+
+        with (
+            patch(_PATCH_REDLOCK, make_redlock_cm()),
+            patch(_PATCH_SETTINGS, make_fake_settings()),
+            patch(_PATCH_REINDEX, AsyncMock()),
+            patch("messaging.publisher.publish", publish),
+        ):
+            await svc.publish_event(actor_id=uuid.uuid4(), event_id=event.id)
+
+        subject, envelope = publish.await_args.args
+        assert subject == "catalog.event.published.v1"
+        assert envelope.data["latitude"] == str(venue.latitude)
+        assert envelope.data["longitude"] == str(venue.longitude)
+        assert envelope.data["geofence_radius_m"] == venue.geofence_radius_m
+        assert envelope.data["timezone"] == venue.timezone
+
+    # verifies that an event without a venue travels without geofence
+    @pytest.mark.asyncio
+    async def test_an_event_without_a_venue_travels_without_geofence(self) -> None:
+        event = make_event(status=EventStatus.draft, venue_id=None)
+        svc, _ = _make_svc(event=event, venue=None)
+        publish = AsyncMock()
+
+        with (
+            patch(_PATCH_REDLOCK, make_redlock_cm()),
+            patch(_PATCH_SETTINGS, make_fake_settings()),
+            patch(_PATCH_REINDEX, AsyncMock()),
+            patch("messaging.publisher.publish", publish),
+        ):
+            await svc.publish_event(actor_id=uuid.uuid4(), event_id=event.id)
+
+        _, envelope = publish.await_args.args
+        assert "latitude" not in envelope.data

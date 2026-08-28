@@ -1,3 +1,4 @@
+# defines the audit action enum and the audit event table
 import enum
 import uuid
 from datetime import datetime

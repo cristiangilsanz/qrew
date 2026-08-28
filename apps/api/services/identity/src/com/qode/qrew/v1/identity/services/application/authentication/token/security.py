@@ -1,3 +1,4 @@
+# hashes passwords checks breaches and issues the tokens every auth flow needs
 import hashlib
 import secrets
 import string
@@ -16,18 +17,18 @@ logger = structlog.get_logger(__name__)
 _pwd_context = CryptContext(schemes=["argon2"])
 
 
+# hashes a password for storage
 def hash_password(password: str) -> str:
-    """Hash a plaintext password."""
     return _pwd_context.hash(password)  # type: ignore[no-any-return]
 
 
+# checks a password against its stored hash
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify a plaintext password against a hash."""
     return _pwd_context.verify(plain, hashed)  # type: ignore[no-any-return]
 
 
+# checks a password against known breaches through have i been pwned
 async def is_password_pwned(password: str) -> bool:
-    """Check whether a password appears in known breach data."""
     if not settings.hibp_enabled:
         return False
 
@@ -50,33 +51,33 @@ async def is_password_pwned(password: str) -> bool:
         return False
 
 
+# generates a random url safe token
 def generate_token(length: int = 32) -> str:
-    """Generate a random url-safe token."""
     return secrets.token_urlsafe(length)
 
 
+# generates a random numeric one time code
 def generate_otp(length: int = 6) -> str:
-    """Generate a numeric one-time password."""
     return "".join(secrets.choice(string.digits) for _ in range(length))
 
 
+# computes when an email verification token expires
 def email_verification_token_expiry() -> datetime:
-    """Return the expiry time for a new email verification token."""
     return datetime.now(UTC) + timedelta(hours=settings.email_verification_token_expire_hours)
 
 
+# computes when a phone verification code expires
 def phone_number_otp_expiry() -> datetime:
-    """Return the expiry time for a new phone one-time password."""
     return datetime.now(UTC) + timedelta(minutes=settings.phone_number_otp_expire_minutes)
 
 
+# signs an access token for an authenticated user
 def create_access_token(
     subject: str,
     device_id: str | None = None,
     session_jti: str | None = None,
     is_admin: bool = False,
 ) -> str:
-    """Mint a signed access token."""
     now = datetime.now(UTC)
     payload: dict[str, object] = {
         "sub": subject,
@@ -94,8 +95,8 @@ def create_access_token(
     return jwt_keys.sign(jwt_keys.ACCESS, payload)
 
 
+# signs a token for an account still completing setup
 def create_setup_token(subject: str) -> str:
-    """Mint a short-lived token for the onboarding flow."""
     now = datetime.now(UTC)
     payload: dict[str, object] = {
         "sub": subject,
@@ -107,8 +108,8 @@ def create_setup_token(subject: str) -> str:
     return jwt_keys.sign(jwt_keys.SETUP, payload)
 
 
+# signs a token for an account undergoing recovery
 def create_recovery_token(subject: str) -> str:
-    """Mint a short-lived token for the account recovery flow."""
     now = datetime.now(UTC)
     payload: dict[str, object] = {
         "sub": subject,
@@ -120,8 +121,8 @@ def create_recovery_token(subject: str) -> str:
     return jwt_keys.sign(jwt_keys.RECOVERY, payload)
 
 
+# signs a refresh token for a new session
 def create_refresh_token(subject: str) -> str:
-    """Mint a signed refresh token."""
     now = datetime.now(UTC)
     payload: dict[str, object] = {
         "sub": subject,
@@ -133,13 +134,13 @@ def create_refresh_token(subject: str) -> str:
     return jwt_keys.sign(jwt_keys.REFRESH, payload)
 
 
+# verifies a refresh token and returns its claims
 def decode_refresh_token(token: str) -> dict[str, object]:
-    """Decode and validate a refresh token."""
     return jwt_keys.verify(jwt_keys.REFRESH, token)
 
 
+# signs a token for a login pending two factor verification
 def create_totp_token(subject: str) -> str:
-    """Mint a short-lived token for the TOTP verification step after login."""
     now = datetime.now(UTC)
     payload: dict[str, object] = {
         "sub": subject,
@@ -151,8 +152,8 @@ def create_totp_token(subject: str) -> str:
     return jwt_keys.sign(jwt_keys.TOTP, payload)
 
 
+# reads the session identifier carried by a refresh token
 def extract_jti(token: str) -> str | None:
-    """Extract the token identifier claim from a refresh token."""
     payload = jwt_keys.verify(jwt_keys.REFRESH, token)
     jti = payload.get("jti")
     return jti if isinstance(jti, str) else None

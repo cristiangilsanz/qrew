@@ -1,3 +1,4 @@
+// implements confirm email change
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -6,12 +7,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { profileApi } from '@/features/profile/api'
 
 export const Route = createFileRoute('/confirm-email-change')({
+  // implements validate search
   validateSearch: (search: Record<string, unknown>) => ({
     token: typeof search.token === 'string' ? search.token : '',
   }),
   component: ConfirmEmailChangePage,
 })
 
+// renders the confirm email change page component
 function ConfirmEmailChangePage() {
   const { t } = useTranslation()
   const { token } = Route.useSearch()

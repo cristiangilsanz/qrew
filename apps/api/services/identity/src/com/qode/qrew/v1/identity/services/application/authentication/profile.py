@@ -1,31 +1,25 @@
+# reports a user's onboarding progress and paginates their audit trail
 import uuid
 from datetime import datetime
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from com.qode.qrew.v1.identity.models.audit import AuditEvent
 from com.qode.qrew.v1.identity.models.user import KycStatus, User
-from com.qode.qrew.v1.identity.repositories.audit import AuditRepository
 from com.qode.qrew.v1.identity.repositories.passkey import (
     PasskeyCredentialRepository,
 )
 from com.qode.qrew.v1.identity.schemas.authentication.auth import OnboardingStatusResponse
-from com.qode.qrew.v1.identity.core.utils.pagination import cursor_paginate
+from com.qode.qrew.v1.identity.services.application.trail import (
+    AuditTrailEntry,
+    fetch_trail,
+)
 
 
 class ProfileService:
-    """Read-only queries that back the user metadata endpoints."""
-
-    def __init__(
-        self,
-        passkey_repo: PasskeyCredentialRepository,
-        audit_repo: AuditRepository,
-    ) -> None:
+    # stores the passkey repository the service reads through
+    def __init__(self, passkey_repo: PasskeyCredentialRepository) -> None:
         self._passkey_repo = passkey_repo
-        self._audit_repo = audit_repo
 
+    # reports which onboarding steps a user has completed
     async def get_onboarding_status(self, user: User) -> OnboardingStatusResponse:
-        """Return which onboarding steps the user has completed."""
         has_passkey = await self._passkey_repo.has_passkey(user.id)
         kyc_submitted = user.kyc_status != KycStatus.not_submitted
         email_verified = user.email_verified
@@ -50,22 +44,14 @@ class ProfileService:
             current_step=current_step,
         )
 
+    # returns a page of a user's audit trail from the audit service
     async def paginate_audit(
         self,
-        db: AsyncSession,
         user_id: uuid.UUID,
         action: str | None = None,
         since: datetime | None = None,
         cursor: str | None = None,
         limit: int = 50,
-    ) -> tuple[list[AuditEvent], str | None]:
-        """Return a cursor-paginated page of audit events for the given user."""
-        stmt = self._audit_repo.query_for_user(user_id, action=action, since=since)
-        return await cursor_paginate(
-            db,
-            stmt,
-            sort_column=AuditEvent.created_at,
-            id_column=AuditEvent.id,
-            limit=limit,
-            cursor=cursor,
-        )
+    ) -> tuple[list[AuditTrailEntry], str | None]:
+        page = await fetch_trail(user_id, action=action, since=since, cursor=cursor, limit=limit)
+        return page.items, page.next_cursor

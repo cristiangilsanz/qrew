@@ -1,3 +1,4 @@
+// implements catalog api
 import { env } from '@/config/env'
 
 import { createServiceClient } from './http'
@@ -5,6 +6,7 @@ import { createServiceClient } from './http'
 export const catalogClient = createServiceClient({
   baseURL: `${env.API_URL}/api/catalog`,
   idempotencyKey: true,
+  // implements params serializer
   paramsSerializer: (params) => {
     const sp = new URLSearchParams()
     for (const [key, value] of Object.entries(params)) {

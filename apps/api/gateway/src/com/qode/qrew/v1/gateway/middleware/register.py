@@ -1,3 +1,4 @@
+# registers the gateway's middleware stack in the order it must run
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -11,9 +12,8 @@ from middleware import RequestIDMiddleware, SecurityHeadersMiddleware
 from com.qode.qrew.v1.gateway.core.config import settings
 from com.qode.qrew.v1.gateway.middleware.auth import AuthMiddleware
 
-# Starlette wraps middleware in LIFO order
 
-
+# adds the rate limiter idempotency security and auth middleware to the app
 def register_middleware(app: FastAPI) -> None:
     limiter = Limiter(key_func=get_remote_address, enabled=settings.ratelimit_enabled)
     app.state.limiter = limiter
@@ -35,6 +35,4 @@ def register_middleware(app: FastAPI) -> None:
         allow_methods=["*"],
         allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-ID"],
     )
-    # Auth runs after CORS middleware
-    # so OPTIONS preflights are already handled by CORSMiddleware before auth checks.
     app.add_middleware(AuthMiddleware)

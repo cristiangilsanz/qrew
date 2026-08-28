@@ -1,3 +1,4 @@
+# tests publisher
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from com.qode.qrew.v1.audit.worker.publisher import publish_audit_event
@@ -7,6 +8,7 @@ _PATCH_ENVELOPE = "contracts.messaging.envelope.EventEnvelope"
 
 
 class TestPublishAuditEvent:
+    # verifies that publishes to nats
     async def test_publishes_to_nats(self) -> None:
         mock_nc = MagicMock()
         mock_nc.js = MagicMock()
@@ -32,6 +34,7 @@ class TestPublishAuditEvent:
         subject_arg = mock_nc.js.publish.call_args.args[0]
         assert subject_arg == "audit.events.v1"
 
+    # verifies that nats unavailable is swallowed
     async def test_nats_unavailable_is_swallowed(self) -> None:
         with patch(_PATCH_NATS, side_effect=RuntimeError("nats down")):
             await publish_audit_event(
@@ -42,6 +45,7 @@ class TestPublishAuditEvent:
                 data={},
             )
 
+    # verifies that publish error is swallowed
     async def test_publish_error_is_swallowed(self) -> None:
         mock_nc = MagicMock()
         mock_nc.js = MagicMock()

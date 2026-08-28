@@ -1,3 +1,4 @@
+# delivers a rendered email through smtp or logs it in development
 from email.message import EmailMessage
 
 import aiosmtplib
@@ -13,8 +14,8 @@ from com.qode.qrew.v1.identity.core.config import settings
 logger = structlog.get_logger(__name__)
 
 
+# renders and sends an email or logs it when smtp is disabled
 async def deliver(*, destination: str, template_key: str, payload: dict[str, object]) -> None:
-    """Render and send an email, or log to the stub when SMTP is disabled."""
     rendered = render_email(template_key, dict(payload))
     if not settings.smtp_enabled:
         await logger.ainfo("email_stub", to=mask_email(destination), template=template_key)
@@ -22,6 +23,7 @@ async def deliver(*, destination: str, template_key: str, payload: dict[str, obj
     await _smtp_send(destination, rendered)
 
 
+# sends a rendered email over smtp
 async def _smtp_send(destination: str, rendered: RenderedEmail) -> None:
     message = EmailMessage()
     message["From"] = settings.smtp_from_address

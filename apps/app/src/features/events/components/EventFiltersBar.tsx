@@ -1,3 +1,4 @@
+// renders the event filters bar component
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, ChevronDown, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -10,6 +11,7 @@ interface Props {
   onFiltersChange: (filters: EventFilters) => void
 }
 
+// renders the event filters bar component
 export function EventFiltersBar({ onFiltersChange }: Props) {
   const [q, setQ] = useState('')
   const [appliedQ, setAppliedQ] = useState('')
@@ -20,6 +22,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
 
   const { data: allEvents, isLoading: citiesLoading } = useQuery({
     queryKey: ['events', {}],
+    // implements query fn
     queryFn: () => eventsApi.list({ limit: 100 }),
     staleTime: 5 * 60 * 1000,
   })
@@ -29,6 +32,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
   ).sort()
 
   useEffect(() => {
+    // handles handle outside
     const handleOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setCityOpen(false)
@@ -46,8 +50,10 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
     })
   }, [appliedQ, selectedCities, fromDate])
 
+  // implements commit search
   const commitSearch = () => setAppliedQ(q)
 
+  // implements toggle city
   const toggleCity = (city: string) =>
     setSelectedCities((prev) =>
       prev.includes(city) ? prev.filter((c) => c !== city) : [...prev, city],
@@ -55,6 +61,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
 
   const hasFilters = !!appliedQ.trim() || selectedCities.length > 0 || !!fromDate
 
+  // implements clear all
   const clearAll = () => {
     setQ('')
     setAppliedQ('')
@@ -64,7 +71,6 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Search input */}
       <div className="relative">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <input
@@ -90,9 +96,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
         )}
       </div>
 
-      {/* City dropdown + Date picker row */}
       <div className="flex gap-2">
-        {/* City filter */}
         {citiesLoading ? (
           <Skeleton className="h-10 flex-1 rounded-xl" />
         ) : availableCities.length > 0 ? (
@@ -171,7 +175,6 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
           </div>
         ) : null}
 
-        {/* Date picker */}
         <div className="relative">
           <Calendar className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <input
@@ -186,7 +189,6 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
         </div>
       </div>
 
-      {/* Active filters + clear all */}
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2">
           {appliedQ.trim() && (
