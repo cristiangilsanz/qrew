@@ -1,3 +1,4 @@
+# creates organisations and manages their membership
 import re
 import uuid
 from collections.abc import Awaitable, Callable
@@ -33,6 +34,7 @@ class OrganisationError(DomainError):
 
 
 class OrganisationService:
+    # stores the repositories audit service and user resolver the service uses
     def __init__(
         self,
         org_repo: OrganisationRepository,
@@ -45,18 +47,23 @@ class OrganisationService:
         self._audit = audit
         self._resolve_user = user_resolver
 
+    # builds the query that lists a user's organisations
     def list_for_user_query(self, user_id: uuid.UUID) -> Select[tuple[Organisation]]:
         return self._orgs.list_for_user_query(user_id)
 
+    # reads an organisation by its identifier
     async def get_by_id(self, organisation_id: uuid.UUID) -> Organisation | None:
         return await self._orgs.get_by_id(organisation_id)
 
+    # searches organisations by name or slug
     async def search(self, q: str, *, limit: int = 20) -> list[Organisation]:
         return await self._orgs.search(q, limit=limit)
 
+    # lists an organisation's members
     async def list_members(self, organisation_id: uuid.UUID) -> list[MemberRow]:
         return await self._members.list_members(organisation_id)
 
+    # creates an organisation with its owner as the first member
     @traced("organisation.create")
     async def create_organisation(
         self,
@@ -84,6 +91,7 @@ class OrganisationService:
         )
         return org
 
+    # invites a user by email to join an organisation
     @traced("organisation.invite_member")
     async def invite_member(
         self,
@@ -115,6 +123,7 @@ class OrganisationService:
         )
         return member
 
+    # adds an already known user to an organisation
     @traced("organisation.add_member")
     async def add_member(
         self,
@@ -142,6 +151,7 @@ class OrganisationService:
         )
         return member
 
+    # removes a member unless doing so would leave the organisation without an owner
     @traced("organisation.remove_member")
     async def remove_member(
         self,
@@ -167,6 +177,7 @@ class OrganisationService:
             payload={"member_user_id": str(member_user_id)},
         )
 
+    # soft deletes an organisation
     @traced("organisation.delete")
     async def delete_organisation(
         self,
@@ -184,6 +195,7 @@ class OrganisationService:
             payload={},
         )
 
+    # records an audit event without letting a failure interrupt the caller
     async def _audit_safe(
         self,
         action: str,

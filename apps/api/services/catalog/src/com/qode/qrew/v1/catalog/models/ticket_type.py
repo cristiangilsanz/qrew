@@ -1,3 +1,4 @@
+# defines the ticket type table that describes an event's inventory
 import uuid
 from datetime import datetime
 

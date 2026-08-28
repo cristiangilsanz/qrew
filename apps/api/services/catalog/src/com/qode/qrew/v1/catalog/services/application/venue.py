@@ -1,3 +1,4 @@
+# creates and reads venues including their geofence and timezone
 import uuid
 from decimal import Decimal
 from zoneinfo import available_timezones
@@ -22,6 +23,7 @@ class VenueError(DomainError):
     pass
 
 
+# rejects coordinates outside the valid latitude and longitude range
 def _validate_coordinates(latitude: Decimal, longitude: Decimal) -> None:
     if latitude < Decimal("-90") or latitude > Decimal("90"):
         raise VenueError("Latitude out of range", field="latitude")
@@ -29,6 +31,7 @@ def _validate_coordinates(latitude: Decimal, longitude: Decimal) -> None:
         raise VenueError("Longitude out of range", field="longitude")
 
 
+# rejects a geofence radius outside the allowed range
 def _validate_radius(radius_m: int) -> None:
     if radius_m < _GEOFENCE_MIN_M or radius_m > _GEOFENCE_MAX_M:
         raise VenueError(
@@ -37,29 +40,35 @@ def _validate_radius(radius_m: int) -> None:
         )
 
 
+# rejects a timezone that is not recognised
 def _validate_timezone(timezone: str) -> None:
     if timezone not in _AVAILABLE_TIMEZONES:
         raise VenueError("Unknown timezone", field="timezone")
 
 
+# rejects a country that is not a two letter code
 def _validate_country(country: str) -> None:
     if len(country) != 2 or not country.isalpha():
         raise VenueError("Country must be an ISO-3166-1 alpha-2 code", field="country")
 
 
 class VenueService:
+    # stores the repository and audit service the venue service uses
     def __init__(self, repo: VenueRepository, audit: AuditService) -> None:
         self._repo = repo
         self._audit = audit
 
+    # builds the query that lists venues filtered by city or country
     def list_query(
         self, city: str | None = None, country: str | None = None
     ) -> Select[tuple[Venue]]:
         return self._repo.list_query(city=city, country=country)
 
+    # reads a venue by its identifier
     async def get_by_id(self, venue_id: uuid.UUID) -> Venue | None:
         return await self._repo.get_by_id(venue_id)
 
+    # creates a venue after validating its location and geofence
     @traced("venue.create")
     async def create_venue(
         self,

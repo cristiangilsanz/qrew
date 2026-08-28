@@ -1,3 +1,4 @@
+# builds the sql fragments that implement a full text search query
 from dataclasses import dataclass
 
 from pagination import decode_cursor, encode_cursor
@@ -16,6 +17,7 @@ class SearchClause:
     order_by: str
 
 
+# builds the where clause rank expression and cursor for a search request
 def build_search_clause(
     *,
     config: SearchConfig,
@@ -35,7 +37,6 @@ def build_search_clause(
             parameters["search_q"] = prefix_q
             tsquery = f"to_tsquery('{config.language}', :search_q)"
             parameters["ilike_q"] = f"%{cleaned}%"
-            # Fulltext prefix or substring match
             name_col = next(
                 (f.column_name for f in config.fields if f.weight == "A"),
                 config.fields[0].column_name if config.fields else "name",
@@ -77,5 +78,6 @@ def build_search_clause(
     )
 
 
+# encodes the pagination cursor for the next page of results
 def encode_next_cursor(last_rank: float, last_id: str) -> str:
     return encode_cursor(last_rank, last_id)

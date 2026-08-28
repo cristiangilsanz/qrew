@@ -1,3 +1,4 @@
+# exposes the full text search helpers for events
 from com.qode.qrew.v1.catalog.repositories.events.search.queries import (
     SearchClause,
     build_search_clause,

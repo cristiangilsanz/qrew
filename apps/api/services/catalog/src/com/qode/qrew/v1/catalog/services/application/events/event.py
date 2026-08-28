@@ -1,3 +1,4 @@
+# creates and moves events through their draft published ongoing and cancelled lifecycle
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -42,6 +43,7 @@ class EventError(DomainError):
     pass
 
 
+# rejects a schedule whose sale and event windows do not make sense
 def _validate_windows(
     *,
     starts_at: datetime,
@@ -57,6 +59,7 @@ def _validate_windows(
         raise EventError("Sale must close before the event starts", field="sale_ends_at")
 
 
+# rejects a per user ticket limit outside the allowed range
 def _validate_max_tickets(value: int) -> None:
     if value < 1 or value > 20:
         raise EventError(
@@ -65,6 +68,7 @@ def _validate_max_tickets(value: int) -> None:
         )
 
 
+# builds the payload shared by every event published onto nats
 def _event_data(event: Any, venue: Any | None = None) -> dict[str, Any]:
     geo: dict[str, Any] = {}
     if venue is not None:
@@ -89,6 +93,7 @@ def _event_data(event: Any, venue: Any | None = None) -> dict[str, Any]:
     }
 
 
+# publishes an event onto the shared nats connection
 async def _publish_nats(
     subject: str, aggregate_type: str, aggregate_id: str, data: dict[str, Any]
 ) -> None:
@@ -108,6 +113,7 @@ async def _publish_nats(
 
 
 class EventService:
+    # stores the session repositories and audit service the event service uses
     def __init__(
         self,
         session: AsyncSession,
@@ -122,30 +128,36 @@ class EventService:
         self._venue_repo = venue_repo
         self._audit = audit
 
+    # builds the query that lists an organisation's events
     def list_for_org_query(self, organisation_id: uuid.UUID) -> Select[tuple[Event]]:
         return self._repo.list_for_org_query(organisation_id)
 
+    # reads an event by its identifier
     async def get_by_id(self, event_id: uuid.UUID) -> Event | None:
         return await self._repo.get_by_id(event_id)
 
+    # reads an organisation or raises when it does not exist
     async def _load_organisation(self, organisation_id: uuid.UUID) -> Organisation:
         org = await self._org_repo.get_by_id(organisation_id)
         if org is None:
             raise EventError("Organisation not found", field="organisation_id")
         return org
 
+    # reads a venue or raises when it does not exist
     async def _load_venue(self, venue_id: uuid.UUID) -> Venue:
         venue = await self._venue_repo.get_by_id(venue_id)
         if venue is None:
             raise EventError("Venue not found", field="venue_id")
         return venue
 
+    # refreshes an event's search vector
     async def _reindex(self, event_id: uuid.UUID) -> None:
         await self._session.execute(
             text(update_one_sql(EVENTS_SEARCH_CONFIG)),
             {"row_id": str(event_id)},
         )
 
+    # creates a draft event for an organisation and venue
     @traced("event.create")
     async def create_event(
         self,
@@ -199,6 +211,7 @@ class EventService:
         )
         return event
 
+    # updates the mutable fields of an event that is not cancelled or ongoing
     @traced("event.update")
     async def update_event(
         self,
@@ -239,12 +252,13 @@ class EventService:
         )
         return event
 
+    # reads an event's venue when it has one
     async def _venue(self, event: Any) -> Any | None:
-        """Returns the venue of an event, so its geofence travels with the announcement."""
         if event.venue_id is None:
             return None
         return await self._venue_repo.get_by_id(event.venue_id)
 
+    # publishes a draft event and reindexes it for search
     @traced("event.publish")
     async def publish_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
         async with redlock(
@@ -275,6 +289,7 @@ class EventService:
             )
             return event
 
+    # moves a published event to ongoing once its start time has passed
     @traced("event.start")
     async def start_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
         async with redlock(
@@ -311,6 +326,7 @@ class EventService:
             )
             return event
 
+    # cancels an event and reindexes it for search
     @traced("event.cancel")
     async def cancel_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
         async with redlock(
@@ -339,6 +355,7 @@ class EventService:
             )
             return event
 
+    # records an audit event without letting a failure interrupt the caller
     async def _record(
         self,
         action: str,

@@ -1,3 +1,4 @@
+# runs the full text search over events and returns a page of results
 import uuid
 from datetime import datetime
 
@@ -17,6 +18,7 @@ logger = structlog.get_logger(__name__)
 
 
 class SearchService:
+    # searches events by query city category and time window
     async def search_events(
         self,
         db: AsyncSession,
@@ -30,7 +32,6 @@ class SearchService:
         cursor: str | None,
         limit: int,
     ) -> Page[EventSearchResult]:
-        # Merge city filter variants
         all_cities: list[str] = []
         if cities:
             all_cities = [c for c in cities if c]

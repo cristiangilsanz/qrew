@@ -1,3 +1,4 @@
+# exposes the catalog schemas package
 from com.qode.qrew.v1.catalog.schemas.event import (
     AvailabilityItem,
     EventAvailabilityResponse,

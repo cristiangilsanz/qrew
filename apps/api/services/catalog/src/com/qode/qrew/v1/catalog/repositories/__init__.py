@@ -1,3 +1,4 @@
+# exposes the catalog repositories package
 from com.qode.qrew.v1.catalog.repositories.events.event import EventRepository
 from com.qode.qrew.v1.catalog.repositories.organisation import (
     OrganisationMemberRepository,

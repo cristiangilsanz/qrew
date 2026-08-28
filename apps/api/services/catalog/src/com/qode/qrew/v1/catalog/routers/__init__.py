@@ -1,3 +1,4 @@
+# assembles the catalog service routers under a common prefix
 from fastapi import APIRouter
 
 from com.qode.qrew.v1.catalog.routers.event import router as events_router

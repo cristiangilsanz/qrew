@@ -1,3 +1,4 @@
+# exposes the endpoints that manage organisations their members and their events
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -40,11 +41,13 @@ from idempotency import idempotent
 router = APIRouter(prefix="/organisations", tags=["organisations"])
 
 
+# converts an organisation error into a conflict or bad request response
 def _bad_request(error: OrganisationError) -> HTTPException:
     code = status.HTTP_409_CONFLICT if error.field == "slug" else status.HTTP_400_BAD_REQUEST
     return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
+# converts an organisation into its response
 def _to_response(org: Organisation) -> OrganisationResponse:
     return OrganisationResponse(
         id=org.id,
@@ -55,6 +58,7 @@ def _to_response(org: Organisation) -> OrganisationResponse:
     )
 
 
+# converts an event into its full response
 def _event_response(event: Event) -> EventResponse:
     return EventResponse(
         id=event.id,
@@ -80,6 +84,7 @@ def _event_response(event: Event) -> EventResponse:
     )
 
 
+# converts an event error into a not found or bad request response
 def _event_error(error: EventError) -> HTTPException:
     code = (
         status.HTTP_404_NOT_FOUND
@@ -89,6 +94,7 @@ def _event_error(error: EventError) -> HTTPException:
     return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
 
 
+# creates a new organisation for an admin caller
 @router.post(
     "",
     response_model=OrganisationResponse,
@@ -121,6 +127,7 @@ async def create_organisation(
     return _to_response(org)
 
 
+# lists the organisations the caller belongs to
 @router.get(
     "",
     response_model=Page[OrganisationResponse],
@@ -153,6 +160,7 @@ async def list_my_organisations(
     )
 
 
+# searches organisations by name or slug
 @router.get(
     "/search",
     response_model=list[OrganisationSearchResult],
@@ -176,6 +184,7 @@ async def search_organisations(
     ]
 
 
+# reads an organisation's public profile
 @router.get(
     "/{organisation_id}",
     response_model=OrganisationPublicResponse,
@@ -200,6 +209,7 @@ async def get_public_organisation(
     )
 
 
+# lists an organisation's members
 @router.get(
     "/{organisation_id}/members",
     response_model=list[OrgMemberListItem],
@@ -218,6 +228,7 @@ async def list_members(
     return [OrgMemberListItem(user_id=r.user_id, role=r.role, joined_at=r.joined_at) for r in rows]
 
 
+# invites a user by email to join an organisation
 @router.post(
     "/{organisation_id}/members",
     response_model=OrganisationMemberResponse,
@@ -251,6 +262,7 @@ async def invite_member(
     )
 
 
+# adds an already known user to an organisation
 @router.post(
     "/{organisation_id}/members/add",
     response_model=OrganisationMemberResponse,
@@ -284,6 +296,7 @@ async def add_member(
     )
 
 
+# removes a member from an organisation
 @router.delete(
     "/{organisation_id}/members/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -308,9 +321,7 @@ async def remove_member(
         raise _bad_request(exc) from exc
 
 
-# Delete organisation
-
-
+# soft deletes an organisation
 @router.delete(
     "/{organisation_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -333,9 +344,7 @@ async def delete_organisation(
         raise _bad_request(exc) from exc
 
 
-# Events nested under organisations
-
-
+# creates a draft event under an organisation
 @router.post(
     "/{organisation_id}/events",
     response_model=EventResponse,
@@ -373,6 +382,7 @@ async def create_event(
     return _event_response(event)
 
 
+# lists an organisation's events
 @router.get(
     "/{organisation_id}/events",
     response_model=Page[EventResponse],
@@ -405,6 +415,7 @@ async def list_org_events(
     )
 
 
+# reads a single event the caller's organisation owns
 @router.get(
     "/{organisation_id}/events/{event_id}",
     response_model=EventResponse,

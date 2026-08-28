@@ -1,3 +1,4 @@
+# defines the venue table including its geofence and timezone
 import uuid
 from datetime import datetime
 from decimal import Decimal

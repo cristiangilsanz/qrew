@@ -1,3 +1,4 @@
+# resolves a user's identifier from identity by email
 import uuid
 
 import httpx
@@ -12,11 +13,11 @@ _NOT_FOUND = 404
 
 
 class IdentityUnavailableError(Exception):
-    """Raised when the identity service cannot answer a directory lookup."""
+    pass
 
 
+# looks up a user's identifier by email through identity
 async def resolve_user_id(email: str) -> uuid.UUID | None:
-    """Asks identity for the holder of an email address, since catalog does not store it."""
     url = f"{settings.identity_url}/v1/_internal/users/lookup"
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT_SECONDS) as client:

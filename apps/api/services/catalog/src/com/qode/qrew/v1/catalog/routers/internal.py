@@ -1,3 +1,4 @@
+# exposes the internal endpoint other services use to check event membership
 import uuid
 
 from fastapi import APIRouter, Depends
@@ -22,13 +23,13 @@ class _MembershipResponse(BaseModel):
     venue_id: uuid.UUID | None = None
 
 
+# reports whether an event exists and whether a user belongs to its organisation
 @router.get("/{event_id}/members/{user_id}", response_model=_MembershipResponse)
 async def event_membership(
     event_id: uuid.UUID,
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
 ) -> _MembershipResponse:
-    """Answers whether a user belongs to the organisation that owns an event."""
     event = await EventRepository(db).get_by_id(event_id)
     if event is None:
         return _MembershipResponse(event_exists=False, is_member=False)

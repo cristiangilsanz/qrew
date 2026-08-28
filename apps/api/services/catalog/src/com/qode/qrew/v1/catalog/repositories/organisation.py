@@ -1,3 +1,4 @@
+# reads and writes organisations and their members
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -20,9 +21,11 @@ class MemberRow:
 
 
 class OrganisationRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads an organisation by its identifier
     async def get_by_id(self, organisation_id: uuid.UUID) -> Organisation | None:
         result = await self._session.execute(
             select(Organisation).where(
@@ -32,6 +35,7 @@ class OrganisationRepository:
         )
         return result.scalar_one_or_none()
 
+    # reads an organisation by its slug
     async def get_by_slug(self, slug: str) -> Organisation | None:
         result = await self._session.execute(
             select(Organisation).where(
@@ -41,12 +45,14 @@ class OrganisationRepository:
         )
         return result.scalar_one_or_none()
 
+    # writes a new organisation to the database
     async def insert(self, organisation: Organisation) -> Organisation:
         self._session.add(organisation)
         await self._session.flush()
         await self._session.refresh(organisation)
         return organisation
 
+    # searches organisations by name or slug
     async def search(self, q: str, *, limit: int = 20) -> list[Organisation]:
         pattern = f"%{q.strip()}%"
         result = await self._session.execute(
@@ -63,6 +69,7 @@ class OrganisationRepository:
         )
         return list(result.scalars().all())
 
+    # marks an organisation as deleted without removing its row
     async def soft_delete(self, organisation_id: uuid.UUID) -> bool:
         from datetime import datetime, timezone
 
@@ -73,6 +80,7 @@ class OrganisationRepository:
         await self._session.flush()
         return True
 
+    # builds the query that lists a user's organisations
     def list_for_user_query(self, user_id: uuid.UUID):  # type: ignore[no-untyped-def]
         return (
             select(Organisation)
@@ -88,9 +96,11 @@ class OrganisationRepository:
 
 
 class OrganisationMemberRepository:
+    # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # reads a single membership row
     async def get(
         self, organisation_id: uuid.UUID, user_id: uuid.UUID
     ) -> OrganisationMember | None:
@@ -102,6 +112,7 @@ class OrganisationMemberRepository:
         )
         return result.scalar_one_or_none()
 
+    # adds a member to an organisation
     async def insert(
         self,
         *,
@@ -115,6 +126,7 @@ class OrganisationMemberRepository:
         await self._session.refresh(member)
         return member
 
+    # removes a member from an organisation
     async def delete(self, organisation_id: uuid.UUID, user_id: uuid.UUID) -> bool:
         member = await self.get(organisation_id, user_id)
         if member is None:
@@ -123,6 +135,7 @@ class OrganisationMemberRepository:
         await self._session.flush()
         return True
 
+    # lists an organisation's members oldest first
     async def list_members(self, organisation_id: uuid.UUID) -> list[MemberRow]:
         result = await self._session.execute(
             select(
@@ -138,6 +151,7 @@ class OrganisationMemberRepository:
             for row in result.all()
         ]
 
+    # counts how many owners an organisation has
     async def count_owners(self, organisation_id: uuid.UUID) -> int:
         result = await self._session.execute(
             select(OrganisationMember).where(

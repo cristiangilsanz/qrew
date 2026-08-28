@@ -1,3 +1,4 @@
+# defines the organisation role enum and the organisation and membership tables
 import enum
 import uuid
 from datetime import datetime
@@ -22,6 +23,7 @@ _ROLE_RANK = {
 }
 
 
+# ranks an organisation role for privilege comparisons
 def role_rank(role: OrganisationRole) -> int:
     return _ROLE_RANK[role]
 

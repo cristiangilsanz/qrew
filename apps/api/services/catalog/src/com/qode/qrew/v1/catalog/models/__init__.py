@@ -1,3 +1,4 @@
+# exposes the catalog models package
 from com.qode.qrew.v1.catalog.models.event import Event, EventStatus
 from com.qode.qrew.v1.catalog.models.organisation import (
     Organisation,
