@@ -1,3 +1,4 @@
+# tests billing
 import uuid
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
@@ -13,6 +14,7 @@ from com.qode.qrew.v1.sales.services.application.billing import (
 from conftest import make_inventory, make_reservation
 
 
+# handles make db
 def _make_db(
     *,
     reservation: object = None,
@@ -29,6 +31,7 @@ def _make_db(
 
     db = MagicMock()
 
+    # handles patch repo
     def _patch_repo(cls, session):  # type: ignore[no-untyped-def]
         pass
 
@@ -42,6 +45,7 @@ def _make_db(
     return db
 
 
+# handles billing
 async def _billing(
     *,
     user_id: uuid.UUID,
@@ -72,11 +76,13 @@ async def _billing(
 
 
 class TestGetPaymentContext:
+    # verifies that raises when reservation not found
     async def test_raises_when_reservation_not_found(self, user_id: uuid.UUID) -> None:
         with pytest.raises(PaymentContextError) as exc_info:
             await _billing(user_id=user_id, reservation_id=uuid.uuid4(), reservation=None)
         assert exc_info.value.error_code == "not_found"
 
+    # verifies that raises when reservation owned by other
     async def test_raises_when_reservation_owned_by_other(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -87,6 +93,7 @@ class TestGetPaymentContext:
             await _billing(user_id=user_id, reservation_id=reservation.id, reservation=reservation)
         assert exc_info.value.error_code == "not_found"
 
+    # verifies that raises when not in reserved status
     async def test_raises_when_not_in_reserved_status(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -103,6 +110,7 @@ class TestGetPaymentContext:
                 )
             assert exc_info.value.error_code == "not_reserved"
 
+    # verifies that raises when reservation expired
     async def test_raises_when_reservation_expired(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -116,6 +124,7 @@ class TestGetPaymentContext:
             await _billing(user_id=user_id, reservation_id=reservation.id, reservation=reservation)
         assert exc_info.value.error_code == "expired"
 
+    # verifies that raises when inventory not found
     async def test_raises_when_inventory_not_found(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -131,6 +140,7 @@ class TestGetPaymentContext:
             )
         assert exc_info.value.error_code == "not_found"
 
+    # verifies that happy path returns correct amount
     async def test_happy_path_returns_correct_amount(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -155,6 +165,7 @@ class TestGetPaymentContext:
         assert result.amount_cents == 1500
         assert result.currency == "GBP"
 
+    # verifies that falls back to default currency when inventory has none
     async def test_falls_back_to_default_currency_when_inventory_has_none(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:

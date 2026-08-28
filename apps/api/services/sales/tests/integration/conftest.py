@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import os
 import pathlib
 import time
@@ -22,6 +23,7 @@ os.environ.setdefault("OTEL_ENABLED", "false")
 os.environ.setdefault("FRAUD_SIGNALS_ENABLED", "false")
 
 
+# handles get test db url
 def _get_test_db_url() -> str | None:
     explicit = os.environ.get("SALES_TEST_DB_URL") or os.environ.get("DATABASE_URL")
     if explicit:
@@ -50,6 +52,7 @@ def _get_test_db_url() -> str | None:
         return None
 
 
+# verifies that db url
 @pytest.fixture(scope="session")
 def test_db_url() -> str:
     url = _get_test_db_url()
@@ -61,6 +64,7 @@ def test_db_url() -> str:
     return url
 
 
+# provides setup test infrastructure
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_infrastructure(test_db_url: str) -> None:
     from com.qode.qrew.v1.sales.core.config import settings
@@ -89,13 +93,16 @@ def setup_test_infrastructure(test_db_url: str) -> None:
     alembic_command.upgrade(cfg, "head")
 
 
+# provides fake redis server
 @pytest.fixture(scope="session")
 def fake_redis_server() -> fakeredis.FakeServer:
     return fakeredis.FakeServer()
 
 
+# provides patch redis globally
 @pytest.fixture(scope="session", autouse=True)
 def patch_redis_globally(fake_redis_server: fakeredis.FakeServer):
+    # handles make fake
     def make_fake(url: str, **kwargs: object) -> fakeredis.aioredis.FakeRedis:
         decode = bool(kwargs.get("decode_responses", False))
         return fakeredis.aioredis.FakeRedis(server=fake_redis_server, decode_responses=decode)
@@ -104,6 +111,7 @@ def patch_redis_globally(fake_redis_server: fakeredis.FakeServer):
         yield
 
 
+# verifies that session factory
 @pytest.fixture(scope="session")
 def test_session_factory(setup_test_infrastructure: None) -> async_sessionmaker[AsyncSession]:
     import com.qode.qrew.v1.sales.core.database as db_module
@@ -111,6 +119,7 @@ def test_session_factory(setup_test_infrastructure: None) -> async_sessionmaker[
     return db_module.AsyncSessionLocal
 
 
+# provides client
 @pytest_asyncio.fixture
 async def client(
     setup_test_infrastructure: None, patch_redis_globally: None
@@ -130,6 +139,7 @@ async def client(
         yield c
 
 
+# handles make token
 def _make_token(user_id: _uuid.UUID) -> str:
     from com.qode.qrew.v1.sales.core.principals import ACCESS, sign
 
@@ -137,12 +147,14 @@ def _make_token(user_id: _uuid.UUID) -> str:
     return sign(ACCESS, {"sub": str(user_id), "type": "access", "iat": now, "exp": now + 3600})
 
 
+# provides auth headers
 @pytest.fixture
 def auth_headers() -> tuple[_uuid.UUID, dict[str, str]]:
     user_id = _uuid.uuid4()
     return user_id, {"Authorization": f"Bearer {_make_token(user_id)}"}
 
 
+# provides seed event
 @pytest_asyncio.fixture
 async def seed_event(
     test_session_factory: async_sessionmaker[AsyncSession],
@@ -177,6 +189,7 @@ async def seed_event(
     return event_id, ticket_type_id
 
 
+# provides seed queue event
 @pytest_asyncio.fixture
 async def seed_queue_event(
     test_session_factory: async_sessionmaker[AsyncSession],

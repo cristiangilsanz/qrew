@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import uuid
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -7,16 +8,19 @@ import pytest
 from com.qode.qrew.v1.payments.models.payment import PaymentStatus
 
 
+# provides user id
 @pytest.fixture
 def user_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides reservation id
 @pytest.fixture
 def reservation_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# handles make payment
 def make_payment(
     *,
     reservation_id: uuid.UUID | None = None,

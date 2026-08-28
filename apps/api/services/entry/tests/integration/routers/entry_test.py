@@ -1,3 +1,4 @@
+# tests entry
 import uuid
 from unittest.mock import patch
 
@@ -18,6 +19,7 @@ from tests.integration.conftest import (
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# provides base ids
 @pytest.fixture
 async def base_ids():
     return {
@@ -27,11 +29,7 @@ async def base_ids():
     }
 
 
-# ---------------------------------------------------------------------------
-# POST /v1/entry/validate
-# ---------------------------------------------------------------------------
-
-
+# verifies that validate entry success
 async def test_validate_entry_success(client, db, fake_redis, base_ids):
     event_id = base_ids["event_id"]
     venue_id = base_ids["venue_id"]
@@ -69,6 +67,7 @@ async def test_validate_entry_success(client, db, fake_redis, base_ids):
     assert data["ticket_id"] == str(tc.ticket_id)
 
 
+# verifies that validate entry no auth
 async def test_validate_entry_no_auth(client):
     response = await client.post(
         "/v1/entry/validate",
@@ -77,6 +76,7 @@ async def test_validate_entry_no_auth(client):
     assert response.status_code == 401
 
 
+# verifies that validate entry replay
 async def test_validate_entry_replay(client, db, fake_redis, base_ids):
     event_id = base_ids["event_id"]
     venue_id = base_ids["venue_id"]
@@ -118,6 +118,7 @@ async def test_validate_entry_replay(client, db, fake_redis, base_ids):
     assert r2.json()["reason"] == "replay"
 
 
+# verifies that validate entry ticket used state
 async def test_validate_entry_ticket_used_state(client, db, fake_redis, base_ids):
     event_id = base_ids["event_id"]
     venue_id = base_ids["venue_id"]
@@ -158,11 +159,7 @@ async def test_validate_entry_ticket_used_state(client, db, fake_redis, base_ids
     assert data["reason"] == "state"
 
 
-# ---------------------------------------------------------------------------
-# GET /v1/events/{event_id}/entry-stats
-# ---------------------------------------------------------------------------
-
-
+# verifies that entry stats success
 async def test_entry_stats_success(client):
     user = make_principal()
     event_id = uuid.uuid4()
@@ -180,6 +177,7 @@ async def test_entry_stats_success(client):
     assert data["total_issued"] == 0
 
 
+# verifies that entry stats not member
 async def test_entry_stats_not_member(client):
     user = make_principal()
     token = make_access_token(user.id, is_admin=user.is_admin)
@@ -193,11 +191,13 @@ async def test_entry_stats_not_member(client):
     assert response.status_code == 403
 
 
+# verifies that entry stats no auth
 async def test_entry_stats_no_auth(client):
     response = await client.get(f"/v1/events/{uuid.uuid4()}/entry-stats")
     assert response.status_code == 401
 
 
+# verifies that entry stats event not found
 async def test_entry_stats_event_not_found(client):
     user = make_principal()
     token = make_access_token(user.id, is_admin=user.is_admin)

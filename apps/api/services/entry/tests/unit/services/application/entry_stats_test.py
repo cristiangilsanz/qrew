@@ -1,3 +1,4 @@
+# tests entry stats
 import json
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -16,6 +17,7 @@ _PATCH_SETTINGS = (
 )
 
 
+# handles make redis
 def _make_redis(*, cached: str | bytes | None = None) -> MagicMock:
     redis = MagicMock()
     redis.get = AsyncMock(return_value=cached)
@@ -23,26 +25,27 @@ def _make_redis(*, cached: str | bytes | None = None) -> MagicMock:
     return redis
 
 
+# mock AsyncSession that returns provided rows for execute calls
 def _make_db(
     *,
     state_rows: list[tuple[str, int]] | None = None,
     rejection_rows: list[tuple[str, int]] | None = None,
     last_scan: datetime | None = None,
 ) -> MagicMock:
-    """Mock AsyncSession that returns provided rows for execute() calls."""
     state_rows = state_rows or []
     rejection_rows = rejection_rows or []
 
     call_count = 0
 
+    # handles execute
     async def _execute(_query):  # type: ignore[no-untyped-def]
         nonlocal call_count
         call_count += 1
         mock_result = MagicMock()
-        # First call → state counts; second call → rejection counts
         mock_result.all.return_value = state_rows if call_count == 1 else rejection_rows
         return mock_result
 
+    # handles scalar
     async def _scalar(_query):  # type: ignore[no-untyped-def]
         return last_scan
 
@@ -52,6 +55,7 @@ def _make_db(
     return db
 
 
+# handles fake settings
 def _fake_settings(
     *,
     window_hours: int = 24,
@@ -64,12 +68,14 @@ def _fake_settings(
 
 
 class TestResolveSince:
+    # verifies that returns provided datetime
     def test_returns_provided_datetime(self) -> None:
         fixed = datetime(2026, 6, 1, tzinfo=UTC)
         with patch(_PATCH_SETTINGS, _fake_settings()):
             result = _resolve_since(fixed)
         assert result == fixed
 
+    # verifies that defaults to window hours ago
     def test_defaults_to_window_hours_ago(self) -> None:
         before = datetime.now(UTC)
         with patch(_PATCH_SETTINGS, _fake_settings(window_hours=12)):
@@ -80,6 +86,7 @@ class TestResolveSince:
 
 
 class TestDeserialise:
+    # verifies that round trip payload
     def test_round_trip_payload(self) -> None:
         event_id = uuid.uuid4()
         since = datetime(2026, 6, 1, tzinfo=UTC)
@@ -101,6 +108,7 @@ class TestDeserialise:
         assert result.rejections_by_reason == {"signature": 3, "replay": 1}
         assert result.last_scan_at == last_scan
 
+    # verifies that handles missing last scan
     def test_handles_missing_last_scan(self) -> None:
         event_id = uuid.uuid4()
         since = datetime(2026, 6, 1, tzinfo=UTC)
@@ -110,6 +118,7 @@ class TestDeserialise:
 
 
 class TestComputeEntryStats:
+    # verifies that returns cached when redis hit
     async def test_returns_cached_when_redis_hit(self, event_id: uuid.UUID) -> None:
         since = datetime(2026, 6, 1, tzinfo=UTC)
         payload = json.dumps(
@@ -134,6 +143,7 @@ class TestComputeEntryStats:
         assert result.total_entered == 20
         db.execute.assert_not_called()
 
+    # verifies that queries db on cache miss
     async def test_queries_db_on_cache_miss(self, event_id: uuid.UUID) -> None:
         since = datetime(2026, 6, 1, tzinfo=UTC)
         redis = _make_redis(cached=None)
@@ -151,13 +161,14 @@ class TestComputeEntryStats:
                 db, redis, event_id=event_id, since=since
             )
 
-        assert result.total_issued == 115  # 80 + 30 + 5
-        assert result.total_entered == 30  # only "used" count
+        assert result.total_issued == 115
+        assert result.total_entered == 30
         assert result.total_remaining == 85
         assert result.rejections_by_reason["signature"] == 4
         assert result.rejections_by_reason["replay"] == 2
         redis.set.assert_awaited_once()
 
+    # verifies that cache write failure is swallowed
     async def test_cache_write_failure_is_swallowed(self, event_id: uuid.UUID) -> None:
         since = datetime(2026, 6, 1, tzinfo=UTC)
         redis = _make_redis(cached=None)
@@ -169,10 +180,10 @@ class TestComputeEntryStats:
             )
         assert isinstance(result, EntryStats)
 
+    # verifies that remaining never goes negative
     async def test_remaining_never_goes_negative(self, event_id: uuid.UUID) -> None:
         since = datetime(2026, 6, 1, tzinfo=UTC)
         redis = _make_redis(cached=None)
-        # More entered than issued (data anomaly)
         db = _make_db(
             state_rows=[(TicketState.redeemed.value, 100)],
         )

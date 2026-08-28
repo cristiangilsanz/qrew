@@ -1,8 +1,8 @@
+# provides shared pytest fixtures
 import os
 import time
 import uuid as _uuid
 
-# Must be set before any catalog app imports so settings pick them up at module load.
 os.environ.setdefault("DEBUG", "true")
 os.environ.setdefault("IDEMPOTENCY_ENABLED", "false")
 os.environ.setdefault("RATELIMIT_ENABLED", "false")
@@ -17,6 +17,7 @@ from httpx import ASGITransport  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine  # noqa: E402
 
 
+# handles get test db url
 def _get_test_db_url() -> str | None:
     explicit = os.environ.get("CATALOG_TEST_DB_URL") or os.environ.get("DATABASE_URL")
     if explicit:
@@ -46,6 +47,7 @@ def _get_test_db_url() -> str | None:
         return None
 
 
+# handles get test redis url
 def _get_test_redis_url() -> str | None:
     explicit = os.environ.get("CATALOG_TEST_REDIS_URL") or os.environ.get("REDIS_URL")
     if explicit:
@@ -63,6 +65,7 @@ def _get_test_redis_url() -> str | None:
         return None
 
 
+# verifies that db url
 @pytest.fixture(scope="session")
 def test_db_url() -> str:
     url = _get_test_db_url()
@@ -74,6 +77,7 @@ def test_db_url() -> str:
     return url
 
 
+# verifies that redis url
 @pytest.fixture(scope="session")
 def test_redis_url() -> str:
     url = _get_test_redis_url()
@@ -85,9 +89,9 @@ def test_redis_url() -> str:
     return url
 
 
+# patch settings + engine and run Alembic migrations once per session
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
-    """Patch settings + engine and run Alembic migrations once per session."""
     from com.qode.qrew.v1.catalog.core.config import settings
     import com.qode.qrew.v1.catalog.core.database as db_module
 
@@ -116,6 +120,7 @@ def setup_test_infrastructure(test_db_url: str, test_redis_url: str) -> None:
     alembic_command.upgrade(cfg, "head")
 
 
+# provides db session
 @pytest_asyncio.fixture
 async def db_session(setup_test_infrastructure: None) -> AsyncSession:
     import com.qode.qrew.v1.catalog.core.database as db_module
@@ -124,6 +129,7 @@ async def db_session(setup_test_infrastructure: None) -> AsyncSession:
         yield session
 
 
+# provides client
 @pytest_asyncio.fixture
 async def client(setup_test_infrastructure: None) -> httpx.AsyncClient:
     from com.qode.qrew.v1.catalog.app import app
@@ -135,8 +141,8 @@ async def client(setup_test_infrastructure: None) -> httpx.AsyncClient:
         yield c
 
 
+# sign a catalog access JWT using the session scoped ephemeral keypair
 def _make_token(user_id: _uuid.UUID, *, is_admin: bool = False) -> str:
-    """Sign a catalog access JWT using the session-scoped ephemeral keypair."""
     from com.qode.qrew.v1.catalog.core.principals import _KEYS, ACCESS, ALGORITHM
 
     keys = _KEYS[ACCESS]
@@ -151,20 +157,24 @@ def _make_token(user_id: _uuid.UUID, *, is_admin: bool = False) -> str:
     return jwt.encode(payload, keys.private_pem, algorithm=ALGORITHM, headers={"kid": keys.kid})
 
 
+# handles auth headers for
 def auth_headers_for(user_id: _uuid.UUID, *, is_admin: bool = False) -> dict:
     return {"Authorization": f"Bearer {_make_token(user_id, is_admin=is_admin)}"}
 
 
+# provides user id
 @pytest.fixture
 def user_id() -> _uuid.UUID:
     return _uuid.uuid4()
 
 
+# provides auth headers
 @pytest.fixture
 def auth_headers(user_id: _uuid.UUID) -> dict:
     return auth_headers_for(user_id, is_admin=True)
 
 
+# provides member headers
 @pytest.fixture
 def member_headers(user_id: _uuid.UUID) -> dict:
     return auth_headers_for(user_id)

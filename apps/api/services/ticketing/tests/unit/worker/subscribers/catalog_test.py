@@ -1,3 +1,4 @@
+# tests catalog
 import uuid
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
@@ -7,12 +8,14 @@ import pytest
 from com.qode.qrew.v1.ticketing.worker.subscribers.catalog import _upsert_geofence
 
 
+# handles repo
 def _repo() -> MagicMock:
     repo = MagicMock()
     repo.upsert_venue = AsyncMock()
     return repo
 
 
+# verifies that the geofence is stored when it travels with the event
 @pytest.mark.asyncio
 async def test_the_geofence_is_stored_when_it_travels_with_the_event() -> None:
     repo = _repo()
@@ -38,6 +41,7 @@ async def test_the_geofence_is_stored_when_it_travels_with_the_event() -> None:
     )
 
 
+# verifies that nothing is stored when the event carries no geofence
 @pytest.mark.asyncio
 async def test_nothing_is_stored_when_the_event_carries_no_geofence() -> None:
     repo = _repo()
@@ -45,6 +49,7 @@ async def test_nothing_is_stored_when_the_event_carries_no_geofence() -> None:
     repo.upsert_venue.assert_not_awaited()
 
 
+# verifies that a malformed geofence is discarded
 @pytest.mark.asyncio
 async def test_a_malformed_geofence_is_discarded() -> None:
     repo = _repo()

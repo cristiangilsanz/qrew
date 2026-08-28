@@ -1,3 +1,4 @@
+# tests reservation
 import uuid
 
 import httpx
@@ -6,6 +7,7 @@ import pytest
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+# verifies that create reservation success
 @pytest.mark.integration
 async def test_create_reservation_success(
     client: httpx.AsyncClient,
@@ -27,6 +29,7 @@ async def test_create_reservation_success(
     assert data["status"] == "reserved"
 
 
+# verifies that create reservation event not found
 @pytest.mark.integration
 async def test_create_reservation_event_not_found(
     client: httpx.AsyncClient,
@@ -41,6 +44,7 @@ async def test_create_reservation_event_not_found(
     assert resp.status_code == 404
 
 
+# verifies that create reservation sold out
 @pytest.mark.integration
 async def test_create_reservation_sold_out(
     client: httpx.AsyncClient,
@@ -86,6 +90,7 @@ async def test_create_reservation_sold_out(
     assert resp.status_code == 409
 
 
+# verifies that get reservation success
 @pytest.mark.integration
 async def test_get_reservation_success(
     client: httpx.AsyncClient,
@@ -107,6 +112,7 @@ async def test_get_reservation_success(
     assert get_resp.json()["id"] == reservation_id
 
 
+# verifies that get reservation not owned
 @pytest.mark.integration
 async def test_get_reservation_not_owned(
     client: httpx.AsyncClient,
@@ -137,6 +143,7 @@ async def test_get_reservation_not_owned(
     assert get_resp.status_code == 404
 
 
+# verifies that cancel reservation success
 @pytest.mark.integration
 async def test_cancel_reservation_success(
     client: httpx.AsyncClient,

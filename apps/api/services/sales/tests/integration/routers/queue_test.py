@@ -1,3 +1,4 @@
+# tests queue
 import uuid
 
 import httpx
@@ -6,6 +7,7 @@ import pytest
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+# verifies that join queue success
 @pytest.mark.integration
 async def test_join_queue_success(
     client: httpx.AsyncClient,
@@ -19,6 +21,7 @@ async def test_join_queue_success(
     assert resp.json()["position"] >= 1
 
 
+# verifies that join queue no queue on non queue event
 @pytest.mark.integration
 async def test_join_queue_no_queue_on_non_queue_event(
     client: httpx.AsyncClient,
@@ -31,6 +34,7 @@ async def test_join_queue_no_queue_on_non_queue_event(
     assert resp.status_code == 409
 
 
+# verifies that join queue event not found
 @pytest.mark.integration
 async def test_join_queue_event_not_found(
     client: httpx.AsyncClient,
@@ -41,6 +45,7 @@ async def test_join_queue_event_not_found(
     assert resp.status_code == 404
 
 
+# verifies that queue position not in queue
 @pytest.mark.integration
 async def test_queue_position_not_in_queue(
     client: httpx.AsyncClient,
@@ -54,6 +59,7 @@ async def test_queue_position_not_in_queue(
     assert resp.json()["position"] is None
 
 
+# verifies that queue position after join
 @pytest.mark.integration
 async def test_queue_position_after_join(
     client: httpx.AsyncClient,

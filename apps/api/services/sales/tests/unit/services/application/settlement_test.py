@@ -1,3 +1,4 @@
+# tests settlement
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,12 +15,12 @@ _PATCH_HOLDERS_REPO = (
 )
 
 
+# builds settlement service replacing repos after construction to avoid a real session execute call
 def _make_svc(
     *,
     reservation: object = None,
     inventory: object = None,
 ) -> tuple[SettlementService, MagicMock]:
-    """Build SettlementService replacing repos after construction to avoid real session.execute()."""
     session = MagicMock()
     session.commit = AsyncMock()
     svc = SettlementService(session)
@@ -31,6 +32,7 @@ def _make_svc(
 
 
 class TestSettlementMarkPaid:
+    # verifies that returns none when reservation not found
     async def test_returns_none_when_reservation_not_found(self) -> None:
         svc, _ = _make_svc(reservation=None)
         with (
@@ -40,6 +42,7 @@ class TestSettlementMarkPaid:
             result = await svc.mark_paid(uuid.uuid4())
         assert result is None
 
+    # verifies that returns none when already paid
     async def test_returns_none_when_already_paid(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -57,6 +60,7 @@ class TestSettlementMarkPaid:
             result = await svc.mark_paid(reservation.id)
         assert result is None
 
+    # verifies that returns none when cancelled
     async def test_returns_none_when_cancelled(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -74,6 +78,7 @@ class TestSettlementMarkPaid:
             result = await svc.mark_paid(reservation.id)
         assert result is None
 
+    # verifies that marks reservation paid and commits
     async def test_marks_reservation_paid_and_commits(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -99,6 +104,7 @@ class TestSettlementMarkPaid:
 
 
 class TestSettlementCancel:
+    # verifies that returns none when not found
     async def test_returns_none_when_not_found(self) -> None:
         svc, _ = _make_svc(reservation=None)
         with (
@@ -108,6 +114,7 @@ class TestSettlementCancel:
             result = await svc.cancel(uuid.uuid4(), reason="refund")
         assert result is None
 
+    # verifies that returns none when already cancelled
     async def test_returns_none_when_already_cancelled(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -126,6 +133,7 @@ class TestSettlementCancel:
         assert result is None
         session.commit.assert_not_awaited()
 
+    # verifies that returns none when expired
     async def test_returns_none_when_expired(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -144,6 +152,7 @@ class TestSettlementCancel:
         assert result is None
         session.commit.assert_not_awaited()
 
+    # verifies that cancels and restores inventory
     async def test_cancels_and_restores_inventory(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -168,6 +177,7 @@ class TestSettlementCancel:
         assert inventory.reserved_count == 7
         session.commit.assert_awaited_once()
 
+    # verifies that inventory count never goes below zero
     async def test_inventory_count_never_goes_below_zero(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -189,6 +199,7 @@ class TestSettlementCancel:
             await svc.cancel(reservation.id, reason="refund")
         assert inventory.reserved_count == 0
 
+    # verifies that cancel without inventory still cancels
     async def test_cancel_without_inventory_still_cancels(
         self, user_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -208,6 +219,7 @@ class TestSettlementCancel:
         session.commit.assert_awaited_once()
 
 
+# handles make redlock
 def _make_redlock() -> MagicMock:
     cm = MagicMock()
     cm.__aenter__ = AsyncMock(return_value=None)
@@ -215,6 +227,7 @@ def _make_redlock() -> MagicMock:
     return cm
 
 
+# handles make fake settings
 def _make_fake_settings() -> MagicMock:
     s = MagicMock()
     s.redis_url = "redis://localhost:6379"

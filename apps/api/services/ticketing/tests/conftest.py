@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import os
 import uuid
 from datetime import UTC, datetime
@@ -14,16 +15,19 @@ from com.qode.qrew.v1.ticketing.services.application.audit import AuditService  
 from com.qode.qrew.v1.ticketing.services.domain.gate import GateInputs  # noqa: E402
 
 
+# provides user id
 @pytest.fixture
 def user_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides device id
 @pytest.fixture
 def device_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides audit
 @pytest.fixture
 def audit() -> AuditService:
     mock = AsyncMock(spec=AuditService)
@@ -31,11 +35,13 @@ def audit() -> AuditService:
     return mock
 
 
+# provides now
 @pytest.fixture
 def now() -> datetime:
     return datetime(2024, 6, 1, 12, 0, 0, tzinfo=UTC)
 
 
+# handles make ticket
 def make_ticket(
     *,
     owner_user_id: uuid.UUID,
@@ -59,6 +65,7 @@ def make_ticket(
 _UNSET = object()
 
 
+# handles make device
 def make_device(
     *,
     user_id: uuid.UUID,
@@ -76,6 +83,7 @@ def make_device(
     )
 
 
+# handles make event ctx
 def make_event_ctx(*, event_id: uuid.UUID) -> SimpleNamespace:
     return SimpleNamespace(
         event_id=event_id,
@@ -89,6 +97,7 @@ def make_event_ctx(*, event_id: uuid.UUID) -> SimpleNamespace:
     )
 
 
+# handles make gate inputs
 def make_gate_inputs(
     *,
     user_id: uuid.UUID,

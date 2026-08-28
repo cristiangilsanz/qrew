@@ -1,3 +1,4 @@
+# tests ticket type
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -19,6 +20,7 @@ _PATCH_REDLOCK = f"{_MOD}.redlock"
 _PATCH_SETTINGS = f"{_MOD}.settings"
 
 
+# handles make svc
 def _make_svc(
     *,
     event: object = None,
@@ -42,18 +44,22 @@ def _make_svc(
 
 
 class TestValidateName:
+    # verifies that raises when starts with digit
     def test_raises_when_starts_with_digit(self) -> None:
         with pytest.raises(TicketTypeError, match="lowercase"):
             _validate_name("1general")
 
+    # verifies that raises when contains uppercase
     def test_raises_when_contains_uppercase(self) -> None:
         with pytest.raises(TicketTypeError):
             _validate_name("General")
 
+    # verifies that raises when too long
     def test_raises_when_too_long(self) -> None:
         with pytest.raises(TicketTypeError):
             _validate_name("a" * 33)
 
+    # verifies that valid names pass
     def test_valid_names_pass(self) -> None:
         _validate_name("general")
         _validate_name("vip_tier")
@@ -61,37 +67,45 @@ class TestValidateName:
 
 
 class TestValidateCapacity:
+    # verifies that raises when zero
     def test_raises_when_zero(self) -> None:
         with pytest.raises(TicketTypeError, match="between 1"):
             _validate_capacity(0)
 
+    # verifies that raises when over limit
     def test_raises_when_over_limit(self) -> None:
         with pytest.raises(TicketTypeError):
             _validate_capacity(100_001)
 
+    # verifies that valid passes
     def test_valid_passes(self) -> None:
         _validate_capacity(1)
         _validate_capacity(100_000)
 
 
 class TestValidatePrice:
+    # verifies that raises when negative
     def test_raises_when_negative(self) -> None:
         with pytest.raises(TicketTypeError, match="between 0"):
             _validate_price(-1)
 
+    # verifies that raises when over limit
     def test_raises_when_over_limit(self) -> None:
         with pytest.raises(TicketTypeError):
             _validate_price(10_000_001)
 
+    # verifies that zero is valid
     def test_zero_is_valid(self) -> None:
         _validate_price(0)
 
 
 class TestValidateCurrency:
+    # verifies that raises when unknown
     def test_raises_when_unknown(self) -> None:
         with pytest.raises(TicketTypeError, match="Currency"):
             _validate_currency("XYZ")
 
+    # verifies that valid currencies pass
     def test_valid_currencies_pass(self) -> None:
         _validate_currency("EUR")
         _validate_currency("USD")
@@ -99,6 +113,7 @@ class TestValidateCurrency:
 
 
 class TestTicketTypeServiceCreate:
+    # verifies that raises on invalid name
     async def test_raises_on_invalid_name(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
         with pytest.raises(TicketTypeError, match="lowercase"):
@@ -113,6 +128,7 @@ class TestTicketTypeServiceCreate:
                 position=0,
             )
 
+    # verifies that raises on invalid currency
     async def test_raises_on_invalid_currency(
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -129,6 +145,7 @@ class TestTicketTypeServiceCreate:
                 position=0,
             )
 
+    # verifies that raises when event not found
     async def test_raises_when_event_not_found(
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -149,6 +166,7 @@ class TestTicketTypeServiceCreate:
                 position=0,
             )
 
+    # verifies that raises when event cancelled
     async def test_raises_when_event_cancelled(
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -170,6 +188,7 @@ class TestTicketTypeServiceCreate:
                 position=0,
             )
 
+    # verifies that raises when name already exists
     async def test_raises_when_name_already_exists(
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
@@ -192,6 +211,7 @@ class TestTicketTypeServiceCreate:
                 position=0,
             )
 
+    # verifies that creates ticket type
     async def test_creates_ticket_type(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
         svc, repo = _make_svc(event=event, name_conflict=None)
@@ -215,6 +235,7 @@ class TestTicketTypeServiceCreate:
 
 
 class TestTicketTypeServiceUpdate:
+    # verifies that raises on unknown fields
     async def test_raises_on_unknown_fields(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -227,6 +248,7 @@ class TestTicketTypeServiceUpdate:
                 changes={"currency": "EUR"},
             )
 
+    # verifies that raises when not found
     async def test_raises_when_not_found(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -243,6 +265,7 @@ class TestTicketTypeServiceUpdate:
                 changes={"name": "vip"},
             )
 
+    # verifies that raises when ticket type belongs to other event
     async def test_raises_when_ticket_type_belongs_to_other_event(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -260,6 +283,7 @@ class TestTicketTypeServiceUpdate:
                 changes={"name": "vip"},
             )
 
+    # verifies that raises when capacity decreases
     async def test_raises_when_capacity_decreases(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -278,6 +302,7 @@ class TestTicketTypeServiceUpdate:
                 changes={"capacity": 100},
             )
 
+    # verifies that raises on name conflict
     async def test_raises_on_name_conflict(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -297,6 +322,7 @@ class TestTicketTypeServiceUpdate:
                 changes={"name": "vip"},
             )
 
+    # verifies that updates fields and flushes
     async def test_updates_fields_and_flushes(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -318,6 +344,7 @@ class TestTicketTypeServiceUpdate:
 
 
 class TestTicketTypeServiceDelete:
+    # verifies that raises when not found
     async def test_raises_when_not_found(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -329,6 +356,7 @@ class TestTicketTypeServiceDelete:
         ):
             await svc.delete(actor_id=actor_id, event_id=event_id, ticket_type_id=ticket_type_id)
 
+    # verifies that raises when has live reservations
     async def test_raises_when_has_live_reservations(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:
@@ -342,6 +370,7 @@ class TestTicketTypeServiceDelete:
         ):
             await svc.delete(actor_id=actor_id, event_id=event_id, ticket_type_id=ticket_type_id)
 
+    # verifies that sets deleted at and flushes
     async def test_sets_deleted_at_and_flushes(
         self, actor_id: uuid.UUID, event_id: uuid.UUID, ticket_type_id: uuid.UUID
     ) -> None:

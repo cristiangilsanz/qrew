@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import contextlib
 import pathlib
 import uuid
@@ -41,6 +42,7 @@ except Exception:
     _DOCKER_AVAILABLE = False
 
 
+# provides postgres container
 @pytest.fixture(scope="session")
 def postgres_container():
     if not _DOCKER_AVAILABLE:
@@ -52,11 +54,13 @@ def postgres_container():
         pytest.skip(f"Docker not available: {exc}")
 
 
+# provides db url
 @pytest.fixture(scope="session")
 def db_url(postgres_container):
     return postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
 
 
+# provides run migrations
 @pytest.fixture(scope="session", autouse=True)
 def run_migrations(postgres_container, db_url):
 
@@ -70,12 +74,14 @@ def run_migrations(postgres_container, db_url):
     alembic_command.upgrade(cfg, "head")
 
 
+# provides session factory
 @pytest.fixture(scope="session")
 def session_factory(db_url):
     engine = create_async_engine(db_url, pool_pre_ping=True)
     return async_sessionmaker(engine, expire_on_commit=False)
 
 
+# provides db
 @pytest.fixture
 async def db(session_factory) -> AsyncGenerator[AsyncSession, None]:
     async with session_factory() as session:
@@ -83,13 +89,16 @@ async def db(session_factory) -> AsyncGenerator[AsyncSession, None]:
         await session.commit()
 
 
+# provides fake redis
 @pytest.fixture
 def fake_redis():
     return fakeredis.aioredis.FakeRedis()
 
 
+# provides client
 @pytest.fixture
 async def client(session_factory, fake_redis) -> AsyncGenerator[AsyncClient, None]:
+    # handles override get db
     async def _override_get_db():
         async with session_factory() as session:
             try:
@@ -110,11 +119,7 @@ async def client(session_factory, fake_redis) -> AsyncGenerator[AsyncClient, Non
     app.dependency_overrides.clear()
 
 
-# ---------------------------------------------------------------------------
-# Auth helpers
-# ---------------------------------------------------------------------------
-
-
+# handles make access token
 def make_access_token(user_id: uuid.UUID, *, is_admin: bool = False) -> str:
     now = datetime.now(UTC)
     return jwt.encode(
@@ -131,6 +136,7 @@ def make_access_token(user_id: uuid.UUID, *, is_admin: bool = False) -> str:
     )
 
 
+# handles make ticket qr jwt
 def make_ticket_qr_jwt(
     ticket_id: uuid.UUID,
     event_id: uuid.UUID,
@@ -155,6 +161,7 @@ def make_ticket_qr_jwt(
     )
 
 
+# handles make scanner token
 def make_scanner_token(
     scanner_id: uuid.UUID,
     venue_id: uuid.UUID,
@@ -167,30 +174,23 @@ def make_scanner_token(
     )
 
 
-# ---------------------------------------------------------------------------
-# Noop context managers for external calls
-# ---------------------------------------------------------------------------
-
-
+# handles noop redlock
 @asynccontextmanager
 async def _noop_redlock(*args, **kwargs):
     yield
 
 
+# handles noop ticketing use
 async def _noop_ticketing_use(*args, **kwargs) -> None:
     return None
 
 
-# ---------------------------------------------------------------------------
-# Seed helpers
-# ---------------------------------------------------------------------------
-
-
+# a principal comes from the token, not from a table of another service
 def make_principal(*, is_admin: bool = False) -> SimpleNamespace:
-    """A principal comes from the token, not from a table of another service."""
     return SimpleNamespace(id=uuid.uuid4(), is_admin=is_admin)
 
 
+# answers the catalog membership question without reaching catalog
 @contextlib.contextmanager
 def membership(
     *,
@@ -198,9 +198,9 @@ def membership(
     is_member: bool = True,
     venue_id: uuid.UUID | None = None,
 ):
-    """Answers the catalog membership question without reaching catalog."""
     import com.qode.qrew.v1.entry.core.dependencies as deps
 
+    # handles fetch
     async def _fetch(_event_id: uuid.UUID, _user_id: uuid.UUID) -> EventMembership:
         return EventMembership(
             event_exists=event_exists,
@@ -216,6 +216,7 @@ def membership(
         deps.fetch_event_membership = original
 
 
+# handles seed scanner
 async def seed_scanner(
     db: AsyncSession, *, created_by: uuid.UUID, venue_id: uuid.UUID
 ) -> Scanner:
@@ -232,6 +233,7 @@ async def seed_scanner(
     return scanner
 
 
+# handles seed ticket context
 async def seed_ticket_context(
     db: AsyncSession,
     *,

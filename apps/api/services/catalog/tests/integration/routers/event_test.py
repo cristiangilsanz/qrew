@@ -1,3 +1,4 @@
+# tests event
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -9,14 +10,15 @@ from tests.integration.conftest import auth_headers_for
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# handles future
 def _future(days: int) -> str:
     return (datetime.now(UTC) + timedelta(days=days)).isoformat()
 
 
+# create an org, a venue, and a draft event
 async def _setup_org_venue_event(
     client: httpx.AsyncClient, user_id: uuid.UUID
 ) -> tuple[str, str, str, dict]:
-    """Create an org, a venue, and a draft event. Returns (org_id, venue_id, event_id, headers)."""
     headers = auth_headers_for(user_id, is_admin=True)
 
     org_resp = await client.post(
@@ -65,11 +67,7 @@ async def _setup_org_venue_event(
     return org_id, venue_id, event_id, headers
 
 
-# ---------------------------------------------------------------------------
-# Event management
-# ---------------------------------------------------------------------------
-
-
+# verifies that update event
 async def test_update_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     resp = await client.patch(
@@ -81,12 +79,14 @@ async def test_update_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> No
     assert resp.json()["name"] == "Updated Event Name"
 
 
+# verifies that update event unauthenticated
 async def test_update_event_unauthenticated(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, _ = await _setup_org_venue_event(client, user_id)
     resp = await client.patch(f"/v1/events/{event_id}", json={"name": "Should Fail"})
     assert resp.status_code in {401, 403}
 
 
+# verifies that update event forbidden non member
 async def test_update_event_forbidden_non_member(
     client: httpx.AsyncClient, user_id: uuid.UUID
 ) -> None:
@@ -98,6 +98,7 @@ async def test_update_event_forbidden_non_member(
     assert resp.status_code == 403
 
 
+# verifies that publish event
 async def test_publish_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     resp = await client.post(f"/v1/events/{event_id}/publish", headers=headers)
@@ -105,6 +106,7 @@ async def test_publish_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> N
     assert resp.json()["status"] == "published"
 
 
+# verifies that cancel event
 async def test_cancel_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     await client.post(f"/v1/events/{event_id}/publish", headers=headers)
@@ -113,11 +115,7 @@ async def test_cancel_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> No
     assert resp.json()["status"] == "cancelled"
 
 
-# ---------------------------------------------------------------------------
-# Public catalog
-# ---------------------------------------------------------------------------
-
-
+# verifies that search events returns published
 async def test_search_events_returns_published(
     client: httpx.AsyncClient, user_id: uuid.UUID
 ) -> None:
@@ -130,6 +128,7 @@ async def test_search_events_returns_published(
     assert event_id in ids
 
 
+# verifies that get public event
 async def test_get_public_event(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     await client.post(f"/v1/events/{event_id}/publish", headers=headers)
@@ -143,11 +142,13 @@ async def test_get_public_event(client: httpx.AsyncClient, user_id: uuid.UUID) -
     assert "ticket_types" in body
 
 
+# verifies that get public event not found
 async def test_get_public_event_not_found(client: httpx.AsyncClient) -> None:
     resp = await client.get(f"/v1/events/{uuid.uuid4()}")
     assert resp.status_code == 404
 
 
+# verifies that get public event draft not visible
 async def test_get_public_event_draft_not_visible(
     client: httpx.AsyncClient, user_id: uuid.UUID
 ) -> None:
@@ -156,6 +157,7 @@ async def test_get_public_event_draft_not_visible(
     assert resp.status_code == 404
 
 
+# verifies that get event availability
 async def test_get_event_availability(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     await client.post(f"/v1/events/{event_id}/publish", headers=headers)
@@ -165,16 +167,13 @@ async def test_get_event_availability(client: httpx.AsyncClient, user_id: uuid.U
     assert "ticket_types" in resp.json()
 
 
+# verifies that get event availability not found
 async def test_get_event_availability_not_found(client: httpx.AsyncClient) -> None:
     resp = await client.get(f"/v1/events/{uuid.uuid4()}/availability")
     assert resp.status_code == 404
 
 
-# ---------------------------------------------------------------------------
-# Ticket types
-# ---------------------------------------------------------------------------
-
-
+# verifies that create ticket type
 async def test_create_ticket_type(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     resp = await client.post(
@@ -195,6 +194,7 @@ async def test_create_ticket_type(client: httpx.AsyncClient, user_id: uuid.UUID)
     assert body["available"] == 100
 
 
+# verifies that list ticket types
 async def test_list_ticket_types(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     await client.post(
@@ -210,6 +210,7 @@ async def test_list_ticket_types(client: httpx.AsyncClient, user_id: uuid.UUID) 
     assert any(item["name"] == "vip" for item in items)
 
 
+# verifies that update ticket type
 async def test_update_ticket_type(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     create_resp = await client.post(
@@ -229,6 +230,7 @@ async def test_update_ticket_type(client: httpx.AsyncClient, user_id: uuid.UUID)
     assert resp.json()["price_cents"] == 1500
 
 
+# verifies that delete ticket type
 async def test_delete_ticket_type(client: httpx.AsyncClient, user_id: uuid.UUID) -> None:
     _, _, event_id, headers = await _setup_org_venue_event(client, user_id)
     create_resp = await client.post(
@@ -245,6 +247,7 @@ async def test_delete_ticket_type(client: httpx.AsyncClient, user_id: uuid.UUID)
     assert resp.status_code == 204
 
 
+# verifies that create ticket type unauthenticated
 async def test_create_ticket_type_unauthenticated(
     client: httpx.AsyncClient, user_id: uuid.UUID
 ) -> None:

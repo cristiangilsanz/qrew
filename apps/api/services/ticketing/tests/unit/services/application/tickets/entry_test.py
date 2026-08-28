@@ -1,3 +1,4 @@
+# tests entry
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,6 +18,7 @@ _PATCH_TRANSITION = (
 _PATCH_REDLOCK = "com.qode.qrew.v1.ticketing.services.application.tickets.entry.redlock"
 
 
+# handles make redlock
 def _make_redlock() -> MagicMock:
     cm = MagicMock()
     cm.__aenter__ = AsyncMock(return_value=None)
@@ -24,6 +26,7 @@ def _make_redlock() -> MagicMock:
     return cm
 
 
+# handles make session
 def _make_session() -> MagicMock:
     session = MagicMock()
     session.commit = AsyncMock()
@@ -31,6 +34,7 @@ def _make_session() -> MagicMock:
 
 
 class TestUseTicket:
+    # verifies that transitions ticket to used
     async def test_transitions_ticket_to_used(self) -> None:
         session = _make_session()
         ticket_id = uuid.uuid4()
@@ -50,6 +54,7 @@ class TestUseTicket:
             actor_id=actor_id,
         )
 
+    # verifies that commits after transition
     async def test_commits_after_transition(self) -> None:
         session = _make_session()
 
@@ -61,6 +66,7 @@ class TestUseTicket:
 
         session.commit.assert_awaited_once()
 
+    # verifies that silently ignores already used
     async def test_silently_ignores_already_used(self) -> None:
         session = _make_session()
 
@@ -75,6 +81,7 @@ class TestUseTicket:
 
         session.commit.assert_not_awaited()
 
+    # verifies that silently ignores redeemed in message
     async def test_silently_ignores_redeemed_in_message(self) -> None:
         session = _make_session()
 
@@ -89,6 +96,7 @@ class TestUseTicket:
 
         session.commit.assert_not_awaited()
 
+    # verifies that reraises non terminal transition error
     async def test_reraises_non_terminal_transition_error(self) -> None:
         session = _make_session()
 
@@ -106,6 +114,7 @@ class TestUseTicket:
         ):
             await use_ticket(session, ticket_id=uuid.uuid4(), actor_id=uuid.uuid4())
 
+    # verifies that propagates not found
     async def test_propagates_not_found(self) -> None:
         session = _make_session()
 
@@ -119,6 +128,7 @@ class TestUseTicket:
         ):
             await use_ticket(session, ticket_id=uuid.uuid4(), actor_id=uuid.uuid4())
 
+    # verifies that propagates busy error
     async def test_propagates_busy_error(self) -> None:
         session = _make_session()
 

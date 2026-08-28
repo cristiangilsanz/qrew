@@ -1,3 +1,4 @@
+# tests admission
 import uuid
 
 import pytest
@@ -8,6 +9,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")
 _INTERNAL_HEADERS = {"X-Internal-Key": "test-internal-key"}
 
 
+# handles seed ticket
 async def _seed_ticket(
     session_factory, *, state: str, ticket_id: uuid.UUID | None = None
 ) -> uuid.UUID:
@@ -31,6 +33,7 @@ async def _seed_ticket(
     return ticket_id
 
 
+# verifies that use ticket success
 async def test_use_ticket_success(client, test_session_factory):
     ticket_id = await _seed_ticket(test_session_factory, state="scanning")
 
@@ -43,6 +46,7 @@ async def test_use_ticket_success(client, test_session_factory):
     assert response.status_code == 204
 
 
+# verifies that use ticket idempotent already used
 async def test_use_ticket_idempotent_already_used(client, test_session_factory):
     ticket_id = await _seed_ticket(test_session_factory, state="redeemed")
 
@@ -55,6 +59,7 @@ async def test_use_ticket_idempotent_already_used(client, test_session_factory):
     assert response.status_code == 204
 
 
+# verifies that use ticket not found
 async def test_use_ticket_not_found(client):
     response = await client.post(
         f"/v1/admission/{uuid.uuid4()}/use",
@@ -65,6 +70,7 @@ async def test_use_ticket_not_found(client):
     assert response.status_code == 404
 
 
+# verifies that use ticket no auth
 async def test_use_ticket_no_auth(client):
     response = await client.post(
         f"/v1/admission/{uuid.uuid4()}/use",

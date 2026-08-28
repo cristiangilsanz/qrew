@@ -1,3 +1,4 @@
+# provides shared pytest fixtures
 import uuid
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
@@ -9,21 +10,25 @@ from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
 from com.qode.qrew.v1.sales.services.application.audit import AuditService
 
 
+# provides user id
 @pytest.fixture
 def user_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides event id
 @pytest.fixture
 def event_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides ticket type id
 @pytest.fixture
 def ticket_type_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+# provides audit
 @pytest.fixture
 def audit() -> AuditService:
     mock = AsyncMock(spec=AuditService)
@@ -31,11 +36,13 @@ def audit() -> AuditService:
     return mock
 
 
+# provides now
 @pytest.fixture
 def now() -> datetime:
     return datetime.now(UTC)
 
 
+# handles make reservation
 def make_reservation(
     *,
     user_id: uuid.UUID,
@@ -60,6 +67,7 @@ def make_reservation(
     )
 
 
+# handles make inventory
 def make_inventory(
     *,
     ticket_type_id: uuid.UUID,
@@ -79,6 +87,7 @@ def make_inventory(
     )
 
 
+# handles make event ctx
 def make_event_ctx(
     *,
     event_id: uuid.UUID,

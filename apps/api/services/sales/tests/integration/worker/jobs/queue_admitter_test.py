@@ -1,3 +1,4 @@
+# tests queue admitter
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 pytestmark = pytest.mark.asyncio(loop_scope="session")
 
 
+# verifies that admit next no active queues
 @pytest.mark.integration
 async def test_admit_next_no_active_queues(
     test_session_factory: async_sessionmaker[AsyncSession],
@@ -19,7 +21,6 @@ async def test_admit_next_no_active_queues(
     from locking import lock as lock_module
 
     monkeypatch.setattr(admitter, "AsyncSessionLocal", test_session_factory)
-    # Isolate from queue entries left by earlier tests in the shared Redis
     monkeypatch.setattr(
         queue_storage._ClientState, "client", fakeredis.aioredis.FakeRedis(decode_responses=True)
     )
@@ -30,6 +31,7 @@ async def test_admit_next_no_active_queues(
     assert admitted == 0
 
 
+# verifies that admit next admits users from queue
 @pytest.mark.integration
 async def test_admit_next_admits_users_from_queue(
     test_session_factory: async_sessionmaker[AsyncSession],
