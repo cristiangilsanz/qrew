@@ -1,3 +1,4 @@
+# tests lock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -5,6 +6,7 @@ from locking.errors import LockUnavailableError
 from locking.lock import RedisLock, redlock
 
 
+# handles make redis
 def _make_redis(*, set_returns: object = True) -> MagicMock:
     redis = MagicMock()
     redis.set = AsyncMock(return_value=set_returns)
@@ -15,6 +17,7 @@ def _make_redis(*, set_returns: object = True) -> MagicMock:
 
 
 class TestRedisLockAcquire:
+    # verifies that acquire succeeds
     async def test_acquire_succeeds(self) -> None:
         redis = _make_redis(set_returns=True)
         lock = RedisLock("mykey", ttl_seconds=10.0, redis_client=redis)
@@ -22,6 +25,7 @@ class TestRedisLockAcquire:
         assert acquired is True
         assert lock.nonce is not None
 
+    # verifies that acquire fails when redis returns none
     async def test_acquire_fails_when_redis_returns_none(self) -> None:
         redis = _make_redis(set_returns=None)
         lock = RedisLock("mykey", ttl_seconds=10.0, redis_client=redis)
@@ -29,10 +33,12 @@ class TestRedisLockAcquire:
         assert acquired is False
         assert lock.nonce is None
 
+    # verifies that acquire retries on failure
     async def test_acquire_retries_on_failure(self) -> None:
         redis = _make_redis()
         call_count = 0
 
+        # handles set
         async def _set(*args, **kwargs):
             nonlocal call_count
             call_count += 1
@@ -46,12 +52,14 @@ class TestRedisLockAcquire:
 
 
 class TestRedisLockRelease:
+    # verifies that release without acquire is noop
     async def test_release_without_acquire_is_noop(self) -> None:
         redis = _make_redis()
         lock = RedisLock("mykey", ttl_seconds=5.0, redis_client=redis)
         await lock.release()
         redis.eval.assert_not_awaited()
 
+    # verifies that release clears nonce
     async def test_release_clears_nonce(self) -> None:
         redis = _make_redis(set_returns=True)
         lock = RedisLock("mykey", ttl_seconds=5.0, redis_client=redis)
@@ -60,6 +68,7 @@ class TestRedisLockRelease:
         await lock.release()
         assert lock.nonce is None
 
+    # verifies that release redis error is swallowed
     async def test_release_redis_error_is_swallowed(self) -> None:
         from redis.asyncio import RedisError
 
@@ -72,6 +81,7 @@ class TestRedisLockRelease:
 
 
 class TestRedlock:
+    # verifies that context manager acquires and releases
     async def test_context_manager_acquires_and_releases(self) -> None:
         redis = _make_redis(set_returns=True)
         async with redlock(
@@ -84,6 +94,7 @@ class TestRedlock:
             assert lock.nonce is not None
         assert lock.nonce is None
 
+    # verifies that raises when lock unavailable
     async def test_raises_when_lock_unavailable(self) -> None:
         redis = _make_redis(set_returns=None)
         with pytest.raises(LockUnavailableError) as exc_info:
@@ -99,6 +110,7 @@ class TestRedlock:
 
 
 class TestLockUnavailableError:
+    # verifies that message includes key
     def test_message_includes_key(self) -> None:
         err = LockUnavailableError("my-resource")
         assert "my-resource" in str(err)
