@@ -1,3 +1,4 @@
+// renders the event image uploader component
 import { ImagePlus, Loader2, X } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -10,6 +11,7 @@ interface Props {
   onChange: (url: string | null) => void
 }
 
+// implements upload event image
 async function uploadEventImage(file: File): Promise<string> {
   const { data: signed } = await apiClient.post<{
     key: string
@@ -31,21 +33,21 @@ async function uploadEventImage(file: File): Promise<string> {
   return signed.key
 }
 
+// renders the event image uploader component
 export function EventImageUploader({ value, onChange }: Props) {
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Local blob URL shown immediately after selecting a file
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Revoke blob URL when component unmounts or preview changes
   useEffect(() => {
     return () => {
       if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
     }
   }, [previewUrl])
 
+  // handles handle file
   const handleFile = useCallback(
     async (file: File) => {
       if (!file.type.startsWith('image/')) {
@@ -57,7 +59,6 @@ export function EventImageUploader({ value, onChange }: Props) {
         return
       }
       setError(null)
-      // Show local preview immediately
       const blob = URL.createObjectURL(file)
       setPreviewUrl(blob)
       setUploading(true)
@@ -75,6 +76,7 @@ export function EventImageUploader({ value, onChange }: Props) {
     [onChange],
   )
 
+  // handles on drop
   const onDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
@@ -85,18 +87,19 @@ export function EventImageUploader({ value, onChange }: Props) {
     [handleFile],
   )
 
+  // handles on input change
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) void handleFile(file)
   }
 
+  // handles handle remove
   const handleRemove = () => {
     if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(null)
     onChange(null)
   }
 
-  // Use blob preview for new uploads, server URL for saved keys
   const displayUrl = previewUrl ?? (value ? getEventImageUrl(value) : null)
 
   return (

@@ -1,3 +1,4 @@
+// tests reservation row
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -14,7 +15,9 @@ import { ReservationRow } from './ReservationRow'
 const navigate = vi.fn()
 
 vi.mock('@tanstack/react-router', () => ({
+  // renders the link component
   Link: ({ children }: { children: ReactNode }) => <span>{children}</span>,
+  // provides use navigate
   useNavigate: () => navigate,
 }))
 
@@ -47,6 +50,7 @@ const EVENT = {
   ticket_types: [],
 } as unknown as EventDetail
 
+// implements ticket
 function ticket(overrides: Partial<Ticket> = {}): Ticket {
   return {
     id: 'ticket-0000000001',
@@ -66,6 +70,7 @@ function ticket(overrides: Partial<Ticket> = {}): Ticket {
   }
 }
 
+// implements render row
 function renderRow(tickets: Ticket[]) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(

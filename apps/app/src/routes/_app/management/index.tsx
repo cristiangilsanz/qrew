@@ -1,3 +1,4 @@
+// implements management
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Plus, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/_app/management/')({
   component: OrganiserPage,
 })
 
+// renders the organiser page component
 function OrganiserPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
@@ -25,6 +27,7 @@ function OrganiserPage() {
   const displayOrgs = isSearchMode ? (searchResults ?? []) : myOrgs
 
   useEffect(() => {
+    // implements timer
     const timer = setTimeout(() => setDebouncedQuery(query), 300)
     return () => clearTimeout(timer)
   }, [query])

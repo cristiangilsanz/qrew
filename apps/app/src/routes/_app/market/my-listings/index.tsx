@@ -1,3 +1,4 @@
+// implements my listings
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Calendar, MapPin, Search } from 'lucide-react'
 import { useState } from 'react'
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/_app/market/my-listings/')({
   component: MyListingsPage,
 })
 
+// renders the listing card component
 function ListingCard({ ticket }: { ticket: Ticket }) {
   const { t } = useTranslation()
   const { data: event, isLoading: eventLoading } = useEvent(ticket.event_id)
@@ -72,10 +74,12 @@ function ListingCard({ ticket }: { ticket: Ticket }) {
   )
 }
 
+// renders the my listings page component
 function MyListingsPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const { data: tickets, isLoading } = useTickets()
+  // implements listed tickets
   const listedTickets = (tickets ?? []).filter((t) => t.state === 'on_sale')
 
   const filtered = query

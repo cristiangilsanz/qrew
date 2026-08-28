@@ -1,3 +1,4 @@
+// tests cancel event section
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -9,6 +10,7 @@ import { server } from '@/test/server'
 import { type OrgEvent } from '../api'
 import { CancelEventSection } from './CancelEventSection'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const CATALOG = 'http://localhost:8000/api/catalog'
@@ -35,6 +37,7 @@ const EVENT = {
   cancelled_at: null,
 } as OrgEvent
 
+// implements render section
 function renderSection() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -46,6 +49,7 @@ function renderSection() {
   )
 }
 
+// implements open and wait out the delay
 async function openAndWaitOutTheDelay() {
   await userEvent.click(screen.getByRole('button', { name: /cancel event/i }))
   for (let tick = 0; tick < 6; tick += 1) {

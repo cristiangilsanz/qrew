@@ -1,3 +1,4 @@
+// implements claims
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Calendar, Clock, MapPin, Search } from 'lucide-react'
 import { useState } from 'react'
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/_app/market/claims/')({
   component: ClaimsPage,
 })
 
+// implements format seconds
 function formatSeconds(s: number) {
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
@@ -25,6 +27,7 @@ function formatSeconds(s: number) {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+// renders the assignment card component
 function AssignmentCard() {
   const { t } = useTranslation()
   const { data: assignment, isLoading: assignmentLoading } = usePendingMarketAssignment()
@@ -103,6 +106,7 @@ function AssignmentCard() {
   )
 }
 
+// renders the claims page component
 function ClaimsPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')

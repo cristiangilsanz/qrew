@@ -1,3 +1,4 @@
+// implements event id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -21,6 +22,7 @@ export const Route = createFileRoute('/_app/events/$eventId/')({
   component: EventDetailPage,
 })
 
+// implements format date
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', {
     weekday: 'short',
@@ -32,10 +34,12 @@ function formatDate(iso: string): string {
   })
 }
 
+// provides use countdown
 function useCountdown(targetIso: string | null): number {
   const [secondsLeft, setSecondsLeft] = useState(0)
   useEffect(() => {
     if (!targetIso) return
+    // implements update
     const update = () => {
       setSecondsLeft(Math.max(0, Math.floor((new Date(targetIso).getTime() - Date.now()) / 1000)))
     }
@@ -46,6 +50,7 @@ function useCountdown(targetIso: string | null): number {
   return secondsLeft
 }
 
+// implements format countdown
 function formatCountdown(s: number): string {
   const d = Math.floor(s / 86400)
   const h = Math.floor((s % 86400) / 3600)
@@ -56,6 +61,7 @@ function formatCountdown(s: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+// renders the event detail page component
 function EventDetailPage() {
   const { t } = useTranslation()
   const { eventId } = Route.useParams()
@@ -78,22 +84,28 @@ function EventDetailPage() {
   )
 
   const joinQueue = useMutation({
+    // implements mutation fn
     mutationFn: () => marketApi.joinQueue(eventId),
+    // handles on success
     onSuccess: () => {
       toast.success(t('market.toast.joinSuccess'))
       void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
     },
+    // handles on error
     onError: () => toast.error(t('market.toast.joinFailed')),
   })
 
   const leaveQueue = useMutation({
+    // implements mutation fn
     mutationFn: () => marketApi.leaveQueue(eventId),
+    // handles on success
     onSuccess: () => {
       toast.success(t('market.toast.leftWaitlist'))
       setLeaveOpen(false)
       void queryClient.invalidateQueries({ queryKey: ['market', 'queue', eventId] })
       void queryClient.invalidateQueries({ queryKey: ['market', 'queues'] })
     },
+    // handles on error
     onError: () => toast.error(t('market.toast.leaveFailed')),
   })
 
@@ -303,6 +315,7 @@ function EventDetailPage() {
   )
 }
 
+// renders the queue waiting room component
 function QueueWaitingRoom({
   eventId,
   eventName,

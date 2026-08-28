@@ -1,3 +1,4 @@
+// implements event id
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Activity, ChevronRight, FileEdit, Ticket } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -15,10 +16,12 @@ export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/')
   component: EventManagePage,
 })
 
+// renders the event manage page component
 function EventManagePage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
   const { data } = useOrgEvents(orgId)
+  // implements event
   const event = data?.items.find((e) => e.id === eventId)
 
   const isOngoing = event?.status === 'ongoing'

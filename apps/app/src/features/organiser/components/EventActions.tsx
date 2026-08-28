@@ -1,3 +1,4 @@
+// renders the event actions component
 import { Link } from '@tanstack/react-router'
 import { CheckCircle, Play, ScanLine } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -11,6 +12,7 @@ interface Props {
   orgId: string
 }
 
+// renders the event actions component
 export function EventActions({ event, orgId }: Props) {
   const { t } = useTranslation()
 

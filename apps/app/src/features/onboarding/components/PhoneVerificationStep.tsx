@@ -1,3 +1,4 @@
+// renders the phone verification step component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -28,8 +29,10 @@ interface Props {
   onSuccess: () => void
 }
 
+// renders the phone verification step component
 export function PhoneVerificationStep({ onSuccess }: Props) {
   const { t } = useTranslation()
+  // implements phone number
   const phoneNumber = useAuthStore((s) => s.phoneNumber)
   const verify = useVerifyPhone(onSuccess)
   const resend = useResendPhoneOtp()
@@ -39,10 +42,12 @@ export function PhoneVerificationStep({ onSuccess }: Props) {
     defaultValues: { otp: '' },
   })
 
+  // handles on submit
   const onSubmit = (values: FormValues) => {
     verify.mutate({ phone_number: phoneNumber ?? '', otp: values.otp })
   }
 
+  // handles handle resend
   const handleResend = () => {
     if (phoneNumber) resend.mutate({ phone_number: phoneNumber })
   }

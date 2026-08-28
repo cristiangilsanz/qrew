@@ -1,3 +1,4 @@
+// implements reservation id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import axios from 'axios'
@@ -15,6 +16,7 @@ import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useInitiatePayment } from '@/features/tickets/hooks/useInitiatePayment'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
 
+// renders the stripe checkout component
 const StripeCheckout = lazy(() =>
   import('@/features/tickets/components/StripeCheckout').then((m) => ({
     default: m.StripeCheckout,
@@ -25,17 +27,20 @@ export const Route = createFileRoute('/_app/reservations/$reservationId/')({
   component: ReservationPage,
 })
 
+// implements format seconds
 function formatSeconds(s: number): string {
   const m = Math.floor(s / 60)
   const sec = s % 60
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+// implements format price
 function formatPrice(cents: number, currency: string): string {
   if (cents === 0) return 'Free'
   return `${currency === 'EUR' ? '€' : currency}${(cents / 100).toFixed(2)}`
 }
 
+// renders the reservation page component
 function ReservationPage() {
   const { t } = useTranslation()
   const { reservationId } = Route.useParams()
@@ -52,11 +57,13 @@ function ReservationPage() {
   } = useReservation(reservationId, !!clientSecret)
   const { data: event, isLoading: eventLoading } = useEvent(reservation?.event_id ?? '')
 
+  // implements initiate payment
   const initiatePayment = useInitiatePayment((payment) => {
     setClientSecret(payment.client_secret)
   })
 
   const saveHolders = useMutation({
+    // implements mutation fn
     mutationFn: () =>
       ticketsApi.setHolders(
         reservationId,
@@ -66,7 +73,9 @@ function ReservationPage() {
           holder_dni: h.holder_dni,
         })),
       ),
+    // handles on success
     onSuccess: () => setHoldersSaved(true),
+    // handles on error
     onError: (err) => {
       const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
       const message =
@@ -81,6 +90,7 @@ function ReservationPage() {
 
   const countdown = useCountdown(reservation?.expires_at)
 
+  // handles handle pay success
   const handlePaySuccess = () => {
     toast.success(t('tickets.payment.success'))
     void queryClient.invalidateQueries({ queryKey: ['tickets'] })
@@ -103,12 +113,15 @@ function ReservationPage() {
           (_, i) => holders[i] ?? { holder_name: '', holder_dni: '' },
         )
 
+  // implements update holder
   const updateHolder = (index: number, field: 'holder_name' | 'holder_dni', value: string) => {
+    // implements next
     const next = initializedHolders.map((h, i) => (i === index ? { ...h, [field]: value } : h))
     setHolders(next)
     setHoldersSaved(false)
   }
 
+  // implements validate dni
   const validateDni = (dni: string): boolean => {
     const v = dni.trim().toUpperCase()
     const letters = 'TRWAGMYFPDXBNJZSQVHLCKE'
@@ -123,10 +136,12 @@ function ReservationPage() {
     return false
   }
 
+  // implements holders complete
   const holdersComplete = initializedHolders.every(
     (h) => h.holder_name.trim().length > 0 && validateDni(h.holder_dni),
   )
 
+  // implements ticket type
   const ticketType = event?.ticket_types.find((tt) => tt.id === reservation.ticket_type_id)
   const unitPrice = ticketType?.price_cents ?? 0
   const currency = ticketType?.currency ?? 'EUR'

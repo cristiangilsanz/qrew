@@ -1,3 +1,4 @@
+// tests management screens
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -5,6 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { currentPath, renderRoute } from '@/test/router'
 import { server } from '@/test/server'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const IDENTITY_URL = 'http://localhost:8000/api/identity'
@@ -20,6 +22,7 @@ const PROFILE = {
   created_at: '2026-01-01T00:00:00Z',
 }
 
+// implements sign in
 function signIn() {
   useAuthStore.setState({
     accessToken: 'header.payload.signature',
@@ -28,10 +31,12 @@ function signIn() {
   })
 }
 
+// implements sign out
 function signOut() {
   useAuthStore.setState({ accessToken: null, refreshToken: null, isAuthenticated: false })
 }
 
+// implements as admin
 function asAdmin() {
   server.use(
     http.get(`${IDENTITY_URL}/v1/auth/profile/me`, () =>

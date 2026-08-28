@@ -1,3 +1,4 @@
+// tests event filters bar
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -16,6 +17,7 @@ vi.mock('../api', async (importOriginal) => {
   }
 })
 
+// implements render bar
 function renderBar(onFiltersChange = vi.fn()) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return {

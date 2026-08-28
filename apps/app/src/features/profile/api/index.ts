@@ -1,3 +1,4 @@
+// implements profile api
 import { apiClient } from '@/lib/api'
 
 export interface UserPublicProfile {
@@ -55,44 +56,55 @@ export interface Session {
 }
 
 export const profileApi = {
+  // implements get me
   getMe: () => apiClient.get<UserProfile>('/v1/auth/profile/me').then((r) => r.data),
 
+  // implements change password
   changePassword: (data: { current_password: string; new_password: string }) =>
     apiClient
       .post<{ message: string }>('/v1/auth/account/change-password', data)
       .then((r) => r.data),
 
+  // implements change email
   changeEmail: (data: { new_email: string; current_password: string }) =>
     apiClient.post<{ message: string }>('/v1/auth/account/change-email', data).then((r) => r.data),
 
+  // implements confirm email change
   confirmEmailChange: (token: string) =>
     apiClient
       .post<{ message: string }>('/v1/auth/account/confirm-email-change', { token })
       .then((r) => r.data),
 
+  // implements change phone
   changePhone: (data: { new_phone_number: string; current_password: string }) =>
     apiClient.post<{ message: string }>('/v1/auth/account/change-phone', data).then((r) => r.data),
 
+  // implements confirm phone change
   confirmPhoneChange: (data: { new_phone_number: string; otp: string }) =>
     apiClient
       .post<{ message: string }>('/v1/auth/account/confirm-phone-change', data)
       .then((r) => r.data),
 
+  // implements get sessions
   getSessions: () =>
     apiClient
       .get<{ items: Session[]; next_cursor: string | null }>('/v1/auth/sessions')
       .then((r) => r.data),
 
+  // implements revoke session
   revokeSession: (jti: string) => apiClient.delete(`/v1/auth/sessions/${jti}`),
 
+  // implements revoke all sessions
   revokeAllSessions: () =>
     apiClient.post<{ message: string }>('/v1/auth/sessions/revoke-all').then((r) => r.data),
 
+  // implements delete account
   deleteAccount: (current_password: string) =>
     apiClient
       .post<{ message: string }>('/v1/auth/account/delete', { current_password })
       .then((r) => r.data),
 
+  // implements get audit log
   getAuditLog: (cursor?: string) =>
     apiClient
       .get<{ items: AuditEvent[]; next_cursor: string | null }>('/v1/auth/profile/audit', {
@@ -100,22 +112,27 @@ export const profileApi = {
       })
       .then((r) => r.data),
 
+  // implements get devices
   getDevices: () =>
     apiClient
       .get<{ items: Device[]; next_cursor: string | null }>('/v1/auth/devices')
       .then((r) => r.data),
 
+  // implements revoke device
   revokeDevice: (deviceId: string) =>
     apiClient.post<{ message: string }>(`/v1/auth/devices/${deviceId}/revoke`).then((r) => r.data),
 
+  // implements revoke all devices
   revokeAllDevices: () =>
     apiClient.post<{ message: string }>('/v1/auth/devices/revoke-all').then((r) => r.data),
 
+  // implements get public profiles
   getPublicProfiles: (userIds: string[]) =>
     apiClient
       .post<UserPublicProfile[]>('/v1/auth/profile/users/public', { user_ids: userIds })
       .then((r) => r.data),
 
+  // implements search users
   searchUsers: (q: string) =>
     apiClient
       .get<UserSearchResult[]>('/v1/admin/users/search', { params: { q } })

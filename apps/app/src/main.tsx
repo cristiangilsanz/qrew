@@ -1,3 +1,4 @@
+// implements main
 import './styles/globals.css'
 import './i18n'
 
@@ -30,6 +31,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
+// implements mount
 const mount = () => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

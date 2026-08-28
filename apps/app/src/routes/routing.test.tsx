@@ -1,10 +1,13 @@
+// tests routing
 import { describe, expect, it, vi } from 'vitest'
 
 import { useAuthStore } from '@/store/auth'
 import { currentPath, renderRoute } from '@/test/router'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
+// implements sign in
 function signIn() {
   useAuthStore.setState({
     accessToken: 'header.payload.signature',
@@ -13,6 +16,7 @@ function signIn() {
   })
 }
 
+// implements sign out
 function signOut() {
   useAuthStore.setState({ accessToken: null, refreshToken: null, isAuthenticated: false })
 }

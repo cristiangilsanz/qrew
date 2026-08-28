@@ -1,5 +1,7 @@
+// renders the market skeletons component
 import { Skeleton } from '@/components/ui/skeleton'
 
+// renders the waitlist row skeleton component
 export function WaitlistRowSkeleton() {
   return (
     <div className="bg-card border-border overflow-hidden rounded-xl border">

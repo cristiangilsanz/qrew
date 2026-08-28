@@ -1,3 +1,4 @@
+// implements scanner api
 import axios from 'axios'
 
 import { env } from '@/config/env'
@@ -41,11 +42,13 @@ export interface EntryStats {
 }
 
 export const scannerApi = {
+  // implements create for event
   createForEvent: (eventId: string, name: string, date?: string) =>
     entryClient
       .post<ScannerToken>(`/v1/scanners/for-event/${eventId}`, { name, date })
       .then((r) => r.data),
 
+  // implements validate entry
   validateEntry: (scannerToken: string, ticketJwt: string) =>
     axios
       .post<EntryResult>(
@@ -55,6 +58,7 @@ export const scannerApi = {
       )
       .then((r) => r.data),
 
+  // implements get entry stats
   getEntryStats: (eventId: string) =>
     entryClient.get<EntryStats>(`/v1/events/${eventId}/entry-stats`).then((r) => r.data),
 }

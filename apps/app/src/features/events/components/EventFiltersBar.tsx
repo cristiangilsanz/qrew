@@ -1,3 +1,4 @@
+// renders the event filters bar component
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, ChevronDown, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -10,6 +11,7 @@ interface Props {
   onFiltersChange: (filters: EventFilters) => void
 }
 
+// renders the event filters bar component
 export function EventFiltersBar({ onFiltersChange }: Props) {
   const [q, setQ] = useState('')
   const [appliedQ, setAppliedQ] = useState('')
@@ -20,6 +22,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
 
   const { data: allEvents, isLoading: citiesLoading } = useQuery({
     queryKey: ['events', {}],
+    // implements query fn
     queryFn: () => eventsApi.list({ limit: 100 }),
     staleTime: 5 * 60 * 1000,
   })
@@ -29,6 +32,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
   ).sort()
 
   useEffect(() => {
+    // handles handle outside
     const handleOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setCityOpen(false)
@@ -46,8 +50,10 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
     })
   }, [appliedQ, selectedCities, fromDate])
 
+  // implements commit search
   const commitSearch = () => setAppliedQ(q)
 
+  // implements toggle city
   const toggleCity = (city: string) =>
     setSelectedCities((prev) =>
       prev.includes(city) ? prev.filter((c) => c !== city) : [...prev, city],
@@ -55,6 +61,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
 
   const hasFilters = !!appliedQ.trim() || selectedCities.length > 0 || !!fromDate
 
+  // implements clear all
   const clearAll = () => {
     setQ('')
     setAppliedQ('')

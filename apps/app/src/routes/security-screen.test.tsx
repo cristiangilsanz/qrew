@@ -1,3 +1,4 @@
+// tests security screen
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -7,10 +8,12 @@ import { useAuthStore } from '@/store/auth'
 import { renderRoute } from '@/test/router'
 import { server } from '@/test/server'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const API = 'http://localhost:8000/api/identity'
 
+// implements sign in
 function signIn() {
   useAuthStore.setState({
     accessToken: 'header.payload.signature',
@@ -19,6 +22,7 @@ function signIn() {
   })
 }
 
+// implements open security
 async function openSecurity() {
   signIn()
   const rendered = await renderRoute('/profile/security')

@@ -1,3 +1,4 @@
+// renders the cancel event section component
 import { AnimatePresence, motion } from 'framer-motion'
 import { Ban } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -11,6 +12,7 @@ interface Props {
   orgId: string
 }
 
+// renders the cancel event section component
 export function CancelEventSection({ event, orgId }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -23,6 +25,7 @@ export function CancelEventSection({ event, orgId }: Props) {
       return
     }
     if (countdown <= 0) return
+    // implements timer
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
   }, [open, countdown])

@@ -1,3 +1,4 @@
+// implements security
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -50,6 +51,7 @@ const expandVariants = {
   exit: { height: 0, opacity: 0, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } },
 }
 
+// renders the expand row component
 function ExpandRow({
   id,
   icon,
@@ -106,6 +108,7 @@ function ExpandRow({
   )
 }
 
+// renders the device list component
 function DeviceList() {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useDevices()
@@ -219,6 +222,7 @@ function DeviceList() {
 
 const PAGE = 5
 
+// renders the audit log component
 function AuditLog() {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useAuditLog()
@@ -292,6 +296,7 @@ function AuditLog() {
 
 type TotpStep = 'setup' | 'confirm' | 'backup' | 'disable'
 
+// renders the totp section component
 function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose: () => void }) {
   const { t } = useTranslation()
   const qc = useQueryClient()
@@ -303,7 +308,9 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
   const [disableCode, setDisableCode] = useState('')
 
   const setupMut = useMutation({
+    // implements mutation fn
     mutationFn: () => totpApi.setup(),
+    // handles on success
     onSuccess: (data) => {
       setPendingSecret(data.secret)
       setPendingUri(data.provisioning_uri)
@@ -312,22 +319,28 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
   })
 
   const confirmMut = useMutation({
+    // implements mutation fn
     mutationFn: () => totpApi.confirm(pendingSecret, confirmCode, pendingBackups),
+    // handles on success
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['totp', 'status'] })
       setStep('backup')
     },
+    // handles on error
     onError: () => toast.error(t('auth.totp.invalidCode')),
   })
 
   const disableMut = useMutation({
+    // implements mutation fn
     mutationFn: () => totpApi.disable(disableCode),
+    // handles on success
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['totp', 'status'] })
       setDisableCode('')
       toast.success(t('profile.security.totp.disabledToast'))
       onClose()
     },
+    // handles on error
     onError: () => toast.error(t('auth.totp.invalidCode')),
   })
 
@@ -501,17 +514,21 @@ function TotpSection({ initialStep, onClose }: { initialStep: TotpStep; onClose:
   return null
 }
 
+// renders the security page component
 function SecurityPage() {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState<ExpandedRow>(null)
   const [totpInitialStep, setTotpInitialStep] = useState<TotpStep>('setup')
   const { data: totpStatus, isLoading: totpLoading } = useQuery({
     queryKey: ['totp', 'status'],
+    // implements query fn
     queryFn: () => totpApi.status(),
   })
 
+  // implements toggle
   const toggle = (row: ExpandedRow) => setExpanded((prev) => (prev === row ? null : row))
 
+  // handles handle totp button
   const handleTotpButton = () => {
     if (expanded === 'totp') {
       setExpanded(null)

@@ -1,3 +1,4 @@
+// implements confirm dialog
 import { AnimatePresence, motion } from 'framer-motion'
 import { Trash2 } from 'lucide-react'
 
@@ -13,6 +14,7 @@ interface ConfirmDialogProps {
   destructive?: boolean
 }
 
+// renders the confirm dialog component
 export function ConfirmDialog({
   open,
   onOpenChange,

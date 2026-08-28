@@ -1,3 +1,4 @@
+// tests account screen
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -7,6 +8,7 @@ import { useAuthStore } from '@/store/auth'
 import { renderRoute } from '@/test/router'
 import { server } from '@/test/server'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const API = 'http://localhost:8000/api/identity'
@@ -22,6 +24,7 @@ const PROFILE = {
   created_at: '2026-01-15T00:00:00Z',
 }
 
+// implements open account
 async function openAccount() {
   useAuthStore.setState({
     accessToken: 'header.payload.signature',

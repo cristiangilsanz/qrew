@@ -1,3 +1,4 @@
+// renders the ticket card component
 import { Link } from '@tanstack/react-router'
 import { Calendar, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -16,6 +17,7 @@ interface Props {
   ticket: Ticket
 }
 
+// renders the ticket card component
 export function TicketCard({ ticket }: Props) {
   const { t } = useTranslation()
   const { data: event } = useEvent(ticket.event_id)

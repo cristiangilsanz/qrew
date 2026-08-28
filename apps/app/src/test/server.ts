@@ -1,3 +1,4 @@
+// implements server
 import { setupServer } from 'msw/node'
 
 import { authHandlers } from './handlers/auth'

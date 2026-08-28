@@ -1,3 +1,4 @@
+// tests delete account dialog
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -8,10 +9,12 @@ import { server } from '@/test/server'
 
 import { DeleteAccountDialog } from './DeleteAccountDialog'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const ENDPOINT = 'http://localhost:8000/api/identity/v1/auth/account/delete'
 
+// implements render dialog
 function renderDialog() {
   const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   return render(
@@ -21,6 +24,7 @@ function renderDialog() {
   )
 }
 
+// implements open and wait out the delay
 async function openAndWaitOutTheDelay() {
   await userEvent.click(screen.getByRole('button', { name: /delete my account/i }))
   await act(async () => {

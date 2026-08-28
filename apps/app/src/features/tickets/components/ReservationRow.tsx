@@ -1,3 +1,4 @@
+// renders the reservation row component
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Calendar, Clock, CreditCard, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils'
 
 import type { Ticket, TicketState } from '../api'
 
+// implements format seconds
 function formatSeconds(s: number): string {
   const m = Math.floor(s / 60)
   const sec = s % 60
@@ -26,6 +28,7 @@ interface StubProps {
   hasRealImage: boolean
 }
 
+// renders the ticket stub component
 function TicketStub({ ticket, index, total, imageUrl, hasRealImage }: StubProps) {
   const { t } = useTranslation()
   const { data: reservation, isLoading: resLoading } = useReservation(
@@ -88,8 +91,10 @@ interface Props {
   event: EventDetail | undefined
 }
 
+// renders the reservation row component
 export function ReservationRow({ tickets, event }: Props) {
   const navigate = useNavigate()
+  // implements sorted
   const sorted = tickets
     .slice()
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())

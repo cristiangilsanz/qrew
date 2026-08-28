@@ -1,3 +1,4 @@
+// implements entry
 import { http, HttpResponse } from 'msw'
 
 const ENTRY_URL = 'http://localhost:8000/api/entry'

@@ -1,3 +1,4 @@
+// implements http
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios'
 
 import { useAuthStore } from '@/store/auth'
@@ -9,6 +10,7 @@ interface ServiceClientOptions extends CreateAxiosDefaults {
   useSetupToken?: boolean
 }
 
+// implements create service client
 export function createServiceClient({
   idempotencyKey = false,
   useSetupToken = false,

@@ -1,3 +1,4 @@
+// renders the create organisation form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -35,6 +36,7 @@ interface Props {
   onSuccess?: (orgId: string) => void
 }
 
+// renders the create organisation form component
 export function CreateOrganisationForm({ onSuccess }: Props) {
   const { t } = useTranslation()
 
@@ -43,6 +45,7 @@ export function CreateOrganisationForm({ onSuccess }: Props) {
     defaultValues: { slug: '', name: '', description: '' },
   })
 
+  // implements create org
   const createOrg = useCreateOrganisation((org: Organisation) => {
     form.reset()
     onSuccess?.(org.id)

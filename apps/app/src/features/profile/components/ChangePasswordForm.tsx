@@ -1,3 +1,4 @@
+// renders the change password form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
@@ -31,6 +32,7 @@ interface Props {
 const darkInput =
   'border-white/5 bg-black/30 text-white/70 placeholder:text-white/15 focus-visible:border-white/15 focus-visible:ring-0 focus-visible:ring-offset-0'
 
+// renders the change password form component
 export function ChangePasswordForm({ hideTitle }: Props) {
   const { t } = useTranslation()
   const [showCurrent, setShowCurrent] = useState(false)
@@ -41,6 +43,7 @@ export function ChangePasswordForm({ hideTitle }: Props) {
     defaultValues: { current_password: '', new_password: '' },
   })
 
+  // implements change password
   const changePassword = useChangePassword(() => form.reset())
 
   return (

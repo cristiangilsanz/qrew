@@ -1,3 +1,4 @@
+// tests org event list
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -7,15 +8,19 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
+    // renders the link component
     Link: ({ children, to }: { children: unknown; to: string }) => <a href={to}>{children}</a>,
   }
 })
 
 vi.mock('react-i18next', () => ({
+  // provides use translation
+  // implements t
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
 }))
 
 vi.mock('@/lib/formatDate', () => ({
+  // implements format date
   formatDate: () => '1 Sep 2026',
 }))
 

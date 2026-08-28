@@ -1,3 +1,4 @@
+// implements terms
 import { createFileRoute } from '@tanstack/react-router'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/_app/profile/terms')({
   component: TermsPage,
 })
 
+// renders the section component
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-8">
@@ -17,6 +19,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
+// renders the terms en component
 function TermsEN() {
   return (
     <>
@@ -96,6 +99,7 @@ function TermsEN() {
   )
 }
 
+// renders the terms es component
 function TermsES() {
   return (
     <>
@@ -176,6 +180,7 @@ function TermsES() {
   )
 }
 
+// renders the terms page component
 function TermsPage() {
   const { i18n } = useTranslation()
   const isES = i18n.language.startsWith('es')

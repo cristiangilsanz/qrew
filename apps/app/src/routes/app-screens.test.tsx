@@ -1,8 +1,10 @@
+// tests app screens
 import { describe, expect, it, vi } from 'vitest'
 
 import { useAuthStore } from '@/store/auth'
 import { currentPath, renderRoute } from '@/test/router'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const PATHS = [
@@ -21,6 +23,7 @@ const PATHS = [
   '/market/assignments/assignment-1',
 ]
 
+// implements sign in
 function signIn() {
   useAuthStore.setState({
     accessToken: 'header.payload.signature',

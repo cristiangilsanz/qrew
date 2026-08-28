@@ -1,3 +1,4 @@
+// implements new
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -9,12 +10,14 @@ export const Route = createFileRoute('/_app/management/$orgId/members/new')({
   component: AddMemberPage,
 })
 
+// renders the add member page component
 function AddMemberPage() {
   const { t } = useTranslation()
   const { orgId } = Route.useParams()
   const navigate = useNavigate()
 
   const { data: members } = useOrgMembers(orgId)
+  // implements existing member ids
   const existingMemberIds = (members ?? []).map((m) => m.user_id)
 
   return (

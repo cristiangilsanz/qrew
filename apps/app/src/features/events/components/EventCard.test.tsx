@@ -1,3 +1,4 @@
+// tests event card
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -8,10 +9,12 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
+    // renders the link component
     Link: ({ children, to }: { children: unknown; to: string }) => <a href={to}>{children}</a>,
   }
 })
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const mockEvent: EventSummary = {

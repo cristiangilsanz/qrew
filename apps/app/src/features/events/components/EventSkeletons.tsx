@@ -1,5 +1,7 @@
+// renders the event skeletons component
 import { Skeleton } from '@/components/ui/skeleton'
 
+// renders the event card skeleton component
 export function EventCardSkeleton() {
   return (
     <div className="bg-card border-border overflow-hidden rounded-xl border">
@@ -17,6 +19,7 @@ export function EventCardSkeleton() {
   )
 }
 
+// renders the event detail skeleton component
 export function EventDetailSkeleton() {
   return (
     <div className="pb-24">
@@ -63,6 +66,7 @@ export function EventDetailSkeleton() {
   )
 }
 
+// renders the checkout skeleton component
 export function CheckoutSkeleton() {
   return (
     <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">

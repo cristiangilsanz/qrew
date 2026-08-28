@@ -1,3 +1,4 @@
+// implements org id
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CalendarDays, ChevronRight, Trash2, Users } from 'lucide-react'
@@ -17,11 +18,13 @@ export const Route = createFileRoute('/_app/management/$orgId/')({
 
 const COUNTDOWN = 5
 
+// renders the org dashboard page component
 function OrgDashboardPage() {
   const { t } = useTranslation()
   const { orgId } = Route.useParams()
 
   const { data: orgsData, isLoading: orgLoading } = useMyOrganisations()
+  // implements org
   const org = orgsData?.items.find((o) => o.id === orgId)
 
   const { data: membersData, isLoading: membersLoading } = useOrgMembers(orgId)
@@ -36,11 +39,13 @@ function OrgDashboardPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const deleteOrg = useDeleteOrganisation()
 
+  // implements open delete
   const openDelete = () => {
     setSeconds(COUNTDOWN)
     setDeleteOpen(true)
   }
 
+  // implements close delete
   const closeDelete = () => {
     setDeleteOpen(false)
     if (timerRef.current) clearInterval(timerRef.current)

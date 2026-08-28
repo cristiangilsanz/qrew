@@ -1,3 +1,4 @@
+// tests change email form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -8,10 +9,12 @@ import { server } from '@/test/server'
 
 import { ChangeEmailForm } from './ChangeEmailForm'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const ENDPOINT = 'http://localhost:8000/api/identity/v1/auth/account/change-email'
 
+// implements render form
 function renderForm() {
   const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   return render(

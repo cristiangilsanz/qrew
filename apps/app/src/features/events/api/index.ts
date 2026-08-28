@@ -1,3 +1,4 @@
+// implements events api
 import { catalogClient } from '@/lib/catalogApi'
 
 export interface EventSummary {
@@ -69,10 +70,12 @@ export interface EventFilters {
 }
 
 export const eventsApi = {
+  // implements list
   list: (filters: EventFilters = {}) =>
     catalogClient
       .get<{ items: EventSummary[]; next_cursor: string | null }>('/v1/events', { params: filters })
       .then((r) => r.data),
 
+  // implements get by id
   getById: (id: string) => catalogClient.get<EventDetail>(`/v1/events/${id}`).then((r) => r.data),
 }

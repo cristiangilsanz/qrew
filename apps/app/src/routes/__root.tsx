@@ -1,3 +1,4 @@
+// implements root
 import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { useEffect } from 'react'
@@ -15,8 +16,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   errorComponent: ServerError,
 })
 
+// renders the root component
 function Root() {
   useEffect(() => {
+    // handles handler
     const handler = (e: MouseEvent) => {
       if ((e.target as Element).closest('button, a[role="button"], [data-haptic]')) {
         void hapticLight()

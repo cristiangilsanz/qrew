@@ -1,8 +1,10 @@
+// tests profile screens
 import { describe, expect, it, vi } from 'vitest'
 
 import { useAuthStore } from '@/store/auth'
 import { currentPath, renderRoute } from '@/test/router'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const PATHS = [

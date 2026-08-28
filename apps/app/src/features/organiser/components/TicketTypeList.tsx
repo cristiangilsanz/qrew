@@ -1,3 +1,4 @@
+// renders the ticket type list component
 import { AnimatePresence, motion } from 'framer-motion'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -15,6 +16,7 @@ interface Props {
   eventStatus?: 'draft' | 'published' | 'ongoing' | 'cancelled'
 }
 
+// renders the ticket type list component
 export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
   const { t } = useTranslation()
   const { data, isLoading } = useOrgTicketTypes(eventId)
@@ -58,7 +60,6 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
             onClose={() => setEditingId(null)}
           />
         ) : (
-          /* Ticket-shaped card — white background with top/bottom notch semicircles */
           <div
             key={tt.id}
             className="relative flex overflow-hidden rounded-2xl bg-white text-gray-900 shadow-sm"

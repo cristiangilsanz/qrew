@@ -1,3 +1,4 @@
+// renders the change phone form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, Send } from 'lucide-react'
 import { useState } from 'react'
@@ -37,6 +38,7 @@ interface Props {
 const darkInput =
   'border-white/5 bg-black/30 text-white/70 placeholder:text-white/15 focus-visible:border-white/15 focus-visible:ring-0 focus-visible:ring-offset-0'
 
+// renders the change phone form component
 export function ChangePhoneForm({ hideTitle }: Props) {
   const { t } = useTranslation()
   const [pendingPhone, setPendingPhone] = useState<string | null>(null)
@@ -52,6 +54,7 @@ export function ChangePhoneForm({ hideTitle }: Props) {
   })
 
   const changePhone = useChangePhone()
+  // implements confirm phone
   const confirmPhone = useConfirmPhoneChange(() => {
     setPendingPhone(null)
     step1Form.reset()
@@ -122,6 +125,7 @@ export function ChangePhoneForm({ hideTitle }: Props) {
         <form
           onSubmit={step1Form.handleSubmit((v) =>
             changePhone.mutate(v, {
+              // handles on success
               onSuccess: () => setPendingPhone(v.new_phone_number),
             }),
           )}

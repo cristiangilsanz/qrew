@@ -1,9 +1,11 @@
+// tests use web socket
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useWebSocket } from './useWebSocket'
 
 vi.mock('@/store/auth', () => ({
+  // provides use auth store
   useAuthStore: (selector: (s: { accessToken: string }) => unknown) =>
     selector({ accessToken: 'test.eyJzdWIiOiJ1c2VyLTEifQ.sig' }), // gitleaks:allow
 }))
@@ -22,16 +24,19 @@ class MockWebSocket {
   onerror: (() => void) | null = null
   sent: string[] = []
 
+  // stores the values this object needs
   constructor(url: string, protocols?: string[]) {
     this.url = url
     this.protocols = protocols ?? []
     MockWebSocket.instances.push(this)
   }
 
+  // implements send
   send(data: string) {
     this.sent.push(data)
   }
 
+  // implements close
   close(code = 1000) {
     this.onclose?.({ code })
   }

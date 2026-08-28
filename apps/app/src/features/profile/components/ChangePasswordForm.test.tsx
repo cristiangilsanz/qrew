@@ -1,3 +1,4 @@
+// tests change password form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -10,9 +11,11 @@ import { ChangePasswordForm } from './ChangePasswordForm'
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
+  // renders the toaster component
   Toaster: () => null,
 }))
 
+// implements render form
 function renderForm() {
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false } },

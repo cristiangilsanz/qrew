@@ -1,5 +1,7 @@
+// renders the profile skeletons component
 import { Skeleton } from '@/components/ui/skeleton'
 
+// renders the profile skeleton component
 export function ProfileSkeleton() {
   return (
     <div className="space-y-4">
@@ -42,6 +44,7 @@ export function ProfileSkeleton() {
   )
 }
 
+// renders the account skeleton component
 export function AccountSkeleton() {
   const rows = [
     { chip: false, value: true },

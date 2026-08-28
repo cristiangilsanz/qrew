@@ -1,3 +1,4 @@
+// tests passkey registration step
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -12,10 +13,12 @@ vi.mock('@simplewebauthn/browser', () => ({
   }),
 }))
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 import { PasskeyRegistrationStep } from './PasskeyRegistrationStep'
 
+// implements render step
 function renderStep(onSuccess = vi.fn()) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },

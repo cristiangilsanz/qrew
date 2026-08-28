@@ -1,3 +1,4 @@
+// implements refresh interceptor
 import type { AxiosInstance } from 'axios'
 import axios from 'axios'
 
@@ -6,6 +7,7 @@ import { useAuthStore } from '@/store/auth'
 
 let refreshPromise: Promise<string> | null = null
 
+// implements do refresh
 async function doRefresh(): Promise<string> {
   const refreshToken = useAuthStore.getState().refreshToken
   if (!refreshToken) throw new Error('No refresh token')
@@ -18,6 +20,7 @@ async function doRefresh(): Promise<string> {
   return res.data.access_token
 }
 
+// implements attach refresh interceptor
 export function attachRefreshInterceptor(client: AxiosInstance): void {
   client.interceptors.response.use(
     (response) => response,

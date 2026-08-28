@@ -1,3 +1,4 @@
+// renders the create venue form component
 /* global google */
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -43,6 +44,7 @@ interface Props {
   onSuccess?: (venue: Venue) => void
 }
 
+// renders the create venue form component
 export function CreateVenueForm({ onSuccess }: Props) {
   const { t } = useTranslation()
   const searchRef = useRef<HTMLInputElement>(null)
@@ -64,12 +66,12 @@ export function CreateVenueForm({ onSuccess }: Props) {
     },
   })
 
+  // implements create venue
   const createVenue = useCreateVenue((venue: Venue) => {
     form.reset()
     onSuccess?.(venue)
   })
 
-  // Load Google Maps Places library
   useEffect(() => {
     if (!env.GOOGLE_MAPS_API_KEY) return
     setOptions({ apiKey: env.GOOGLE_MAPS_API_KEY })
@@ -80,7 +82,6 @@ export function CreateVenueForm({ onSuccess }: Props) {
       })
   }, [])
 
-  // Attach Autocomplete once maps is ready and input is mounted
   useEffect(() => {
     if (!mapsReady || !searchRef.current || autocompleteRef.current) return
 
@@ -98,6 +99,7 @@ export function CreateVenueForm({ onSuccess }: Props) {
       const lng = place.geometry.location.lng()
       const comps = place.address_components ?? []
 
+      // implements get
       const get = (type: string, short = false) =>
         comps.find((c) => c.types.includes(type))?.[short ? 'short_name' : 'long_name'] ?? ''
 
@@ -115,7 +117,6 @@ export function CreateVenueForm({ onSuccess }: Props) {
       form.setValue('country', country, { shouldValidate: true })
       form.setValue('latitude', lat, { shouldValidate: true })
       form.setValue('longitude', lng, { shouldValidate: true })
-      // Autodetect timezone
       if (env.GOOGLE_MAPS_API_KEY) {
         const ts = Math.floor(Date.now() / 1000)
         fetch(

@@ -1,3 +1,4 @@
+// renders the event card component
 import { Calendar, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -12,6 +13,7 @@ interface Props {
   onClick?: () => void
 }
 
+// implements format event date
 function formatEventDate(isoString: string | null): string {
   if (!isoString) return ''
   return new Date(isoString).toLocaleDateString('en-GB', {
@@ -23,6 +25,7 @@ function formatEventDate(isoString: string | null): string {
   })
 }
 
+// renders the event card component
 export function EventCard({ event, onClick }: Props) {
   const { t } = useTranslation()
   const imageUrl = getEventImageUrl(event.image_url)

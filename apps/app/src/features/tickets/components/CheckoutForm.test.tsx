@@ -1,3 +1,4 @@
+// tests checkout form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -11,6 +12,7 @@ import { CheckoutForm } from './CheckoutForm'
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
+  // renders the toaster component
   Toaster: () => null,
 }))
 
@@ -39,6 +41,7 @@ const TICKET_TYPES: TicketType[] = [
   },
 ]
 
+// implements render form
 function renderForm(onSuccess = vi.fn()) {
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false } },
@@ -66,6 +69,7 @@ describe('CheckoutForm', () => {
   it('shows sold out events ticket types as disabled in the selector', () => {
     renderForm()
     const options = screen.getAllByRole('option')
+    // implements vip option
     const vipOption = options.find((o) => o.textContent?.includes('VIP'))
     expect(vipOption).toHaveAttribute('disabled')
   })
@@ -94,6 +98,7 @@ describe('CheckoutForm', () => {
   })
 
   it('shows sold out message when all ticket types are unavailable', () => {
+    // implements sold out types
     const soldOutTypes = TICKET_TYPES.map((tt) => ({ ...tt, available: 0 }))
     const queryClient = new QueryClient()
     render(

@@ -1,3 +1,4 @@
+// implements stats
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/st
   component: EntryStatsPage,
 })
 
+// renders the stat card skeleton component
 function StatCardSkeleton() {
   return (
     <div className="px-4 py-5 text-center">
@@ -19,12 +21,14 @@ function StatCardSkeleton() {
   )
 }
 
+// renders the entry stats page component
 function EntryStatsPage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
 
   const { data: stats, isLoading } = useQuery({
     queryKey: queryKeys.entryStats.detail(eventId),
+    // implements query fn
     queryFn: () => scannerApi.getEntryStats(eventId),
     refetchInterval: 30_000,
   })

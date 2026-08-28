@@ -1,3 +1,4 @@
+// provides use web socket
 import { useEffect, useRef, useState } from 'react'
 
 import {
@@ -10,7 +11,9 @@ import { useAuthStore } from '@/store/auth'
 
 export type { WsStatus }
 
+// provides use web socket
 export function useWebSocket(channel: string | null, onMessage: MessageHandler) {
+  // implements token
   const token = useAuthStore((s) => s.accessToken)
   const [status, setStatus] = useState<WsStatus>('closed')
   const onMessageRef = useRef<MessageHandler>(onMessage)
@@ -26,6 +29,7 @@ export function useWebSocket(channel: string | null, onMessage: MessageHandler) 
     const client = new GatewayClient(channel, token)
 
     const unsubStatus = client.onStatus(setStatus)
+    // implements unsub msg
     const unsubMsg = client.onMessage((msg: GatewayMessage) => onMessageRef.current(msg))
 
     client.start()
@@ -40,12 +44,15 @@ export function useWebSocket(channel: string | null, onMessage: MessageHandler) 
   return status
 }
 
+// provides use user channel
 export function useUserChannel(onMessage: MessageHandler) {
+  // implements token
   const token = useAuthStore((s) => s.accessToken)
   const channel = token ? resolveUserChannel(token) : null
   return useWebSocket(channel, onMessage)
 }
 
+// implements resolve user channel
 function resolveUserChannel(token: string): string | null {
   try {
     const payload = token.split('.')[1]

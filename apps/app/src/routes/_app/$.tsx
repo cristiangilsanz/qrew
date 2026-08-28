@@ -1,3 +1,4 @@
+// implements
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { House } from 'lucide-react'
 
@@ -7,6 +8,7 @@ export const Route = createFileRoute('/_app/$')({
   component: NotFoundPage,
 })
 
+// renders the not found page component
 function NotFoundPage() {
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center gap-6 px-6">

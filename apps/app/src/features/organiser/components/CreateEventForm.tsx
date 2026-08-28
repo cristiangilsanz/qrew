@@ -1,3 +1,4 @@
+// renders the create event form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Users } from 'lucide-react'
 import { useState } from 'react'
@@ -23,6 +24,7 @@ import { CreateVenueForm } from './CreateVenueForm'
 import { DateTimeInput } from './DateTimeInput'
 import { EventImageUploader } from './EventImageUploader'
 
+// implements schema
 const schema = z
   .object({
     name: z.string().min(1),
@@ -55,6 +57,7 @@ interface Props {
 const frostedInput =
   'w-full rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5 text-sm text-white/50 outline-none transition-all duration-150 placeholder:text-white/20 focus:border-primary/50 focus:bg-white/8 focus:text-white'
 
+// renders the create event form component
 export function CreateEventForm({ orgId, onSuccess }: Props) {
   const { t } = useTranslation()
   const { data: venuesData } = useVenues()
@@ -77,6 +80,7 @@ export function CreateEventForm({ orgId, onSuccess }: Props) {
     },
   })
 
+  // implements create event
   const createEvent = useCreateEvent(orgId, (event: OrgEvent) => {
     form.reset()
     onSuccess?.(event.id)

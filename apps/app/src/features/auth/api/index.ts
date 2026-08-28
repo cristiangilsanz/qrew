@@ -1,3 +1,4 @@
+// implements auth api
 import { apiClient } from '@/lib/api'
 
 export interface LoginRequest {
@@ -43,7 +44,6 @@ export interface RegisterResponse {
   message: string
 }
 
-// Pydantic validation error item shape from FastAPI 422 responses
 interface PydanticErrorItem {
   type: string
   loc: string[]
@@ -53,6 +53,7 @@ interface PydanticErrorItem {
 
 export type ApiErrorDetail = string | PydanticErrorItem[]
 
+// implements extract error message
 export function extractErrorMessage(detail: ApiErrorDetail | undefined, fallback: string): string {
   if (!detail) return fallback
   if (typeof detail === 'string') return detail
@@ -65,35 +66,43 @@ export interface RefreshResponse {
 }
 
 export const authApi = {
+  // implements login
   login: (data: LoginRequest) =>
     apiClient.post<LoginResponse>('/v1/auth/login', data).then((r) => r.data),
 
+  // implements refresh
   refresh: (refreshToken: string) =>
     apiClient
       .post<RefreshResponse>('/v1/auth/refresh', { refresh_token: refreshToken })
       .then((r) => r.data),
 
+  // implements register
   register: (data: RegisterRequest) =>
     apiClient.post<RegisterResponse>('/v1/auth/registration/', data).then((r) => r.data),
 
+  // implements passkey auth begin
   passkeyAuthBegin: (email: string) =>
     apiClient.post('/v1/auth/passkeys/authenticate/begin', { email }).then((r) => r.data),
 
+  // implements passkey auth complete
   passkeyAuthComplete: (credential: object) =>
     apiClient
       .post<LoginResponse>('/v1/auth/passkeys/authenticate/complete', credential)
       .then((r) => r.data),
 
+  // implements logout
   logout: (refreshToken: string) =>
     apiClient
       .post<{ message: string }>('/v1/auth/logout', { refresh_token: refreshToken })
       .then((r) => r.data),
 
+  // implements forgot password
   forgotPassword: (email: string) =>
     apiClient
       .post<{ message: string }>('/v1/auth/account/forgot-password', { email })
       .then((r) => r.data),
 
+  // implements reset password
   resetPassword: (token: string, newPassword: string) =>
     apiClient
       .post<{ message: string }>('/v1/auth/account/reset-password', {
@@ -104,10 +113,13 @@ export const authApi = {
 }
 
 export const totpApi = {
+  // implements status
   status: () => apiClient.get<TotpStatusResponse>('/v1/auth/totp/status').then((r) => r.data),
 
+  // implements setup
   setup: () => apiClient.post<TotpSetupResponse>('/v1/auth/totp/setup').then((r) => r.data),
 
+  // implements confirm
   confirm: (secret: string, code: string, backupCodes: string[]) =>
     apiClient
       .post<{ message: string }>('/v1/auth/totp/confirm', {
@@ -117,6 +129,7 @@ export const totpApi = {
       })
       .then((r) => r.data),
 
+  // implements verify
   verify: (totpToken: string, code: string) =>
     apiClient
       .post<TotpVerifyResponse>(
@@ -126,6 +139,7 @@ export const totpApi = {
       )
       .then((r) => r.data),
 
+  // implements disable
   disable: (code: string) =>
     apiClient
       .delete<{ message: string }>('/v1/auth/totp/disable', { data: { code } })

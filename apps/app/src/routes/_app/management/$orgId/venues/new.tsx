@@ -1,3 +1,4 @@
+// implements new
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/_app/management/$orgId/venues/new')({
   component: NewVenuePage,
 })
 
+// renders the new venue page component
 function NewVenuePage() {
   const { t } = useTranslation()
   const { orgId } = Route.useParams()

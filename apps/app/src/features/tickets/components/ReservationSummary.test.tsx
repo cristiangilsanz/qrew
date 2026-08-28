@@ -1,3 +1,4 @@
+// tests reservation summary
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -10,6 +11,7 @@ import { ReservationSummary } from './ReservationSummary'
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
+  // renders the toaster component
   Toaster: () => null,
 }))
 
@@ -23,6 +25,7 @@ const ACTIVE_RESERVATION = {
   created_at: new Date().toISOString(),
 }
 
+// implements render summary
 function renderSummary(
   reservation = ACTIVE_RESERVATION,
   handlers: { onCancel?: () => void; onPay?: () => void } = {},

@@ -1,3 +1,4 @@
+// tests register form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -12,6 +13,7 @@ const mockNavigate = vi.fn()
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
+  // renders the toaster component
   Toaster: () => null,
 }))
 
@@ -19,7 +21,9 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
+    // provides use navigate
     useNavigate: () => mockNavigate,
+    // renders the link component
     Link: ({ children, to }: { children: unknown; to: string }) => <a href={to}>{children}</a>,
   }
 })
@@ -27,6 +31,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 vi.mock('@marsidev/react-turnstile', async () => {
   const { useEffect } = await import('react')
   return {
+    // renders the turnstile component
     Turnstile: ({ onSuccess }: { onSuccess: (token: string) => void }) => {
       useEffect(() => {
         onSuccess('mock-captcha-token')
@@ -36,6 +41,7 @@ vi.mock('@marsidev/react-turnstile', async () => {
   }
 })
 
+// implements render register form
 function renderRegisterForm() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -47,6 +53,7 @@ function renderRegisterForm() {
   )
 }
 
+// implements fill valid form
 async function fillValidForm() {
   await userEvent.type(screen.getByLabelText(/full name/i), 'Jane Doe')
   await userEvent.type(screen.getByLabelText(/email/i), 'jane@example.com')

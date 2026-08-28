@@ -1,3 +1,4 @@
+// implements image with skeleton
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
@@ -11,8 +12,10 @@ interface Props {
   skeletonClassName?: string
 }
 
+// renders the image with skeleton component
 export function ImageWithSkeleton({ src, alt, className, skeletonClassName }: Props) {
   const [loaded, setLoaded] = useState(false)
+  // implements settle
   const settle = () => setLoaded(true)
 
   return (

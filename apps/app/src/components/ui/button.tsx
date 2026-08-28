@@ -1,3 +1,4 @@
+// implements button
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
@@ -36,6 +37,7 @@ export interface ButtonProps
   isLoading?: boolean
 }
 
+// renders the button component
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     { className, variant, size, asChild = false, isLoading = false, children, disabled, ...props },

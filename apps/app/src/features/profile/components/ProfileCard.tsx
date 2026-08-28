@@ -1,3 +1,4 @@
+// renders the profile card component
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,6 +8,7 @@ import { formatDate } from '@/lib/formatDate'
 
 import { useProfile } from '../hooks/useProfile'
 
+// renders the profile card component
 export function ProfileCard() {
   const { t, i18n } = useTranslation()
   const { data: profile, isLoading } = useProfile()

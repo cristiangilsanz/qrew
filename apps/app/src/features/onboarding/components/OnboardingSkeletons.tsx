@@ -1,5 +1,7 @@
+// renders the onboarding skeletons component
 import { Skeleton } from '@/components/ui/skeleton'
 
+// renders the onboarding step skeleton component
 export function OnboardingStepSkeleton() {
   return (
     <div className="space-y-6">

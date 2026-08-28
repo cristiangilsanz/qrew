@@ -1,3 +1,4 @@
+// implements router
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router'
 import { render, type RenderResult } from '@testing-library/react'
@@ -9,6 +10,7 @@ export interface RenderRouteResult extends RenderResult {
   queryClient: QueryClient
 }
 
+// implements create test router
 function createTestRouter(path: string, queryClient: QueryClient) {
   return createRouter({
     routeTree,
@@ -18,6 +20,7 @@ function createTestRouter(path: string, queryClient: QueryClient) {
   })
 }
 
+// implements render route
 export async function renderRoute(path: string): Promise<RenderRouteResult> {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
@@ -32,6 +35,7 @@ export async function renderRoute(path: string): Promise<RenderRouteResult> {
   return { ...utils, router, queryClient }
 }
 
+// implements current path
 export function currentPath(router: RenderRouteResult['router']): string {
   return router.state.location.pathname
 }

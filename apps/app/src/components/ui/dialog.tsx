@@ -1,3 +1,4 @@
+// implements dialog
 import { X } from 'lucide-react'
 import { type ReactNode, useEffect } from 'react'
 
@@ -12,6 +13,7 @@ interface DialogProps {
   size?: 'default' | 'lg'
 }
 
+// renders the dialog component
 export function Dialog({
   open,
   onClose,
@@ -22,6 +24,7 @@ export function Dialog({
 }: DialogProps) {
   useEffect(() => {
     if (!open) return
+    // handles handler
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }

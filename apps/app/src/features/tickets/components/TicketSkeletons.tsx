@@ -1,5 +1,7 @@
+// renders the ticket skeletons component
 import { Skeleton } from '@/components/ui/skeleton'
 
+// renders the reservation row skeleton component
 export function ReservationRowSkeleton() {
   return (
     <div className="space-y-3">
@@ -31,6 +33,7 @@ export function ReservationRowSkeleton() {
   )
 }
 
+// renders the ticket detail skeleton component
 export function TicketDetailSkeleton() {
   return (
     <div className="min-h-screen px-4 pt-2 pb-24">
@@ -80,6 +83,7 @@ export function TicketDetailSkeleton() {
   )
 }
 
+// renders the reservation skeleton component
 export function ReservationSkeleton() {
   return (
     <div className="mx-auto max-w-md space-y-6 p-6">

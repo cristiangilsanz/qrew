@@ -1,3 +1,4 @@
+// tests edit ticket type form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -8,6 +9,7 @@ import { server } from '@/test/server'
 
 import { CapacityEditTicketTypeForm, EditTicketTypeForm } from './EditTicketTypeForm'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const CATALOG = 'http://localhost:8000/api/catalog'
@@ -20,6 +22,7 @@ const DEFAULTS = {
   position: 0,
 }
 
+// implements render edit
 function renderEdit(onClose = vi.fn()) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -37,6 +40,7 @@ function renderEdit(onClose = vi.fn()) {
   return onClose
 }
 
+// implements render capacity
 function renderCapacity(onClose = vi.fn()) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },

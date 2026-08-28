@@ -1,3 +1,4 @@
+// tests use network
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,7 +8,9 @@ const getStatus = vi.fn()
 
 vi.mock('@capacitor/network', () => ({
   Network: {
+    // implements get status
     getStatus: () => getStatus(),
+    // implements add listener
     addListener: (_event: string, handler: (status: { connected: boolean }) => void) => {
       listeners.push(handler)
       return Promise.resolve({ remove })

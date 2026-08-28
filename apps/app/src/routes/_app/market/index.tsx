@@ -1,3 +1,4 @@
+// implements market
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight, Clock, Tag, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/_app/market/')({
   component: MarketPage,
 })
 
+// renders the market page component
 function MarketPage() {
   const { t } = useTranslation()
   const { data: assignment, isLoading: assignmentLoading } = usePendingMarketAssignment()

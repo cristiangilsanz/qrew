@@ -1,3 +1,4 @@
+// tests edit event form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -9,6 +10,7 @@ import { server } from '@/test/server'
 import { type OrgEvent } from '../api'
 import { EditEventForm } from './EditEventForm'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const CATALOG = 'http://localhost:8000/api/catalog'
@@ -35,6 +37,7 @@ const EVENT: OrgEvent = {
   cancelled_at: null,
 }
 
+// implements render form
 function renderForm() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },

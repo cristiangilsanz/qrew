@@ -1,3 +1,4 @@
+// implements assignment id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
@@ -22,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
+// renders the stripe checkout component
 const StripeCheckout = lazy(() =>
   import('@/features/tickets/components/StripeCheckout').then((m) => ({
     default: m.StripeCheckout,
@@ -35,6 +37,7 @@ export const Route = createFileRoute('/_app/market/assignments/$assignmentId/')(
   component: AssignmentPage,
 })
 
+// implements format seconds
 function formatSeconds(s: number): string {
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
@@ -44,11 +47,13 @@ function formatSeconds(s: number): string {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+// implements format price
 function formatPrice(cents: number, currency: string): string {
   if (cents === 0) return 'Free'
   return `${currency === 'EUR' ? '€' : currency}${(cents / 100).toFixed(2)}`
 }
 
+// implements extract message
 function extractMessage(err: unknown, fallback: string): string {
   if (!axios.isAxiosError(err)) return fallback
   const detail = err.response?.data?.detail
@@ -61,6 +66,7 @@ function extractMessage(err: unknown, fallback: string): string {
   return fallback
 }
 
+// renders the assignment page component
 function AssignmentPage() {
   const { t } = useTranslation()
   const { assignmentId } = Route.useParams()
@@ -100,23 +106,30 @@ function AssignmentPage() {
   }, [declineOpen])
 
   const initiatePayment = useMutation({
+    // implements mutation fn
     mutationFn: () => marketApi.initiateAssignmentPayment(assignmentId),
+    // handles on success
     onSuccess: (payment) => setClientSecret(payment.client_secret),
+    // handles on error
     onError: (err) => {
       toast.error(extractMessage(err, t('market.toast.declineFailed')))
     },
   })
 
   const declineAssignment = useMutation({
+    // implements mutation fn
     mutationFn: () => marketApi.declineAssignment(assignmentId),
+    // handles on success
     onSuccess: () => {
       toast.success(t('market.toast.declined'))
       void queryClient.invalidateQueries({ queryKey: ['market'] })
       void navigate({ to: '/market' })
     },
+    // handles on error
     onError: () => toast.error(t('market.toast.declineFailed')),
   })
 
+  // handles handle pay success
   const handlePaySuccess = () => {
     toast.success(t('market.toast.paymentSuccess'))
     void queryClient.invalidateQueries({ queryKey: ['tickets'] })
@@ -250,6 +263,7 @@ function AssignmentPage() {
 
         {/* Ticket type card */}
         {(() => {
+          // implements ticket type
           const ticketType = event?.ticket_types?.find(
             (tt) => tt.id === assignment.ticket_type_id || tt.name === assignment.ticket_type_name,
           )

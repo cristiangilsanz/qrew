@@ -1,9 +1,11 @@
+// tests auth screens
 import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { useAuthStore } from '@/store/auth'
 import { currentPath, renderRoute } from '@/test/router'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const PATHS = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-totp']

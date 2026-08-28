@@ -1,3 +1,4 @@
+// implements passkeys
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -7,6 +8,7 @@ export const Route = createFileRoute('/_app/profile/passkeys')({
   component: PasskeysPage,
 })
 
+// renders the passkeys page component
 function PasskeysPage() {
   const { t } = useTranslation()
   return (

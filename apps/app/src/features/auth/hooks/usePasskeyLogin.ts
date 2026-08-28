@@ -1,3 +1,4 @@
+// provides use passkey login
 import { Capacitor } from '@capacitor/core'
 import { Passkeys } from '@capawesome/capacitor-passkeys'
 import { startAuthentication } from '@simplewebauthn/browser'
@@ -10,12 +11,16 @@ import { useAuthStore } from '@/store/auth'
 
 import { type ApiErrorDetail, authApi, extractErrorMessage } from '../api'
 
+// provides use passkey login
 export function usePasskeyLogin() {
   const { t } = useTranslation()
+  // implements set tokens
   const setTokens = useAuthStore((s) => s.setTokens)
+  // implements set setup token
   const setSetupToken = useAuthStore((s) => s.setSetupToken)
 
   return useMutation({
+    // implements mutation fn
     mutationFn: async (email: string) => {
       const options = await authApi.passkeyAuthBegin(email)
       const credential = Capacitor.isNativePlatform()
@@ -27,6 +32,7 @@ export function usePasskeyLogin() {
         : await startAuthentication({ optionsJSON: options })
       return authApi.passkeyAuthComplete(credential)
     },
+    // handles on success
     onSuccess: (data) => {
       if (data.setup_required) {
         setSetupToken(data.access_token)
@@ -34,6 +40,7 @@ export function usePasskeyLogin() {
         setTokens(data.access_token, data.refresh_token ?? '')
       }
     },
+    // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
       const message = extractErrorMessage(
         error.response?.data?.detail,

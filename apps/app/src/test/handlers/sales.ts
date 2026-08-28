@@ -1,3 +1,4 @@
+// implements sales
 import { http, HttpResponse } from 'msw'
 
 const SALES_URL = 'http://localhost:8000/api/sales'

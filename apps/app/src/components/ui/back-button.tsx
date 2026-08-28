@@ -1,3 +1,4 @@
+// implements back button
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 
@@ -22,6 +23,7 @@ interface ButtonProps {
 
 type Props = LinkProps | ButtonProps
 
+// renders the back button component
 export function BackButton({ className, ...props }: Props) {
   if (props.to !== undefined) {
     return (

@@ -1,3 +1,4 @@
+// renders the org event list component
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -11,6 +12,7 @@ interface Props {
   orgId: string
 }
 
+// renders the org event list component
 export function OrgEventList({ orgId }: Props) {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useOrgEvents(orgId)

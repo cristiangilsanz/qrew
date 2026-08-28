@@ -1,3 +1,4 @@
+// renders the queue panel component
 import { Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -13,6 +14,7 @@ interface Props {
   onAdmitted?: (reservationWindowToken: string | null) => void
 }
 
+// renders the poll bar component
 function PollBar() {
   const [progress, setProgress] = useState(100)
 
@@ -20,6 +22,7 @@ function PollBar() {
     setProgress(100)
     const start = performance.now()
     let raf: number
+    // implements tick
     const tick = (now: number) => {
       const elapsed = now - start
       const remaining = Math.max(0, 100 - (elapsed / POLL_MS) * 100)
@@ -40,6 +43,7 @@ function PollBar() {
   )
 }
 
+// renders the queue panel component
 export function QueuePanel({ eventId, onAdmitted }: Props) {
   const { t } = useTranslation()
   const joinQueue = useJoinQueue(eventId)

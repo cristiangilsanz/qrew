@@ -1,3 +1,4 @@
+// provides use register passkey
 import { Capacitor } from '@capacitor/core'
 import { Passkeys } from '@capawesome/capacitor-passkeys'
 import { startRegistration } from '@simplewebauthn/browser'
@@ -7,9 +8,11 @@ import { toast } from 'sonner'
 
 import { onboardingApi } from '../api'
 
+// provides use register passkey
 export function useRegisterPasskey(onSuccess?: () => void) {
   const { t } = useTranslation()
   return useMutation({
+    // implements mutation fn
     mutationFn: async () => {
       const options = await onboardingApi.passkeyRegisterBegin()
       const credential = Capacitor.isNativePlatform()
@@ -26,10 +29,12 @@ export function useRegisterPasskey(onSuccess?: () => void) {
         : await startRegistration({ optionsJSON: options })
       return onboardingApi.passkeyRegisterComplete(credential)
     },
+    // handles on success
     onSuccess: () => {
       toast.success(t('passkeys.registerSuccess'))
       onSuccess?.()
     },
+    // handles on error
     onError: () => {
       toast.error(t('passkeys.errors.registerFailed'))
     },

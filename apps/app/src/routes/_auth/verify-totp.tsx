@@ -1,3 +1,4 @@
+// implements verify totp
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ShieldCheck } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react'
@@ -16,11 +17,15 @@ export const Route = createFileRoute('/_auth/verify-totp')({
 
 const DIGITS = 6
 
+// renders the verify totp page component
 function VerifyTotpPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  // implements totp token
   const totpToken = useAuthStore((s) => s.totpToken)
+  // implements set tokens
   const setTokens = useAuthStore((s) => s.setTokens)
+  // implements clear totp pending
   const clearTotpPending = useAuthStore((s) => s.clearTotpPending)
   const [digits, setDigits] = useState<string[]>(Array(DIGITS).fill(''))
   const [isLoading, setIsLoading] = useState(false)
@@ -31,6 +36,7 @@ function VerifyTotpPage() {
     inputRefs.current[0]?.focus()
   }, [])
 
+  // implements submit
   const submit = async (code: string) => {
     if (!totpToken) {
       void navigate({ to: '/login' })
@@ -53,10 +59,11 @@ function VerifyTotpPage() {
     }
   }
 
+  // handles handle change
   const handleChange = (index: number, value: string) => {
-    // Handle paste of full code into any cell
     const pasted = value.replace(/\D/g, '').slice(0, DIGITS)
     if (pasted.length > 1) {
+      // implements next
       const next = [...Array(DIGITS).fill('')].map((_, i) => pasted[i] ?? '')
       setDigits(next)
       setHasError(false)
@@ -82,6 +89,7 @@ function VerifyTotpPage() {
     }
   }
 
+  // handles handle key down
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace') {
       if (digits[index]) {

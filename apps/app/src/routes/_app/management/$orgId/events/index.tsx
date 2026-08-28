@@ -1,3 +1,4 @@
+// implements events
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Calendar, MapPin, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/_app/management/$orgId/events/')({
   component: OrgEventsPage,
 })
 
+// renders the org events page component
 function OrgEventsPage() {
   const { t, i18n } = useTranslation()
   const { orgId } = Route.useParams()

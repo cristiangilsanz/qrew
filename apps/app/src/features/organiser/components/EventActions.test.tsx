@@ -1,3 +1,4 @@
+// tests event actions
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -8,22 +9,28 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
+    // renders the link component
     Link: ({ children, to }: { children: unknown; to: string }) => <a href={to}>{children}</a>,
   }
 })
 
 vi.mock('react-i18next', () => ({
+  // provides use translation
+  // implements t
   useTranslation: () => ({ t: (k: string) => k }),
 }))
 
 vi.mock('../hooks/usePublishEvent', () => ({
+  // provides use publish event
   usePublishEvent: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
 vi.mock('../hooks/useStartEvent', () => ({
+  // provides use start event
   useStartEvent: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
+// implements make event
 function makeEvent(status: OrgEvent['status']): OrgEvent {
   return {
     id: 'event-1',

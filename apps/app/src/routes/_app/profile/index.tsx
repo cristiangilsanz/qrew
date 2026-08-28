@@ -1,3 +1,4 @@
+// implements profile
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronRight, Globe, HelpCircle, Info, LogOut, Shield, User } from 'lucide-react'
 import { useState } from 'react'
@@ -19,20 +20,25 @@ const SUPPORTED_LANGS = [
   { code: 'es', label: 'ES' },
 ]
 
+// renders the profile page component
 function ProfilePage() {
   const { t } = useTranslation()
   useProfile()
+  // implements clear session
   const clearSession = useAuthStore((s) => s.clearSession)
+  // implements refresh token
   const refreshToken = useAuthStore((s) => s.refreshToken)
   const navigate = useNavigate()
   const [currentLang, setCurrentLang] = useState(i18n.language.split('-')[0])
 
+  // implements change language
   const changeLanguage = (lang: string) => {
     void i18n.changeLanguage(lang)
     localStorage.setItem('qrew_lang', lang)
     setCurrentLang(lang)
   }
 
+  // handles handle logout
   const handleLogout = () => {
     if (refreshToken) {
       void authApi.logout(refreshToken).catch(() => {})

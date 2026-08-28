@@ -1,3 +1,4 @@
+// implements catalog
 import { http, HttpResponse } from 'msw'
 
 const CATALOG_URL = 'http://localhost:8000/api/catalog'

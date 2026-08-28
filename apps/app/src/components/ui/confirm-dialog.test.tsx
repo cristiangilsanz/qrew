@@ -1,3 +1,4 @@
+// tests confirm dialog
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
@@ -6,8 +7,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { ConfirmDialog } from './confirm-dialog'
 
 vi.mock('framer-motion', () => ({
+  // renders the animate presence component
   AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
   motion: {
+    // implements div
     div: ({
       children,
       onClick,

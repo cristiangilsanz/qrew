@@ -1,3 +1,4 @@
+// implements new
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/_app/management/new')({
   component: NewOrganisationPage,
 })
 
+// renders the new organisation page component
 function NewOrganisationPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()

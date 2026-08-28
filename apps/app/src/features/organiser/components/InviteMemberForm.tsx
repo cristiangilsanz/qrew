@@ -1,3 +1,4 @@
+// renders the invite member form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import { Info } from 'lucide-react'
@@ -34,19 +35,21 @@ interface Props {
   onSuccess?: () => void
 }
 
+// renders the invite member form component
 export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: Props) {
   const { t } = useTranslation()
   const [searchQ, setSearchQ] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Fetch all users once then filter on client
   const { data: allUsers = [] } = useQuery({
     queryKey: ['user-search-all'],
+    // implements query fn
     queryFn: () => profileApi.searchUsers(''),
     staleTime: 60_000,
   })
 
+  // implements filtered
   const filtered = allUsers
     .filter((u) => !existingMemberIds.includes(u.id))
     .filter((u) => {
@@ -63,6 +66,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
   const invite = useInviteMember(orgId)
 
   useEffect(() => {
+    // handles on click outside
     function onClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setDropdownOpen(false)
@@ -72,6 +76,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
+  // implements select user
   function selectUser(id: string, email: string) {
     form.setValue('user_id', id, { shouldValidate: true })
     setSearchQ(email)
@@ -83,6 +88,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
       <form
         onSubmit={form.handleSubmit((v) => {
           invite.mutate(v, {
+            // handles on success
             onSuccess: () => {
               form.reset()
               setSearchQ('')
@@ -105,7 +111,6 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
               value={searchQ}
               onChange={(e) => {
                 setSearchQ(e.target.value)
-                // Clear the stored user_id if the user edits the field manually
                 form.setValue('user_id', '', { shouldValidate: false })
                 setDropdownOpen(true)
               }}

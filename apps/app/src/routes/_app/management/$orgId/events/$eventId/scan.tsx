@@ -1,3 +1,4 @@
+// implements scan
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { useEffect } from 'react'
@@ -12,12 +13,14 @@ export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/sc
   component: ScanPage,
 })
 
+// renders the scan page component
 function ScanPage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
   const navigate = useNavigate()
 
   const { data: eventsData } = useOrgEvents(orgId)
+  // implements event
   const event = eventsData?.items.find((e) => e.id === eventId)
 
   const { videoRef, phase, scanResult, scanCount, startScanning } = useScanner({

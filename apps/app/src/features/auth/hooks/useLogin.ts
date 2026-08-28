@@ -1,3 +1,4 @@
+// provides use login
 import { useMutation } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
@@ -7,14 +8,20 @@ import { useAuthStore } from '@/store/auth'
 
 import { type ApiErrorDetail, authApi, extractErrorMessage, type LoginRequest } from '../api'
 
+// provides use login
 export function useLogin() {
   const { t } = useTranslation()
+  // implements set tokens
   const setTokens = useAuthStore((s) => s.setTokens)
+  // implements set setup token
   const setSetupToken = useAuthStore((s) => s.setSetupToken)
+  // implements set totp token
   const setTotpToken = useAuthStore((s) => s.setTotpToken)
 
   return useMutation({
+    // implements mutation fn
     mutationFn: (data: LoginRequest) => authApi.login(data),
+    // handles on success
     onSuccess: (data) => {
       if (data.setup_required) {
         setSetupToken(data.access_token)
@@ -24,6 +31,7 @@ export function useLogin() {
         setTokens(data.access_token, data.refresh_token ?? '')
       }
     },
+    // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
       const message = extractErrorMessage(
         error.response?.data?.detail,

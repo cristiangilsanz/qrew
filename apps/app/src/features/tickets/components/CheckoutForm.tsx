@@ -1,3 +1,4 @@
+// renders the checkout form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -32,11 +33,13 @@ interface Props {
   onSuccess: (reservation: Reservation) => void
 }
 
+// implements format price
 function formatPrice(cents: number, currency: string): string {
   if (cents === 0) return 'Free'
   return `${(cents / 100).toFixed(2)} ${currency}`
 }
 
+// renders the checkout form component
 export function CheckoutForm({
   eventId,
   ticketTypes,
@@ -45,6 +48,7 @@ export function CheckoutForm({
   onSuccess,
 }: Props) {
   const { t } = useTranslation()
+  // implements available
   const available = ticketTypes.filter((tt) => tt.available > 0)
 
   const form = useForm<Values>({
@@ -55,6 +59,7 @@ export function CheckoutForm({
   const createReservation = useCreateReservation(eventId, onSuccess)
 
   const selectedId = form.watch('ticket_type_id')
+  // implements selected tt
   const selectedTt = ticketTypes.find((tt) => tt.id === selectedId)
   const maxQty = Math.min(maxPerUser, selectedTt?.available ?? 1)
 

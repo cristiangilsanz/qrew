@@ -1,3 +1,4 @@
+// implements edit
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -11,10 +12,12 @@ export const Route = createFileRoute('/_app/management/$orgId/events/$eventId/ed
   component: EditEventPage,
 })
 
+// renders the edit event page component
 function EditEventPage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
   const { data, isLoading } = useOrgEvents(orgId)
+  // implements event
   const event = data?.items.find((e) => e.id === eventId)
 
   const hasStarted = event?.status === 'ongoing'

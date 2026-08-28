@@ -1,3 +1,4 @@
+// tests change phone form
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -8,10 +9,12 @@ import { server } from '@/test/server'
 
 import { ChangePhoneForm } from './ChangePhoneForm'
 
+// renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const API = 'http://localhost:8000/api/identity'
 
+// implements render form
 function renderForm() {
   const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   return render(
@@ -21,6 +24,7 @@ function renderForm() {
   )
 }
 
+// implements request the change
 async function requestTheChange() {
   await userEvent.type(screen.getByLabelText(/new phone number/i), '+34611222333')
   await userEvent.type(screen.getByLabelText(/password confirmation/i), 'StrongP@ss1!')
