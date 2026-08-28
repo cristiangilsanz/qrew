@@ -1,3 +1,4 @@
+# tests audit
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -12,6 +13,7 @@ from com.qode.qrew.v1.audit.repositories.audit import build_event
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
 
 
+# handles make chain
 def _make_chain(n: int, base_time: datetime | None = None) -> list[AuditEvent]:
     events: list[AuditEvent] = []
     prev_hash: bytes | None = None
@@ -34,6 +36,7 @@ def _make_chain(n: int, base_time: datetime | None = None) -> list[AuditEvent]:
     return events
 
 
+# handles seed chain
 async def _seed_chain(
     db: AsyncSession, n: int, base_time: datetime | None = None
 ) -> list[AuditEvent]:
@@ -45,6 +48,7 @@ async def _seed_chain(
     return events
 
 
+# verifies that verify empty chain
 @pytest.mark.integration
 async def test_verify_empty_chain(client: AsyncClient, internal_headers: dict[str, str]) -> None:
     response = await client.get("/v1/audit/chain/verify", headers=internal_headers)
@@ -55,6 +59,7 @@ async def test_verify_empty_chain(client: AsyncClient, internal_headers: dict[st
     assert body["tampered_ids"] == []
 
 
+# verifies that verify valid chain
 @pytest.mark.integration
 async def test_verify_valid_chain(
     client: AsyncClient,
@@ -70,6 +75,7 @@ async def test_verify_valid_chain(
     assert body["tampered_ids"] == []
 
 
+# verifies that verify tampered chain
 @pytest.mark.integration
 async def test_verify_tampered_chain(
     client: AsyncClient,
@@ -77,7 +83,6 @@ async def test_verify_tampered_chain(
     internal_headers: dict[str, str],
 ) -> None:
     events = await _seed_chain(db, 2, base_time=datetime(2024, 1, 3, tzinfo=UTC))
-    # Corrupt the hash of the second event
     target_id = str(events[1].id)
     await db.execute(
         text("UPDATE audit.audit_events SET hash = :bad WHERE id = CAST(:id AS uuid)"),
@@ -92,12 +97,14 @@ async def test_verify_tampered_chain(
     assert target_id in body["tampered_ids"]
 
 
+# verifies that verify no key
 @pytest.mark.integration
 async def test_verify_no_key(client: AsyncClient) -> None:
     response = await client.get("/v1/audit/chain/verify")
     assert response.status_code in (403, 422)
 
 
+# verifies that verify wrong key
 @pytest.mark.integration
 async def test_verify_wrong_key(client: AsyncClient) -> None:
     response = await client.get("/v1/audit/chain/verify", headers={"X-Internal-Key": "wrong-key"})

@@ -1,3 +1,4 @@
+# tests verifier
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -8,6 +9,7 @@ _PATCH_SESSION = "com.qode.qrew.v1.audit.services.verifier.AsyncSessionLocal"
 _PATCH_REPO = "com.qode.qrew.v1.audit.services.verifier.AuditRepository"
 
 
+# handles mock verifier
 def _mock_verifier(events: list[AuditEvent]) -> AuditChainVerifier:
     mock_session = AsyncMock()
     mock_cm = MagicMock()
@@ -22,6 +24,7 @@ def _mock_verifier(events: list[AuditEvent]) -> AuditChainVerifier:
         return AuditChainVerifier(), mock_cm, mock_repo_cls
 
 
+# handles verify
 async def _verify(events: list[AuditEvent]):  # type: ignore[no-untyped-def]
     mock_session = AsyncMock()
     mock_cm = MagicMock()
@@ -36,6 +39,7 @@ async def _verify(events: list[AuditEvent]):  # type: ignore[no-untyped-def]
         return await AuditChainVerifier().verify()
 
 
+# verifies that empty chain is valid
 async def test_empty_chain_is_valid() -> None:
     result = await _verify([])
 
@@ -44,6 +48,7 @@ async def test_empty_chain_is_valid() -> None:
     assert result.tampered_ids == []
 
 
+# verifies that single event chain is valid
 async def test_single_event_chain_is_valid(
     make_chain: Callable[[int], list[AuditEvent]],
 ) -> None:
@@ -54,6 +59,7 @@ async def test_single_event_chain_is_valid(
     assert result.tampered_ids == []
 
 
+# verifies that multi event chain is valid
 async def test_multi_event_chain_is_valid(
     make_chain: Callable[[int], list[AuditEvent]],
 ) -> None:
@@ -64,6 +70,7 @@ async def test_multi_event_chain_is_valid(
     assert result.tampered_ids == []
 
 
+# verifies that tampered last event detected
 async def test_tampered_last_event_detected(
     make_chain: Callable[[int], list[AuditEvent]],
 ) -> None:
@@ -77,11 +84,10 @@ async def test_tampered_last_event_detected(
     assert len(result.tampered_ids) == 1
 
 
+# verifies that tampered event cascades to downstream
 async def test_tampered_event_cascades_to_downstream(
     make_chain: Callable[[int], list[AuditEvent]],
 ) -> None:
-    # Corrupting events[1] breaks its own hash check and event[2]'s prev_hash,
-    # so both are reported.
     events = make_chain(3)
     events[1].hash = b"\x00" * 32
 
@@ -93,6 +99,7 @@ async def test_tampered_event_cascades_to_downstream(
     assert len(result.tampered_ids) == 2
 
 
+# verifies that tampered event count still reflects total
 async def test_tampered_event_count_still_reflects_total(
     make_chain: Callable[[int], list[AuditEvent]],
 ) -> None:
@@ -104,6 +111,7 @@ async def test_tampered_event_count_still_reflects_total(
     assert result.event_count == 3
 
 
+# verifies that last event tampered
 async def test_last_event_tampered(
     make_chain: Callable[[int], list[AuditEvent]],
 ) -> None:
