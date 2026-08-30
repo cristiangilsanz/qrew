@@ -6,7 +6,6 @@ erDiagram
         UUID id PK
         UUID user_id
         UUID event_id
-        UUID ticket_type_id
         int quantity
         string status
         timestamp expires_at
@@ -14,6 +13,13 @@ erDiagram
         int risk_score
         timestamp created_at
         timestamp updated_at
+    }
+
+    reservation_items {
+        UUID id PK
+        UUID reservation_id FK
+        UUID ticket_type_id
+        int quantity
     }
 
     event_context["event_context (projection)"] {
@@ -57,7 +63,8 @@ erDiagram
         UUID reservation_id FK
         int position
         string holder_name
-        string holder_dni
+        string holder_document_type
+        bytes holder_dni_ciphertext
     }
 
     market_queue_entries {
@@ -94,12 +101,14 @@ erDiagram
         timestamp paid_at
         string payment_intent_id
         string holder_name
-        string holder_dni
+        string holder_document_type
+        bytes holder_dni_ciphertext
         string state
     }
 
     reservations }o--|| event_context : "validates against"
-    reservations }o--|| ticket_type_inventory : "checks inventory"
+    reservations ||--o{ reservation_items : "covers"
+    reservation_items }o--|| ticket_type_inventory : "checks inventory"
     reservations }o--|| user_age_context : "fraud check"
     reservations ||--o{ reservation_holders : "has"
     market_listings ||--o{ market_assignments : "has"
@@ -109,15 +118,14 @@ erDiagram
 
 ### reservations
 
-Primary sales table. Holds an in-flight reservation for a user on a specific ticket type.
+Primary sales table. Holds an in-flight reservation for a user on an event. The ticket types it covers live in `reservation_items`, so one reservation may span several tiers.
 
 | Column | Type | Nullable | Default | Notes |
 |---|---|---|---|---|
 | id | UUID | NO | gen_random_uuid() | PK |
 | user_id | UUID | NO | | |
 | event_id | UUID | NO | | |
-| ticket_type_id | UUID | NO | | |
-| quantity | INTEGER | NO | | CHECK quantity >= 1 |
+| quantity | INTEGER | NO | | Total across every tier, CHECK quantity >= 1 |
 | status | VARCHAR(16) | NO | 'reserved' | |
 | expires_at | TIMESTAMPTZ | NO | | |
 | requires_review | BOOLEAN | NO | false | |
@@ -126,6 +134,23 @@ Primary sales table. Holds an in-flight reservation for a user on a specific tic
 | updated_at | TIMESTAMPTZ | NO | now() | |
 
 **Indexes:** `ix_reservations_user_id`, `ix_reservations_event_id`, `ix_reservations_status_expires_at (status, expires_at)`
+
+---
+
+### reservation_items
+
+One row per ticket type a reservation covers. Every tier is locked before any of them is drawn down, so a reservation is either granted in full or not at all.
+
+| Column | Type | Nullable | Default | Notes |
+|---|---|---|---|---|
+| id | UUID | NO | gen_random_uuid() | PK |
+| reservation_id | UUID | NO | | FK to reservations |
+| ticket_type_id | UUID | NO | | |
+| quantity | INTEGER | NO | | CHECK quantity >= 1 |
+
+**Constraints:** `uq_reservation_items_reservation_tier (reservation_id, ticket_type_id)`
+
+**Indexes:** `ix_reservation_items_reservation_id`
 
 ---
 
@@ -201,7 +226,8 @@ Per-ticket holder details attached to a reservation (one row per ticket in the q
 | reservation_id | UUID | NO | | |
 | position | INTEGER | NO | | CHECK position >= 1 |
 | holder_name | VARCHAR(255) | NO | | |
-| holder_dni | VARCHAR(50) | NO | | |
+| holder_document_type | VARCHAR(16) | NO | 'dni' | dni / nie / passport |
+| holder_dni_ciphertext | BYTEA | NO | | Fernet ciphertext, read through the `holder_dni` property |
 
 **Constraints:** `ck_reservation_holders_position (position >= 1)`, `uq_reservation_holders_reservation_position (reservation_id, position)`
 
@@ -272,7 +298,8 @@ A buyer's pending or completed purchase of a resale listing.
 | paid_at | TIMESTAMPTZ | YES | | |
 | payment_intent_id | VARCHAR(255) | YES | | |
 | holder_name | VARCHAR(255) | YES | | |
-| holder_dni | VARCHAR(50) | YES | | |
+| holder_document_type | VARCHAR(16) | YES | | dni / nie / passport |
+| holder_dni_ciphertext | BYTEA | YES | | Fernet ciphertext, read through the `holder_dni` property |
 | state | VARCHAR(32) | NO | 'pending' | pending / paid / expired / declined |
 
 **Constraints:** `ck_market_assignments_state`

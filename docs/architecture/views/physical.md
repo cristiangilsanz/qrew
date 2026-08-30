@@ -23,7 +23,7 @@ flowchart TB
             audit["Audit :8007"]:::svc
         end
 
-        workers["Workers × 7 + job runner"]:::worker
+        workers["Workers × 7 + job runners × 3"]:::worker
 
         subgraph Stores["Stateful containers"]
             pg[("PostgreSQL 16 :5432")]:::db

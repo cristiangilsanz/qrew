@@ -20,7 +20,7 @@ Sales is the reservation and queue management service in the platform. It create
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `POST` | `/reservations` | Create a reservation for one or more tickets | JWT |
+| `POST` | `/reservations` | Create a reservation covering one or more ticket types of an event | JWT |
 | `GET` | `/reservations/{id}` | Get reservation status and details | JWT |
 | `POST` | `/billing/webhook` | Receive a Stripe billing webhook for settlement | Stripe signature |
 | `POST` | `/queue/join` | Join the waitlist queue for a sold-out event | JWT |
@@ -34,7 +34,7 @@ Sales is the reservation and queue management service in the platform. It create
 | `GET` | `/market/queue` | List all active resale queue entries for the caller | JWT |
 | `GET` | `/market/assignment` | Get the caller's pending market assignment | JWT |
 | `GET` | `/market/assignments/{id}` | Get a specific market assignment | JWT |
-| `PUT` | `/market/assignments/{id}/holder` | Set holder name and DNI for the incoming ticket | JWT |
+| `PUT` | `/market/assignments/{id}/holder` | Set holder name and identity document for the incoming ticket | JWT |
 | `POST` | `/market/assignments/{id}/decline` | Decline a market assignment | JWT |
 
 Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../../../packages/contracts/openapi/sales/openapi.yaml)
@@ -73,11 +73,15 @@ Schemas: [`packages/contracts/openapi/sales/events/`](../../../../../../packages
 
 | Worker | Type | Description |
 |--------|------|-------------|
-| `reservation_expirer` | arq job | Sweeps expired reservations in batches and publishes `ReservationExpired`. |
-| `queue_admitter` | arq job | Admits queued users when capacity becomes available. |
+| `reservation_expirer` | arq job, every minute | Sweeps expired reservations in batches and publishes `ReservationExpired`. |
+| `queue_admitter` | arq job, every minute | Admits queued users when capacity becomes available. |
+| `market_assigner` | arq job, every minute | Offers each open listing to the next buyer in the resale queue. |
+| `market_expirer` | arq job, every minute | Expires unclaimed resale offers and returns the listing to the queue. |
 | `catalog.*` | NATS subscriber | Keeps the `EventContext` and `TicketTypeInventory` projections up to date. |
 | `identity.*` | NATS subscriber | Keeps the `UserAgeContext` and `FingerprintContext` projections up to date. |
 | `payments.*` | NATS subscriber | Handles payment settlement and reservation cancellation. |
+
+The arq jobs run in the `sales-arq-worker` container, which consumes the `qrew:jobs:sales` queue. The NATS subscribers run in the separate `sales-worker` container.
 
 ## Internal Dependencies
 

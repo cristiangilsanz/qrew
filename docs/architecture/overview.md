@@ -102,7 +102,9 @@ flowchart TB
     identity  -->|"Cache, Sessions"| redis
     sales     -->|"Locks, Counters"| redis
     entry     -->|"Locks"| redis
-    id_worker -->|"Job Queue"| redis
+    id_worker    -->|"Job Queue"| redis
+    sales_worker -->|"Job Queue"| redis
+    tick_worker  -->|"Job Queue"| redis
 
     identity  -->|"Publish"| nats
     catalog   -->|"Publish"| nats

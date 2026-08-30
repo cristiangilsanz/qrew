@@ -61,9 +61,13 @@ Schemas: [`packages/contracts/openapi/ticketing/events/`](../../../../../../pack
 
 | Worker | Type | Description |
 |--------|------|-------------|
+| `expired_ticket_purger` | arq job, daily at 04:30 | Deletes tickets that expired without ever being redeemed. |
+| `scanning_reverter` | arq job, every minute | Returns a ticket left in `scanning` to `issued` once the QR it was shown for has expired, so its holder is not stuck on a processing screen. |
 | `catalog.*` | NATS subscriber | Keeps the `EventVenueContext` projection up to date. |
 | `identity.*` | NATS subscriber | Keeps the `DeviceContext` projection up to date and enforces device revocation. |
 | `sales.*` | NATS subscriber | Drives ticket creation and state transitions from reservation events. |
+
+The arq jobs run in the `ticketing-arq-worker` container, which consumes the `qrew:jobs:ticketing` queue. The NATS subscribers run in the separate `ticketing-worker` container.
 
 ## Internal Dependencies
 

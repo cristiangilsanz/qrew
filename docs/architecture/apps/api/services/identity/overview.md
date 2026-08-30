@@ -12,7 +12,7 @@ Identity is the authentication and JWT issuance authority in the platform. It ma
 2. Handles password and passkey authentication via WebAuthn.
 3. Controls session lifecycle and multi-device management.
 4. Attests devices via Android Play Integrity and Apple App Attest.
-5. Verifies KYC documents using OCR.
+5. Accepts a DNI, an NIE or a passport as the KYC document, checks the number it is given against the rules of that type, and for a Spanish document cross reads the image with OCR. Every submission is held for an administrator to approve.
 6. Issues JWTs for access, setup, recovery, refresh, queue, and QR token types.
 7. Encrypts PII at rest and detects anomalous login patterns.
 8. Delivers notifications via SMTP and Twilio SMS.
