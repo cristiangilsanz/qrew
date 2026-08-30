@@ -1,7 +1,10 @@
 // renders the event actions component
 import { Link } from '@tanstack/react-router'
 import { CheckCircle, Play, ScanLine } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 import type { OrgEvent } from '../api'
 import { usePublishEvent } from '../hooks/usePublishEvent'
@@ -18,6 +21,7 @@ export function EventActions({ event, orgId }: Props) {
 
   const publishEvent = usePublishEvent(orgId, event.id)
   const startEvent = useStartEvent(orgId, event.id)
+  const [startOpen, setStartOpen] = useState(false)
 
   const showPublish = event.status === 'draft'
   const showMarkStarted = event.status === 'published'
@@ -40,7 +44,7 @@ export function EventActions({ event, orgId }: Props) {
         )}
         {showMarkStarted && (
           <button
-            onClick={() => startEvent.mutate()}
+            onClick={() => setStartOpen(true)}
             disabled={startEvent.isPending}
             className="flex h-14 items-center gap-2 rounded-full bg-green-600 px-5 text-white shadow-lg transition-colors hover:bg-green-500 disabled:opacity-60"
           >
@@ -59,6 +63,24 @@ export function EventActions({ event, orgId }: Props) {
           </Link>
         )}
       </div>
+
+      <ConfirmDialog
+        open={startOpen}
+        onOpenChange={setStartOpen}
+        tone="warning"
+        icon={Play}
+        title={t('organiser.events.markStartedTitle')}
+        description={t('organiser.events.markStartedDescription')}
+        confirmLabel={t('organiser.events.markStartedConfirm')}
+        cancelLabel={t('common.goBack')}
+        isLoading={startEvent.isPending}
+        onConfirm={() =>
+          startEvent.mutate(undefined, {
+            // closes the dialog once the event has actually started
+            onSuccess: () => setStartOpen(false),
+          })
+        }
+      />
     </div>
   )
 }

@@ -102,7 +102,7 @@ export function SessionList() {
                       title={t('profile.sessions.revokeTitle')}
                       description={t('profile.sessions.revokeDesc')}
                       confirmLabel={t('profile.sessions.revoke')}
-                      destructive
+                      tone="destructive"
                       isLoading={revokeSession.isPending}
                       onConfirm={() => revokeSession.mutate(session.jti)}
                     />
@@ -129,7 +129,7 @@ export function SessionList() {
             title={t('profile.sessions.revokeAllTitle')}
             description={t('profile.sessions.revokeAllDesc')}
             confirmLabel={t('profile.sessions.revokeAndSignOut')}
-            destructive
+            tone="destructive"
             isLoading={revokeAll.isPending}
             onConfirm={() => revokeAll.mutate()}
           />

@@ -23,11 +23,12 @@ describe('isValidDocument', () => {
     expect(isValidDocument('X1234567A', 'nie')).toBe(false)
   })
 
-  // verifies that a passport is accepted on shape alone
-  it('accepts a passport of a plausible length', () => {
-    expect(isValidDocument('AB123456', 'passport')).toBe(true)
-    expect(isValidDocument('AB1', 'passport')).toBe(false)
-    expect(isValidDocument('AB123456789012', 'passport')).toBe(false)
+  // verifies that a foreign document is accepted on shape alone
+  it('accepts any other document of a plausible length', () => {
+    expect(isValidDocument('AB123456', 'other')).toBe(true)
+    expect(isValidDocument('1234567890ABCDEFGHIJ', 'other')).toBe(true)
+    expect(isValidDocument('AB12', 'other')).toBe(false)
+    expect(isValidDocument('AB123456789012345678901', 'other')).toBe(false)
   })
 
   // verifies that a value valid for one type is not accepted for another
@@ -38,6 +39,6 @@ describe('isValidDocument', () => {
 
   // verifies that every offered type is one the validator understands
   it('offers exactly the types the forms present', () => {
-    expect(DOCUMENT_TYPES).toEqual(['dni', 'nie', 'passport'])
+    expect(DOCUMENT_TYPES).toEqual(['dni', 'nie', 'other'])
   })
 })

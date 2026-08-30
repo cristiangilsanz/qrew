@@ -250,17 +250,17 @@
       "documentType": {
         "dni": "DNI",
         "nie": "NIE",
-        "passport": "PASSPORT"
+        "other": "OTHER"
       },
       "documentPlaceholder": {
         "dni": "00000000A",
         "nie": "X0000000A",
-        "passport": "Passport number"
+        "other": "Document number"
       },
       "invalid": {
         "dni": "Invalid DNI",
         "nie": "Invalid NIE",
-        "passport": "Invalid passport number"
+        "other": "Invalid document number"
       }
     }
   },
@@ -328,7 +328,7 @@
       "label": "Identity",
       "rowLabel": "KYC",
       "subtitle": "Government-issued ID required",
-      "description": "Upload a clear photo of your national ID or passport.",
+      "description": "Upload a clear photo of the identity document you selected.",
       "approved": "Verified",
       "pending": "In Review",
       "rejected": "Rejected",
@@ -535,6 +535,9 @@
       "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
       "markStarted": "Mark As Started",
+      "markStartedTitle": "Mark As Started",
+      "markStartedDescription": "The event begins and its sale closes for good. This cannot be undone.",
+      "markStartedConfirm": "Mark As Started",
       "cancel": "Cancel Event",
       "confirmPublish": "Confirm Publish",
       "confirmCancel": "Cancel Event",
@@ -703,7 +706,7 @@
     },
     "kyc": {
       "title": "Identity verification",
-      "description": "Upload a clear photo of your national ID or passport.",
+      "description": "Upload a clear photo of the identity document you selected.",
       "label": "Document",
       "dropzone": "Click to select a file",
       "submit": "Upload Document",

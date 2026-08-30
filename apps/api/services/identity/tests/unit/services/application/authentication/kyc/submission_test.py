@@ -122,16 +122,14 @@ class TestUploadAcceptance:
         repo.save.assert_awaited()
         notifier.send_kyc_status_update.assert_not_awaited()
 
-    # verifies that a passport is accepted even though no scan can read it
-    async def test_accepts_a_passport_without_a_readable_scan(self) -> None:
+    # verifies that a foreign document is accepted even though no scan can read it
+    async def test_accepts_a_foreign_document_without_a_readable_scan(self) -> None:
         service, _, _ = _make_service(scanned=None)
         user = _user()
         with patch(f"{_MODULE}.settings", _settings()):
-            status = await _upload(
-                service, user, document_type="passport", document_number="AB123456"
-            )
+            status = await _upload(service, user, document_type="other", document_number="AB123456")
         assert status == KycStatus.pending
-        assert user.national_id_type == "passport"
+        assert user.national_id_type == "other"
 
     # verifies that a scan disagreeing with the declared number does not block the submission
     async def test_accepts_a_dni_whose_scan_disagrees(self) -> None:

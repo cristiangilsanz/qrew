@@ -4,7 +4,7 @@ import re
 
 _DNI_RE = re.compile(r"^\d{8}[A-Z]$")
 _NIE_RE = re.compile(r"^[XYZ]\d{7}[A-Z]$")
-_PASSPORT_RE = re.compile(r"^[A-Z0-9]{6,12}$")
+_OTHER_RE = re.compile(r"^[A-Z0-9]{5,20}$")
 _LETTER_MAP = "TRWAGMYFPDXBNJZSQVHLCKE"
 _NIE_PREFIX = {"X": "0", "Y": "1", "Z": "2"}
 
@@ -12,7 +12,7 @@ _NIE_PREFIX = {"X": "0", "Y": "1", "Z": "2"}
 class DocumentType(enum.StrEnum):
     dni = "dni"
     nie = "nie"
-    passport = "passport"
+    other = "other"
 
 
 # checks the control letter a spanish identity number ends with
@@ -39,9 +39,10 @@ def validate_document(value: str, document_type: DocumentType | str) -> str:
             raise ValueError("NIE check letter rejected.")
         return v
 
-    # a passport has no check digit that holds across every issuing country
-    if not _PASSPORT_RE.match(v):
-        raise ValueError("A passport number is 6 to 12 letters or digits.")
+    # a foreign document has no check digit that holds across every issuing country,
+    # so only its shape is checked here and a person reviews the photo behind it
+    if not _OTHER_RE.match(v):
+        raise ValueError("A document number is 5 to 20 letters or digits.")
     return v
 
 
@@ -52,4 +53,4 @@ def infer_document_type(value: str) -> DocumentType:
         return DocumentType.dni
     if _NIE_RE.match(v):
         return DocumentType.nie
-    return DocumentType.passport
+    return DocumentType.other

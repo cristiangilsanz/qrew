@@ -226,7 +226,7 @@ Per-ticket holder details attached to a reservation (one row per ticket in the q
 | reservation_id | UUID | NO | | |
 | position | INTEGER | NO | | CHECK position >= 1 |
 | holder_name | VARCHAR(255) | NO | | |
-| holder_document_type | VARCHAR(16) | NO | 'dni' | dni / nie / passport |
+| holder_document_type | VARCHAR(16) | NO | 'dni' | dni / nie / other |
 | holder_dni_ciphertext | BYTEA | NO | | Fernet ciphertext, read through the `holder_dni` property |
 
 **Constraints:** `ck_reservation_holders_position (position >= 1)`, `uq_reservation_holders_reservation_position (reservation_id, position)`
@@ -298,7 +298,7 @@ A buyer's pending or completed purchase of a resale listing.
 | paid_at | TIMESTAMPTZ | YES | | |
 | payment_intent_id | VARCHAR(255) | YES | | |
 | holder_name | VARCHAR(255) | YES | | |
-| holder_document_type | VARCHAR(16) | YES | | dni / nie / passport |
+| holder_document_type | VARCHAR(16) | YES | | dni / nie / other |
 | holder_dni_ciphertext | BYTEA | YES | | Fernet ciphertext, read through the `holder_dni` property |
 | state | VARCHAR(32) | NO | 'pending' | pending / paid / expired / declined |
 

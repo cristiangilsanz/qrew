@@ -68,9 +68,9 @@ def test_reports_which_states_count_toward_the_limit(state: TicketState, counts:
 # verifies that the declared document type travels with the holder
 def test_carries_the_holder_document_type() -> None:
     response = _to_response(
-        _ticket(TicketState.issued, holder_document_type="passport", holder_dni="AB123456")
+        _ticket(TicketState.issued, holder_document_type="other", holder_dni="AB123456")
     )
-    assert response.holder_document_type == "passport"
+    assert response.holder_document_type == "other"
     assert response.holder_dni == "AB123456"
 
 

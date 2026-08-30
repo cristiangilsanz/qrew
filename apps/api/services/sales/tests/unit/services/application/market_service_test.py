@@ -193,11 +193,11 @@ class TestSetHolders:
             user_id=assignment.buyer_user_id,
             assignment_id=assignment.id,
             holder_name="Foreign Guest",
-            holder_document_type="passport",
+            holder_document_type="other",
             holder_dni="AB123456",
         )
         assert result.holder_name == "Foreign Guest"
-        assert result.holder_document_type == "passport"
+        assert result.holder_document_type == "other"
         assert result.holder_dni == "AB123456"
 
 

@@ -1,12 +1,12 @@
 // mirrors the document rules the backend enforces so the form can warn as you type
-export type DocumentType = 'dni' | 'nie' | 'passport'
+export type DocumentType = 'dni' | 'nie' | 'other'
 
-export const DOCUMENT_TYPES: DocumentType[] = ['dni', 'nie', 'passport']
+export const DOCUMENT_TYPES: DocumentType[] = ['dni', 'nie', 'other']
 
 const LETTERS = 'TRWAGMYFPDXBNJZSQVHLCKE'
 const DNI_RE = /^\d{8}[A-Z]$/
 const NIE_RE = /^[XYZ]\d{7}[A-Z]$/
-const PASSPORT_RE = /^[A-Z0-9]{6,12}$/
+const OTHER_RE = /^[A-Z0-9]{5,20}$/
 const NIE_PREFIX: Record<string, string> = { X: '0', Y: '1', Z: '2' }
 
 // normalises a typed document the same way the backend does before checking it
@@ -27,5 +27,5 @@ export function isValidDocument(value: string, type: DocumentType): boolean {
     if (!NIE_RE.test(v)) return false
     return validControlLetter(NIE_PREFIX[v[0]!]! + v.slice(1, 8), v[8]!)
   }
-  return PASSPORT_RE.test(v)
+  return OTHER_RE.test(v)
 }

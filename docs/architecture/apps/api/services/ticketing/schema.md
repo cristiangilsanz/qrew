@@ -63,7 +63,7 @@ erDiagram
 | expired_at | TIMESTAMPTZ | NULL | | |
 | holder_name | VARCHAR(255) | NULL | | |
 | holder_dni_ciphertext | BYTEA | NULL | | Fernet ciphertext, read through the `holder_dni` property |
-| holder_document_type | VARCHAR(16) | NULL | | dni / nie / passport |
+| holder_document_type | VARCHAR(16) | NULL | | dni / nie / other |
 | created_at | TIMESTAMPTZ | NOT NULL | now() | |
 | updated_at | TIMESTAMPTZ | NOT NULL | now() | |
 

@@ -184,7 +184,7 @@ function DeviceList() {
                     ? t('profile.security.revokeAndSignOut')
                     : t('profile.security.removeDevice')
                 }
-                destructive
+                tone="destructive"
                 isLoading={revoke.isPending}
                 onConfirm={() =>
                   revoke.mutate({ deviceId: device.id, isCurrent: device.is_current })
@@ -210,7 +210,7 @@ function DeviceList() {
             title={t('profile.security.revokeAllDevicesTitle')}
             description={t('profile.security.revokeAllDevicesDesc')}
             confirmLabel={t('profile.security.revokeAndSignOut')}
-            destructive
+            tone="destructive"
             isLoading={revokeAll.isPending}
             onConfirm={() => revokeAll.mutate()}
           />

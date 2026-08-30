@@ -30,16 +30,16 @@ class TestKycUpload:
         )
         assert resp.status_code in (200, 400)
 
-    # verifies that a passport is accepted with its own document photo
-    async def test_passport_upload_accepted(
+    # verifies that a foreign document is accepted with its own document photo
+    async def test_other_document_upload_accepted(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
         fake_image = io.BytesIO(b"\xff\xd8\xff" + b"0" * 64)
         resp = await client.post(
             "/v1/auth/setup/kyc/upload",
             headers=auth_headers,
-            files={"document": ("passport.jpg", fake_image, "image/jpeg")},
-            data={"document_number": "AB123456", "document_type": "passport"},
+            files={"document": ("document.jpg", fake_image, "image/jpeg")},
+            data={"document_number": "AB123456", "document_type": "other"},
         )
         assert resp.status_code in (200, 400)
 
@@ -56,14 +56,14 @@ class TestKycUpload:
         )
         assert resp.status_code == 400
 
-    # verifies that a passport still has to come with its document photo
-    async def test_passport_requires_a_document(
+    # verifies that a foreign document still has to come with its photo
+    async def test_other_document_requires_a_photo(
         self, client: httpx.AsyncClient, auth_headers: dict
     ) -> None:
         resp = await client.post(
             "/v1/auth/setup/kyc/upload",
             headers=auth_headers,
-            data={"document_number": "AB123456", "document_type": "passport"},
+            data={"document_number": "AB123456", "document_type": "other"},
         )
         assert resp.status_code == 422
 
