@@ -65,8 +65,10 @@ function ProfilePage() {
           {accountNeedsAttention && (
             <span
               aria-label={t('profile.needsAttention')}
-              className="h-2.5 w-2.5 shrink-0 rounded-full bg-yellow-500"
-            />
+              className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-yellow-500 px-1 text-[9px] leading-none font-bold text-black"
+            >
+              1
+            </span>
           )}
           <ChevronRight className="text-muted-foreground h-4 w-4" />
         </Link>

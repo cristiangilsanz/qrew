@@ -28,13 +28,11 @@ function DockTab({
   icon: Icon,
   labelKey,
   badge,
-  dot,
 }: {
   to: string
   icon: LucideIcon
   labelKey: string
   badge?: number
-  dot?: boolean
 }) {
   const { t } = useTranslation()
   // implements select
@@ -61,9 +59,6 @@ function DockTab({
           <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-500 px-1 text-[9px] leading-none font-bold text-black">
             {badge > 9 ? '9+' : badge}
           </span>
-        )}
-        {dot && (
-          <span className="absolute -top-0.5 -right-1.5 h-2.5 w-2.5 rounded-full bg-yellow-500" />
         )}
       </span>
       <span className="mt-1 text-[10px] leading-none font-medium">{t(labelKey)}</span>
@@ -99,9 +94,10 @@ export function BottomDock() {
                 ? reservedCount
                 : tab.to === '/market' && pendingAssignment
                   ? 1
-                  : undefined
+                  : tab.to === '/profile' && accountNeedsAttention
+                    ? 1
+                    : undefined
             }
-            dot={tab.to === '/profile' && accountNeedsAttention}
           />
         ))}
         {showOrganiser && <DockTab {...organiserTab} />}
