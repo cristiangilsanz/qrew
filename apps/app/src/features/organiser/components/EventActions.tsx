@@ -71,6 +71,7 @@ export function EventActions({ event, orgId }: Props) {
         icon={Play}
         title={t('organiser.events.markStartedTitle')}
         description={t('organiser.events.markStartedDescription')}
+        note={t('organiser.events.markStartedNote')}
         confirmLabel={t('organiser.events.markStartedConfirm')}
         cancelLabel={t('common.goBack')}
         isLoading={startEvent.isPending}

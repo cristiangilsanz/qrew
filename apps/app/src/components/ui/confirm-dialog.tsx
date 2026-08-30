@@ -21,10 +21,10 @@ const TONES: Record<
     button: 'bg-red-500',
   },
   warning: {
-    border: 'border-orange-500/20',
-    bubble: 'bg-orange-500/10',
-    accent: 'text-orange-400',
-    button: 'bg-orange-500',
+    border: 'border-primary/30',
+    bubble: 'bg-primary/10',
+    accent: 'text-primary',
+    button: 'bg-primary',
   },
 }
 
@@ -33,6 +33,7 @@ interface ConfirmDialogProps {
   onOpenChange: (open: boolean) => void
   title: string
   description?: string
+  note?: string
   confirmLabel: string
   cancelLabel?: string
   onConfirm: () => void
@@ -47,6 +48,7 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
+  note,
   confirmLabel,
   cancelLabel = 'Go Back',
   onConfirm,
@@ -84,7 +86,12 @@ export function ConfirmDialog({
               <h3 className={`text-base font-semibold ${palette.accent}`}>{title}</h3>
             </div>
 
-            {description && <p className="text-muted-foreground mb-5 text-sm">{description}</p>}
+            {description && (
+              <p className={`text-muted-foreground text-sm ${note ? 'mb-2' : 'mb-5'}`}>
+                {description}
+              </p>
+            )}
+            {note && <p className="text-muted-foreground mb-5 text-sm">{note}</p>}
 
             <div className="flex items-center justify-between pt-1">
               <button

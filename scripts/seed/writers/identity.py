@@ -43,8 +43,8 @@ async def write(
             encrypt(cfg.fernet, person.national_id).decode()
             if person.national_id
             else None,
-            "dni" if person.national_id else None,
-            "match" if person.national_id else None,
+            person.document_type if person.national_id else None,
+            person.ocr,
             person.kyc,
             when.days(-30),
             "127.0.0.1",

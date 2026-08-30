@@ -29,6 +29,7 @@ erDiagram
         string national_id_type
         string kyc_status
         string kyc_document_object_key
+        string kyc_ocr_result
         bool is_active
         bool is_admin
         string device_fingerprint

@@ -20,6 +20,8 @@ class Person:
     email: str
     phone: str
     kyc: str = "approved"
+    document_type: str | None = "dni"
+    ocr: str | None = "match"
     admin: bool = False
     national_id: str | None = None
     verified: bool = True

@@ -47,8 +47,28 @@ PEOPLE = (
         email="user-c@qrew.dev",
         phone="+34600000006",
         kyc="not_submitted",
+        document_type=None,
+        ocr=None,
         national_id=None,
         verified=False,
+    ),
+    Person(
+        key="user-d",
+        name="User D",
+        email="user-d@qrew.dev",
+        phone="+34600000007",
+        kyc="pending",
+        national_id="00000006Y",
+    ),
+    Person(
+        key="user-e",
+        name="User E",
+        email="user-e@qrew.dev",
+        phone="+34600000008",
+        kyc="rejected",
+        document_type="other",
+        ocr="not_applicable",
+        national_id="FR8842136",
     ),
 )
 
