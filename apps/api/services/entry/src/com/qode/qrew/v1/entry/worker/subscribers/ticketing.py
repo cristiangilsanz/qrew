@@ -90,7 +90,9 @@ async def run_projector() -> None:
         try:
             await js.find_stream_name_by_subject("ticketing.>")
         except Exception:
-            await js.add_stream(name=STREAM, subjects=["ticketing.>"])
+            await js.add_stream(  # pyright: ignore[reportUnknownMemberType]
+                name=STREAM, subjects=["ticketing.>"]
+            )
         await js.subscribe(
             SUBJECT, cb=handle_ticket_state_changed, durable="entry-projector"
         )
