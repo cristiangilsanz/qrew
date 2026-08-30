@@ -24,6 +24,4 @@ async def enqueue(
     carrier = inject_current_context()
     if carrier and CARRIER_KEY not in body:
         body[CARRIER_KEY] = carrier
-    return await pool.enqueue_job(
-        spec.name, body, _defer_by=defer_seconds, _queue_name=QUEUE_NAME
-    )
+    return await pool.enqueue_job(spec.name, body, _defer_by=defer_seconds, _queue_name=QUEUE_NAME)
