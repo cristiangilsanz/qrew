@@ -5,6 +5,8 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from security import DocumentType
+
 from com.qode.qrew.v1.sales.core.database import get_db
 from com.qode.qrew.v1.sales.core.dependencies import get_market_service, limiter
 from com.qode.qrew.v1.sales.core.principals import AuthenticatedUser, get_current_user
@@ -58,6 +60,11 @@ def _assignment_response(
         assigned_at=assignment.assigned_at,
         expires_at=assignment.expires_at,
         holder_name=assignment.holder_name,
+        holder_document_type=(
+            DocumentType(assignment.holder_document_type)
+            if assignment.holder_document_type
+            else None
+        ),
         holder_dni=assignment.holder_dni,
     )
 
@@ -305,6 +312,7 @@ async def set_assignment_holders(
             user_id=current_user.id,
             assignment_id=assignment_id,
             holder_name=body.holder_name,
+            holder_document_type=body.holder_document_type,
             holder_dni=body.holder_dni,
         )
     except MarketError as exc:

@@ -237,6 +237,7 @@ async def set_holders(
             reservation_id=reservation_id,
             position=h.position,
             holder_name=h.holder_name,
+            holder_document_type=h.holder_document_type,
             holder_dni=h.holder_dni,
         )
         for h in body.holders
@@ -244,6 +245,11 @@ async def set_holders(
     await ReservationHolderRepository(db).upsert_all(reservation_id, holder_models)
     await db.commit()
     return [
-        HolderResponse(position=h.position, holder_name=h.holder_name, holder_dni=h.holder_dni)
+        HolderResponse(
+            position=h.position,
+            holder_name=h.holder_name,
+            holder_document_type=h.holder_document_type,
+            holder_dni=h.holder_dni,
+        )
         for h in body.holders
     ]

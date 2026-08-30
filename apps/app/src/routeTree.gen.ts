@@ -189,12 +189,11 @@ const AppManagementNewRoute = AppManagementNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AppManagementRoute,
 } as any)
-const AppReservationsReservationIdIndexRoute =
-  AppReservationsReservationIdIndexRouteImport.update({
-    id: '/reservations/$reservationId/',
-    path: '/reservations/$reservationId/',
-    getParentRoute: () => AppRoute,
-  } as any)
+const AppReservationsReservationIdIndexRoute = AppReservationsReservationIdIndexRouteImport.update({
+  id: '/reservations/$reservationId/',
+  path: '/reservations/$reservationId/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMarketWaitlistsIndexRoute = AppMarketWaitlistsIndexRouteImport.update({
   id: '/market/waitlists/',
   path: '/market/waitlists/',
@@ -225,42 +224,37 @@ const AppEventsEventIdQueueRoute = AppEventsEventIdQueueRouteImport.update({
   path: '/events/$eventId/queue',
   getParentRoute: () => AppRoute,
 } as any)
-const AppEventsEventIdCheckoutRoute =
-  AppEventsEventIdCheckoutRouteImport.update({
-    id: '/events/$eventId/checkout',
-    path: '/events/$eventId/checkout',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppMarketOffersOfferIdIndexRoute =
-  AppMarketOffersOfferIdIndexRouteImport.update({
-    id: '/market/offers/$offerId/',
-    path: '/market/offers/$offerId/',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppManagementOrgIdEventsIndexRoute =
-  AppManagementOrgIdEventsIndexRouteImport.update({
-    id: '/$orgId/events/',
-    path: '/$orgId/events/',
-    getParentRoute: () => AppManagementRoute,
-  } as any)
+const AppEventsEventIdCheckoutRoute = AppEventsEventIdCheckoutRouteImport.update({
+  id: '/events/$eventId/checkout',
+  path: '/events/$eventId/checkout',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMarketOffersOfferIdIndexRoute = AppMarketOffersOfferIdIndexRouteImport.update({
+  id: '/market/offers/$offerId/',
+  path: '/market/offers/$offerId/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppManagementOrgIdEventsIndexRoute = AppManagementOrgIdEventsIndexRouteImport.update({
+  id: '/$orgId/events/',
+  path: '/$orgId/events/',
+  getParentRoute: () => AppManagementRoute,
+} as any)
 const AppManagementOrgIdCollaboratorsIndexRoute =
   AppManagementOrgIdCollaboratorsIndexRouteImport.update({
     id: '/$orgId/collaborators/',
     path: '/$orgId/collaborators/',
     getParentRoute: () => AppManagementRoute,
   } as any)
-const AppManagementOrgIdVenuesNewRoute =
-  AppManagementOrgIdVenuesNewRouteImport.update({
-    id: '/$orgId/venues/new',
-    path: '/$orgId/venues/new',
-    getParentRoute: () => AppManagementRoute,
-  } as any)
-const AppManagementOrgIdEventsNewRoute =
-  AppManagementOrgIdEventsNewRouteImport.update({
-    id: '/$orgId/events/new',
-    path: '/$orgId/events/new',
-    getParentRoute: () => AppManagementRoute,
-  } as any)
+const AppManagementOrgIdVenuesNewRoute = AppManagementOrgIdVenuesNewRouteImport.update({
+  id: '/$orgId/venues/new',
+  path: '/$orgId/venues/new',
+  getParentRoute: () => AppManagementRoute,
+} as any)
+const AppManagementOrgIdEventsNewRoute = AppManagementOrgIdEventsNewRouteImport.update({
+  id: '/$orgId/events/new',
+  path: '/$orgId/events/new',
+  getParentRoute: () => AppManagementRoute,
+} as any)
 const AppManagementOrgIdCollaboratorsNewRoute =
   AppManagementOrgIdCollaboratorsNewRouteImport.update({
     id: '/$orgId/collaborators/new',
@@ -934,23 +928,16 @@ const AppManagementRouteChildren: AppManagementRouteChildren = {
   AppManagementNewRoute: AppManagementNewRoute,
   AppManagementIndexRoute: AppManagementIndexRoute,
   AppManagementOrgIdIndexRoute: AppManagementOrgIdIndexRoute,
-  AppManagementOrgIdCollaboratorsNewRoute:
-    AppManagementOrgIdCollaboratorsNewRoute,
+  AppManagementOrgIdCollaboratorsNewRoute: AppManagementOrgIdCollaboratorsNewRoute,
   AppManagementOrgIdEventsNewRoute: AppManagementOrgIdEventsNewRoute,
   AppManagementOrgIdVenuesNewRoute: AppManagementOrgIdVenuesNewRoute,
-  AppManagementOrgIdCollaboratorsIndexRoute:
-    AppManagementOrgIdCollaboratorsIndexRoute,
+  AppManagementOrgIdCollaboratorsIndexRoute: AppManagementOrgIdCollaboratorsIndexRoute,
   AppManagementOrgIdEventsIndexRoute: AppManagementOrgIdEventsIndexRoute,
-  AppManagementOrgIdEventsEventIdEditRoute:
-    AppManagementOrgIdEventsEventIdEditRoute,
-  AppManagementOrgIdEventsEventIdScanRoute:
-    AppManagementOrgIdEventsEventIdScanRoute,
-  AppManagementOrgIdEventsEventIdStatsRoute:
-    AppManagementOrgIdEventsEventIdStatsRoute,
-  AppManagementOrgIdEventsEventIdTicketsRoute:
-    AppManagementOrgIdEventsEventIdTicketsRoute,
-  AppManagementOrgIdEventsEventIdIndexRoute:
-    AppManagementOrgIdEventsEventIdIndexRoute,
+  AppManagementOrgIdEventsEventIdEditRoute: AppManagementOrgIdEventsEventIdEditRoute,
+  AppManagementOrgIdEventsEventIdScanRoute: AppManagementOrgIdEventsEventIdScanRoute,
+  AppManagementOrgIdEventsEventIdStatsRoute: AppManagementOrgIdEventsEventIdStatsRoute,
+  AppManagementOrgIdEventsEventIdTicketsRoute: AppManagementOrgIdEventsEventIdTicketsRoute,
+  AppManagementOrgIdEventsEventIdIndexRoute: AppManagementOrgIdEventsEventIdIndexRoute,
 }
 
 const AppManagementRouteWithChildren = AppManagementRoute._addFileChildren(
@@ -1005,8 +992,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMarketOffersIndexRoute: AppMarketOffersIndexRoute,
   AppMarketOnSaleIndexRoute: AppMarketOnSaleIndexRoute,
   AppMarketWaitlistsIndexRoute: AppMarketWaitlistsIndexRoute,
-  AppReservationsReservationIdIndexRoute:
-    AppReservationsReservationIdIndexRoute,
+  AppReservationsReservationIdIndexRoute: AppReservationsReservationIdIndexRoute,
   AppMarketOffersOfferIdIndexRoute: AppMarketOffersOfferIdIndexRoute,
 }
 

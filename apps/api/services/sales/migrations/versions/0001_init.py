@@ -124,6 +124,12 @@ def upgrade() -> None:
         sa.Column("position", sa.Integer(), nullable=False),
         sa.Column("holder_name", sa.String(255), nullable=False),
         sa.Column("holder_dni_ciphertext", sa.LargeBinary(), nullable=False),
+        sa.Column(
+            "holder_document_type",
+            sa.String(16),
+            nullable=False,
+            server_default="dni",
+        ),
         sa.CheckConstraint("position >= 1", name="ck_reservation_holders_position"),
         sa.UniqueConstraint(
             "reservation_id", "position", name="uq_reservation_holders_reservation_position"
@@ -254,6 +260,7 @@ def upgrade() -> None:
         sa.Column("payment_intent_id", sa.String(255), nullable=True),
         sa.Column("holder_name", sa.String(255), nullable=True),
         sa.Column("holder_dni_ciphertext", sa.LargeBinary(), nullable=True),
+        sa.Column("holder_document_type", sa.String(16), nullable=True),
         sa.Column("state", sa.String(32), nullable=False, server_default="pending"),
         sa.CheckConstraint(
             "state IN ('pending', 'paid', 'expired', 'declined')",

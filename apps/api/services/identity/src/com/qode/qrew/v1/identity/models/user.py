@@ -73,6 +73,7 @@ class User(Base):
         String(64), nullable=True, unique=True, index=True
     )
     national_id_number: Mapped[str | None] = mapped_column(Text, nullable=True)
+    national_id_type: Mapped[str | None] = mapped_column(String(16), nullable=True)
     kyc_status: Mapped[KycStatus] = mapped_column(
         Enum(KycStatus, name="kyc_status"),
         default=KycStatus.not_submitted,

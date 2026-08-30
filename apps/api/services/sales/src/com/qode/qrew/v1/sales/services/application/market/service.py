@@ -219,6 +219,7 @@ class MarketService:
         user_id: uuid.UUID,
         assignment_id: uuid.UUID,
         holder_name: str,
+        holder_document_type: str,
         holder_dni: str,
     ) -> MarketAssignment:
         assignment = await self._repo.get_assignment_by_id(assignment_id)
@@ -230,6 +231,7 @@ class MarketService:
             raise MarketError("Assignment expired.", field="expires_at")
         assignment.holder_name = holder_name
         assignment.holder_dni = holder_dni
+        assignment.holder_document_type = holder_document_type
         await self._repo.flush()
         return assignment
 
@@ -337,6 +339,7 @@ class MarketService:
             ticket_id=listing.ticket_id,
             new_owner_user_id=assignment.buyer_user_id,
             holder_name=assignment.holder_name or "",
+            holder_document_type=assignment.holder_document_type or "",
             holder_dni=assignment.holder_dni or "",
             actor_id=assignment.buyer_user_id,
         )
@@ -397,6 +400,7 @@ async def _publish_transfer(
     ticket_id: uuid.UUID,
     new_owner_user_id: uuid.UUID,
     holder_name: str,
+    holder_document_type: str,
     holder_dni: str,
     actor_id: uuid.UUID,
 ) -> None:
@@ -413,6 +417,7 @@ async def _publish_transfer(
                 "ticket_id": str(ticket_id),
                 "new_owner_user_id": str(new_owner_user_id),
                 "holder_name": holder_name,
+                "holder_document_type": holder_document_type,
                 "holder_dni": holder_dni,
             },
         )

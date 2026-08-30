@@ -3,6 +3,7 @@ import hashlib
 
 import structlog
 from cryptography.fernet import Fernet
+from security import DocumentType, validate_document
 
 from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.services.application.storage import storage
@@ -42,8 +43,15 @@ class KycService:
         self._audit = audit
         self._ocr = ocr
 
-    # extracts the identity number stores the document and marks kyc pending
-    async def upload(self, user: User, content: bytes) -> KycStatus:
+    # records the declared document stores its image and marks kyc pending
+    async def upload(
+        self,
+        user: User,
+        content: bytes,
+        *,
+        document_type: DocumentType,
+        document_number: str,
+    ) -> KycStatus:
         if user.kyc_status == KycStatus.approved:
             await logger.awarning(
                 "kyc_upload_failed", reason="already_approved", user_id=str(user.id)
@@ -69,10 +77,25 @@ class KycService:
             raise KycError("Document exceeds the maximum size of 10 MB.")
 
         try:
-            id_number = self._ocr.extract_national_id(content)
-        except OcrError as exc:
-            await logger.awarning("kyc_upload_failed", reason="ocr_failed", user_id=str(user.id))
-            raise KycError(str(exc)) from exc
+            id_number = validate_document(document_number, document_type)
+        except ValueError as exc:
+            await logger.awarning(
+                "kyc_upload_failed", reason="document_rejected", user_id=str(user.id)
+            )
+            raise KycError(str(exc), field="document_number") from exc
+
+        # a spanish document can be read back off the image, so disagreement is worth flagging
+        if document_type in {DocumentType.dni, DocumentType.nie}:
+            try:
+                scanned = self._ocr.extract_national_id(content)
+            except OcrError:
+                scanned = None
+            if scanned is not None and scanned != id_number:
+                await logger.awarning(
+                    "kyc_document_mismatch",
+                    user_id=str(user.id),
+                    document_type=str(document_type),
+                )
 
         id_hash = hashlib.sha256(id_number.encode()).hexdigest()
 
@@ -91,6 +114,7 @@ class KycService:
         fernet = Fernet(settings.national_id_encryption_key.encode())
         user.national_id_hash = id_hash
         user.national_id_number = fernet.encrypt(id_number.encode()).decode()
+        user.national_id_type = str(document_type)
         previous_key = user.kyc_document_object_key
         object_key = await storage.put(
             kind="kyc",

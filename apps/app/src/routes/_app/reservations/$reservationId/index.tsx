@@ -16,6 +16,7 @@ import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useInitiatePayment } from '@/features/tickets/hooks/useInitiatePayment'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
+import { DOCUMENT_TYPES, type DocumentType, isValidDocument } from '@/lib/documents'
 import { isNotFound } from '@/lib/errors'
 import { fieldErrorMessage } from '@/lib/errors'
 import { lazyWithReload } from '@/lib/lazyWithReload'
@@ -51,7 +52,9 @@ function ReservationPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [holders, setHolders] = useState<Array<{ holder_name: string; holder_dni: string }>>([])
+  const [holders, setHolders] = useState<
+    Array<{ holder_name: string; holder_document_type: DocumentType; holder_dni: string }>
+  >([])
   const [holdersSaved, setHoldersSaved] = useState(false)
   const [confirming, setConfirming] = useState(false)
 
@@ -78,6 +81,7 @@ function ReservationPage() {
         holders.map((h, i) => ({
           position: i + 1,
           holder_name: h.holder_name,
+          holder_document_type: h.holder_document_type,
           holder_dni: h.holder_dni,
         })),
       ),
@@ -134,35 +138,24 @@ function ReservationPage() {
       ? holders
       : Array.from(
           { length: quantity },
-          (_, i) => holders[i] ?? { holder_name: '', holder_dni: '' },
+          (_, i) => holders[i] ?? { holder_name: '', holder_document_type: 'dni', holder_dni: '' },
         )
 
   // implements update holder
-  const updateHolder = (index: number, field: 'holder_name' | 'holder_dni', value: string) => {
+  const updateHolder = (
+    index: number,
+    field: 'holder_name' | 'holder_document_type' | 'holder_dni',
+    value: string,
+  ) => {
     // implements next
     const next = initializedHolders.map((h, i) => (i === index ? { ...h, [field]: value } : h))
     setHolders(next)
     setHoldersSaved(false)
   }
 
-  // implements validate dni
-  const validateDni = (dni: string): boolean => {
-    const v = dni.trim().toUpperCase()
-    const letters = 'TRWAGMYFPDXBNJZSQVHLCKE'
-    const dniRe = /^\d{8}[A-Z]$/
-    const nieRe = /^[XYZ]\d{7}[A-Z]$/
-    if (dniRe.test(v)) return letters[parseInt(v.slice(0, 8)) % 23] === v[8]
-    if (nieRe.test(v)) {
-      const prefix: Record<string, string> = { X: '0', Y: '1', Z: '2' }
-      const digits = prefix[v[0]] + v.slice(1, 8)
-      return letters[parseInt(digits) % 23] === v[8]
-    }
-    return false
-  }
-
   // implements holders complete
   const holdersComplete = initializedHolders.every(
-    (h) => h.holder_name.trim().length > 0 && validateDni(h.holder_dni),
+    (h) => h.holder_name.trim().length > 0 && isValidDocument(h.holder_dni, h.holder_document_type),
   )
 
   // implements order lines
@@ -270,20 +263,39 @@ function ReservationPage() {
                 className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
               />
               <div>
-                <input
-                  type="text"
-                  placeholder="DNI / NIE"
-                  value={holder.holder_dni}
-                  onChange={(e) => updateHolder(i, 'holder_dni', e.target.value)}
-                  className={`placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none ${
-                    holder.holder_dni && !validateDni(holder.holder_dni)
-                      ? 'border-red-500/60 focus:border-red-500/80'
-                      : 'border-white/10 focus:border-white/30'
-                  }`}
-                />
-                {holder.holder_dni && !validateDni(holder.holder_dni) && (
-                  <p className="mt-1 px-1 text-xs text-red-400">Invalid DNI / NIE</p>
-                )}
+                <div className="flex gap-2">
+                  <select
+                    value={holder.holder_document_type}
+                    onChange={(e) => updateHolder(i, 'holder_document_type', e.target.value)}
+                    className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
+                  >
+                    {DOCUMENT_TYPES.map((type) => (
+                      <option key={type} value={type} className="bg-[hsl(0,0%,10%)]">
+                        {t(`tickets.holders.documentType.${type}`)}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder={t(
+                      `tickets.holders.documentPlaceholder.${holder.holder_document_type}`,
+                    )}
+                    value={holder.holder_dni}
+                    onChange={(e) => updateHolder(i, 'holder_dni', e.target.value)}
+                    className={`placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none ${
+                      holder.holder_dni &&
+                      !isValidDocument(holder.holder_dni, holder.holder_document_type)
+                        ? 'border-red-500/60 focus:border-red-500/80'
+                        : 'border-white/10 focus:border-white/30'
+                    }`}
+                  />
+                </div>
+                {holder.holder_dni &&
+                  !isValidDocument(holder.holder_dni, holder.holder_document_type) && (
+                    <p className="mt-1 px-1 text-xs text-red-400">
+                      {t(`tickets.holders.invalid.${holder.holder_document_type}`)}
+                    </p>
+                  )}
               </div>
             </div>
           ))}

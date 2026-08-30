@@ -111,9 +111,10 @@ async def write(
             await conn.execute(
                 """
                 INSERT INTO sales.reservation_holders (
-                    id, reservation_id, position, holder_name, holder_dni_ciphertext
+                    id, reservation_id, position, holder_name, holder_dni_ciphertext,
+                    holder_document_type
                 )
-                VALUES ($1, $2, $3, $4, $5)
+                VALUES ($1, $2, $3, $4, $5, 'dni')
                 """,
                 ident("holder", reservation.key, str(position)),
                 reservation.id,
@@ -149,8 +150,9 @@ async def write(
             INSERT INTO sales.market_assignments (
                 id, listing_id, event_id, buyer_user_id, assigned_at, expires_at,
                 paid_at,
-                payment_intent_id, holder_name, holder_dni_ciphertext, state
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                payment_intent_id, holder_name, holder_dni_ciphertext,
+                holder_document_type, state
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             """,
             assignment.id,
             data.listing(assignment.listing).id,
@@ -166,6 +168,7 @@ async def write(
             encrypt(cfg.fernet, assignment.holder_dni)
             if assignment.holder_dni is not None
             else None,
+            "dni" if assignment.holder_dni is not None else None,
             assignment.state,
         )
 

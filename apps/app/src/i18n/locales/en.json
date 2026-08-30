@@ -229,6 +229,23 @@
     "toast": {
       "listSuccess": "Ticket listed for resale.",
       "listFailed": "Ticket not listed."
+    },
+    "holders": {
+      "documentType": {
+        "dni": "DNI",
+        "nie": "NIE",
+        "passport": "Passport"
+      },
+      "documentPlaceholder": {
+        "dni": "00000000A",
+        "nie": "X0000000A",
+        "passport": "Passport number"
+      },
+      "invalid": {
+        "dni": "Invalid DNI",
+        "nie": "Invalid NIE",
+        "passport": "Invalid passport number"
+      }
     }
   },
   "market": {

@@ -1,5 +1,6 @@
 // implements onboarding api
 import { apiClient } from '@/lib/api'
+import type { DocumentType } from '@/lib/documents'
 
 export interface OnboardingStatus {
   email_verified: boolean
@@ -47,9 +48,11 @@ export const onboardingApi = {
       .then((r) => r.data),
 
   // implements upload kyc
-  uploadKyc: (file: File) => {
+  uploadKyc: (input: { file: File; documentType: DocumentType; documentNumber: string }) => {
     const formData = new FormData()
-    formData.append('document', file)
+    formData.append('document', input.file)
+    formData.append('document_type', input.documentType)
+    formData.append('document_number', input.documentNumber)
     return apiClient
       .post<KycUploadResponse>('/v1/auth/setup/kyc/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

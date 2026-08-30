@@ -110,6 +110,7 @@ async def _publish_paid(
                     {
                         "position": h.position,
                         "holder_name": h.holder_name,
+                        "holder_document_type": h.holder_document_type,
                         "holder_dni": h.holder_dni,
                     }
                     for h in holders

@@ -1,4 +1,5 @@
 // implements tickets api
+import type { DocumentType } from '@/lib/documents'
 import { paymentsClient } from '@/lib/paymentsApi'
 import { salesClient } from '@/lib/salesApi'
 import { ticketingClient } from '@/lib/ticketingApi'
@@ -58,6 +59,7 @@ export interface Ticket {
   issued_at: string | null
   expired_at: string | null
   holder_name: string | null
+  holder_document_type: DocumentType | null
   holder_dni: string | null
   created_at: string
   qr_eligible: boolean
@@ -67,6 +69,7 @@ export interface Ticket {
 export interface HolderInput {
   position: number
   holder_name: string
+  holder_document_type: DocumentType
   holder_dni: string
 }
 

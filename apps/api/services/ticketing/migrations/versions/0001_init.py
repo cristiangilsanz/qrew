@@ -42,6 +42,7 @@ def upgrade() -> None:
             expired_at TIMESTAMPTZ,
             holder_name VARCHAR(255),
             holder_dni_ciphertext BYTEA,
+            holder_document_type VARCHAR(16),
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )

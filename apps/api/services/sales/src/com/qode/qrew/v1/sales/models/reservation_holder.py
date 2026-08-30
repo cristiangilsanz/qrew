@@ -5,6 +5,8 @@ from sqlalchemy import CheckConstraint, Index, Integer, LargeBinary, String, Uni
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from security import DocumentType
+
 from com.qode.qrew.v1.sales.core.database import Base
 from com.qode.qrew.v1.sales.core.utils import pii as pii_crypto
 
@@ -25,6 +27,9 @@ class ReservationHolder(Base):
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     holder_name: Mapped[str] = mapped_column(String(255), nullable=False)
     holder_dni_ciphertext: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    holder_document_type: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=DocumentType.dni.value
+    )
 
     # decrypts the stored identity document
     @property

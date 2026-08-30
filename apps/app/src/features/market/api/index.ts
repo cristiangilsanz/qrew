@@ -1,4 +1,5 @@
 // implements market api
+import type { DocumentType } from '@/lib/documents'
 import { paymentsClient } from '@/lib/paymentsApi'
 import { salesClient } from '@/lib/salesApi'
 
@@ -36,6 +37,7 @@ export interface MarketOfferResponse {
   paid_at: string | null
   state: MarketOfferState
   holder_name: string | null
+  holder_document_type: DocumentType | null
   holder_dni: string | null
   price_cents: number
   currency: string
@@ -102,10 +104,16 @@ export const marketApi = {
     salesClient.get<MarketOfferResponse>(`/v1/market/assignments/${offerId}`).then((r) => r.data),
 
   // implements set holders
-  setHolders: (offerId: string, holder_name: string, holder_dni: string) =>
+  setHolders: (
+    offerId: string,
+    holder_name: string,
+    holder_dni: string,
+    holder_document_type: DocumentType = 'dni',
+  ) =>
     salesClient
       .put<MarketOfferResponse>(`/v1/market/assignments/${offerId}/holders`, {
         holder_name,
+        holder_document_type,
         holder_dni,
       })
       .then((r) => r.data),

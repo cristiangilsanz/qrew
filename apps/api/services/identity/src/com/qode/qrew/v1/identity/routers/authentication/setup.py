@@ -1,9 +1,19 @@
 # exposes the endpoints that submit kyc and complete account setup
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 
 from middleware import client_ip
+from security import DocumentType
 
 from com.qode.qrew.v1.identity.core.config import settings
 from com.qode.qrew.v1.identity.core.dependencies import get_setup_or_full_user
@@ -52,6 +62,8 @@ def _is_allowed_file(content: bytes) -> bool:
 async def kyc_upload(
     request: Request,
     document: Annotated[UploadFile, File()],
+    document_number: Annotated[str, Form(min_length=1, max_length=50)],
+    document_type: Annotated[DocumentType, Form()] = DocumentType.dni,
     current_user: User = Depends(get_setup_or_full_user),
     service: KycService = Depends(get_kyc_service),
 ) -> KycUploadResponse:
@@ -65,7 +77,12 @@ async def kyc_upload(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Unsupported file type"
         )
     try:
-        final_status = await service.upload(current_user, content)
+        final_status = await service.upload(
+            current_user,
+            content,
+            document_type=document_type,
+            document_number=document_number,
+        )
         return KycUploadResponse(
             message="KYC document submitted for review.",
             kyc_status=final_status,

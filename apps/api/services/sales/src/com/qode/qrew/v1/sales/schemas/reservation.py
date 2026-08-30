@@ -1,38 +1,11 @@
 # defines the request and response schemas for reservations and their holders
-import re
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
+from security import DocumentType, validate_document
 
 from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
-
-_DNI_RE = re.compile(r"^\d{8}[A-Z]$")
-_NIE_RE = re.compile(r"^[XYZ]\d{7}[A-Z]$")
-_LETTER_MAP = "TRWAGMYFPDXBNJZSQVHLCKE"
-_NIE_PREFIX = {"X": "0", "Y": "1", "Z": "2"}
-
-
-# checks the control letter of a spanish national identity number
-def _valid_dni_letter(digits: str, letter: str) -> bool:
-    return _LETTER_MAP[int(digits) % 23] == letter
-
-
-# validates a spanish dni or nie and returns it normalised
-def validate_spanish_id(value: str) -> str:
-    v = value.strip().upper()
-    if _DNI_RE.match(v):
-        if not _valid_dni_letter(v[:8], v[8]):
-            raise ValueError("DNI check letter rejected.")
-        return v
-    if _NIE_RE.match(v):
-        digits = _NIE_PREFIX[v[0]] + v[1:8]
-        if not _valid_dni_letter(digits, v[8]):
-            raise ValueError("NIE check letter rejected.")
-        return v
-    raise ValueError(
-        "Must be a valid Spanish DNI (8 digits + letter) or NIE (X/Y/Z + 7 digits + letter)"
-    )
 
 
 class ReservationItemInput(BaseModel):
@@ -63,13 +36,16 @@ class ReservationResponse(BaseModel):
 class HolderInput(BaseModel):
     position: int = Field(..., ge=1)
     holder_name: str = Field(..., min_length=1, max_length=255)
+    holder_document_type: DocumentType = DocumentType.dni
     holder_dni: str = Field(..., min_length=1, max_length=50)
 
-    # validates that a holder's identity document is a real spanish dni or nie
-    @field_validator("holder_dni")
-    @classmethod
-    def validate_dni(cls, v: str) -> str:
-        return validate_spanish_id(v)
+    # validates a holder's document against the rules of the type it claims to be
+    @model_validator(mode="after")
+    def validate_holder_document(self) -> "HolderInput":
+        object.__setattr__(
+            self, "holder_dni", validate_document(self.holder_dni, self.holder_document_type)
+        )
+        return self
 
 
 class SetHoldersRequest(BaseModel):
@@ -79,4 +55,5 @@ class SetHoldersRequest(BaseModel):
 class HolderResponse(BaseModel):
     position: int
     holder_name: str
+    holder_document_type: DocumentType
     holder_dni: str

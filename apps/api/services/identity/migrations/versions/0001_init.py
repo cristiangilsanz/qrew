@@ -107,6 +107,7 @@ def upgrade() -> None:
         sa.Column("pending_email_token_expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("national_id_hash", sa.String(length=64), nullable=True),
         sa.Column("national_id_number", sa.Text(), nullable=True),
+        sa.Column("national_id_type", sa.String(length=16), nullable=True),
         sa.Column(
             "kyc_status",
             sa.Enum("not_submitted", "pending", "approved", "rejected", name="kyc_status"),

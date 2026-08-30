@@ -51,6 +51,7 @@ class Ticket(Base):
     expired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     holder_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     holder_dni_ciphertext: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    holder_document_type: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     # decrypts the stored identity document
     @property

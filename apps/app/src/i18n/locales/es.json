@@ -219,6 +219,23 @@
     "toast": {
       "listSuccess": "Entrada puesta a la venta.",
       "listFailed": "Entrada no puesta a la venta."
+    },
+    "holders": {
+      "documentType": {
+        "dni": "DNI",
+        "nie": "NIE",
+        "passport": "Pasaporte"
+      },
+      "documentPlaceholder": {
+        "dni": "00000000A",
+        "nie": "X0000000A",
+        "passport": "Número de pasaporte"
+      },
+      "invalid": {
+        "dni": "DNI no válido",
+        "nie": "NIE no válido",
+        "passport": "Pasaporte no válido"
+      }
     }
   },
   "market": {

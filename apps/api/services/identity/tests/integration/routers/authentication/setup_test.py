@@ -26,8 +26,46 @@ class TestKycUpload:
             "/v1/auth/setup/kyc/upload",
             headers=auth_headers,
             files={"document": ("id.jpg", fake_image, "image/jpeg")},
+            data={"document_number": "00000001R", "document_type": "dni"},
         )
         assert resp.status_code in (200, 400)
+
+    # verifies that a passport is accepted with its own document photo
+    async def test_passport_upload_accepted(
+        self, client: httpx.AsyncClient, auth_headers: dict
+    ) -> None:
+        fake_image = io.BytesIO(b"\xff\xd8\xff" + b"0" * 64)
+        resp = await client.post(
+            "/v1/auth/setup/kyc/upload",
+            headers=auth_headers,
+            files={"document": ("passport.jpg", fake_image, "image/jpeg")},
+            data={"document_number": "AB123456", "document_type": "passport"},
+        )
+        assert resp.status_code in (200, 400)
+
+    # verifies that a document that does not match its type is rejected
+    async def test_upload_rejects_mismatched_document(
+        self, client: httpx.AsyncClient, auth_headers: dict
+    ) -> None:
+        fake_image = io.BytesIO(b"\xff\xd8\xff" + b"0" * 64)
+        resp = await client.post(
+            "/v1/auth/setup/kyc/upload",
+            headers=auth_headers,
+            files={"document": ("id.jpg", fake_image, "image/jpeg")},
+            data={"document_number": "AB123456", "document_type": "dni"},
+        )
+        assert resp.status_code == 400
+
+    # verifies that a passport still has to come with its document photo
+    async def test_passport_requires_a_document(
+        self, client: httpx.AsyncClient, auth_headers: dict
+    ) -> None:
+        resp = await client.post(
+            "/v1/auth/setup/kyc/upload",
+            headers=auth_headers,
+            data={"document_number": "AB123456", "document_type": "passport"},
+        )
+        assert resp.status_code == 422
 
 
 class TestCompleteSetup:

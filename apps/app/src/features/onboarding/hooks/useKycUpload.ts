@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import type { ApiErrorDetail } from '@/features/auth/api'
+import type { DocumentType } from '@/lib/documents'
 import { toastErrorMessage } from '@/lib/errors'
 
 import { type KycUploadResponse, onboardingApi } from '../api'
@@ -15,7 +16,8 @@ export function useKycUpload(onSuccess?: (data: KycUploadResponse) => void) {
 
   return useMutation({
     // implements mutation fn
-    mutationFn: (file: File) => onboardingApi.uploadKyc(file),
+    mutationFn: (input: { file: File; documentType: DocumentType; documentNumber: string }) =>
+      onboardingApi.uploadKyc(input),
     // handles on success
     onSuccess: (data) => {
       toast.success(t('onboarding.kyc.successToast'))

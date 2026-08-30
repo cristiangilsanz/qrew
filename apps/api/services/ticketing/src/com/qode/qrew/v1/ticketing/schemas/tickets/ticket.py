@@ -15,6 +15,7 @@ class TicketResponse(BaseModel):
     issued_at: datetime | None
     expired_at: datetime | None
     holder_name: str | None
+    holder_document_type: str | None
     holder_dni: str | None
     created_at: datetime
     qr_eligible: bool
