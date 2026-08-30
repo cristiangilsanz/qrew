@@ -8,6 +8,7 @@ import { usePendingMarketAssignment } from '@/features/market/hooks/useMarketAss
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useReservedTicketsCount } from '@/features/tickets/hooks/useReservedTicketsCount'
+import { useKeyboardOpen } from '@/hooks/useKeyboardOpen'
 import { cn } from '@/lib/utils'
 
 const baseTabs = [
@@ -71,9 +72,13 @@ export function BottomDock() {
   const reservedCount = useReservedTicketsCount()
   const { data: pendingAssignment } = usePendingMarketAssignment()
 
+  const keyboardOpen = useKeyboardOpen()
+
   const stillLoading = profileLoading || orgsLoading
   const showOrganiser =
     !stillLoading && (profile?.is_admin === true || (orgsData?.items.length ?? 0) > 0)
+
+  if (keyboardOpen) return null
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/25 bg-black/95 backdrop-blur-md">

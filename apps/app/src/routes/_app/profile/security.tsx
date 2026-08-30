@@ -541,7 +541,7 @@ function SecurityPage() {
   const iconClass = 'h-4 w-4 text-muted-foreground'
 
   return (
-    <div className="min-h-screen px-4 pt-4 pb-28">
+    <div className="px-4 pt-4 pb-28">
       <BackButton to="/profile" className="mb-6" />
       <h1 className="mb-6 text-xl font-bold">{t('profile.security.title')}</h1>
 

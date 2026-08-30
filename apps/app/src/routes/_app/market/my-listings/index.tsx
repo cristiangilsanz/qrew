@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
+import { PageError } from '@/components/ui/page-error'
+import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import type { Ticket } from '@/features/tickets/api'
@@ -49,10 +51,10 @@ function ListingCard({ ticket }: { ticket: Ticket }) {
           </p>
           <h2 className="text-base leading-snug font-semibold">{eventName}</h2>
           <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
-            {event?.venue_city && (
+            {event?.venue.city && (
               <span className="flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
-                {event.venue_city}
+                {event.venue.city}
               </span>
             )}
             {event?.starts_at && (
@@ -78,7 +80,7 @@ function ListingCard({ ticket }: { ticket: Ticket }) {
 function MyListingsPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
-  const { data: tickets, isLoading } = useTickets()
+  const { data: tickets, isLoading, isError, refetch } = useTickets()
   // implements listed tickets
   const listedTickets = (tickets ?? []).filter((t) => t.state === 'on_sale')
 
@@ -86,22 +88,22 @@ function MyListingsPage() {
     ? listedTickets.filter((t) => t.event_id.toLowerCase().includes(query.toLowerCase()))
     : listedTickets
 
+  if (isError) return <PageError onRetry={() => void refetch()} />
+
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] space-y-4 px-4 pt-5 pb-28">
-      <div>
-        <BackButton to="/market" />
-        <h1 className="mt-3 text-2xl font-bold">{t('market.myTicketsOnSale')}</h1>
-      </div>
+    <div className="mx-auto max-w-[430px] space-y-4 px-4 pt-5 pb-28">
+      <BackButton to="/market" />
+      <h1 className="text-2xl font-bold">{t('market.myTicketsOnSale')}</h1>
 
       {!isLoading && listedTickets.length > 0 && (
         <div className="relative">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-white/30" />
+          <Search className={SEARCH_ICON_CLASS} />
           <input
             type="text"
             placeholder={t('market.searchByEvent')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pr-4 pl-9 text-sm text-white placeholder:text-white/30 focus:border-white/20 focus:outline-none"
+            className={SEARCH_INPUT_CLASS}
           />
         </div>
       )}
@@ -113,7 +115,7 @@ function MyListingsPage() {
         </div>
       )}
 
-      {!isLoading && filtered.length === 0 && (
+      {!isLoading && !isError && filtered.length === 0 && (
         <p className="text-muted-foreground pt-10 text-center text-sm">
           {query ? t('market.noResults') : t('market.noTicketsOnSale')}
         </p>

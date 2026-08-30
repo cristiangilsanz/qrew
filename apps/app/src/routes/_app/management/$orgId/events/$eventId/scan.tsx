@@ -1,4 +1,5 @@
 // implements scan
+import { Capacitor } from '@capacitor/core'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { useEffect } from 'react'
@@ -18,12 +19,13 @@ function ScanPage() {
   const { t } = useTranslation()
   const { orgId, eventId } = Route.useParams()
   const navigate = useNavigate()
+  const nativeCamera = Capacitor.isNativePlatform()
 
   const { data: eventsData } = useOrgEvents(orgId)
   // implements event
   const event = eventsData?.items.find((e) => e.id === eventId)
 
-  const { videoRef, phase, scanResult, scanCount, startScanning } = useScanner({
+  const { videoRef, phase, scanResult, scanCount, errorMsg, startScanning } = useScanner({
     eventId,
     eventName: event?.name ?? 'Event',
     notSupportedMessage: t('organiser.scanner.notSupported'),
@@ -34,8 +36,13 @@ function ScanPage() {
   }, [])
 
   return (
-    <div className="flex h-screen flex-col bg-black">
-      <div className="safe-top flex items-center gap-3 p-4">
+    <div
+      className={cn(
+        'flex h-screen flex-col',
+        nativeCamera && phase !== 'error' ? 'bg-transparent' : 'bg-black',
+      )}
+    >
+      <div className="scanner-overlay safe-top flex items-center gap-3 p-4">
         <BackButton
           to="/management/$orgId/events/$eventId/"
           params={{ orgId, eventId }}
@@ -55,7 +62,7 @@ function ScanPage() {
       <div className="relative flex-1 overflow-hidden">
         <video
           ref={videoRef}
-          className={`h-full w-full object-cover ${phase === 'error' ? 'hidden' : ''}`}
+          className={`h-full w-full object-cover ${phase === 'error' || nativeCamera ? 'hidden' : ''}`}
           playsInline
           muted
           autoPlay
@@ -65,7 +72,7 @@ function ScanPage() {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-black/70 px-8">
             <XCircle className="h-12 w-12 text-red-400" />
             <p className="text-center text-sm text-white/70">
-              {t('organiser.scanner.notSupported')}
+              {errorMsg || t('organiser.scanner.notSupported')}
             </p>
             <button
               onClick={() =>
@@ -82,7 +89,7 @@ function ScanPage() {
         )}
 
         {phase === 'scanning' && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="scanner-overlay absolute inset-0 flex items-center justify-center">
             <div className="relative h-64 w-64">
               <span className="absolute top-0 left-0 h-8 w-8 rounded-tl-lg border-t-2 border-l-2 border-white" />
               <span className="absolute top-0 right-0 h-8 w-8 rounded-tr-lg border-t-2 border-r-2 border-white" />
@@ -95,7 +102,7 @@ function ScanPage() {
         {phase === 'result' && scanResult && (
           <div
             className={cn(
-              'absolute inset-0 flex flex-col items-center justify-center gap-4',
+              'scanner-overlay fixed inset-0 z-50 flex flex-col items-center justify-center gap-4',
               scanResult.allowed ? 'bg-green-500/80' : 'bg-red-500/80',
             )}
           >
@@ -109,9 +116,6 @@ function ScanPage() {
                 ? t('organiser.scanner.admitted')
                 : t('organiser.scanner.rejected')}
             </p>
-            {scanResult.reason && (
-              <p className="text-sm text-white/80">{scanResult.reason.replace(/_/g, ' ')}</p>
-            )}
           </div>
         )}
       </div>

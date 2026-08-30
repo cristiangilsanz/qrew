@@ -5,6 +5,7 @@ import { Search } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { PageError } from '@/components/ui/page-error'
 import { ReservationRowSkeleton } from '@/components/ui/skeleton'
 import { eventsApi } from '@/features/events/api'
 import type { Ticket } from '@/features/tickets/api'
@@ -30,7 +31,12 @@ function groupByReservation(tickets: Ticket[]): Map<string, Ticket[]> {
 function TicketsPage() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const { data: tickets, isLoading: ticketsLoading } = useTickets()
+  const {
+    data: tickets,
+    isLoading: ticketsLoading,
+    isError: ticketsError,
+    refetch: refetchTickets,
+  } = useTickets()
 
   useEffect(() => {
     void queryClient.invalidateQueries({ queryKey: ['tickets'] })
@@ -65,6 +71,8 @@ function TicketsPage() {
       .map((e) => [e!.id, e!]),
   )
 
+  if (ticketsError) return <PageError onRetry={() => void refetchTickets()} />
+
   return (
     <div className="space-y-6 px-4 pt-5 pb-24">
       <h1 className="text-2xl font-bold">{t('tickets.title')}</h1>
@@ -77,7 +85,7 @@ function TicketsPage() {
         </div>
       )}
 
-      {!isLoading && tickets?.length === 0 && (
+      {!isLoading && !ticketsError && tickets?.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-12 text-center">
           <p className="text-muted-foreground text-sm">{t('tickets.empty')}</p>
           <Link

@@ -10,21 +10,27 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
-  ShieldX,
+  Loader2,
+  TicketX,
   XCircle,
 } from 'lucide-react'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
+import { NotFound } from '@/components/ui/not-found'
+import { PageError } from '@/components/ui/page-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
+import { useTickets } from '@/features/tickets/hooks/useTickets'
+import { isNotFound } from '@/lib/errors'
+import { lazyWithReload } from '@/lib/lazyWithReload'
 // renders the stripe checkout component
-const StripeCheckout = lazy(() =>
+const StripeCheckout = lazyWithReload(() =>
   import('@/features/tickets/components/StripeCheckout').then((m) => ({
     default: m.StripeCheckout,
   })),
@@ -77,11 +83,16 @@ function AssignmentPage() {
     data: assignment,
     isLoading: assignmentLoading,
     isError,
+    error,
+    refetch,
   } = useMarketAssignment(assignmentId)
   const { data: event, isLoading: eventLoading } = useEvent(assignment?.event_id ?? '')
   const countdown = useCountdown(assignment?.state === 'pending' ? assignment.expires_at : null)
 
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState(false)
+  const ticketIdsBeforePay = useRef<Set<string>>(new Set())
+  const { data: myTickets } = useTickets(confirming)
   const [declineOpen, setDeclineOpen] = useState(false)
   const [declineSeconds, setDeclineSeconds] = useState(5)
   const declineTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -131,17 +142,36 @@ function AssignmentPage() {
 
   // handles handle pay success
   const handlePaySuccess = () => {
-    toast.success(t('market.toast.paymentSuccess'))
-    void queryClient.invalidateQueries({ queryKey: ['tickets'] })
-    void queryClient.invalidateQueries({ queryKey: ['market'] })
-    void navigate({ to: '/tickets' })
+    ticketIdsBeforePay.current = new Set((myTickets ?? []).map((tk) => tk.id))
+    setConfirming(true)
   }
+
+  const ticketTransferred = myTickets?.some((tk) => !ticketIdsBeforePay.current.has(tk.id)) ?? false
+
+  useEffect(() => {
+    if (!confirming) return
+
+    // closes the wait and hands the user their ticket
+    const finish = () => {
+      toast.success(t('market.toast.paymentSuccess'))
+      void queryClient.invalidateQueries({ queryKey: ['tickets'] })
+      void queryClient.invalidateQueries({ queryKey: ['market'] })
+      void navigate({ to: '/tickets' })
+    }
+
+    if (ticketTransferred) {
+      finish()
+      return
+    }
+    const timer = setTimeout(finish, 20_000)
+    return () => clearTimeout(timer)
+  }, [confirming, ticketTransferred, navigate, queryClient, t])
 
   const isLoading = assignmentLoading || (!!assignment && eventLoading)
 
   if (isLoading) {
     return (
-      <div className="min-h-screen pb-32">
+      <div className="pb-32">
         <Skeleton className="h-64 w-full rounded-none" />
         <div className="mx-auto max-w-[430px] space-y-4 px-4 pt-4">
           <div className="space-y-2">
@@ -164,13 +194,12 @@ function AssignmentPage() {
     )
   }
 
+  if (isError && !isNotFound(error)) {
+    return <PageError onRetry={() => void refetch()} />
+  }
+
   if (isError || !assignment) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center">
-        <ShieldX className="h-10 w-10 text-white/30" />
-        <p className="text-muted-foreground text-sm">{t('market.assignment.notFound')}</p>
-      </div>
-    )
+    return <NotFound message={t('common.resourceGone')} />
   }
 
   const isPaid = assignment.state === 'paid'
@@ -185,7 +214,7 @@ function AssignmentPage() {
   const startDate = event?.starts_at ? new Date(event.starts_at) : null
 
   return (
-    <div className="flex min-h-screen flex-col pb-24">
+    <div className="flex flex-col pb-24">
       <div className="relative h-64 overflow-hidden bg-[#111]">
         <ImageWithSkeleton
           src={imageUrl}
@@ -278,16 +307,23 @@ function AssignmentPage() {
         })()}
       </div>
 
-      {clientSecret && (
-        <div className="mx-auto mt-5 max-w-[430px] px-4 pb-32">
+      {clientSecret && !confirming && (
+        <div className="mx-auto mt-5 w-full max-w-[430px] px-4 pb-32">
           <Suspense fallback={null}>
             <StripeCheckout clientSecret={clientSecret} onSuccess={handlePaySuccess} />
           </Suspense>
         </div>
       )}
 
+      {confirming && (
+        <div className="mx-auto mt-5 flex w-full max-w-[430px] flex-col items-center gap-3 px-4 py-10 text-center">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">{t('tickets.payment.confirming')}</p>
+        </div>
+      )}
+
       {isPaid && (
-        <div className="mx-auto mt-5 max-w-[430px] px-4">
+        <div className="mx-auto mt-5 w-full max-w-[430px] px-4">
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-green-400/20 bg-green-400/5 p-6 text-center">
             <CheckCircle2 className="h-8 w-8 text-green-400" />
             <p className="text-sm font-semibold text-green-400">
@@ -300,25 +336,24 @@ function AssignmentPage() {
         </div>
       )}
       {(isExpired || countdownExpired) && (
-        <div className="mx-auto mt-5 max-w-[430px] px-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-            <p className="text-sm font-semibold text-white/60">{t('market.assignment.expired')}</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {t('market.assignment.expiredDesc')}
-            </p>
-          </div>
+        <div className="mx-auto mt-2 flex w-full max-w-[430px] flex-col items-center space-y-2 px-4">
+          <TicketX className="h-7 w-7 text-white/20" />
+          <p className="text-muted-foreground text-center text-base font-semibold">
+            {t('market.assignment.expired')}
+          </p>
         </div>
       )}
       {isDeclined && (
-        <div className="mx-auto mt-5 max-w-[430px] px-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-            <p className="text-muted-foreground text-sm">{t('market.assignment.declined')}</p>
-          </div>
+        <div className="mx-auto mt-2 flex w-full max-w-[430px] flex-col items-center space-y-2 px-4">
+          <TicketX className="h-7 w-7 text-white/20" />
+          <p className="text-muted-foreground text-center text-base font-semibold">
+            {t('market.assignment.declined')}
+          </p>
         </div>
       )}
 
       {isPending && !clientSecret && (
-        <div className="fixed inset-x-0 bottom-24 z-40">
+        <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto w-full max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
             <div className="flex items-center justify-between border-t border-white/10 pt-3 pb-1">
               <span className="text-muted-foreground text-sm">{t('market.assignment.total')}</span>

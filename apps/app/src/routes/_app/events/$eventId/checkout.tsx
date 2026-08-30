@@ -1,7 +1,6 @@
 // implements checkout
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import axios from 'axios'
-import { Minus, Plus, Ticket } from 'lucide-react'
+import { Info, Minus, Plus, Ticket } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -9,10 +8,13 @@ import { z } from 'zod'
 
 import { BackButton } from '@/components/ui/back-button'
 import { NotFound } from '@/components/ui/not-found'
+import { PageError } from '@/components/ui/page-error'
 import { CheckoutSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { ticketsApi } from '@/features/tickets/api'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
+import { isNotFound } from '@/lib/errors'
+import { fieldErrorMessage } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 
 const searchSchema = z.object({
@@ -40,7 +42,7 @@ function CheckoutPage() {
   })
   const navigate = useNavigate()
 
-  const { data: event, isLoading: eventLoading, isError } = useEvent(eventId)
+  const { data: event, isLoading: eventLoading, isError, error, refetch } = useEvent(eventId)
   const { data: myTickets, isLoading: ticketsLoading } = useTickets()
 
   const [quantities, setQuantities] = useState<Record<string, number>>({})
@@ -49,17 +51,19 @@ function CheckoutPage() {
   const isLoading = eventLoading || ticketsLoading
   if (isLoading) return <CheckoutSkeleton />
 
+  if (isError && !isNotFound(error)) {
+    return <PageError onRetry={() => void refetch()} />
+  }
+
   if (isError || !event) {
-    return <NotFound message={t('events.notFound')} />
+    return <NotFound message={t('common.resourceGone')} />
   }
 
   if (event.queue_required && !admitted) {
     return (
       <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">
-        <BackButton
-          onClick={() => void navigate({ to: '/events/$eventId', params: { eventId } })}
-        />
-        <div className="fixed inset-x-0 bottom-24 z-40">
+        <BackButton to="/events/$eventId" params={{ eventId }} />
+        <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto max-w-[430px] bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-3 pb-6">
             <button
               className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 w-full rounded-full text-sm font-semibold"
@@ -138,42 +142,33 @@ function CheckoutPage() {
         void navigate({ to: '/tickets' })
       }
     } catch (err) {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
-      const message =
-        typeof detail === 'object' && detail?.message
-          ? detail.message
-          : typeof detail === 'string'
-            ? detail
-            : t('tickets.reservation.createFailed')
       console.error('[checkout] reservation failed', err)
-      toast.error(message)
+      toast.error(fieldErrorMessage(err) ?? t('tickets.reservation.createFailed'))
     } finally {
       setIsPending(false)
     }
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] space-y-6 px-4 pt-5 pb-28">
+    <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">
+      <BackButton to="/events/$eventId" params={{ eventId }} />
       <div>
-        <BackButton
-          onClick={() => void navigate({ to: '/events/$eventId', params: { eventId } })}
-          className="mb-4"
-        />
         <h1 className="text-xl font-bold">{event.name}</h1>
         <p className="text-muted-foreground text-sm">{event.organisation.name}</p>
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-3">
           <h2 className="text-base font-semibold">{t('events.ticketTypes')}</h2>
-          <span className="text-muted-foreground text-xs">
-            {totalSelected}/{maxTotal} {t('tickets.checkout.selected')}
-            {alreadyHeld > 0 && (
-              <span className="text-muted-foreground ml-1">
-                ({alreadyHeld} {t('tickets.checkout.alreadyHeld')})
-              </span>
-            )}
-          </span>
+          <div className="text-right">
+            <span className="text-muted-foreground text-xs">
+              {totalSelected}/{maxTotal} {t('tickets.checkout.selected')}
+            </span>
+            <p className="text-muted-foreground flex items-center justify-end gap-1 text-[11px] opacity-70">
+              <Info className="h-3 w-3 shrink-0" />
+              {t('tickets.checkout.walletLimit', { count: event.max_tickets_per_user })}
+            </p>
+          </div>
         </div>
         {maxTotal === 0 && (
           <p className="text-muted-foreground text-sm">{t('tickets.checkout.limitReached')}</p>
@@ -254,7 +249,7 @@ function CheckoutPage() {
         })}
       </div>
 
-      <div className="fixed inset-x-0 bottom-24 z-40">
+      <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
         <div className="mx-auto max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
           {totalSelected > 0 && (
             <div className="border-border flex items-center justify-between border-t pt-3 pb-1">

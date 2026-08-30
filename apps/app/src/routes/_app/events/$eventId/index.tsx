@@ -10,11 +10,13 @@ import { toast } from 'sonner'
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { NotFound } from '@/components/ui/not-found'
+import { PageError } from '@/components/ui/page-error'
 import { EventDetailSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketQueueStatus } from '@/features/market/hooks/useMarketQueueStatus'
 import { QueuePanel } from '@/features/tickets/components/QueuePanel'
+import { isNotFound } from '@/lib/errors'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +33,14 @@ function formatDate(iso: string): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+  })
+}
+
+// implements format compact
+function formatCompact(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
   })
 }
 
@@ -67,7 +77,7 @@ function EventDetailPage() {
   const { eventId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { data: event, isLoading, isError } = useEvent(eventId)
+  const { data: event, isLoading, isError, error, refetch } = useEvent(eventId)
   const [showQueue, setShowQueue] = useState(false)
   const [leaveOpen, setLeaveOpen] = useState(false)
 
@@ -75,8 +85,11 @@ function EventDetailPage() {
   const secondsUntilSale = useCountdown(saleNotStarted && event ? event.sale_starts_at : null)
 
   const saleEnded = event?.availability_status === 'ended'
-  const allSoldOut = event?.availability_status === 'sold_out'
-  const showResaleQueue = saleEnded || allSoldOut
+  const isPublished = event?.status === 'published'
+  const showResaleQueue = isPublished && saleEnded
+  const saleOpen = isPublished && event?.availability_status === 'open'
+  const eventFinished = event ? new Date(event.ends_at).getTime() <= Date.now() : false
+  const eventCancelled = event?.status === 'cancelled'
 
   const { data: queueStatus, isLoading: queueLoading } = useMarketQueueStatus(
     eventId,
@@ -121,8 +134,12 @@ function EventDetailPage() {
     )
   }
 
+  if (isError && !isNotFound(error)) {
+    return <PageError onRetry={() => void refetch()} />
+  }
+
   if (isError || !event) {
-    return <NotFound message={t('events.notFound')} />
+    return <NotFound message={t('common.resourceGone')} />
   }
 
   const imageUrl = getEventImageUrl(event.image_url)
@@ -145,10 +162,7 @@ function EventDetailPage() {
         )}
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent" />
 
-        <BackButton
-          onClick={() => void navigate({ to: '/events' })}
-          className="absolute top-4 left-4"
-        />
+        <BackButton to="/events" className="absolute top-4 left-4" />
       </div>
 
       <div className="space-y-5 px-4 py-4">
@@ -163,11 +177,17 @@ function EventDetailPage() {
           <p className="text-muted-foreground text-sm leading-relaxed">{event.description}</p>
         )}
 
-        <div className="text-muted-foreground text-sm">
+        <div className="text-muted-foreground flex items-center justify-between gap-3 text-sm">
           <span className="flex items-center gap-2">
             <Calendar className="h-4 w-4 shrink-0" />
             {formatDate(event.starts_at)}
           </span>
+          {!eventFinished && !eventCancelled && (
+            <span className="flex shrink-0 items-center gap-1.5 text-xs">
+              <Ticket className="h-3.5 w-3.5 shrink-0" />
+              {`${formatCompact(event.sale_starts_at)} - ${formatCompact(event.sale_ends_at)}`}
+            </span>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -204,34 +224,43 @@ function EventDetailPage() {
             </p>
           </div>
         )}
+
+        {(eventFinished || eventCancelled) && (
+          <div className="mt-8 flex flex-col items-center space-y-2">
+            <Ticket className="h-7 w-7 text-white/20" />
+            <p className="text-muted-foreground text-center text-base font-semibold">
+              {eventCancelled ? t('events.cancelled') : t('events.finished')}
+            </p>
+          </div>
+        )}
       </div>
 
-      {!saleNotStarted &&
-        (showResaleQueue ? (
-          inQueue ? (
-            <button
-              onClick={() => setLeaveOpen(true)}
-              className="fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full border border-red-500/25 bg-red-500/15 px-5 text-red-400 shadow-lg"
-              style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-            >
-              <LogOut className="h-5 w-5 shrink-0" />
-              <span className="text-sm font-semibold">{t('market.leaveQueueButton')}</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => joinQueue.mutate()}
-              disabled={joinQueue.isPending}
-              className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
-              style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-            >
-              <Shuffle className="h-5 w-5 shrink-0" />
-              <span className="text-sm font-semibold">{t('market.joinQueueButton')}</span>
-            </button>
-          )
-        ) : event.queue_required ? (
+      {showResaleQueue ? (
+        inQueue ? (
+          <button
+            onClick={() => setLeaveOpen(true)}
+            className="keyboard-hide fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-red-600 px-5 text-white shadow-lg transition-colors hover:bg-red-700"
+            style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('market.leaveQueueButton')}</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => joinQueue.mutate()}
+            disabled={joinQueue.isPending}
+            className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
+            style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
+          >
+            <Shuffle className="h-5 w-5 shrink-0" />
+            <span className="text-sm font-semibold">{t('market.joinQueueButton')}</span>
+          </button>
+        )
+      ) : saleOpen ? (
+        event.queue_required ? (
           <button
             onClick={() => setShowQueue(true)}
-            className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+            className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
             <Users className="h-5 w-5 shrink-0" />
@@ -240,13 +269,14 @@ function EventDetailPage() {
         ) : (
           <button
             onClick={() => void navigate({ to: '/events/$eventId/checkout', params: { eventId } })}
-            className="bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+            className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
             <Ticket className="h-5 w-5 shrink-0" />
             <span className="text-sm font-semibold">{t('tickets.checkout.buyButton')}</span>
           </button>
-        ))}
+        )
+      ) : null}
 
       <AnimatePresence>
         {leaveOpen && (
@@ -287,7 +317,7 @@ function EventDetailPage() {
                 <button
                   onClick={() => leaveQueue.mutate()}
                   disabled={leaveQueue.isPending}
-                  className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full border border-red-500/25 bg-red-500/15 px-5 text-sm font-semibold text-red-400 disabled:opacity-50"
+                  className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   <>
                     <LogOut className="h-3.5 w-3.5" />

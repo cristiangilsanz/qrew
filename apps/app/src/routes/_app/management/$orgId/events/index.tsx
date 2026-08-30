@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
+import { PageError } from '@/components/ui/page-error'
+import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
@@ -23,26 +25,28 @@ function OrgEventsPage() {
   const { orgId } = Route.useParams()
   const [query, setQuery] = useState('')
 
-  const { data, isLoading } = useOrgEvents(orgId)
+  const { data, isLoading, isError, refetch } = useOrgEvents(orgId)
   const allEvents = data?.items ?? []
   const events = query.trim()
     ? allEvents.filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
     : allEvents
 
+  if (isError) return <PageError onRetry={() => void refetch()} />
+
   return (
     <div className="mx-auto max-w-2xl p-6 pb-28">
-      <div className="mb-6 space-y-4">
-        <BackButton to="/management/$orgId" params={{ orgId }} />
+      <BackButton to="/management/$orgId" params={{ orgId }} />
+      <div className="mt-4 mb-6 space-y-4">
         <h1 className="text-2xl font-semibold">{t('organiser.events.title')}</h1>
 
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Search className={SEARCH_ICON_CLASS} />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('organiser.events.searchPlaceholder')}
-            className="placeholder:text-muted-foreground focus:border-primary/60 w-full rounded-2xl border border-white/15 bg-white/5 py-3 pr-4 pl-9 text-sm transition-colors outline-none"
+            className={SEARCH_INPUT_CLASS}
           />
         </div>
       </div>
@@ -55,7 +59,7 @@ function OrgEventsPage() {
         </div>
       )}
 
-      {!isLoading && events.length === 0 && (
+      {!isLoading && !isError && events.length === 0 && (
         <p className="text-muted-foreground py-8 text-center text-sm">
           {t('organiser.events.empty')}
         </p>
@@ -119,7 +123,7 @@ function OrgEventsPage() {
       <Link
         to="/management/$orgId/events/new"
         params={{ orgId }}
-        className="bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+        className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
         style={{ right: 'max(calc((100vw - 430px) / 2 + 1.5rem), 1.5rem)' }}
       >
         <Plus className="h-5 w-5 shrink-0" />

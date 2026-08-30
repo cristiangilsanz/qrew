@@ -49,7 +49,7 @@ function FaqRow({ question, answer }: { question: string; answer: string }) {
             style={{ overflow: 'hidden' }}
           >
             <div className="border-t border-white/10 bg-white/[0.03] px-4 pt-3 pb-4">
-              <p className="text-muted-foreground text-justify text-sm leading-relaxed">{answer}</p>
+              <p className="text-muted-foreground text-sm leading-relaxed">{answer}</p>
             </div>
           </motion.div>
         )}
@@ -70,7 +70,7 @@ function HelpPage() {
   ]
 
   return (
-    <div className="min-h-screen px-4 pt-4 pb-28">
+    <div className="px-4 pt-4 pb-28">
       <BackButton to="/profile" className="mb-6" />
       <h1 className="mb-6 text-xl font-bold">{t('profile.help.title')}</h1>
 

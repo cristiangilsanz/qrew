@@ -6,6 +6,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { PageError } from '@/components/ui/page-error'
+import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { useOrgMembers } from '@/features/organiser/hooks/useOrgMembers'
@@ -24,7 +26,12 @@ function OrgMembersPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [query, setQuery] = useState('')
 
-  const { data: members, isLoading: membersLoading } = useOrgMembers(orgId)
+  const {
+    data: members,
+    isLoading: membersLoading,
+    isError: membersError,
+    refetch: refetchMembers,
+  } = useOrgMembers(orgId)
   // implements member ids
   const memberIds = (members ?? []).map((m) => m.user_id)
   const { data: profiles, isLoading: profilesLoading } = useUserPublicProfiles(memberIds)
@@ -42,19 +49,21 @@ function OrgMembersPage() {
 
   const remove = useRemoveMember(orgId)
 
+  if (membersError) return <PageError onRetry={() => void refetchMembers()} />
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
       <BackButton to="/management/$orgId" params={{ orgId }} />
       <h1 className="text-2xl font-semibold">{t('organiser.members.title')}</h1>
 
       <div className="relative">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+        <Search className={SEARCH_ICON_CLASS} />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('organiser.members.searchPlaceholder')}
-          className="placeholder:text-muted-foreground focus:border-primary/60 w-full rounded-2xl border border-white/15 bg-white/5 py-3 pr-4 pl-9 text-sm transition-colors outline-none"
+          className={SEARCH_INPUT_CLASS}
         />
       </div>
 
@@ -78,7 +87,7 @@ function OrgMembersPage() {
 
       {!isLoading && members && (
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-          {visibleMembers.length === 0 && (
+          {!membersError && visibleMembers.length === 0 && (
             <p className="text-muted-foreground py-8 text-center text-sm">
               {t('organiser.members.empty')}
             </p>
@@ -181,7 +190,7 @@ function OrgMembersPage() {
       <Link
         to="/management/$orgId/members/new"
         params={{ orgId }}
-        className="bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+        className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
         style={{ right: 'max(calc((100vw - 430px) / 2 + 1.5rem), 1.5rem)' }}
       >
         <UserPlus className="h-5 w-5 shrink-0" />

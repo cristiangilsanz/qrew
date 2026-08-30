@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'com.qrew.app',
-  appName: 'Qrew',
+  appName: 'QREW',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

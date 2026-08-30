@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { BackButton } from '@/components/ui/back-button'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { NotFound } from '@/components/ui/not-found'
+import { PageError } from '@/components/ui/page-error'
 import { TicketDetailSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
@@ -31,6 +32,8 @@ import { useProfile } from '@/features/profile/hooks/useProfile'
 import { QrDisplay } from '@/features/tickets/components/QrDisplay'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
 import { useTicket } from '@/features/tickets/hooks/useTicket'
+import { displayTicketState } from '@/features/tickets/lib/ticketState'
+import { isNotFound } from '@/lib/errors'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
@@ -69,13 +72,14 @@ function TicketDetailPage() {
     return () => clearTimeout(timer)
   }, [saleConfirmOpen, saleCountdown])
   const { data: profile } = useProfile()
-  const { data: ticket, isLoading: ticketLoading, isError } = useTicket(ticketId)
+  const { data: ticket, isLoading: ticketLoading, isError, error, refetch } = useTicket(ticketId)
   const { data: event, isLoading: eventLoading } = useEvent(ticket?.event_id ?? '')
   const { data: reservation } = useReservation(
     ticket?.reservation_id ?? '',
     ticket?.state === 'reserved',
   )
-  const isExpired = ticket?.state === 'expired' || reservation?.status === 'expired'
+  const displayState = ticket ? displayTicketState(ticket, reservation) : undefined
+  const isExpired = displayState === 'expired'
 
   const saleEnded =
     event?.availability_status === 'ended' || event?.availability_status === 'sold_out'
@@ -103,10 +107,14 @@ function TicketDetailPage() {
   const isLoading = ticketLoading || (!!ticket && eventLoading)
   if (isLoading) return <TicketDetailSkeleton />
 
+  if (isError && !isNotFound(error)) {
+    return <PageError onRetry={() => void refetch()} />
+  }
+
   if (isError || !ticket) {
     return (
       <NotFound
-        message={t('tickets.ticket.notFound')}
+        message={t('common.resourceGone')}
         action={
           <Link to="/tickets" className="text-primary inline-block text-sm underline">
             {t('tickets.backToTickets')}
@@ -135,13 +143,13 @@ function TicketDetailPage() {
     status: 'done',
   })
 
-  if (ticket.state === 'expired') {
+  if (displayState === 'expired') {
     timeline.push({
       label: t('tickets.ticket.timeline.expired'),
       date: ticket.expired_at ? fmt(ticket.expired_at) : null,
       status: 'error',
     })
-  } else if (ticket.state === 'cancelled') {
+  } else if (displayState === 'cancelled') {
     if (ticket.issued_at) {
       timeline.push({
         label: t('tickets.ticket.timeline.issued'),
@@ -154,7 +162,7 @@ function TicketDetailPage() {
       date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
       status: 'error',
     })
-  } else if (ticket.state === 'reserved') {
+  } else if (displayState === 'reserved') {
     // Pending issuance
   } else {
     timeline.push({
@@ -162,21 +170,21 @@ function TicketDetailPage() {
       date: ticket.issued_at ? fmt(ticket.issued_at) : null,
       status: 'done',
     })
-    if (ticket.state === 'scanning') {
+    if (displayState === 'scanning') {
       timeline.push({ label: t('tickets.ticket.timeline.scanned'), date: null, status: 'pending' })
-    } else if (ticket.state === 'redeemed') {
+    } else if (displayState === 'redeemed') {
       timeline.push({
         label: t('tickets.ticket.timeline.redeemed'),
         date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
         status: 'done',
       })
-    } else if (ticket.state === 'on_sale') {
+    } else if (displayState === 'on_sale') {
       timeline.push({
         label: t('tickets.ticket.timeline.onSale'),
         date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
         status: 'error',
       })
-    } else if (ticket.state === 'flagged') {
+    } else if (displayState === 'flagged') {
       timeline.push({
         label: t('tickets.ticket.timeline.flagged'),
         date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
@@ -186,7 +194,7 @@ function TicketDetailPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 pt-2 pb-24">
+    <div className="px-4 pt-2 pb-24">
       <BackButton to="/tickets" className="mb-3" />
 
       <div className="mx-auto max-w-sm rounded-[2.5rem] bg-neutral-800 p-5">
@@ -213,7 +221,7 @@ function TicketDetailPage() {
             </div>
           </div>
 
-          {(ticket.holder_name || ticket.holder_dni || ticket.state === 'expired') && (
+          {(ticket.holder_name || ticket.holder_dni || displayState === 'expired') && (
             <div className="px-5 pt-4 pb-3 text-center">
               <p className="text-base font-bold text-gray-800">
                 {ticket.holder_name ?? profile?.full_name ?? ''}
@@ -336,9 +344,9 @@ function TicketDetailPage() {
             <div className="h-5 w-5 shrink-0 translate-x-1/2 rounded-full bg-neutral-800 shadow-inner" />
           </div>
 
-          {ticket.qr_eligible && ticket.state !== 'scanning' ? (
+          {ticket.qr_eligible && displayState !== 'scanning' ? (
             <div className="px-5 py-5">
-              <QrDisplay ticketId={ticket.id} />
+              <QrDisplay ticketId={ticket.id} startsAt={event?.starts_at} endsAt={event?.ends_at} />
               {saleEnded && ticket?.state === 'issued' && !existingListing && (
                 <>
                   <button
@@ -356,7 +364,7 @@ function TicketDetailPage() {
                 </>
               )}
             </div>
-          ) : ticket.state === 'reserved' ? (
+          ) : displayState === 'reserved' ? (
             <div className="flex h-[300px] flex-col items-center justify-center gap-3 px-5 text-center">
               {isExpired ? (
                 <>
@@ -380,7 +388,7 @@ function TicketDetailPage() {
             </div>
           ) : (
             <div className="flex h-[300px] flex-col items-center justify-center gap-3 px-5 text-center">
-              {ticket.state === 'redeemed' && (
+              {displayState === 'redeemed' && (
                 <>
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <ShieldCheck className="h-6 w-6 text-green-500" />
@@ -388,7 +396,7 @@ function TicketDetailPage() {
                   <p className="text-xs text-gray-400">{t('tickets.ticket.status.redeemed')}</p>
                 </>
               )}
-              {ticket.state === 'scanning' && (
+              {displayState === 'scanning' && (
                 <>
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <ScanLine className="h-6 w-6 text-purple-400" />
@@ -396,7 +404,7 @@ function TicketDetailPage() {
                   <p className="text-xs text-gray-400">{t('tickets.ticket.status.scanning')}</p>
                 </>
               )}
-              {ticket.state === 'cancelled' && (
+              {displayState === 'cancelled' && (
                 <>
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <ShieldX className="h-6 w-6 text-red-400" />
@@ -404,7 +412,7 @@ function TicketDetailPage() {
                   <p className="text-xs text-gray-400">{t('tickets.ticket.status.cancelled')}</p>
                 </>
               )}
-              {ticket.state === 'expired' && (
+              {displayState === 'expired' && (
                 <>
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <Clock className="h-6 w-6 text-gray-400" />
@@ -414,7 +422,7 @@ function TicketDetailPage() {
                   </p>
                 </>
               )}
-              {ticket.state === 'on_sale' && (
+              {displayState === 'on_sale' && (
                 <>
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <ShoppingBag className="h-6 w-6 text-blue-400" />
@@ -422,7 +430,7 @@ function TicketDetailPage() {
                   <p className="text-xs text-gray-400">{t('tickets.ticket.status.onSale')}</p>
                 </>
               )}
-              {ticket.state === 'flagged' && (
+              {displayState === 'flagged' && (
                 <>
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <Flag className="h-6 w-6 text-amber-900" />

@@ -4,10 +4,11 @@ import { Plus, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { PageError } from '@/components/ui/page-error'
+import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { OrgCardSkeleton } from '@/components/ui/skeleton'
 import { OrgCard } from '@/features/organiser/components/OrgCard'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
-import { useSearchOrgs } from '@/features/organiser/hooks/useSearchOrgs'
 
 export const Route = createFileRoute('/_app/management/')({
   component: OrganiserPage,
@@ -19,12 +20,16 @@ function OrganiserPage() {
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
 
-  const { data, isLoading } = useMyOrganisations()
-  const { data: searchResults, isFetching: isSearching } = useSearchOrgs(debouncedQuery)
+  const { data, isLoading, isError, refetch } = useMyOrganisations()
 
   const myOrgs = data?.items ?? []
-  const isSearchMode = debouncedQuery.trim().length > 0
-  const displayOrgs = isSearchMode ? (searchResults ?? []) : myOrgs
+  const term = debouncedQuery.trim().toLowerCase()
+  const isSearchMode = term.length > 0
+  const displayOrgs = isSearchMode
+    ? myOrgs.filter(
+        (org) => org.name.toLowerCase().includes(term) || org.slug.toLowerCase().includes(term),
+      )
+    : myOrgs
 
   useEffect(() => {
     // implements timer
@@ -32,12 +37,14 @@ function OrganiserPage() {
     return () => clearTimeout(timer)
   }, [query])
 
+  if (isError) return <PageError onRetry={() => void refetch()} />
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 pt-5 pb-28">
       <h1 className="text-2xl font-bold">{t('organiser.title')}</h1>
 
       <div className="relative">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+        <Search className={SEARCH_ICON_CLASS} />
         <input
           type="text"
           value={query}
@@ -46,7 +53,7 @@ function OrganiserPage() {
             if (e.key === 'Enter') setDebouncedQuery(query)
           }}
           placeholder={t('organiser.search.placeholder')}
-          className="border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-primary w-full rounded-xl border py-2.5 pr-9 pl-9 text-sm focus:ring-2 focus:outline-none"
+          className={SEARCH_INPUT_CLASS}
         />
         {query && (
           <button
@@ -62,7 +69,7 @@ function OrganiserPage() {
         )}
       </div>
 
-      {(isLoading || isSearching) && (
+      {isLoading && (
         <div className="grid gap-4">
           {[0, 1].map((i) => (
             <OrgCardSkeleton key={i} />
@@ -70,7 +77,7 @@ function OrganiserPage() {
         </div>
       )}
 
-      {!isLoading && !isSearching && displayOrgs.length === 0 && (
+      {!isLoading && !isError && displayOrgs.length === 0 && (
         <p className="text-muted-foreground py-8 text-center text-sm">
           {isSearchMode ? t('organiser.search.empty') : t('organiser.org.empty')}
         </p>
@@ -89,7 +96,7 @@ function OrganiserPage() {
 
       <Link
         to="/management/new"
-        className="bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+        className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
         style={{ right: 'max(calc((100vw - 430px) / 2 + 1.5rem), 1.5rem)' }}
       >
         <Plus className="h-5 w-5 shrink-0" />

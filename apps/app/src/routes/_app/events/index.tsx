@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { PageError } from '@/components/ui/page-error'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { type EventFilters } from '@/features/events/api'
 import { EventCard } from '@/features/events/components/EventCard'
@@ -18,13 +19,15 @@ function EventsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [filters, setFilters] = useState<EventFilters>({})
-  const { data, isLoading } = useEvents(filters)
+  const { data, isLoading, isError, refetch } = useEvents(filters)
+
+  if (isError) return <PageError onRetry={() => void refetch()} />
 
   return (
     <div className="space-y-6 px-4 pt-5 pb-4">
       <h1 className="text-2xl font-bold">{t('events.title')}</h1>
       <EventFiltersBar onFiltersChange={setFilters} />
-      {!isLoading && data?.items.length === 0 && (
+      {!isLoading && !isError && data?.items.length === 0 && (
         <p className="text-muted-foreground py-12 text-center">{t('events.empty')}</p>
       )}
       <div className="grid gap-4">

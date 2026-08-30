@@ -1,23 +1,27 @@
 // implements reservation id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import axios from 'axios'
-import { CheckCircle2, Clock, CreditCard, Save } from 'lucide-react'
-import { lazy, Suspense, useState } from 'react'
+import { CheckCircle2, Clock, CreditCard, Loader2, Save } from 'lucide-react'
+import { Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { NotFound } from '@/components/ui/not-found'
+import { PageError } from '@/components/ui/page-error'
 import { ReservationSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { ticketsApi } from '@/features/tickets/api'
 import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useInitiatePayment } from '@/features/tickets/hooks/useInitiatePayment'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
+import { useTickets } from '@/features/tickets/hooks/useTickets'
+import { isNotFound } from '@/lib/errors'
+import { fieldErrorMessage } from '@/lib/errors'
+import { lazyWithReload } from '@/lib/lazyWithReload'
 
 // renders the stripe checkout component
-const StripeCheckout = lazy(() =>
+const StripeCheckout = lazyWithReload(() =>
   import('@/features/tickets/components/StripeCheckout').then((m) => ({
     default: m.StripeCheckout,
   })),
@@ -49,13 +53,17 @@ function ReservationPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [holders, setHolders] = useState<Array<{ holder_name: string; holder_dni: string }>>([])
   const [holdersSaved, setHoldersSaved] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   const {
     data: reservation,
     isLoading: reservationLoading,
     isError,
+    error,
+    refetch,
   } = useReservation(reservationId, !!clientSecret)
   const { data: event, isLoading: eventLoading } = useEvent(reservation?.event_id ?? '')
+  const { data: myTickets } = useTickets(confirming)
 
   // implements initiate payment
   const initiatePayment = useInitiatePayment((payment) => {
@@ -77,14 +85,7 @@ function ReservationPage() {
     onSuccess: () => setHoldersSaved(true),
     // handles on error
     onError: (err) => {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
-      const message =
-        typeof detail === 'object' && detail?.message
-          ? detail.message
-          : typeof detail === 'string'
-            ? detail
-            : 'Failed to save holder info'
-      toast.error(message)
+      toast.error(fieldErrorMessage(err) ?? t('tickets.reservation.holdersFailed'))
     },
   })
 
@@ -92,16 +93,39 @@ function ReservationPage() {
 
   // handles handle pay success
   const handlePaySuccess = () => {
-    toast.success(t('tickets.payment.success'))
-    void queryClient.invalidateQueries({ queryKey: ['tickets'] })
-    void navigate({ to: '/tickets' })
+    setConfirming(true)
   }
+
+  const ticketsIssued =
+    myTickets?.some((tk) => tk.reservation_id === reservationId && tk.state !== 'reserved') ?? false
+
+  useEffect(() => {
+    if (!confirming) return
+
+    // closes the wait and hands the user their tickets
+    const finish = () => {
+      toast.success(t('tickets.payment.success'))
+      void queryClient.invalidateQueries({ queryKey: ['tickets'] })
+      void navigate({ to: '/tickets' })
+    }
+
+    if (ticketsIssued) {
+      finish()
+      return
+    }
+    const timer = setTimeout(finish, 20_000)
+    return () => clearTimeout(timer)
+  }, [confirming, ticketsIssued, navigate, queryClient, t])
 
   const isLoading = reservationLoading || (!!reservation && eventLoading)
   if (isLoading) return <ReservationSkeleton />
 
+  if (isError && !isNotFound(error)) {
+    return <PageError onRetry={() => void refetch()} />
+  }
+
   if (isError || !reservation) {
-    return <NotFound message={t('tickets.reservation.notFound')} />
+    return <NotFound message={t('common.resourceGone')} />
   }
 
   const quantity = reservation.quantity
@@ -155,8 +179,8 @@ function ReservationPage() {
     !isPaid && !isExpired && !countdownExpired && !isCancelled && !clientSecret && holdersSaved
 
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] px-4 pt-5 pb-28">
-      <BackButton onClick={() => void navigate({ to: '/tickets' })} className="mb-6" />
+    <div className="mx-auto max-w-[430px] px-4 pt-5 pb-28">
+      <BackButton to="/tickets" className="mb-6" />
 
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-bold">Complete your order</h1>
@@ -270,11 +294,18 @@ function ReservationPage() {
         </div>
       )}
 
-      {clientSecret && (
+      {clientSecret && !confirming && (
         <div className="mt-6">
           <Suspense fallback={null}>
             <StripeCheckout clientSecret={clientSecret} onSuccess={handlePaySuccess} />
           </Suspense>
+        </div>
+      )}
+
+      {confirming && (
+        <div className="mt-6 flex flex-col items-center gap-3 py-10 text-center">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">{t('tickets.payment.confirming')}</p>
         </div>
       )}
 
@@ -295,7 +326,7 @@ function ReservationPage() {
       )}
 
       {canPay && (
-        <div className="fixed inset-x-0 bottom-24 z-40">
+        <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto flex max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-5">
             <button
               onClick={() => initiatePayment.mutate(reservationId)}

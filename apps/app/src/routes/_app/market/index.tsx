@@ -46,7 +46,7 @@ function MarketPage() {
   ]
 
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] space-y-6 px-4 pt-5 pb-28">
+    <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">
       <h1 className="text-2xl font-bold">{t('market.title')}</h1>
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">

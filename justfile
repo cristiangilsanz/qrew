@@ -35,6 +35,7 @@ setup:
     uv venv --python 3.12
     uv sync --all-packages --all-groups
     just db-upgrade
+    just stripe-listen
 
 # Stop dev environment
 stop:
@@ -44,21 +45,45 @@ stop:
 resume:
     docker compose start postgres redis nats
     just db-upgrade
+    just stripe-listen
 
 # Build and run all services in containers
 up:
     docker compose up postgres redis nats -d --wait
     just db-upgrade
     docker compose up --build -d
+    just stripe-listen
     docker compose logs -f
+
+# Forward Stripe webhooks to the local payments service in the background
+stripe-listen:
+    #!/usr/bin/env bash
+    if ! command -v stripe > /dev/null 2>&1; then
+      echo "  stripe     CLI not installed, webhooks are not forwarded"
+      exit 0
+    fi
+    pkill -f "stripe listen --forward-to" > /dev/null 2>&1 || true
+    nohup stripe listen --forward-to localhost:8000/api/payments/v1/payments/webhook \
+      > /tmp/qrew-stripe-listen.log 2>&1 &
+    echo "  stripe     webhooks forwarded, log at /tmp/qrew-stripe-listen.log"
+
+# Stop forwarding Stripe webhooks
+stripe-stop:
+    #!/usr/bin/env bash
+    pkill -f "stripe listen --forward-to" > /dev/null 2>&1 && echo "  stripe     forwarding stopped" || echo "  stripe     nothing to stop"
 
 # Tear down dev environment
 shutdown:
+    just stripe-stop
     docker compose down --volumes --rmi local --remove-orphans
 
 # Seed database with the fixture catalogue
 db-seed:
     cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py
+
+# Seed only the accounts, leaving every list empty for UI testing
+db-seed-accounts:
+    cd {{IDENTITY}} && uv run python ../../../../scripts/seed_db.py --accounts-only
 
 # Wipe all application data rows (preserves schema/migrations)
 db-truncate:
@@ -374,6 +399,6 @@ gateway-dev:
 gateway-type-check:
     cd {{GATEWAY}} && uv run pyright
 
-# Forward Stripe webhooks to local payments service (copy the whsec_ key to payments config/local.yaml)
+# Forward Stripe webhooks in the foreground, useful to watch each event
 stripe-dev:
     stripe listen --forward-to localhost:8000/api/payments/v1/payments/webhook
