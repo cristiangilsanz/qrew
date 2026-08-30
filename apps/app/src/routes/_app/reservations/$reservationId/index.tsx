@@ -1,7 +1,7 @@
 // implements reservation id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { CheckCircle2, Clock, CreditCard, Loader2, Save } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Clock, CreditCard, Loader2, Save } from 'lucide-react'
 import { Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -264,17 +264,20 @@ function ReservationPage() {
               />
               <div>
                 <div className="flex gap-2">
-                  <select
-                    value={holder.holder_document_type}
-                    onChange={(e) => updateHolder(i, 'holder_document_type', e.target.value)}
-                    className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
-                  >
-                    {DOCUMENT_TYPES.map((type) => (
-                      <option key={type} value={type} className="bg-[hsl(0,0%,10%)]">
-                        {t(`tickets.holders.documentType.${type}`)}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative shrink-0">
+                    <select
+                      value={holder.holder_document_type}
+                      onChange={(e) => updateHolder(i, 'holder_document_type', e.target.value)}
+                      className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pr-9 pl-3 text-sm text-white focus:border-white/30 focus:outline-none"
+                    >
+                      {DOCUMENT_TYPES.map((type) => (
+                        <option key={type} value={type} className="bg-[hsl(0,0%,10%)]">
+                          {t(`tickets.holders.documentType.${type}`)}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+                  </div>
                   <input
                     type="text"
                     placeholder={t(

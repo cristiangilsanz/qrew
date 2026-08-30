@@ -1,5 +1,5 @@
 // renders the kyc upload step component
-import { ShieldCheck, Upload } from 'lucide-react'
+import { ChevronDown, ShieldCheck, Upload } from 'lucide-react'
 import { type ChangeEvent, type FormEvent, type KeyboardEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -56,17 +56,20 @@ export function KycUploadStep({ onSuccess }: Props) {
       <p className="text-muted-foreground text-sm">{t('onboarding.kyc.description')}</p>
 
       <div className="flex gap-2">
-        <select
-          value={documentType}
-          onChange={(e) => setDocumentType(e.target.value as DocumentType)}
-          className="border-input bg-background text-foreground shrink-0 rounded-xl border px-3 py-2.5 text-sm focus:outline-none"
-        >
-          {DOCUMENT_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {t(`tickets.holders.documentType.${type}`)}
-            </option>
-          ))}
-        </select>
+        <div className="relative shrink-0">
+          <select
+            value={documentType}
+            onChange={(e) => setDocumentType(e.target.value as DocumentType)}
+            className="border-input bg-background text-foreground w-full appearance-none rounded-xl border py-2.5 pr-9 pl-3 text-sm focus:outline-none"
+          >
+            {DOCUMENT_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {t(`tickets.holders.documentType.${type}`)}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+        </div>
         <input
           type="text"
           value={documentNumber}
