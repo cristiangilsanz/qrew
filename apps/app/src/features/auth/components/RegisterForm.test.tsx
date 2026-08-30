@@ -35,7 +35,7 @@ vi.mock('@marsidev/react-turnstile', async () => {
     Turnstile: ({ onSuccess }: { onSuccess: (token: string) => void }) => {
       useEffect(() => {
         onSuccess('mock-captcha-token')
-      }, [])
+      }, [onSuccess])
       return null
     },
   }

@@ -40,7 +40,7 @@ function TicketsPage() {
 
   useEffect(() => {
     void queryClient.invalidateQueries({ queryKey: ['tickets'] })
-  }, [])
+  }, [queryClient])
 
   // implements sorted
   const sorted = (tickets ?? [])
