@@ -34,9 +34,12 @@ def fallback_link(url: str) -> str:
 
 # wraps a template's content in the shared email layout
 def base_email(*, title: str, preheader: str, logo_url: str | None, content_html: str) -> str:
+    # the anchor is inline-block so the centred cell can centre it, while the image
+    # inside stays a block, which is what stops mail clients adding a stray baseline gap
     masthead = (
-        f'<a href="https://qrew.com"><img src="{logo_url}" alt="QREW" width="120" height="120"'
-        ' style="display:block;border:none;width:120px;height:120px;" /></a>'
+        f'<a href="https://qrew.com" style="display:inline-block;">'
+        f'<img src="{logo_url}" alt="QREW" width="160" height="160"'
+        ' style="display:block;border:none;width:160px;height:160px;" /></a>'
         if logo_url
         else '<a href="https://qrew.com" class="email-masthead_name">QREW</a>'
     )
@@ -108,7 +111,7 @@ def base_email(*, title: str, preheader: str, logo_url: str | None, content_html
       .email-content {{ width: 100%; margin: 0; padding: 0; }}
 
       .email-masthead {{
-        padding: 25px 0;
+        padding: 32px 0 24px;
         text-align: center;
         background-color: #1A1A1A;
       }}
@@ -189,7 +192,7 @@ def base_email(*, title: str, preheader: str, logo_url: str | None, content_html
 
             <!-- Masthead -->
             <tr>
-              <td class="email-masthead">
+              <td class="email-masthead" align="center">
                 {masthead}
               </td>
             </tr>

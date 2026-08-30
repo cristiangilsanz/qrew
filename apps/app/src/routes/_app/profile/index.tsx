@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import { authApi } from '@/features/auth/api'
 import { DeleteAccountDialog } from '@/features/profile/components/DeleteAccountDialog'
+import { useAccountNeedsAttention } from '@/features/profile/hooks/useAccountNeedsAttention'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import i18n from '@/i18n'
 import { cn } from '@/lib/utils'
@@ -24,6 +25,7 @@ const SUPPORTED_LANGS = [
 function ProfilePage() {
   const { t } = useTranslation()
   useProfile()
+  const accountNeedsAttention = useAccountNeedsAttention()
   // implements clear session
   const clearSession = useAuthStore((s) => s.clearSession)
   // implements refresh token
@@ -60,6 +62,12 @@ function ProfilePage() {
             <User className="text-muted-foreground h-4 w-4" />
           </div>
           <span className="flex-1 text-sm font-medium">{t('profile.myAccount')}</span>
+          {accountNeedsAttention && (
+            <span
+              aria-label={t('profile.needsAttention')}
+              className="h-2.5 w-2.5 shrink-0 rounded-full bg-yellow-500"
+            />
+          )}
           <ChevronRight className="text-muted-foreground h-4 w-4" />
         </Link>
 

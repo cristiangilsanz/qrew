@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import { usePendingMarketOffer } from '@/features/market/hooks/useMarketOffer'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
+import { useAccountNeedsAttention } from '@/features/profile/hooks/useAccountNeedsAttention'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useReservedTicketsCount } from '@/features/tickets/hooks/useReservedTicketsCount'
 import { useKeyboardOpen } from '@/hooks/useKeyboardOpen'
@@ -27,11 +28,13 @@ function DockTab({
   icon: Icon,
   labelKey,
   badge,
+  dot,
 }: {
   to: string
   icon: LucideIcon
   labelKey: string
   badge?: number
+  dot?: boolean
 }) {
   const { t } = useTranslation()
   // implements select
@@ -59,6 +62,9 @@ function DockTab({
             {badge > 9 ? '9+' : badge}
           </span>
         )}
+        {dot && (
+          <span className="absolute -top-0.5 -right-1.5 h-2.5 w-2.5 rounded-full bg-yellow-500" />
+        )}
       </span>
       <span className="mt-1 text-[10px] leading-none font-medium">{t(labelKey)}</span>
     </Link>
@@ -71,6 +77,7 @@ export function BottomDock() {
   const { data: orgsData, isLoading: orgsLoading } = useMyOrganisations()
   const reservedCount = useReservedTicketsCount()
   const { data: pendingAssignment } = usePendingMarketOffer()
+  const accountNeedsAttention = useAccountNeedsAttention()
 
   const keyboardOpen = useKeyboardOpen()
 
@@ -94,6 +101,7 @@ export function BottomDock() {
                   ? 1
                   : undefined
             }
+            dot={tab.to === '/profile' && accountNeedsAttention}
           />
         ))}
         {showOrganiser && <DockTab {...organiserTab} />}
