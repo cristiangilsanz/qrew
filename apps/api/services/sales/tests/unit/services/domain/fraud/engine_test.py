@@ -94,6 +94,11 @@ class _FakeRedis:
 
 
 class TestFraudRuleEngine:
+    # turns scoring on regardless of what another suite left in the settings
+    @pytest.fixture(autouse=True)
+    def _scoring_on(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(settings, "fraud_signals_enabled", True)
+
     # verifies that a quiet purchase is allowed
     async def test_low_score_is_allowed(self) -> None:
         engine = FraudRuleEngine([_FixedSignal("a", 1)])
