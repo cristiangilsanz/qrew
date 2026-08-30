@@ -112,15 +112,14 @@ class TestLoginLockout:
 
 
 class TestLoginEmailNotVerified:
-    # verifies that raises for unverified email
-    async def test_raises_for_unverified_email(self) -> None:
+    # verifies that an unverified address hands back a setup session rather than a refusal
+    async def test_issues_a_setup_session_for_an_unverified_email(self) -> None:
         user = make_user(email_verified=False)
         svc = _make_svc(user=user)
-        with (
-            patch(_PATCH_VERIFY, return_value=True),
-            pytest.raises(LoginError, match="Email or password rejected."),
-        ):
-            await svc.login(_make_request())
+        with patch(_PATCH_VERIFY, return_value=True):
+            response = await svc.login(_make_request())
+        assert response.setup_required is True
+        assert response.refresh_token is None
 
 
 class TestLoginInactiveAccount:

@@ -222,3 +222,41 @@ async def seed_queue_event(
             {"ticket_type_id": ticket_type_id, "event_id": event_id},
         )
     return event_id, ticket_type_id
+
+
+# seeds an event whose sale window has already closed so resale applies to it
+@pytest_asyncio.fixture
+async def closed_event(
+    test_session_factory: async_sessionmaker[AsyncSession],
+) -> _uuid.UUID:
+    from sqlalchemy import text
+
+    event_id = _uuid.uuid4()
+    now = datetime.now(UTC)
+    async with test_session_factory() as session, session.begin():
+        # sales counts a buyer's live tickets across the schema ticketing owns
+        await session.execute(text("CREATE SCHEMA IF NOT EXISTS ticketing"))
+        await session.execute(
+            text("""
+                CREATE TABLE IF NOT EXISTS ticketing.tickets (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    owner_user_id UUID NOT NULL,
+                    event_id UUID NOT NULL,
+                    state VARCHAR(20) NOT NULL
+                )
+            """)
+        )
+        await session.execute(
+            text("""
+                INSERT INTO sales.event_context
+                (event_id, status, sale_starts_at, sale_ends_at, max_tickets_per_user,
+                 queue_required, queue_admit_rate_per_minute)
+                VALUES (:event_id, 'published', :starts, :ends, 4, false, 50)
+            """),
+            {
+                "event_id": event_id,
+                "starts": now - timedelta(days=2),
+                "ends": now - timedelta(hours=1),
+            },
+        )
+    return event_id

@@ -1,4 +1,5 @@
 // tests management screens
+import { waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -10,6 +11,7 @@ import { server } from '@/test/server'
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
 const IDENTITY_URL = 'http://localhost:8000/api/identity'
+const CATALOG_URL = 'http://localhost:8000/api/catalog'
 
 const PROFILE = {
   id: 'mock-user-id',
@@ -57,21 +59,38 @@ describe('management screens', () => {
     '/management/org-1/events/event-1/stats',
     '/management/org-1/events/event-1/tickets',
     '/management/org-1/events/event-1/scan',
-    '/management/org-1/members',
-    '/management/org-1/members/new',
+    '/management/org-1/collaborators',
+    '/management/org-1/collaborators/new',
     '/management/org-1/venues/new',
   ]
 
   it.each(PATHS)('renders %s for an administrator', async (path) => {
     signIn()
     asAdmin()
-    const { router, container } = await renderRoute(path)
+    const { router, container, queryClient } = await renderRoute(path)
     expect(currentPath(router)).toBe(path)
+    // the screen only reaches its loaded state once every query it fires has settled
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0), { timeout: 5000 })
     expect(container.textContent?.trim()).not.toBe('')
     signOut()
   })
 
-  it('sends a visitor without administration rights back home', async () => {
+  it('sends a visitor who belongs to no organisation back home', async () => {
+    signIn()
+    server.use(
+      http.get(`${IDENTITY_URL}/v1/auth/profile/me`, () =>
+        HttpResponse.json({ ...PROFILE, is_admin: false }),
+      ),
+      http.get(`${CATALOG_URL}/v1/organisations`, () =>
+        HttpResponse.json({ items: [], next_cursor: null }),
+      ),
+    )
+    const { router } = await renderRoute('/management')
+    await waitFor(() => expect(currentPath(router)).toBe('/home'))
+    signOut()
+  })
+
+  it('lets a collaborator without administration rights in', async () => {
     signIn()
     server.use(
       http.get(`${IDENTITY_URL}/v1/auth/profile/me`, () =>
@@ -79,7 +98,7 @@ describe('management screens', () => {
       ),
     )
     const { router } = await renderRoute('/management')
-    expect(currentPath(router)).toBe('/home')
+    await waitFor(() => expect(currentPath(router)).toBe('/management'))
     signOut()
   })
 })
