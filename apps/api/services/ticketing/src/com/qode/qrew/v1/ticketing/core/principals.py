@@ -121,7 +121,7 @@ def verify(purpose: str, token: str) -> dict[str, object]:
     kid = header.get("kid")
     public_pem = keys.verifiers.get(kid) if isinstance(kid, str) else None
     if public_pem is None:
-        raise InvalidTokenError("Unknown signing key")
+        raise InvalidTokenError("Signing key unknown.")
     return _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[no-any-return]
 
 
@@ -139,19 +139,19 @@ def get_current_user(
         except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={"message": "Invalid or expired token"},
+                detail={"message": "Token expired."},
             ) from exc
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Invalid or expired token"},
+            detail={"message": "Token expired."},
         )
     token = credentials.credentials
     try:
         payload = verify(ACCESS, token)
         sub = payload.get("sub")
         if not isinstance(sub, str):
-            raise ValueError("missing sub")
+            raise ValueError("Token subject missing.")
         user_id = uuid.UUID(sub)
         raw_device = payload.get("device_id")
         device_id = uuid.UUID(raw_device) if isinstance(raw_device, str) else None
@@ -163,5 +163,5 @@ def get_current_user(
     except (jwt.InvalidTokenError, ValueError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Invalid or expired token"},
+            detail={"message": "Token expired."},
         ) from exc

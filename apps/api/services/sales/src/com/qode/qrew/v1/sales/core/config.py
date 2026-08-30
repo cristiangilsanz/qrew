@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     nats_url: str = ""
 
     internal_api_key: str = ""
+
+    pii_encryption_key: str = ""
+    pii_encryption_previous_keys: str = ""
     payments_default_currency: str = "EUR"
 
     access_jwt_private_key: str = ""

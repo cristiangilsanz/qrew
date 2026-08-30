@@ -2,7 +2,9 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from com.qode.qrew.v1.sales.schemas.reservation import validate_spanish_id
 
 
 class MarketQueueStatusResponse(BaseModel):
@@ -55,6 +57,12 @@ class MarketQueueEntryResponse(BaseModel):
 class MarketSetHoldersRequest(BaseModel):
     holder_name: str = Field(..., min_length=1, max_length=255)
     holder_dni: str = Field(..., min_length=1, max_length=50)
+
+    # validates that a holder's identity document is a real spanish dni or nie
+    @field_validator("holder_dni")
+    @classmethod
+    def validate_dni(cls, v: str) -> str:
+        return validate_spanish_id(v)
 
 
 class MarketAssignmentChargeResponse(BaseModel):

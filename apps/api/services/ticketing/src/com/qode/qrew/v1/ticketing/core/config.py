@@ -29,6 +29,9 @@ class Settings(BaseSettings):
 
     internal_api_key: str = ""
 
+    pii_encryption_key: str = ""
+    pii_encryption_previous_keys: str = ""
+
     access_jwt_private_key: str = ""
     access_jwt_previous_public_keys: str = ""
     ticket_qr_jwt_private_key: str = ""
@@ -38,6 +41,8 @@ class Settings(BaseSettings):
     ticket_qr_reassert_window_seconds: int = 30
     ticket_qr_mint_audit_sample_rate: int = 10
     ticket_qr_attestation_max_age_hours: int = 24
+    ticket_qr_skip_attestation: bool = False
+    ticket_qr_skip_geofence: bool = False
     ticket_qr_audience: str = "qrew.scan"
     ticket_qr_stream_max_seconds: int = 1800
 

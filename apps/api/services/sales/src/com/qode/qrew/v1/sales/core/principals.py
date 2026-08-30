@@ -93,7 +93,7 @@ def verify_any(purposes: tuple[Purpose, ...], token: str) -> tuple[Purpose, dict
             return purpose, verify(purpose, token)
         except jwt.InvalidTokenError:
             continue
-    raise jwt.InvalidTokenError("Token invalid for all attempted purposes")
+    raise jwt.InvalidTokenError("Token rejected.")
 
 
 # resolves the authenticated user from the request headers or bearer token
@@ -108,22 +108,22 @@ def get_current_user(
         except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={"message": "Invalid or expired token"},
+                detail={"message": "Token expired."},
             ) from exc
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Invalid or expired token"},
+            detail={"message": "Token expired."},
         )
     token = credentials.credentials
     try:
         payload = verify(ACCESS, token)
         sub = payload.get("sub")
         if not isinstance(sub, str):
-            raise ValueError("missing sub")
+            raise ValueError("Token subject missing.")
         return AuthenticatedUser(id=uuid.UUID(sub))
     except (jwt.InvalidTokenError, ValueError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Invalid or expired token"},
+            detail={"message": "Token expired."},
         ) from exc

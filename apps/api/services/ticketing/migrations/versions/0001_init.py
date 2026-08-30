@@ -41,7 +41,7 @@ def upgrade() -> None:
             issued_at TIMESTAMPTZ,
             expired_at TIMESTAMPTZ,
             holder_name VARCHAR(255),
-            holder_dni VARCHAR(50),
+            holder_dni_ciphertext BYTEA,
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
