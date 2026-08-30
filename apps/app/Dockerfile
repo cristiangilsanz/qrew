@@ -29,6 +29,7 @@ FROM nginx:alpine AS runtime
 COPY --from=builder /repo/apps/app/dist /usr/share/nginx/html
 
 COPY apps/app/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/app/nginx-security-headers.conf /etc/nginx/conf.d/security-headers.conf
 
 EXPOSE 80
 
