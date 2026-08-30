@@ -6,7 +6,7 @@ import asyncpg
 
 from .core import SeedConfig, Timeline, load, truncate
 from .data import Dataset, build, build_accounts
-from .writers import WRITERS, identity
+from .writers import WRITERS, identity, queues
 
 __all__ = ["SeedConfig", "load", "run"]
 
@@ -27,6 +27,9 @@ async def run(*, verbose: bool = True, accounts_only: bool = False) -> None:
                 _say(verbose, writer.NAME, "seeded")
     finally:
         await conn.close()
+    if not accounts_only:
+        await queues.write(data, when, cfg)
+        _say(verbose, queues.NAME, "seeded")
     _report(verbose, data, when)
 
 
@@ -55,6 +58,7 @@ def _report(verbose: bool, data: Dataset, when: Timeline) -> None:
         f"{len(data.listings)} listings, {len(data.assignments)} assignments"
     )
     print(
-        f"  {len(data.payments)} payments, {len(data.queue)} queue entries, "
+        f"  {len(data.payments)} payments, {len(data.admission_queue)} queue entries, "
+        f"{len(data.waitlist)} waitlist entries, "
         f"{len(data.scans)} scans"
     )

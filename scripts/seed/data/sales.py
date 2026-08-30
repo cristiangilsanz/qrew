@@ -258,4 +258,16 @@ ASSIGNMENTS = (
     ),
 )
 
-QUEUE = (("event-f", "admin", 1), ("event-f", "user-a", 2), ("event-f", "user-b", 3))
+# the admission queue of the event that gates its sale behind one
+ADMISSION_QUEUE = (
+    ("event-f", "admin", 1),
+    ("event-f", "user-a", 2),
+    ("event-f", "user-b", 3),
+)
+
+# the resale waitlist of the event whose sale window already closed
+WAITLIST = (
+    ("event-h", "user-a", 1),
+    ("event-h", "user-b", 2),
+    ("event-h", "user-c", 3),
+)

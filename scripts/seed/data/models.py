@@ -237,7 +237,8 @@ class Dataset:
     listings: tuple[Listing, ...]
     assignments: tuple[Assignment, ...]
     payments: tuple[Payment, ...]
-    queue: tuple[tuple[str, str, int], ...]
+    admission_queue: tuple[tuple[str, str, int], ...]
+    waitlist: tuple[tuple[str, str, int], ...]
     scans: tuple[Scan, ...]
     devices: tuple[tuple[str, str], ...] = field(default=())
 

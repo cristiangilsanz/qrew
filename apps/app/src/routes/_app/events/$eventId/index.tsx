@@ -16,6 +16,7 @@ import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketQueueStatus } from '@/features/market/hooks/useMarketQueueStatus'
 import { QueuePanel } from '@/features/tickets/components/QueuePanel'
+import { useQueuePosition } from '@/features/tickets/hooks/useQueuePosition'
 import { isNotFound } from '@/lib/errors'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
@@ -90,6 +91,13 @@ function EventDetailPage() {
   const saleOpen = isPublished && event?.availability_status === 'open'
   const eventFinished = event ? new Date(event.ends_at).getTime() <= Date.now() : false
   const eventCancelled = event?.status === 'cancelled'
+
+  const { data: purchaseQueue } = useQueuePosition(
+    eventId,
+    event?.queue_required === true && event.availability_status === 'open',
+  )
+  const queuePosition = purchaseQueue?.position ?? null
+  const queueAdmitted = queuePosition === null && !!purchaseQueue?.redeem_token
 
   const { data: queueStatus, isLoading: queueLoading } = useMarketQueueStatus(
     eventId,
@@ -243,7 +251,7 @@ function EventDetailPage() {
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
             <LogOut className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">{t('market.leaveQueueButton')}</span>
+            <span className="text-sm font-semibold">{t('market.leaveWaitlistButton')}</span>
           </button>
         ) : (
           <button
@@ -253,7 +261,7 @@ function EventDetailPage() {
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
             <Shuffle className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">{t('market.joinQueueButton')}</span>
+            <span className="text-sm font-semibold">{t('market.joinWaitlistButton')}</span>
           </button>
         )
       ) : saleOpen ? (
@@ -264,7 +272,13 @@ function EventDetailPage() {
             style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
           >
             <Users className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">{t('tickets.queue.joinButton')}</span>
+            <span className="text-sm font-semibold">
+              {queueAdmitted
+                ? t('tickets.queue.admittedButton')
+                : queuePosition !== null
+                  ? t('tickets.queue.resumeButton')
+                  : t('tickets.queue.joinButton')}
+            </span>
           </button>
         ) : (
           <button
@@ -301,11 +315,11 @@ function EventDetailPage() {
                   <LogOut className="h-5 w-5 text-red-400" />
                 </div>
                 <h3 className="text-base font-semibold text-red-400">
-                  {t('market.leaveQueue.title')}
+                  {t('market.leaveWaitlist.title')}
                 </h3>
               </div>
               <p className="text-muted-foreground mb-6 text-sm">
-                {t('market.leaveQueue.description')}
+                {t('market.leaveWaitlist.description')}
               </p>
               <div className="flex items-center justify-between pt-1">
                 <button
@@ -321,7 +335,7 @@ function EventDetailPage() {
                 >
                   <>
                     <LogOut className="h-3.5 w-3.5" />
-                    {t('market.leaveQueue.confirm')}
+                    {t('market.leaveWaitlist.confirm')}
                   </>
                 </button>
               </div>

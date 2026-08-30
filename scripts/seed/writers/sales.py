@@ -169,7 +169,7 @@ async def write(
             assignment.state,
         )
 
-    for position, (event_key, person_key, tiebreak) in enumerate(data.queue):
+    for position, (event_key, person_key, tiebreak) in enumerate(data.waitlist):
         await conn.execute(
             """
             INSERT INTO sales.market_queue_entries (

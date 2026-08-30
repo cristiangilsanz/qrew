@@ -16,6 +16,7 @@ IDENTITY_CONFIG = REPO_ROOT / "apps/api/services/identity/config/local.yaml"
 class SeedConfig:
     dsn: str
     fernet: MultiFernet
+    redis_url: str
 
 
 # converts the async database url into the plain dsn asyncpg expects
@@ -45,4 +46,5 @@ def load(path: Path | None = None) -> SeedConfig:
         fernet=_fernet(
             raw["pii_encryption_key"], raw.get("pii_encryption_previous_keys", "")
         ),
+        redis_url=raw.get("redis_url", "redis://localhost:6379/0"),
     )
