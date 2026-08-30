@@ -314,6 +314,22 @@ services:
       nats:
         condition: service_healthy
 
+  ticketing-arq-worker:
+    build:
+      context: .
+      dockerfile: apps/api/services/ticketing/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.ticketing.worker.runner"]
+    volumes:
+      - ./apps/api/services/ticketing/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   sales-arq-worker:
     build:
       context: .

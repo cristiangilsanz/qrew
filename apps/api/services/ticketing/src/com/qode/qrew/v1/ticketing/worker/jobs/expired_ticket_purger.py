@@ -1,7 +1,8 @@
 # deletes expired tickets on a periodic schedule
-from typing import cast
+from typing import Any, cast
 
 import structlog
+from jobs import job, parse_crontab
 from sqlalchemy import text
 
 from com.qode.qrew.v1.ticketing.core.database import AsyncSessionLocal
@@ -18,3 +19,10 @@ async def purge_expired() -> int:
         deleted = cast(int, raw.rowcount)  # type: ignore[union-attr]
     await logger.ainfo("tickets.purge_expired", deleted=deleted)
     return deleted
+
+
+# deletes expired tickets on a nightly schedule
+@job("tickets.purge_expired", cron=parse_crontab("30 4 * * *"), max_attempts=1)
+async def run_purge_expired(ctx: dict[str, Any]) -> None:
+    del ctx
+    await purge_expired()

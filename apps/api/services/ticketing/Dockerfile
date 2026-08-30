@@ -14,6 +14,7 @@ COPY packages/shared-python/observability/pyproject.toml packages/shared-python/
 COPY packages/shared-python/locking/pyproject.toml packages/shared-python/locking/pyproject.toml
 COPY packages/shared-python/worker/pyproject.toml packages/shared-python/worker/pyproject.toml
 COPY packages/shared-python/db/pyproject.toml packages/shared-python/db/pyproject.toml
+COPY packages/shared-python/jobs/pyproject.toml packages/shared-python/jobs/pyproject.toml
 COPY packages/shared-python/probes/pyproject.toml packages/shared-python/probes/pyproject.toml
 COPY packages/shared-python/messaging/pyproject.toml packages/shared-python/messaging/pyproject.toml
 COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
@@ -37,6 +38,7 @@ COPY packages/shared-python/observability/src/ ./src/
 COPY packages/shared-python/locking/src/ ./src/
 COPY packages/shared-python/worker/src/ ./src/
 COPY packages/shared-python/db/src/ ./src/
+COPY packages/shared-python/jobs/src/ ./src/
 COPY packages/shared-python/probes/src/ ./src/
 COPY packages/shared-python/messaging/src/ ./src/
 COPY packages/contracts/src/ ./src/
