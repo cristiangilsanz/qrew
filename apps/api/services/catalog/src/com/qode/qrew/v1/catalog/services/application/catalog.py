@@ -22,7 +22,7 @@ class PublicCatalogService:
         self._venue_repo = VenueRepository(session)
         self._ticket_type_repo = TicketTypeRepository(session)
 
-    _VISIBLE_STATUSES = {EventStatus.published, EventStatus.ongoing}
+    _VISIBLE_STATUSES = {EventStatus.published, EventStatus.ongoing, EventStatus.cancelled}
 
     # reads a published event with its organisation and venue
     async def get_published_event(

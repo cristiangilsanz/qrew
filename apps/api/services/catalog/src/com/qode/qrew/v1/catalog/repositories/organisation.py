@@ -94,6 +94,10 @@ class OrganisationRepository:
             )
         )
 
+    # builds the query that lists every organisation still alive
+    def list_all_query(self):  # type: ignore[no-untyped-def]
+        return select(Organisation).where(Organisation.deleted_at.is_(None))
+
 
 class OrganisationMemberRepository:
     # stores the session the repository queries through
