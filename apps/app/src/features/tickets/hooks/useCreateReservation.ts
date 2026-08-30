@@ -4,7 +4,8 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { type ApiErrorDetail, extractErrorMessage } from '@/features/auth/api'
+import type { ApiErrorDetail } from '@/features/auth/api'
+import { toastErrorMessage } from '@/lib/errors'
 
 import { type Reservation, ticketsApi } from '../api'
 
@@ -27,10 +28,7 @@ export function useCreateReservation(
     onSuccess: (reservation) => onSuccess?.(reservation),
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('tickets.reservation.createFailed'),
-      )
+      const message = toastErrorMessage(error, t('tickets.reservation.createFailed'))
       toast.error(message)
     },
   })

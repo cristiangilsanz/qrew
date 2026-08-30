@@ -111,7 +111,7 @@ export function ReservationRow({ tickets, event }: Props) {
     <div className="space-y-3">
       <div>
         <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          {event?.organisation?.name ?? 'Qrew'}
+          {event?.organisation?.name ?? 'QREW'}
         </p>
         <h2 className="mt-1 text-base leading-snug font-semibold">{event?.name}</h2>
         <div className="text-muted-foreground mt-1 flex flex-wrap gap-3 text-xs">

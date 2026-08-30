@@ -4,6 +4,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ListError } from '@/components/ui/list-error'
 import { TicketTypeListSkeleton } from '@/components/ui/skeleton'
 
 import { useDeleteTicketType } from '../hooks/useDeleteTicketType'
@@ -19,7 +20,7 @@ interface Props {
 // renders the ticket type list component
 export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
   const { t } = useTranslation()
-  const { data, isLoading } = useOrgTicketTypes(eventId)
+  const { data, isLoading, isError, refetch } = useOrgTicketTypes(eventId)
   const deleteTt = useDeleteTicketType(eventId)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -34,8 +35,17 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
     return <TicketTypeListSkeleton />
   }
 
+  if (isError) {
+    return <ListError onRetry={() => void refetch()} />
+  }
+
   return (
     <div className="space-y-4">
+      {ticketTypes.length === 0 && (
+        <p className="text-muted-foreground py-8 text-center text-sm">
+          {t('organiser.ticketTypes.empty')}
+        </p>
+      )}
       {ticketTypes.map((tt) =>
         canEdit && editingId === tt.id ? (
           <EditTicketTypeForm

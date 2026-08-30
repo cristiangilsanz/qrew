@@ -51,14 +51,12 @@ interface PydanticErrorItem {
   input?: unknown
 }
 
-export type ApiErrorDetail = string | PydanticErrorItem[]
-
-// implements extract error message
-export function extractErrorMessage(detail: ApiErrorDetail | undefined, fallback: string): string {
-  if (!detail) return fallback
-  if (typeof detail === 'string') return detail
-  return detail[0]?.msg ?? fallback
+interface FieldErrorDetail {
+  message: string
+  field?: string | null
 }
+
+export type ApiErrorDetail = string | PydanticErrorItem[] | FieldErrorDetail
 
 export interface RefreshResponse {
   access_token: string

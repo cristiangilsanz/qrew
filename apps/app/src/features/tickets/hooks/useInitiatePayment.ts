@@ -4,7 +4,8 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { type ApiErrorDetail, extractErrorMessage } from '@/features/auth/api'
+import type { ApiErrorDetail } from '@/features/auth/api'
+import { toastErrorMessage } from '@/lib/errors'
 
 import { type Payment, ticketsApi } from '../api'
 
@@ -18,10 +19,7 @@ export function useInitiatePayment(onSuccess?: (payment: Payment) => void) {
     onSuccess: (payment) => onSuccess?.(payment),
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('tickets.payment.initFailed'),
-      )
+      const message = toastErrorMessage(error, t('tickets.payment.initFailed'))
       toast.error(message)
     },
   })

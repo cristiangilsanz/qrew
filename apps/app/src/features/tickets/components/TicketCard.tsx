@@ -7,10 +7,11 @@ import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { useEvent } from '@/features/events/hooks/useEvent'
+import { displayTicketState } from '@/features/tickets/lib/ticketState'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
-import type { Ticket, TicketState } from '../api'
+import type { Ticket } from '../api'
 import { useReservation } from '../hooks/useReservation'
 
 interface Props {
@@ -27,12 +28,7 @@ export function TicketCard({ ticket }: Props) {
   const imageUrl = getEventImageUrl(event?.image_url)
 
   const badgeReady = ticket.state !== 'reserved' || !reservationLoading
-  const displayState: TicketState =
-    ticket.state === 'reserved' &&
-    reservation &&
-    (reservation.status === 'expired' || new Date(reservation.expires_at) < new Date())
-      ? 'expired'
-      : ticket.state
+  const displayState = displayTicketState(ticket, reservation)
 
   return (
     <Link to="/tickets/$ticketId" params={{ ticketId: ticket.id }}>
@@ -72,7 +68,7 @@ export function TicketCard({ ticket }: Props) {
           ) : (
             <>
               <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                {event.organisation?.name ?? 'Qrew'}
+                {event.organisation?.name ?? 'QREW'}
               </p>
               <h2 className="text-base leading-snug font-semibold">{event.name}</h2>
               <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">

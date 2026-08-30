@@ -1,6 +1,7 @@
 // renders the qr display component
+import { Capacitor } from '@capacitor/core'
 import { Geolocation } from '@capacitor/geolocation'
-import { Loader2, MapPin, QrCode, RefreshCw, ShieldX } from 'lucide-react'
+import { Clock, Loader2, MapPin, QrCode, RefreshCw, ShieldX } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import QRCode from 'react-qr-code'
@@ -11,6 +12,8 @@ import { useAuthStore } from '@/store/auth'
 
 interface Props {
   ticketId: string
+  startsAt?: string | null
+  endsAt?: string | null
 }
 
 type QrState =
@@ -19,6 +22,8 @@ type QrState =
   | { status: 'streaming'; jwt: string; expiresAt: string }
   | { status: 'denied'; reason: string }
   | { status: 'error' }
+
+const _QR_WINDOW_HOURS_BEFORE = 5
 
 // provides use countdown
 function useCountdown(targetIso: string | null): number {
@@ -38,7 +43,7 @@ function useCountdown(targetIso: string | null): number {
 }
 
 // renders the qr display component
-export function QrDisplay({ ticketId }: Props) {
+export function QrDisplay({ ticketId, startsAt, endsAt }: Props) {
   const { t } = useTranslation()
   const [state, setState] = useState<QrState>({ status: 'idle' })
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -87,7 +92,7 @@ export function QrDisplay({ ticketId }: Props) {
     activeRef.current = true
     setState({ status: 'locating' })
     try {
-      await Geolocation.requestPermissions()
+      if (Capacitor.isNativePlatform()) await Geolocation.requestPermissions()
       const pos = await Geolocation.getCurrentPosition({ timeout: 20000, maximumAge: 60000 })
       await fetchQr(pos.coords.latitude, pos.coords.longitude)
     } catch {
@@ -101,6 +106,24 @@ export function QrDisplay({ ticketId }: Props) {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
     }
   }, [ticketId])
+
+  const outsideWindow = (() => {
+    if (!startsAt || !endsAt) return false
+    const now = Date.now()
+    const opens = new Date(startsAt).getTime() - _QR_WINDOW_HOURS_BEFORE * 3600 * 1000
+    return now < opens || now > new Date(endsAt).getTime()
+  })()
+
+  if (state.status === 'idle' && outsideWindow) {
+    return (
+      <div className="flex h-[300px] flex-col items-center justify-center gap-3 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          <Clock className="h-6 w-6 text-gray-400" />
+        </div>
+        <p className="text-xs text-gray-400">{t('tickets.qr.windowPending')}</p>
+      </div>
+    )
+  }
 
   if (state.status === 'idle') {
     return (

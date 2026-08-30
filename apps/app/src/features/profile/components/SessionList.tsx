@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { ListError } from '@/components/ui/list-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/lib/formatDate'
 import { parseUserAgent } from '@/lib/parseUserAgent'
@@ -23,7 +24,7 @@ function DeviceIcon({ type }: { type: 'mobile' | 'tablet' | 'desktop' }) {
 // renders the session list component
 export function SessionList() {
   const { t, i18n } = useTranslation()
-  const { data, isLoading } = useSessions()
+  const { data, isLoading, isError, refetch } = useSessions()
   const revokeSession = useRevokeSession()
   const revokeAll = useRevokeAllSessions()
   const [confirmJti, setConfirmJti] = useState<string | null>(null)
@@ -44,6 +45,10 @@ export function SessionList() {
         ))}
       </div>
     )
+  }
+
+  if (isError) {
+    return <ListError onRetry={() => void refetch()} />
   }
 
   const sessions = data?.items ?? []

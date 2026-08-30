@@ -21,6 +21,7 @@
   "common": {
     "loading": "Cargando…",
     "error": "Algo ha ido mal",
+    "resourceGone": "El recurso ya no es válido.",
     "retry": "Intentar De Nuevo",
     "save": "Guardar",
     "update": "Actualizar",
@@ -31,7 +32,7 @@
     "goBack": "Volver",
     "waitSeconds": "Esperar {{seconds}}s",
     "done": "Listo",
-    "copied": "Copiado"
+    "copied": "Copiado."
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -47,32 +48,36 @@
     "acceptTerms": "Acepto los términos y condiciones",
     "noAccount": "¿No tienes cuenta?",
     "hasAccount": "¿Ya tienes cuenta?",
-    "registrationSuccess": "Cuenta creada. Revisa tu correo para verificarla.",
+    "registrationSuccess": "Cuenta creada.",
     "or": "o",
     "passkeyLogin": "Iniciar Sesión Con Passkey",
     "emailRequiredForPasskey": "Introduce tu correo para iniciar sesión con passkey",
     "errors": {
-      "loginFailed": "Correo o contraseña incorrectos",
-      "registerFailed": "Registro fallido. Por favor, inténtalo de nuevo."
+      "loginFailed": "Inicio de sesión fallido.",
+      "registerFailed": "Cuenta no creada.",
+      "resetFailed": "Contraseña no restablecida."
     },
     "totp": {
       "title": "Verificación en Dos Pasos",
       "subtitle": "Introduce el código de 6 dígitos:",
       "codeLabel": "Código de Autenticación",
       "verify": "Verificar",
-      "invalidCode": "Código inválido o expirado. Por favor, inténtalo de nuevo."
-    }
+      "invalidCode": "Código rechazado."
+    },
+    "resetPasswordSuccess": "Contraseña restablecida."
   },
   "events": {
     "title": "Eventos",
     "empty": "No se encontraron eventos.",
-    "notFound": "Evento no encontrado.",
     "backToList": "Volver a eventos",
     "backToEvent": "Volver al evento",
     "searchPlaceholder": "Buscar eventos…",
+    "datePlaceholder": "Fecha del evento",
     "cityPlaceholder": "Ciudad",
     "searchButton": "Buscar",
     "soldOut": "Agotado",
+    "finished": "Este evento ha terminado",
+    "cancelled": "Este evento fue cancelado",
     "available": "{{count}} disponibles",
     "ticketTypes": "Entradas",
     "venue": "Lugar",
@@ -80,7 +85,6 @@
     "unknownOrganiser": "Organizador desconocido",
     "starts": "Comienza",
     "ends": "Termina",
-    "saleEnds": "Venta hasta",
     "maxPerUser": "Máx. {{count}} por usuario",
     "free": "Gratis"
   },
@@ -103,7 +107,6 @@
       "timeLabel": "Hora",
       "historyLabel": "Historial",
       "issuedLabel": "Emitida",
-      "notFound": "Entrada no encontrada.",
       "frozenHint": "Esta entrada ha sido congelada. Contacta con soporte si crees que es un error.",
       "flaggedHint": "Esta entrada está marcada para revisión. Contacta con soporte para obtener ayuda.",
       "states": {
@@ -154,20 +157,21 @@
       "denied": "QR no disponible.",
       "deniedLocation": "Debes permitir el acceso a tu ubicación.",
       "deniedGeofence": "Debes estar en el recinto para mostrar tu código QR.",
-      "deniedAttestation": "Dispositivo no verificado. Los códigos QR solo están disponibles en dispositivos atestados.",
+      "deniedAttestation": "Los códigos QR solo están disponibles en dispositivos atestados.",
       "deniedState": "Esta entrada no puede usarse para el acceso en su estado actual.",
+      "windowPending": "Tu código QR estará disponible 5 horas antes del evento.",
       "deniedTimeWindow": "Los códigos QR solo están disponibles desde 5 horas antes del evento hasta que finaliza.",
       "error": "Tu código QR no se pudo cargar."
     },
     "queue": {
       "title": "Sala de espera",
       "joinButton": "Unirse A La Cola",
-      "joinFailed": "No se pudo unir a la cola. Por favor, inténtalo de nuevo.",
+      "joinFailed": "Cola no unida.",
       "waiting": "Tu posición en la cola",
       "ready": "Eres el siguiente",
       "readyDescription": "Tu turno está listo. Vuelve pronto para obtener tu enlace de canje.",
       "notInQueue": "No estás en la cola.",
-      "redeemFailed": "No se pudo canjear tu turno. Por favor, inténtalo de nuevo.",
+      "redeemFailed": "Turno no canjeado.",
       "descriptionTitle": "Este es un evento de alta demanda",
       "descriptionSub": "Únete a la cola para conseguir tus entradas",
       "updatingIn": "Actualizando en {{seconds}}s",
@@ -181,8 +185,8 @@
       "total": "Total",
       "reserveButton": "Reservar Entradas",
       "selected": "seleccionada",
-      "alreadyHeld": "ya tienes",
-      "limitReached": "Ya tienes el número máximo de entradas para este evento."
+      "limitReached": "Ya tienes el número máximo de entradas para este evento.",
+      "walletLimit": "Max {{count}} entradas"
     },
     "reservation": {
       "title": "Tu reserva",
@@ -194,21 +198,24 @@
       "paid": "Pago confirmado.",
       "cancelButton": "Cancelar Reserva",
       "cancelSuccess": "Reserva cancelada.",
-      "cancelFailed": "No se pudo cancelar la reserva.",
-      "createFailed": "No se pudo crear la reserva. Por favor, inténtalo de nuevo.",
-      "notFound": "Reserva no encontrada."
+      "cancelFailed": "Reserva no cancelada.",
+      "createFailed": "Reserva no creada.",
+      "notFound": "Reserva no encontrada.",
+      "holdersFailed": "Titulares no guardados."
     },
     "payment": {
       "title": "Pago",
       "payButton": "Pagar Ahora",
       "confirmButton": "Confirmar Pago",
-      "initFailed": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo.",
-      "failed": "Pago fallido. Por favor, inténtalo de nuevo.",
-      "success": "Pago realizado. Tu entrada está en camino."
+      "unavailable": "Los pagos con tarjeta no están configurados en esta versión.",
+      "initFailed": "Pago no iniciado.",
+      "failed": "Pago fallido.",
+      "confirming": "Confirmando tu pago…",
+      "success": "Pago confirmado."
     },
     "toast": {
-      "listSuccess": "Entrada publicada en reventa",
-      "listFailed": "No se pudo publicar la entrada en reventa"
+      "listSuccess": "Entrada puesta a la venta.",
+      "listFailed": "Entrada no puesta a la venta."
     }
   },
   "market": {
@@ -237,21 +244,24 @@
       "declineTitle": "Rechazar",
       "declineDesc": "Perderás esta oferta de entrada y podrá ser reasignada a otra persona.",
       "generalAdmission": "Acceso general",
-      "notFound": "Reclamación no encontrada.",
       "paymentConfirmed": "Pago confirmado",
       "ticketTransferring": "Tu entrada está siendo transferida.",
-      "expired": "Esta oferta ha caducado.",
-      "expiredDesc": "Has sido eliminado de la cola. Vuelve a unirte si quieres otra oportunidad.",
-      "declined": "Oferta rechazada."
+      "expired": "Oferta Expirada",
+      "declined": "Oferta Rechazada"
     },
     "toast": {
-      "declined": "Oferta rechazada",
-      "declineFailed": "No se pudo rechazar la oferta",
-      "paymentSuccess": "Pago realizado. Tu entrada está siendo transferida.",
-      "leftWaitlist": "Has abandonado la lista de espera",
-      "leaveFailed": "No se pudo abandonar la cola de reventa",
-      "joinSuccess": "Estás en la cola de reventa.",
-      "joinFailed": "No se pudo unir a la cola de reventa"
+      "declined": "Asignación rechazada.",
+      "declineFailed": "Asignación no rechazada.",
+      "paymentSuccess": "Pago confirmado.",
+      "leftWaitlist": "Lista de espera abandonada.",
+      "leaveFailed": "Lista de espera no abandonada.",
+      "joinSuccess": "Cola de reventa unida.",
+      "joinFailed": "Cola de reventa no unida."
+    },
+    "claims": {
+      "paidBadge": "Pagado",
+      "declinedBadge": "Rechazado",
+      "expiredBadge": "Expirado"
     }
   },
   "profile": {
@@ -344,11 +354,11 @@
       "reportBugDesc": "Abre un issue en GitHub",
       "faq": {
         "q1": "¿Cómo compro una entrada?",
-        "a1": "Ve a la pantalla de inicio, encuentra un evento que te guste y tócalo. Desde ahí podrás seleccionar tus entradas y completar el proceso de compra.",
+        "a1": "Abre un evento desde la pantalla de inicio, elige tus entradas y completa la compra.",
         "q2": "¿Qué es una passkey?",
-        "a2": "Una passkey te permite iniciar sesión usando tu cara, huella dactilar o PIN del dispositivo en lugar de una contraseña. Es más rápido y mucho más seguro.",
+        "a2": "Inicia sesión con tu cara, huella o PIN del dispositivo en lugar de escribir una contraseña.",
         "q3": "¿Cómo solicito un reembolso?",
-        "a3": "Las políticas de reembolso las decide el organizador del evento. Puedes contactarle directamente a través de la página del evento o ponerte en contacto con nuestro equipo de soporte."
+        "a3": "Consulta al organizador desde la página del evento, ya que cada organizador fija su política de reembolso."
       }
     },
     "about": {
@@ -418,11 +428,11 @@
       "success": "Cuenta eliminada."
     },
     "errors": {
-      "changePasswordFailed": "Error al cambiar la contraseña. Comprueba tu contraseña actual.",
-      "changeEmailFailed": "Error al cambiar el correo. Comprueba tu contraseña.",
-      "changePhoneFailed": "Error al cambiar el teléfono. Comprueba tu contraseña.",
-      "confirmPhoneFailed": "Verificación fallida. Comprueba tu código.",
-      "deleteAccountFailed": "Error al eliminar. Comprueba tu contraseña.",
+      "changePasswordFailed": "Contraseña no cambiada.",
+      "changeEmailFailed": "Correo no cambiado.",
+      "changePhoneFailed": "Teléfono no cambiado.",
+      "confirmPhoneFailed": "Teléfono no confirmado.",
+      "deleteAccountFailed": "Cuenta no eliminada.",
       "fetchFailed": "No se pudo cargar el perfil."
     }
   },
@@ -440,11 +450,11 @@
       "submit": "Registrar Passkey"
     },
     "errors": {
-      "registerFailed": "El registro de passkey ha fallado. Por favor, inténtalo de nuevo.",
-      "loginFailed": "El inicio de sesión con passkey ha fallado. Por favor, inténtalo de nuevo.",
-      "deleteFailed": "No se pudo eliminar la passkey.",
-      "lastPasskey": "No puedes eliminar tu única passkey.",
-      "renameFailed": "No se pudo renombrar la passkey."
+      "registerFailed": "Passkey no registrada.",
+      "loginFailed": "Inicio de sesión con passkey fallido.",
+      "deleteFailed": "Passkey no eliminada.",
+      "lastPasskey": "Última passkey no eliminada.",
+      "renameFailed": "Passkey no renombrada."
     }
   },
   "organiser": {
@@ -463,7 +473,7 @@
       "descriptionLabel": "Descripción (opcional)",
       "deleteButton": "Eliminar Organización",
       "deleteTitle": "Eliminar organización",
-      "deleteDesc": "Esto eliminará permanentemente la organización y todos sus eventos, tipos de entrada y miembros.\n\nEsta acción no se puede deshacer.",
+      "deleteDesc": "Esto eliminará permanentemente la organización y todos sus eventos, tipos de entrada y colaboradores.\n\nEsta acción no se puede deshacer.",
       "deleteSuccess": "Organización eliminada."
     },
     "events": {
@@ -528,6 +538,7 @@
       "updateSuccess": "Tipo de entrada actualizado.",
       "deleteSuccess": "Tipo de entrada eliminado.",
       "addButton": "Añadir Tipo De Entrada",
+      "empty": "Aún no hay tipos de entrada.",
       "deleteTitle": "Eliminar tipo de entrada",
       "deleteDesc": "Este tipo de entrada se eliminará permanentemente. Las entradas ya emitidas no se verán afectadas.",
       "deleteConfirm": "Eliminar",
@@ -540,22 +551,23 @@
       "free": "Gratis"
     },
     "members": {
-      "title": "Miembros",
-      "inviteSuccess": "Miembro añadido.",
-      "removeSuccess": "Miembro eliminado.",
+      "title": "Colaboradores",
+      "inviteSuccess": "Colaborador añadido.",
+      "removeSuccess": "Colaborador eliminado.",
       "emailLabel": "Usuario",
       "roleLabel": "Rol",
       "inviteButton": "Añadir",
       "joined": "Se unió",
-      "invite": "Añadir miembro",
-      "addMember": "Añadir miembro",
-      "empty": "Aún no hay miembros.",
+      "invite": "Añadir colaborador",
+      "addMember": "Añadir colaborador",
+      "empty": "Aún no hay colaboradores.",
       "emailPlaceholder": "Buscar por nombre o email…",
-      "roleMemberDesc": "Puede ver eventos y miembros, y escanear entradas",
-      "roleManagerDesc": "Puede gestionar eventos y añadir o eliminar miembros",
+      "roleMemberDesc": "Puede ver eventos y colaboradores, y escanear entradas",
+      "roleManagerDesc": "Puede gestionar eventos y añadir o eliminar colaboradores",
       "selectUser": "Selecciona un usuario de la lista",
-      "searchPlaceholder": "Buscar miembros…",
-      "removeTitle": "Eliminar miembro",
+      "noMatches": "Ningun usuario coincide con la busqueda",
+      "searchPlaceholder": "Buscar colaboradores…",
+      "removeTitle": "Eliminar colaborador",
       "removeConfirmDesc": "Esta persona perderá el acceso a la organización y sus eventos.",
       "removeConfirm": "Eliminar",
       "roleValidationNote": "Tanto gestores como miembros pueden validar entradas en el acceso"
@@ -578,20 +590,20 @@
       "geofenceLabel": "Radio de geovalla (m)"
     },
     "errors": {
-      "createOrgFailed": "No se pudo crear la organización.",
-      "createEventFailed": "No se pudo crear el evento.",
-      "updateEventFailed": "No se pudo actualizar el evento.",
-      "publishFailed": "No se pudo publicar el evento.",
-      "startFailed": "No se pudo marcar el evento como iniciado.",
-      "cancelFailed": "No se pudo cancelar el evento.",
-      "createTicketTypeFailed": "No se pudo crear el tipo de entrada.",
-      "updateTicketTypeFailed": "No se pudo actualizar el tipo de entrada.",
-      "deleteTicketTypeFailed": "No se pudo eliminar el tipo de entrada.",
-      "inviteFailed": "No se pudo enviar la invitación.",
-      "removeFailed": "No se pudo eliminar al miembro.",
-      "createVenueFailed": "No se pudo crear el lugar.",
-      "addMemberFailed": "Error al añadir miembro.",
-      "deleteFailed": "No se pudo eliminar la organización."
+      "createOrgFailed": "Organización no creada.",
+      "createEventFailed": "Evento no creado.",
+      "updateEventFailed": "Evento no actualizado.",
+      "publishFailed": "Evento no publicado.",
+      "startFailed": "Evento no iniciado.",
+      "cancelFailed": "Evento no cancelado.",
+      "createTicketTypeFailed": "Tipo de entrada no creado.",
+      "updateTicketTypeFailed": "Tipo de entrada no actualizado.",
+      "deleteTicketTypeFailed": "Tipo de entrada no eliminado.",
+      "inviteFailed": "Colaborador no invitado.",
+      "removeFailed": "Colaborador no eliminado.",
+      "createVenueFailed": "Sede no creada.",
+      "addMemberFailed": "Colaborador no añadido.",
+      "deleteFailed": "Organización no eliminada."
     },
     "search": {
       "placeholder": "Buscar organizaciones…",
@@ -639,8 +651,8 @@
       "placeholder": "123456",
       "submit": "Verificar Número De Teléfono",
       "resend": "Reenviar Código",
-      "resendSuccess": "Código reenviado correctamente.",
-      "successToast": "Número de teléfono verificado."
+      "resendSuccess": "Código reenviado.",
+      "successToast": "Teléfono verificado."
     },
     "kyc": {
       "title": "Verificación de identidad",
@@ -648,7 +660,7 @@
       "label": "Documento",
       "dropzone": "Haz clic para seleccionar un archivo",
       "submit": "Subir Documento",
-      "successToast": "Documento subido correctamente."
+      "successToast": "Documento subido."
     },
     "pending": {
       "title": "En revisión",
@@ -661,10 +673,10 @@
       "continue": "Continuar A La App"
     },
     "errors": {
-      "verifyEmailFailed": "Verificación de correo fallida. Por favor, comprueba tu código.",
-      "verifyPhoneFailed": "Verificación de teléfono fallida. Por favor, comprueba tu código.",
-      "kycUploadFailed": "Error al subir el documento. Por favor, inténtalo de nuevo.",
-      "completeFailed": "Error al completar la configuración. Por favor, inténtalo de nuevo."
+      "verifyEmailFailed": "Correo no verificado.",
+      "verifyPhoneFailed": "Teléfono no verificado.",
+      "kycUploadFailed": "Documento no subido.",
+      "completeFailed": "Configuración no completada."
     }
   }
 }

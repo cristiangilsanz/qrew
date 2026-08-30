@@ -147,7 +147,7 @@ export function EventImageUploader({ value, onChange }: Props) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
         className="hidden"
         onChange={onInputChange}
       />

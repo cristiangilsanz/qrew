@@ -4,9 +4,10 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { toastErrorMessage } from '@/lib/errors'
 import { useAuthStore } from '@/store/auth'
 
-import { type ApiErrorDetail, authApi, extractErrorMessage, type RegisterRequest } from '../api'
+import { type ApiErrorDetail, authApi, type RegisterRequest } from '../api'
 
 // provides use register
 export function useRegister() {
@@ -23,10 +24,7 @@ export function useRegister() {
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('auth.errors.registerFailed'),
-      )
+      const message = toastErrorMessage(error, t('auth.errors.registerFailed'))
       toast.error(message)
     },
   })

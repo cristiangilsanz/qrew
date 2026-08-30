@@ -94,7 +94,7 @@ describe('RegisterForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('Check your email'))
+      expect(toast.success).toHaveBeenCalledWith('Account created.')
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/login' })
     })
   })
@@ -103,7 +103,7 @@ describe('RegisterForm', () => {
     const { toast } = await import('sonner')
     server.use(
       http.post('http://localhost:8000/api/identity/v1/auth/registration/', () =>
-        HttpResponse.json({ detail: 'Email already registered' }, { status: 409 }),
+        HttpResponse.json({ detail: 'Email already registered.' }, { status: 409 }),
       ),
     )
 
@@ -115,7 +115,7 @@ describe('RegisterForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Email already registered')
+      expect(toast.error).toHaveBeenCalledWith('Email already registered.')
     })
   })
 })

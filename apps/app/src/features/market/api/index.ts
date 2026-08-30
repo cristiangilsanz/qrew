@@ -89,6 +89,9 @@ export const marketApi = {
   getMyQueues: () => salesClient.get<MarketQueueEntry[]>('/v1/market/queues').then((r) => r.data),
 
   // implements get pending assignment
+  listAssignments: () =>
+    salesClient.get<MarketAssignmentResponse[]>('/v1/market/assignments').then((r) => r.data),
+
   getPendingAssignment: () =>
     salesClient
       .get<MarketAssignmentResponse | null>('/v1/market/assignments/pending')

@@ -1,7 +1,7 @@
 // renders the invite member form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
-import { Info } from 'lucide-react'
+import { Info, Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { profileApi } from '@/features/profile/api'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +29,8 @@ const schema = z.object({
 
 type Values = z.infer<typeof schema>
 
+const MIN_QUERY_LENGTH = 2
+
 interface Props {
   orgId: string
   existingMemberIds?: string[]
@@ -39,24 +41,29 @@ interface Props {
 export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: Props) {
   const { t } = useTranslation()
   const [searchQ, setSearchQ] = useState('')
+  const [debouncedQ, setDebouncedQ] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['user-search-all'],
+  useEffect(() => {
+    // implements timer
+    const timer = setTimeout(() => setDebouncedQ(searchQ), 300)
+    return () => clearTimeout(timer)
+  }, [searchQ])
+
+  const term = debouncedQ.trim()
+  const canSearch = term.length >= MIN_QUERY_LENGTH
+
+  const { data: matches = [], isFetching } = useQuery({
+    queryKey: ['user-search', term],
     // implements query fn
-    queryFn: () => profileApi.searchUsers(''),
-    staleTime: 60_000,
+    queryFn: () => profileApi.searchUsers(term),
+    enabled: canSearch,
+    staleTime: 30_000,
   })
 
   // implements filtered
-  const filtered = allUsers
-    .filter((u) => !existingMemberIds.includes(u.id))
-    .filter((u) => {
-      if (!searchQ.trim()) return true
-      const q = searchQ.toLowerCase()
-      return u.email.toLowerCase().includes(q) || u.full_name.toLowerCase().includes(q)
-    })
+  const filtered = matches.filter((u) => !existingMemberIds.includes(u.id))
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -103,9 +110,11 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
         <FormItem>
           <FormLabel>{t('organiser.members.emailLabel')}</FormLabel>
           <div ref={containerRef} className="relative">
-            <Input
+            <Search className={SEARCH_ICON_CLASS} />
+            <input
               type="search"
               autoComplete="off"
+              className={SEARCH_INPUT_CLASS}
               placeholder={t('organiser.members.emailPlaceholder')}
               value={searchQ}
               onChange={(e) => {
@@ -115,8 +124,16 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
               }}
               onFocus={() => setDropdownOpen(true)}
             />
-            {dropdownOpen && filtered.length > 0 && (
+            {dropdownOpen && canSearch && (
               <ul className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-white/15 bg-black/95 shadow-xl backdrop-blur-md">
+                {isFetching && filtered.length === 0 && (
+                  <li className="text-muted-foreground px-4 py-3 text-xs">{t('common.loading')}</li>
+                )}
+                {!isFetching && filtered.length === 0 && (
+                  <li className="text-muted-foreground px-4 py-3 text-xs">
+                    {t('organiser.members.noMatches')}
+                  </li>
+                )}
                 {filtered.map((u) => (
                   <li key={u.id}>
                     <button
@@ -165,7 +182,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
                       )}
                     >
                       <p className="text-sm font-semibold capitalize">{role}</p>
-                      <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                      <p className="text-muted-foreground mt-0.5 text-xs leading-tight">
                         {t(
                           `organiser.members.role${role.charAt(0).toUpperCase() + role.slice(1)}Desc`,
                         )}

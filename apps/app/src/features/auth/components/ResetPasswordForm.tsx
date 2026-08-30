@@ -20,8 +20,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { toastErrorMessage } from '@/lib/errors'
 
-import { type ApiErrorDetail, authApi, extractErrorMessage } from '../api'
+import { type ApiErrorDetail, authApi } from '../api'
 import { AuthLayout } from './AuthLayout'
 
 const schema = z.object({
@@ -50,10 +51,7 @@ export function ResetPasswordForm({ token }: Props) {
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('auth.errors.resetFailed'),
-      )
+      const message = toastErrorMessage(error, t('auth.errors.resetFailed'))
       toast.error(message)
     },
   })

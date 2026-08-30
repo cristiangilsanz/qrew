@@ -5,7 +5,8 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { type ApiErrorDetail, extractErrorMessage } from '@/features/auth/api'
+import type { ApiErrorDetail } from '@/features/auth/api'
+import { toastErrorMessage } from '@/lib/errors'
 
 import { organiserApi } from '../api'
 
@@ -26,10 +27,7 @@ export function useDeleteOrganisation() {
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('organiser.errors.deleteFailed'),
-      )
+      const message = toastErrorMessage(error, t('organiser.errors.deleteFailed'))
       toast.error(message)
     },
   })

@@ -18,6 +18,16 @@ export function useMarketAssignment(assignmentId: string) {
   })
 }
 
+// provides use market assignments
+export function useMarketAssignments() {
+  return useQuery({
+    queryKey: ['market', 'assignments'],
+    // implements query fn
+    queryFn: () => marketApi.listAssignments(),
+    refetchInterval: 30_000,
+  })
+}
+
 // provides use pending market assignment
 export function usePendingMarketAssignment() {
   return useQuery({

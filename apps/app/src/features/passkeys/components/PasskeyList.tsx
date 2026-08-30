@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ListError } from '@/components/ui/list-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useRegisterPasskey } from '@/features/onboarding/hooks/useRegisterPasskey'
 import { formatDate } from '@/lib/formatDate'
@@ -18,7 +19,7 @@ import { useRenamePasskey } from '../hooks/useRenamePasskey'
 export function PasskeyList() {
   const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
-  const { data, isLoading } = usePasskeys()
+  const { data, isLoading, isError, refetch } = usePasskeys()
   const deletePasskey = useDeletePasskey()
   const renamePasskey = useRenamePasskey()
   // implements register passkey
@@ -45,6 +46,10 @@ export function PasskeyList() {
         ))}
       </div>
     )
+  }
+
+  if (isError) {
+    return <ListError onRetry={() => void refetch()} />
   }
 
   const passkeys = data?.items ?? []
