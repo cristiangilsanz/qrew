@@ -188,7 +188,7 @@ async def get_ticket_listing(
     if listing is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "No active listing found for this ticket", "field": "ticket_id"},
+            detail={"message": "Listing not found.", "field": "ticket_id"},
         )
     return _listing_response(listing)
 
@@ -210,6 +210,29 @@ async def get_my_queues(
     del request, db
     entries = await service.my_queues(user_id=current_user.id)
     return [MarketQueueEntryResponse(**e) for e in entries]
+
+
+# lists the caller's pending assignments and the ones that ended recently
+@market_router.get(
+    "/assignments",
+    response_model=list[MarketAssignmentResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List the caller's pending and recently ended market assignments",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def list_assignments(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    service: MarketService = Depends(get_market_service),
+) -> list[MarketAssignmentResponse]:
+    del request, db
+    assignments = await service.list_recent_assignments(user_id=current_user.id)
+    responses: list[MarketAssignmentResponse] = []
+    for assignment in assignments:
+        listing = await service.get_listing(listing_id=assignment.listing_id)
+        responses.append(_assignment_response(assignment, listing))
+    return responses
 
 
 # reads the caller's pending market assignment if any
@@ -286,8 +309,8 @@ async def set_assignment_holders(
         )
     except MarketError as exc:
         raise _market_error(exc) from exc
-    await db.commit()
     listing = await service.get_listing(listing_id=assignment.listing_id)
+    await db.commit()
     return _assignment_response(assignment, listing)
 
 
