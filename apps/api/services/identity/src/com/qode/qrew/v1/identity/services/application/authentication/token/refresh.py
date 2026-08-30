@@ -36,6 +36,8 @@ from com.qode.qrew.v1.identity.services.application.authentication.device.bindin
 )
 from com.qode.qrew.v1.identity.core.config import settings
 
+from com.qode.qrew.v1.identity.models.user import KycStatus
+
 logger = structlog.get_logger(__name__)
 
 _ROTATED = b"rotated"
@@ -135,6 +137,7 @@ class RefreshService:
             device_id=str(bound_device_id) if bound_device_id else None,
             session_jti=new_jti,
             is_admin=user.is_admin,
+            kyc_approved=user.kyc_status == KycStatus.approved,
         )
 
         if self._session_repo is not None and isinstance(jti, str) and new_jti is not None:

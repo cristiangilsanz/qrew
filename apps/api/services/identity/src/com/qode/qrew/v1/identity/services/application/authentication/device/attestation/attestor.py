@@ -1,3 +1,4 @@
+# issues and redeems the nonces that prove a device attestation is fresh
 import uuid
 
 import redis.asyncio as aioredis

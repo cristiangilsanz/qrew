@@ -9,7 +9,7 @@ from com.qode.qrew.v1.identity.core.dependencies import (
     get_totp_user,
     limiter,
 )
-from com.qode.qrew.v1.identity.models.user import User
+from com.qode.qrew.v1.identity.models.user import KycStatus, User
 from com.qode.qrew.v1.identity.repositories.session import SessionRepository
 from com.qode.qrew.v1.identity.schemas.authentication.totp import (
     TotpConfirmRequest,
@@ -128,7 +128,10 @@ async def totp_verify(
     refresh_token = create_refresh_token(str(totp_user.id))
     jti = extract_jti(refresh_token)
     access_token = create_access_token(
-        str(totp_user.id), session_jti=jti, is_admin=totp_user.is_admin
+        str(totp_user.id),
+        session_jti=jti,
+        is_admin=totp_user.is_admin,
+        kyc_approved=totp_user.kyc_status == KycStatus.approved,
     )
 
     if jti:

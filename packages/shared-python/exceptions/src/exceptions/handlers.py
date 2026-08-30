@@ -81,6 +81,43 @@ def _location_to_field(loc: tuple[int | str, ...]) -> str | None:
     return ".".join(parts) if parts else None
 
 
+_PYDANTIC_VALUE_ERROR_PREFIX = "Value error, "
+
+
+# renders a field name the way a person would read it back
+def _humanise_field(field: str | None) -> str:
+    if not field:
+        return "Request"
+    name = field.split(".")[-1].replace("_", " ").strip()
+    return name[:1].upper() + name[1:] if name else "Request"
+
+
+# describes a failed constraint in the same noun and verb shape as every other message
+def _describe_violation(error_type: str, field: str | None) -> str:
+    subject = _humanise_field(field)
+    if error_type == "missing":
+        return f"{subject} missing."
+    if error_type in {"string_too_short", "too_short"}:
+        return f"{subject} too short."
+    if error_type in {"string_too_long", "too_long"}:
+        return f"{subject} too long."
+    if error_type in {
+        "greater_than",
+        "greater_than_equal",
+        "less_than",
+        "less_than_equal",
+    }:
+        return f"{subject} out of range."
+    return f"{subject} rejected."
+
+
+# keeps a validator's own wording and rewrites whatever pydantic phrased itself
+def _validation_message(error_type: str, msg: str, field: str | None) -> str:
+    if msg.startswith(_PYDANTIC_VALUE_ERROR_PREFIX):
+        return msg[len(_PYDANTIC_VALUE_ERROR_PREFIX) :]
+    return _describe_violation(error_type, field)
+
+
 # converts a request validation error into its json response
 async def _validation_exception_handler(
     request: Request, exc: RequestValidationError
@@ -93,9 +130,11 @@ async def _validation_exception_handler(
             content=_error_body("Validation error"),
         )
     first = errors[0]
-    message = str(first.get("msg", "Validation error"))
     loc = first.get("loc", ())
     field = _location_to_field(tuple(loc))
+    message = _validation_message(
+        str(first.get("type", "")), str(first.get("msg", "")), field
+    )
     return JSONResponse(
         status_code=HTTP_422_UNPROCESSABLE_CONTENT,
         content=_error_body(message, field),

@@ -61,6 +61,8 @@ class UserPublicProfilesRequest(BaseModel):
 
 
 class OnboardingStatusResponse(BaseModel):
+    email: str
+    phone_number: str
     email_verified: bool
     phone_verified: bool
     kyc_submitted: bool

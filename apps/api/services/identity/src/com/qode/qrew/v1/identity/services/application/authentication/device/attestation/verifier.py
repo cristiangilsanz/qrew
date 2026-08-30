@@ -1,3 +1,4 @@
+# verifies the attestation a device presents before it is trusted
 from dataclasses import dataclass
 from typing import Protocol
 

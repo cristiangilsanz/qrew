@@ -35,8 +35,8 @@ def fallback_link(url: str) -> str:
 # wraps a template's content in the shared email layout
 def base_email(*, title: str, preheader: str, logo_url: str | None, content_html: str) -> str:
     masthead = (
-        f'<a href="https://qrew.com"><img src="{logo_url}" alt="QREW" height="240"'
-        ' style="display:inline-block;border:none;max-height:240px;" /></a>'
+        f'<a href="https://qrew.com"><img src="{logo_url}" alt="QREW" width="120" height="120"'
+        ' style="display:block;border:none;width:120px;height:120px;" /></a>'
         if logo_url
         else '<a href="https://qrew.com" class="email-masthead_name">QREW</a>'
     )

@@ -92,7 +92,6 @@ class LoginService:
         await self._reset_lockout(user.id)
         password_compromised = await self._check_breach(user.id, request.password, ip_address)
 
-        self._ensure_email_verified(user)
         self._ensure_account_active(user)
 
         if await self._is_setup_complete(user):
@@ -149,12 +148,6 @@ class LoginService:
             return False
         return await self._breach_checker.is_compromised(user_id, password, ip_address)
 
-    # rejects a login whose email is not yet verified
-    def _ensure_email_verified(self, user: User) -> None:
-        if user.email_verified:
-            return
-        raise LoginError(_INVALID_CREDENTIALS)
-
     # rejects a login against an inactive account
     def _ensure_account_active(self, user: User) -> None:
         if user.is_active:
@@ -164,7 +157,8 @@ class LoginService:
     # checks whether a user has finished every onboarding step
     async def _is_setup_complete(self, user: User) -> bool:
         return (
-            user.phone_number_verified
+            user.email_verified
+            and user.phone_number_verified
             and user.kyc_status != KycStatus.not_submitted
             and await self._passkey_repo.has_passkey(user.id)
         )
@@ -187,6 +181,7 @@ class LoginService:
             device_id=str(bound_device_id) if bound_device_id else None,
             session_jti=session_jti,
             is_admin=user.is_admin,
+            kyc_approved=user.kyc_status == KycStatus.approved,
         )
         await self._persist_session(
             user.id,

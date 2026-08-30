@@ -50,6 +50,25 @@ def access_public_keys() -> list[str]:
     return keys
 
 
+# returns the public keys that verify the tokens issued during account setup
+@functools.cache
+def setup_public_keys() -> list[str]:
+    keys: list[str] = []
+    if settings.setup_jwt_private_key:
+        keys.append(_load_public_pem(settings.setup_jwt_private_key))
+    for entry in settings.setup_jwt_previous_public_keys.split(","):
+        pem = entry.strip()
+        if pem:
+            keys.append(pem)
+    return keys
+
+
+# returns every public key that can verify a token belonging to a user
+@functools.cache
+def user_public_keys() -> list[str]:
+    return access_public_keys() + setup_public_keys()
+
+
 # returns the public keys that verify scanner tokens
 @functools.cache
 def scanner_public_keys() -> list[str]:

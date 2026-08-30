@@ -27,6 +27,8 @@ class Settings(BaseSettings):
 
     access_jwt_private_key: str = ""
     access_jwt_previous_public_keys: str = ""
+    setup_jwt_private_key: str = ""
+    setup_jwt_previous_public_keys: str = ""
     scanner_jwt_private_key: str = ""
     jwt_audience: str = ""
     scanner_jwt_audience: str = "qrew.scan"

@@ -77,6 +77,7 @@ def create_access_token(
     device_id: str | None = None,
     session_jti: str | None = None,
     is_admin: bool = False,
+    kyc_approved: bool = False,
 ) -> str:
     now = datetime.now(UTC)
     payload: dict[str, object] = {
@@ -88,6 +89,8 @@ def create_access_token(
     }
     if is_admin:
         payload["adm"] = True
+    if kyc_approved:
+        payload["kyc"] = True
     if device_id is not None:
         payload["device_id"] = device_id
     if session_jti is not None:

@@ -10,7 +10,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from com.qode.qrew.v1.gateway.core.config import settings
 from com.qode.qrew.v1.gateway.core.auth import (
-    access_public_keys,
+    user_public_keys,
     scanner_public_keys,
     try_verify,
 )
@@ -53,6 +53,22 @@ def _extract_bearer(authorization: str | None) -> str | None:
     return None
 
 
+# an account still under review may read the catalogue and finish its own setup
+_SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+_ALWAYS_ALLOWED_PREFIX = "/api/identity/"
+
+_NOT_VERIFIED = Response(
+    content=json.dumps({"detail": {"message": "Account not verified.", "field": None}}),
+    status_code=403,
+    headers={"Content-Type": "application/json"},
+)
+
+
+# reports whether a caller who has not cleared verification may make this request
+def _allowed_while_unverified(method: str, path: str) -> bool:
+    return method in _SAFE_METHODS or path.startswith(_ALWAYS_ALLOWED_PREFIX)
+
+
 _UNAUTHORIZED = Response(
     content=json.dumps({"detail": {"message": "Missing or invalid token", "field": None}}),
     status_code=401,
@@ -88,7 +104,7 @@ class AuthMiddleware:
             await _UNAUTHORIZED(scope, receive, send)
             return
 
-        claims = try_verify(token, access_public_keys())
+        claims = try_verify(token, user_public_keys())
         if claims is not None:
             token_type = str(claims.get("type", ""))
             if token_type not in ("access", "setup"):
@@ -97,6 +113,10 @@ class AuthMiddleware:
             sub = str(claims.get("sub", ""))
             if not sub:
                 await _UNAUTHORIZED(scope, receive, send)
+                return
+            verified = claims.get("kyc") is True or claims.get("adm") is True
+            if not verified and not _allowed_while_unverified(method, path):
+                await _NOT_VERIFIED(scope, receive, send)
                 return
             headers = MutableHeaders(scope=scope)
             headers.append("x-authenticated-user-id", sub)

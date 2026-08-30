@@ -36,6 +36,8 @@ class ProfileService:
         else:
             current_step = "pending"
         return OnboardingStatusResponse(
+            email=user.email,
+            phone_number=user.phone_number,
             email_verified=email_verified,
             phone_verified=phone_verified,
             kyc_submitted=kyc_submitted,

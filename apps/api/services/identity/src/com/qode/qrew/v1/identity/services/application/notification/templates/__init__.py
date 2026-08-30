@@ -41,7 +41,8 @@ class RenderedSms:
 
 # builds the url of the logo shown in every email
 def _logo_url() -> str:
-    return f"{settings.base_url}/logo.webp"
+    # png rather than webp because several mail clients still cannot render webp
+    return f"{settings.base_url}/logo.png"
 
 
 # renders the email that verifies a new account
