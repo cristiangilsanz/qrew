@@ -18,15 +18,15 @@ Entry is the gate control service in the platform. It registers scanner devices,
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `POST` | `/entry` | Validate a ticket QR at the gate | Scanner JWT |
-| `GET` | `/events/{id}/entry-stats` | Per-event entry rollup for organiser console | JWT |
+| `POST` | `/entry/validate` | Validate a ticket QR at the gate | Scanner JWT |
+| `GET` | `/events/{event_id}/entry-stats` | Per-event entry rollup for organiser console | JWT |
 | `POST` | `/scanners/refresh` | Self-service scanner JWT refresh | Scanner JWT |
-| `POST` | `/scanners/token` | Create a scanner token for an event | JWT (org member or admin) |
+| `POST` | `/scanners/for-event/{event_id}` | Create a scanner token for an event | JWT (org member or admin) |
 | `POST` | `/admin/scanners` | Register a new scanner device | JWT (admin) |
 | `GET` | `/admin/scanners` | List all registered scanners | JWT (admin) |
-| `GET` | `/admin/scanners/{id}` | Read a single scanner | JWT (admin) |
-| `POST` | `/admin/scanners/{id}/refresh` | Mint a fresh credential for a scanner | JWT (admin) |
-| `DELETE` | `/admin/scanners/{id}` | Deactivate a scanner | JWT (admin) |
+| `GET` | `/admin/scanners/{scanner_id}` | Read a single scanner | JWT (admin) |
+| `POST` | `/admin/scanners/{scanner_id}/rotate` | Mint a fresh credential for a scanner | JWT (admin) |
+| `DELETE` | `/admin/scanners/{scanner_id}` | Deactivate a scanner | JWT (admin) |
 
 Full spec: [`packages/contracts/openapi/entry/openapi.yaml`](../../../../../../packages/contracts/openapi/entry/openapi.yaml)
 

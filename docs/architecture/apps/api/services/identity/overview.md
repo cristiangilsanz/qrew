@@ -22,32 +22,67 @@ Identity is the authentication and JWT issuance authority in the platform. It ma
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `POST` | `/auth/register` | Start multi-step user registration | Public |
+| `POST` | `/auth/registration/` | Start multi-step user registration | Public |
+| `POST` | `/auth/registration/verify-email` | Confirm the address with the mailed token | Public |
+| `POST` | `/auth/registration/resend-email-verification` | Send the verification mail again | Public |
+| `POST` | `/auth/registration/verify-phone` | Confirm the phone number with its code | JWT (setup) |
+| `POST` | `/auth/registration/resend-phone-otp` | Send the phone code again | JWT (setup) |
 | `POST` | `/auth/login` | Log in with password or passkey | Public |
+| `POST` | `/auth/logout` | End the current session | JWT |
+| `POST` | `/auth/refresh` | Exchange a refresh token for a new access token | Public |
 | `GET` | `/auth/sessions` | List active sessions | JWT |
-| `DELETE` | `/auth/sessions` | Revoke all sessions | JWT |
-| `POST` | `/auth/sessions` | Refresh the session token | JWT |
-| `POST` | `/auth/device` | Register and attest a device | JWT |
-| `GET` | `/auth/passkey` | List registered passkeys | JWT |
-| `POST` | `/auth/passkey` | Register a new passkey | JWT |
-| `PATCH` | `/auth/passkey` | Update passkey metadata | JWT |
-| `DELETE` | `/auth/passkey` | Remove a passkey | JWT |
-| `POST` | `/auth/account` | Change or verify email and phone | JWT |
-| `GET` | `/auth/profile` | Get a user profile by ID | JWT |
+| `DELETE` | `/auth/sessions/{jti}` | Revoke one session | JWT |
+| `POST` | `/auth/sessions/revoke-all` | Revoke every session | JWT |
+| `GET` | `/auth/devices` | List bound devices | JWT |
+| `POST` | `/auth/devices/attest` | Attest a device with the platform | JWT |
+| `POST` | `/auth/devices/bind/begin` | Start binding a device | JWT |
+| `POST` | `/auth/devices/bind/complete` | Finish binding a device | JWT |
+| `POST` | `/auth/devices/fingerprint` | Record a device fingerprint | JWT |
+| `POST` | `/auth/devices/{device_id}/revoke` | Revoke one device | JWT |
+| `POST` | `/auth/devices/revoke-all` | Revoke every device | JWT |
+| `GET` | `/auth/passkeys/` | List registered passkeys | JWT |
+| `POST` | `/auth/passkeys/register/begin` | Start registering a passkey | JWT |
+| `POST` | `/auth/passkeys/register/complete` | Finish registering a passkey | JWT |
+| `POST` | `/auth/passkeys/authenticate/begin` | Start signing in with a passkey | Public |
+| `POST` | `/auth/passkeys/authenticate/complete` | Finish signing in with a passkey | Public |
+| `POST` | `/auth/passkeys/assert/begin` | Start reasserting the passkey of a session | JWT |
+| `POST` | `/auth/passkeys/assert/complete` | Finish reasserting the passkey of a session | JWT |
+| `PATCH` | `/auth/passkeys/{passkey_id}` | Rename a passkey | JWT |
+| `DELETE` | `/auth/passkeys/{passkey_id}` | Remove a passkey | JWT |
+| `POST` | `/auth/totp/setup` | Start enrolling a second factor | JWT |
+| `POST` | `/auth/totp/confirm` | Confirm the enrolled second factor | JWT |
+| `POST` | `/auth/totp/verify` | Verify the second factor during login | JWT (totp) |
+| `GET` | `/auth/totp/status` | Report whether a second factor is enabled | JWT |
+| `DELETE` | `/auth/totp/disable` | Disable the second factor | JWT |
+| `POST` | `/auth/account/change-email` | Request an email address change | JWT |
+| `POST` | `/auth/account/confirm-email-change` | Confirm the new email address | Public |
+| `POST` | `/auth/account/change-phone` | Request a phone number change | JWT |
+| `POST` | `/auth/account/confirm-phone-change` | Confirm the new phone number | JWT |
+| `POST` | `/auth/account/change-password` | Change the password | JWT |
+| `POST` | `/auth/account/forgot-password` | Ask for a password reset link | Public |
+| `POST` | `/auth/account/reset-password` | Reset the password with the mailed token | Public |
+| `POST` | `/auth/account/delete` | Delete the account | JWT |
 | `GET` | `/auth/profile/me` | Get the authenticated user profile | JWT |
-| `GET` | `/auth/profile/badges` | Get user badges | JWT |
-| `POST` | `/auth/recovery` | Initiate account recovery | Public |
-| `POST` | `/auth/setup` | Complete account setup steps | JWT |
-| `POST` | `/uploads` | Upload a profile photo or KYC document | JWT |
-| `PUT` | `/uploads` | Replace an existing upload | JWT |
-| `GET` | `/uploads` | Retrieve a signed upload URL | JWT |
-| `POST` | `/jwt/sign` | Sign a JWT on behalf of another service | Internal |
-| `GET` | `/admin/users` | List users with filters | JWT |
-| `POST` | `/admin/users` | Create a user as admin | JWT |
-| `POST` | `/admin/kyc` | Approve or reject a KYC submission | JWT |
-| `GET` | `/admin/fingerprints` | Query device fingerprints | JWT |
-| `GET` | `/admin/outbox/dlq` | Inspect the outbox dead letter queue | JWT |
+| `GET` | `/auth/profile/onboarding-status` | Report which setup step remains | JWT (setup) |
+| `GET` | `/auth/profile/audit` | Read the caller's own account trail | JWT |
+| `POST` | `/auth/profile/users/public` | Resolve several user identifiers into public profiles | JWT |
+| `POST` | `/auth/setup/kyc/upload` | Submit the identity document for review | JWT (setup) |
+| `POST` | `/auth/setup/complete-setup` | Close the setup wizard and issue an access token | JWT (setup) |
+| `POST` | `/auth/recovery/begin` | Start account recovery | Public |
+| `POST` | `/auth/recovery/complete` | Finish account recovery | Public |
+| `POST` | `/uploads/sign` | Get a signed URL for a direct upload | JWT |
+| `PUT` | `/uploads/local/{key}` | Store an upload through the signed URL | Signed URL |
+| `GET` | `/uploads/local/{key}` | Read a private upload through the signed URL | Signed URL |
+| `GET` | `/uploads/public/{key}` | Read a public upload | Public |
+| `GET` | `/admin/users` | List users with filters | JWT (admin) |
+| `GET` | `/admin/users/search` | Search users | JWT (admin) |
+| `POST` | `/admin/users/{user_id}/unlock` | Lift a lockout on an account | JWT (admin) |
+| `POST` | `/admin/kyc/{user_id}/review` | Approve or reject a KYC submission | JWT (admin) |
+| `GET` | `/admin/fingerprints/{fingerprint_hash}` | Query one device fingerprint | JWT (admin) |
+| `GET` | `/admin/outbox/dlq` | Inspect the outbox dead letter queue | JWT (admin) |
 | `POST` | `/_internal/users/lookup` | Resolve an email or phone into a user identifier | Internal |
+
+The signing endpoint `POST /issuer/jwt/sign` is served outside the versioned prefix and reachable only from inside the network.
 
 Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../../../packages/contracts/openapi/identity/openapi.yaml)
 
@@ -80,13 +115,15 @@ Schemas: [`packages/contracts/openapi/identity/events/`](../../../../../../packa
 
 | Worker | Type | Description |
 |--------|------|-------------|
-| `auth_cleaner` | arq job | Purges expired sessions, tokens, and OTPs. |
-| `lifecycle_notifier` | arq job | Sends lifecycle emails including welcome and verification reminders. |
-| `notification_deliverer` | arq job | Drains the notification queue for email and SMS delivery. |
-| `outbox_drainer` | arq job | Publishes pending domain events from the transactional outbox to NATS. |
-| `storage_retainer` | arq job | Enforces the KYC document retention policy and deletes documents after the configured period. |
+| `auth_cleaner` | arq job, every 15 minutes | Purges expired sessions, tokens, and OTPs. |
+| `lifecycle_notifier` | arq job, on demand | Sends the mails a payment, a cancellation or a device revocation calls for. |
+| `notification_deliverer` | arq job, on demand | Drains the notification queue for email and SMS delivery. |
+| `outbox_drainer` | arq job, every minute | Publishes pending domain events from the transactional outbox to NATS. |
+| `storage_retainer` | arq job, daily at 04:00 | Enforces the KYC document retention policy and deletes documents after the configured period. |
 | `catalog.event.cancelled.*` | NATS subscriber | Handles catalog event cancellation notifications. |
 | `payments.*` | NATS subscriber | Handles payment outcome notifications. |
+
+The arq jobs run in the `identity-arq-worker` container, which consumes the `qrew:jobs:identity` queue. The NATS subscribers run in the separate `identity-worker` container.
 
 ## Internal Dependencies
 

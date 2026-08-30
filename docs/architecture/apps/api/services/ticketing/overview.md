@@ -21,10 +21,12 @@ Ticketing is the ticket lifecycle authority in the platform. It creates and issu
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `GET` | `/tickets/{id}/qr` | Get a short lived QR token for a ticket | JWT |
-| `POST` | `/tickets/{id}/qr/deny` | Deny a pending QR request | Internal |
-| `POST` | `/tickets/{id}/restore` | Restore a frozen or cancelled ticket | Internal |
-| `POST` | `/tickets/{id}/use` | Mark a ticket as used after a successful entry scan | Internal |
+| `GET` | `/tickets` | List the caller's tickets | JWT |
+| `GET` | `/tickets/{ticket_id}` | Get one ticket with the event it belongs to | JWT |
+| `GET` | `/tickets/{ticket_id}/qr` | Get a short lived QR token for a ticket | JWT |
+| `POST` | `/tickets/{ticket_id}/qr/stream` | Poll for the outcome of a QR that is being scanned | JWT |
+| `POST` | `/tickets/{ticket_id}/restore` | Restore a frozen or cancelled ticket | Internal |
+| `POST` | `/admission/{ticket_id}/use` | Mark a ticket as used after a successful entry scan | Internal |
 
 Full spec: [`packages/contracts/openapi/ticketing/openapi.yaml`](../../../../../../packages/contracts/openapi/ticketing/openapi.yaml)
 
