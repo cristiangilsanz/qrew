@@ -93,7 +93,7 @@ function WaitlistRow({ eventId }: { eventId: string }) {
             className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/15 px-3 text-xs font-semibold text-red-400"
           >
             <LogOut className="h-3.5 w-3.5 shrink-0" />
-            {t('market.leaveQueueButton')}
+            {t('market.leaveWaitlistButton')}
           </button>
         </div>
       </article>
@@ -121,11 +121,11 @@ function WaitlistRow({ eventId }: { eventId: string }) {
                   <LogOut className="h-5 w-5 text-red-400" />
                 </div>
                 <h3 className="text-base font-semibold text-red-400">
-                  {t('market.leaveQueue.title')}
+                  {t('market.leaveWaitlist.title')}
                 </h3>
               </div>
               <p className="text-muted-foreground mb-6 text-sm">
-                {t('market.leaveQueue.description')}
+                {t('market.leaveWaitlist.description')}
               </p>
               <div className="flex items-center justify-between pt-1">
                 <button
@@ -141,7 +141,7 @@ function WaitlistRow({ eventId }: { eventId: string }) {
                 >
                   <>
                     <LogOut className="h-3.5 w-3.5" />
-                    {t('market.leaveQueue.confirm')}
+                    {t('market.leaveWaitlist.confirm')}
                   </>
                 </button>
               </div>

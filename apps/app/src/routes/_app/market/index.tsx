@@ -4,7 +4,7 @@ import { ChevronRight, Clock, Tag, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Skeleton } from '@/components/ui/skeleton'
-import { usePendingMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
+import { usePendingMarketOffer } from '@/features/market/hooks/useMarketOffer'
 import { useMyQueues } from '@/features/market/hooks/useMyQueues'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
 
@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_app/market/')({
 // renders the market page component
 function MarketPage() {
   const { t } = useTranslation()
-  const { data: assignment, isLoading: assignmentLoading } = usePendingMarketAssignment()
+  const { data: assignment, isLoading: assignmentLoading } = usePendingMarketOffer()
   const { data: tickets, isLoading: ticketsLoading } = useTickets()
   const { data: queues, isLoading: queuesLoading } = useMyQueues()
 
@@ -26,15 +26,15 @@ function MarketPage() {
 
   const sections = [
     {
-      to: '/market/my-listings' as const,
+      to: '/market/on-sale' as const,
       icon: Tag,
       label: t('market.myTicketsOnSale'),
       count: listedCount,
     },
     {
-      to: '/market/claims' as const,
+      to: '/market/offers' as const,
       icon: Clock,
-      label: t('market.myTicketsToClaim'),
+      label: t('market.myOffers'),
       count: claimsCount,
     },
     {

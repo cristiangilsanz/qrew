@@ -10,7 +10,7 @@ import { toastErrorMessage } from '@/lib/errors'
 import { organiserApi } from '../api'
 
 // provides use remove member
-export function useRemoveMember(orgId: string) {
+export function useRemoveCollaborator(orgId: string) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
 
@@ -20,7 +20,7 @@ export function useRemoveMember(orgId: string) {
     // handles on success
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['org-members', orgId] })
-      toast.success(t('organiser.members.removeSuccess'))
+      toast.success(t('organiser.collaborators.removeSuccess'))
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {

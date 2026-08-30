@@ -1,11 +1,11 @@
 {
   "nav": {
     "home": "Home",
-    "discover": "Events",
     "tickets": "Tickets",
     "profile": "Profile",
-    "organiser": "Management",
-    "market": "Market"
+    "market": "Market",
+    "management": "Management",
+    "events": "Events"
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -178,6 +178,8 @@
       "descriptionTitle": "This is a high-demand event",
       "descriptionSub": "Join the queue to get your tickets",
       "joinButton": "Join Queue",
+      "resumeButton": "View Your Place",
+      "admittedButton": "Claim Your Slot",
       "joinFailed": "Queue not joined.",
       "waiting": "Your position in the queue",
       "updatingIn": "Updating in {{seconds}}s",
@@ -232,22 +234,29 @@
   "market": {
     "title": "Market",
     "myTicketsOnSale": "My Tickets on Sale",
-    "myTicketsToClaim": "My Tickets to Claim",
     "myWaitlists": "My Waitlists",
     "searchByEvent": "Search by event…",
     "noResults": "No results.",
     "noTicketsOnSale": "You have no tickets on sale.",
-    "noPendingClaims": "You have no pending claims.",
     "noWaitlists": "You're not on any waitlists.",
     "resaleMarket": "Resale market",
-    "joinQueueButton": "Join Resale Queue",
-    "leaveQueueButton": "Leave Resale Queue",
-    "leaveQueue": {
-      "title": "Leave Resale Queue",
-      "description": "If someone lists a ticket, you won't be considered for it.",
-      "confirm": "Leave Resale Queue"
+    "toast": {
+      "declined": "Offer declined.",
+      "declineFailed": "Offer not declined.",
+      "paymentSuccess": "Payment confirmed.",
+      "leftWaitlist": "Waitlist left.",
+      "leaveFailed": "Waitlist not left.",
+      "joinSuccess": "Waitlist joined.",
+      "joinFailed": "Waitlist not joined."
     },
-    "assignment": {
+    "myOffers": "My Offers",
+    "noPendingOffers": "You have no offers.",
+    "offers": {
+      "paidBadge": "Paid",
+      "declinedBadge": "Declined",
+      "expiredBadge": "Expired"
+    },
+    "offer": {
       "viewEventDetails": "View Event Details",
       "total": "Total",
       "decline": "Decline",
@@ -260,19 +269,12 @@
       "expired": "Offer Expired",
       "declined": "Offer Declined"
     },
-    "toast": {
-      "declined": "Assignment declined.",
-      "declineFailed": "Assignment not declined.",
-      "paymentSuccess": "Payment confirmed.",
-      "leftWaitlist": "Waitlist left.",
-      "leaveFailed": "Waitlist not left.",
-      "joinSuccess": "Resale queue joined.",
-      "joinFailed": "Resale queue not joined."
-    },
-    "claims": {
-      "paidBadge": "Paid",
-      "declinedBadge": "Declined",
-      "expiredBadge": "Expired"
+    "joinWaitlistButton": "Join Waitlist",
+    "leaveWaitlistButton": "Leave Waitlist",
+    "leaveWaitlist": {
+      "title": "Leave Waitlist",
+      "description": "If someone lists a ticket, you won't be considered for it.",
+      "confirm": "Leave Waitlist"
     }
   },
   "profile": {
@@ -561,28 +563,6 @@
       "available": "{{available}}/{{capacity}} available",
       "free": "Free"
     },
-    "members": {
-      "title": "Collaborators",
-      "inviteSuccess": "Collaborator added.",
-      "removeSuccess": "Collaborator removed.",
-      "emailLabel": "User",
-      "roleLabel": "Role",
-      "inviteButton": "Add",
-      "joined": "Joined",
-      "invite": "Add collaborator",
-      "addMember": "Add collaborator",
-      "empty": "No collaborators yet.",
-      "emailPlaceholder": "Search by name or email…",
-      "roleMemberDesc": "Can view events and collaborators",
-      "roleManagerDesc": "Can manage events and add or remove collaborators",
-      "selectUser": "Please select a user from the list",
-      "noMatches": "No users match that search",
-      "searchPlaceholder": "Search collaborators…",
-      "removeTitle": "Remove collaborator",
-      "removeConfirmDesc": "This person will lose access to the organisation and its events.",
-      "removeConfirm": "Remove",
-      "roleValidationNote": "Both managers and members can validate tickets at entry"
-    },
     "venues": {
       "createSuccess": "Venue created.",
       "createTitle": "Create venue",
@@ -623,12 +603,34 @@
       "inviteFailed": "Collaborator not invited.",
       "removeFailed": "Collaborator not removed.",
       "createVenueFailed": "Venue not created.",
-      "addMemberFailed": "Collaborator not added.",
-      "deleteFailed": "Organisation not deleted."
+      "deleteFailed": "Organisation not deleted.",
+      "addCollaboratorFailed": "Collaborator not added."
     },
     "search": {
       "placeholder": "Search organisations…",
       "empty": "No organisations found."
+    },
+    "collaborators": {
+      "title": "Collaborators",
+      "inviteSuccess": "Collaborator added.",
+      "removeSuccess": "Collaborator removed.",
+      "emailLabel": "User",
+      "roleLabel": "Role",
+      "inviteButton": "Add",
+      "joined": "Joined",
+      "invite": "Add collaborator",
+      "addMember": "Add collaborator",
+      "empty": "No collaborators yet.",
+      "emailPlaceholder": "Search by name or email…",
+      "roleMemberDesc": "Can view events and collaborators",
+      "roleManagerDesc": "Can manage events and add or remove collaborators",
+      "selectUser": "Please select a user from the list",
+      "noMatches": "No users match that search",
+      "searchPlaceholder": "Search collaborators…",
+      "removeTitle": "Remove collaborator",
+      "removeConfirmDesc": "This person will lose access to the organisation and its events.",
+      "removeConfirm": "Remove",
+      "roleValidationNote": "Both managers and members can validate tickets at entry"
     }
   },
   "realtime": {

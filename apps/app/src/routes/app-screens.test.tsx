@@ -14,13 +14,13 @@ const PATHS = [
   '/tickets',
   '/tickets/ticket-1',
   '/market',
-  '/market/claims',
-  '/market/my-listings',
+  '/market/offers',
+  '/market/on-sale',
   '/market/waitlists',
   '/reservations/res-1',
   '/events/event-1/queue',
   '/events/event-1/checkout',
-  '/market/assignments/assignment-1',
+  '/market/offers/assignment-1',
 ]
 
 // implements sign in

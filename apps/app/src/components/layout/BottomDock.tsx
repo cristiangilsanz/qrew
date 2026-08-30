@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react'
 import { ArrowLeftRight, Building2, Compass, Home, Ticket, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { usePendingMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
+import { usePendingMarketOffer } from '@/features/market/hooks/useMarketOffer'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useReservedTicketsCount } from '@/features/tickets/hooks/useReservedTicketsCount'
@@ -13,13 +13,13 @@ import { cn } from '@/lib/utils'
 
 const baseTabs = [
   { to: '/home' as const, icon: Home, labelKey: 'nav.home' },
-  { to: '/events' as const, icon: Compass, labelKey: 'nav.discover' },
+  { to: '/events' as const, icon: Compass, labelKey: 'nav.events' },
   { to: '/tickets' as const, icon: Ticket, labelKey: 'nav.tickets' },
   { to: '/market' as const, icon: ArrowLeftRight, labelKey: 'nav.market' },
   { to: '/profile' as const, icon: User, labelKey: 'nav.profile' },
 ]
 
-const organiserTab = { to: '/management' as const, icon: Building2, labelKey: 'nav.organiser' }
+const organiserTab = { to: '/management' as const, icon: Building2, labelKey: 'nav.management' }
 
 // renders the dock tab component
 function DockTab({
@@ -70,7 +70,7 @@ export function BottomDock() {
   const { data: profile, isLoading: profileLoading } = useProfile()
   const { data: orgsData, isLoading: orgsLoading } = useMyOrganisations()
   const reservedCount = useReservedTicketsCount()
-  const { data: pendingAssignment } = usePendingMarketAssignment()
+  const { data: pendingAssignment } = usePendingMarketOffer()
 
   const keyboardOpen = useKeyboardOpen()
 

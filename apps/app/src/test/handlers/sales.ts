@@ -30,7 +30,7 @@ export const salesHandlers = [
 
   http.get(`${SALES_URL}/v1/market/assignments/pending`, () => HttpResponse.json(null)),
 
-  http.get(`${SALES_URL}/v1/market/assignments/:assignmentId`, () =>
+  http.get(`${SALES_URL}/v1/market/assignments/:offerId`, () =>
     HttpResponse.json({
       id: 'assignment-1',
       listing_id: 'listing-1',

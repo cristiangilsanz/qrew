@@ -25,7 +25,7 @@ import { PageError } from '@/components/ui/page-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
-import { useMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
+import { useMarketOffer } from '@/features/market/hooks/useMarketOffer'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
 import { isNotFound } from '@/lib/errors'
 import { lazyWithReload } from '@/lib/lazyWithReload'
@@ -39,7 +39,7 @@ import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/_app/market/assignments/$assignmentId/')({
+export const Route = createFileRoute('/_app/market/offers/$offerId/')({
   component: AssignmentPage,
 })
 
@@ -75,7 +75,7 @@ function extractMessage(err: unknown, fallback: string): string {
 // renders the assignment page component
 function AssignmentPage() {
   const { t } = useTranslation()
-  const { assignmentId } = Route.useParams()
+  const { offerId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -85,7 +85,7 @@ function AssignmentPage() {
     isError,
     error,
     refetch,
-  } = useMarketAssignment(assignmentId)
+  } = useMarketOffer(offerId)
   const { data: event, isLoading: eventLoading } = useEvent(assignment?.event_id ?? '')
   const countdown = useCountdown(assignment?.state === 'pending' ? assignment.expires_at : null)
 
@@ -118,7 +118,7 @@ function AssignmentPage() {
 
   const initiatePayment = useMutation({
     // implements mutation fn
-    mutationFn: () => marketApi.initiateAssignmentPayment(assignmentId),
+    mutationFn: () => marketApi.initiateOfferPayment(offerId),
     // handles on success
     onSuccess: (payment) => setClientSecret(payment.client_secret),
     // handles on error
@@ -127,9 +127,9 @@ function AssignmentPage() {
     },
   })
 
-  const declineAssignment = useMutation({
+  const declineOffer = useMutation({
     // implements mutation fn
-    mutationFn: () => marketApi.declineAssignment(assignmentId),
+    mutationFn: () => marketApi.declineOffer(offerId),
     // handles on success
     onSuccess: () => {
       toast.success(t('market.toast.declined'))
@@ -279,7 +279,7 @@ function AssignmentPage() {
             params={{ eventId: assignment.event_id }}
             className="flex items-center justify-between rounded-xl border border-white/10 px-4 py-3 transition-colors hover:bg-white/5"
           >
-            <span className="text-sm font-medium">{t('market.assignment.viewEventDetails')}</span>
+            <span className="text-sm font-medium">{t('market.offer.viewEventDetails')}</span>
             <ChevronRight className="h-4 w-4 text-white/40" />
           </Link>
         )}
@@ -294,7 +294,7 @@ function AssignmentPage() {
               <p className="leading-tight font-semibold">
                 {assignment.ticket_type_name ??
                   ticketType?.name ??
-                  t('market.assignment.generalAdmission')}
+                  t('market.offer.generalAdmission')}
               </p>
               {ticketType?.description && (
                 <p className="text-muted-foreground mt-0.5 text-xs">{ticketType.description}</p>
@@ -327,11 +327,9 @@ function AssignmentPage() {
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-green-400/20 bg-green-400/5 p-6 text-center">
             <CheckCircle2 className="h-8 w-8 text-green-400" />
             <p className="text-sm font-semibold text-green-400">
-              {t('market.assignment.paymentConfirmed')}
+              {t('market.offer.paymentConfirmed')}
             </p>
-            <p className="text-muted-foreground text-xs">
-              {t('market.assignment.ticketTransferring')}
-            </p>
+            <p className="text-muted-foreground text-xs">{t('market.offer.ticketTransferring')}</p>
           </div>
         </div>
       )}
@@ -339,7 +337,7 @@ function AssignmentPage() {
         <div className="mx-auto mt-2 flex w-full max-w-[430px] flex-col items-center space-y-2 px-4">
           <TicketX className="h-7 w-7 text-white/20" />
           <p className="text-muted-foreground text-center text-base font-semibold">
-            {t('market.assignment.expired')}
+            {t('market.offer.expired')}
           </p>
         </div>
       )}
@@ -347,7 +345,7 @@ function AssignmentPage() {
         <div className="mx-auto mt-2 flex w-full max-w-[430px] flex-col items-center space-y-2 px-4">
           <TicketX className="h-7 w-7 text-white/20" />
           <p className="text-muted-foreground text-center text-base font-semibold">
-            {t('market.assignment.declined')}
+            {t('market.offer.declined')}
           </p>
         </div>
       )}
@@ -356,7 +354,7 @@ function AssignmentPage() {
         <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto w-full max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
             <div className="flex items-center justify-between border-t border-white/10 pt-3 pb-1">
-              <span className="text-muted-foreground text-sm">{t('market.assignment.total')}</span>
+              <span className="text-muted-foreground text-sm">{t('market.offer.total')}</span>
               <span className="text-lg font-bold">
                 {formatPrice(assignment.price_cents, assignment.currency)}
               </span>
@@ -367,7 +365,7 @@ function AssignmentPage() {
                 className="flex h-14 items-center gap-2 rounded-full bg-red-500 pr-6 pl-5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-red-600"
               >
                 <XCircle className="h-4 w-4 shrink-0" />
-                {t('market.assignment.decline')}
+                {t('market.offer.decline')}
               </button>
               <button
                 onClick={() => initiatePayment.mutate()}
@@ -375,7 +373,7 @@ function AssignmentPage() {
                 className="bg-primary hover:bg-primary/90 flex h-14 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-lg transition disabled:opacity-40"
               >
                 <CreditCard className="h-4 w-4" />
-                {t('market.assignment.acceptAndPay')}
+                {t('market.offer.acceptAndPay')}
               </button>
             </div>
           </div>
@@ -405,12 +403,10 @@ function AssignmentPage() {
                   <XCircle className="h-5 w-5 text-red-400" />
                 </div>
                 <h3 className="text-base font-semibold text-red-400">
-                  {t('market.assignment.declineTitle')}
+                  {t('market.offer.declineTitle')}
                 </h3>
               </div>
-              <p className="text-muted-foreground mb-6 text-sm">
-                {t('market.assignment.declineDesc')}
-              </p>
+              <p className="text-muted-foreground mb-6 text-sm">{t('market.offer.declineDesc')}</p>
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => setDeclineOpen(false)}
@@ -421,9 +417,9 @@ function AssignmentPage() {
                 <button
                   onClick={() => {
                     setDeclineOpen(false)
-                    declineAssignment.mutate()
+                    declineOffer.mutate()
                   }}
-                  disabled={declineSeconds > 0 || declineAssignment.isPending}
+                  disabled={declineSeconds > 0 || declineOffer.isPending}
                   className="flex h-10 min-w-[112px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {declineSeconds > 0 ? (
@@ -431,7 +427,7 @@ function AssignmentPage() {
                   ) : (
                     <>
                       <XCircle className="h-3.5 w-3.5" />
-                      {t('market.assignment.decline')}
+                      {t('market.offer.decline')}
                     </>
                   )}
                 </button>

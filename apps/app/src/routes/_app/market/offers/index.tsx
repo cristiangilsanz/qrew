@@ -12,13 +12,13 @@ import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-fi
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { type EventDetail, eventsApi } from '@/features/events/api'
-import type { MarketAssignmentResponse } from '@/features/market/api'
-import { useMarketAssignments } from '@/features/market/hooks/useMarketAssignment'
+import type { MarketOfferResponse } from '@/features/market/api'
+import { useMarketOffers } from '@/features/market/hooks/useMarketOffer'
 import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/_app/market/claims/')({
+export const Route = createFileRoute('/_app/market/offers/')({
   component: ClaimsPage,
 })
 
@@ -33,7 +33,7 @@ function formatSeconds(s: number) {
 }
 
 interface CardProps {
-  assignment: MarketAssignmentResponse
+  assignment: MarketOfferResponse
   event?: EventDetail
 }
 
@@ -52,17 +52,13 @@ function AssignmentCard({ assignment, event }: CardProps) {
   // implements state label
   const stateLabel =
     effectiveState === 'paid'
-      ? t('market.claims.paidBadge')
+      ? t('market.offers.paidBadge')
       : effectiveState === 'declined'
-        ? t('market.claims.declinedBadge')
-        : t('market.claims.expiredBadge')
+        ? t('market.offers.declinedBadge')
+        : t('market.offers.expiredBadge')
 
   return (
-    <Link
-      to="/market/assignments/$assignmentId"
-      params={{ assignmentId: assignment.id }}
-      className="block"
-    >
+    <Link to="/market/offers/$offerId" params={{ offerId: assignment.id }} className="block">
       <article
         className={cn(
           'bg-card border-border hover:border-primary overflow-hidden rounded-xl border transition-colors',
@@ -128,7 +124,7 @@ function AssignmentCard({ assignment, event }: CardProps) {
 function ClaimsPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
-  const { data: assignments = [], isLoading, isError, refetch } = useMarketAssignments()
+  const { data: assignments = [], isLoading, isError, refetch } = useMarketOffers()
 
   const eventQueries = useQueries({
     queries: assignments.map((assignment) => ({
@@ -153,7 +149,7 @@ function ClaimsPage() {
   return (
     <div className="mx-auto max-w-[430px] space-y-4 px-4 pt-5 pb-28">
       <BackButton to="/market" />
-      <h1 className="text-2xl font-bold">{t('market.myTicketsToClaim')}</h1>
+      <h1 className="text-2xl font-bold">{t('market.myOffers')}</h1>
 
       {!isLoading && assignments.length > 0 && (
         <div className="relative">
@@ -172,7 +168,7 @@ function ClaimsPage() {
 
       {!isLoading && !isError && rows.length === 0 && (
         <p className="text-muted-foreground pt-10 text-center text-sm">
-          {term ? t('market.noResults') : t('market.noPendingClaims')}
+          {term ? t('market.noResults') : t('market.noPendingOffers')}
         </p>
       )}
 

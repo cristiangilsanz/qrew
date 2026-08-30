@@ -15,7 +15,7 @@ import { useTickets } from '@/features/tickets/hooks/useTickets'
 import { getEventImageUrl } from '@/lib/imageUrl'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/_app/market/my-listings/')({
+export const Route = createFileRoute('/_app/market/on-sale/')({
   component: MyListingsPage,
 })
 

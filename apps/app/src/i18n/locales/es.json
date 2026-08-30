@@ -1,11 +1,11 @@
 {
   "nav": {
     "home": "Inicio",
-    "discover": "Descubrir",
     "tickets": "Entradas",
     "profile": "Perfil",
-    "organiser": "Organizador",
-    "market": "Mercado"
+    "market": "Mercado",
+    "management": "Gestión",
+    "events": "Eventos"
   },
   "home": {
     "greetingMorning": "Buenos días",
@@ -166,6 +166,8 @@
     "queue": {
       "title": "Sala de espera",
       "joinButton": "Unirse A La Cola",
+      "resumeButton": "Ver tu posición",
+      "admittedButton": "Reclamar tu turno",
       "joinFailed": "Cola no unida.",
       "waiting": "Tu posición en la cola",
       "ready": "Eres el siguiente",
@@ -222,22 +224,29 @@
   "market": {
     "title": "Mercado",
     "myTicketsOnSale": "Mis Entradas en Venta",
-    "myTicketsToClaim": "Mis Entradas por Reclamar",
     "myWaitlists": "Mis Listas de Espera",
     "searchByEvent": "Buscar por evento…",
     "noResults": "Sin resultados.",
     "noTicketsOnSale": "No tienes entradas en venta.",
-    "noPendingClaims": "No tienes reclamaciones pendientes.",
     "noWaitlists": "No estás en ninguna lista de espera.",
     "resaleMarket": "Mercado de reventa",
-    "joinQueueButton": "Unirse A La Cola De Reventa",
-    "leaveQueueButton": "Abandonar Cola De Reventa",
-    "leaveQueue": {
-      "title": "Abandonar Cola de Reventa",
-      "description": "Si alguien publica una entrada, no serás considerado para ella.",
-      "confirm": "Abandonar Cola de Reventa"
+    "toast": {
+      "declined": "Oferta rechazada.",
+      "declineFailed": "Oferta no rechazada.",
+      "paymentSuccess": "Pago confirmado.",
+      "leftWaitlist": "Lista de espera abandonada.",
+      "leaveFailed": "Lista de espera no abandonada.",
+      "joinSuccess": "Lista de espera unida.",
+      "joinFailed": "Lista de espera no unida."
     },
-    "assignment": {
+    "myOffers": "Mis ofertas",
+    "noPendingOffers": "No tienes ofertas.",
+    "offers": {
+      "paidBadge": "Pagado",
+      "declinedBadge": "Rechazado",
+      "expiredBadge": "Expirado"
+    },
+    "offer": {
       "viewEventDetails": "Ver Detalles Del Evento",
       "total": "Total",
       "decline": "Rechazar",
@@ -250,19 +259,12 @@
       "expired": "Oferta Expirada",
       "declined": "Oferta Rechazada"
     },
-    "toast": {
-      "declined": "Asignación rechazada.",
-      "declineFailed": "Asignación no rechazada.",
-      "paymentSuccess": "Pago confirmado.",
-      "leftWaitlist": "Lista de espera abandonada.",
-      "leaveFailed": "Lista de espera no abandonada.",
-      "joinSuccess": "Cola de reventa unida.",
-      "joinFailed": "Cola de reventa no unida."
-    },
-    "claims": {
-      "paidBadge": "Pagado",
-      "declinedBadge": "Rechazado",
-      "expiredBadge": "Expirado"
+    "joinWaitlistButton": "Unirme a la lista",
+    "leaveWaitlistButton": "Salir de la lista",
+    "leaveWaitlist": {
+      "title": "Salir de la lista",
+      "description": "Si alguien publica una entrada, no serás considerado para ella.",
+      "confirm": "Salir de la lista"
     }
   },
   "profile": {
@@ -551,28 +553,6 @@
       "available": "{{available}}/{{capacity}} disponibles",
       "free": "Gratis"
     },
-    "members": {
-      "title": "Colaboradores",
-      "inviteSuccess": "Colaborador añadido.",
-      "removeSuccess": "Colaborador eliminado.",
-      "emailLabel": "Usuario",
-      "roleLabel": "Rol",
-      "inviteButton": "Añadir",
-      "joined": "Se unió",
-      "invite": "Añadir colaborador",
-      "addMember": "Añadir colaborador",
-      "empty": "Aún no hay colaboradores.",
-      "emailPlaceholder": "Buscar por nombre o email…",
-      "roleMemberDesc": "Puede ver eventos y colaboradores, y escanear entradas",
-      "roleManagerDesc": "Puede gestionar eventos y añadir o eliminar colaboradores",
-      "selectUser": "Selecciona un usuario de la lista",
-      "noMatches": "Ningun usuario coincide con la busqueda",
-      "searchPlaceholder": "Buscar colaboradores…",
-      "removeTitle": "Eliminar colaborador",
-      "removeConfirmDesc": "Esta persona perderá el acceso a la organización y sus eventos.",
-      "removeConfirm": "Eliminar",
-      "roleValidationNote": "Tanto gestores como miembros pueden validar entradas en el acceso"
-    },
     "venues": {
       "createSuccess": "Lugar creado.",
       "createTitle": "Crear lugar",
@@ -603,8 +583,8 @@
       "inviteFailed": "Colaborador no invitado.",
       "removeFailed": "Colaborador no eliminado.",
       "createVenueFailed": "Sede no creada.",
-      "addMemberFailed": "Colaborador no añadido.",
-      "deleteFailed": "Organización no eliminada."
+      "deleteFailed": "Organización no eliminada.",
+      "addCollaboratorFailed": "Colaborador no añadido."
     },
     "search": {
       "placeholder": "Buscar organizaciones…",
@@ -619,6 +599,28 @@
       "scanned": "escaneadas",
       "admitted": "Admitido",
       "rejected": "Rechazado"
+    },
+    "collaborators": {
+      "title": "Colaboradores",
+      "inviteSuccess": "Colaborador añadido.",
+      "removeSuccess": "Colaborador eliminado.",
+      "emailLabel": "Usuario",
+      "roleLabel": "Rol",
+      "inviteButton": "Añadir",
+      "joined": "Se unió",
+      "invite": "Añadir colaborador",
+      "addMember": "Añadir colaborador",
+      "empty": "Aún no hay colaboradores.",
+      "emailPlaceholder": "Buscar por nombre o email…",
+      "roleMemberDesc": "Puede ver eventos y colaboradores, y escanear entradas",
+      "roleManagerDesc": "Puede gestionar eventos y añadir o eliminar colaboradores",
+      "selectUser": "Selecciona un usuario de la lista",
+      "noMatches": "Ningun usuario coincide con la busqueda",
+      "searchPlaceholder": "Buscar colaboradores…",
+      "removeTitle": "Eliminar colaborador",
+      "removeConfirmDesc": "Esta persona perderá el acceso a la organización y sus eventos.",
+      "removeConfirm": "Eliminar",
+      "roleValidationNote": "Tanto gestores como miembros pueden validar entradas en el acceso"
     }
   },
   "realtime": {

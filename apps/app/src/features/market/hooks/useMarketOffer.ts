@@ -4,12 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import { marketApi } from '../api'
 
 // provides use market assignment
-export function useMarketAssignment(assignmentId: string) {
+export function useMarketOffer(offerId: string) {
   return useQuery({
-    queryKey: ['market', 'assignment', assignmentId],
+    queryKey: ['market', 'assignment', offerId],
     // implements query fn
-    queryFn: () => marketApi.getAssignment(assignmentId),
-    enabled: !!assignmentId,
+    queryFn: () => marketApi.getOffer(offerId),
+    enabled: !!offerId,
     // implements refetch interval
     refetchInterval: (query) => {
       const state = query.state.data?.state
@@ -19,21 +19,21 @@ export function useMarketAssignment(assignmentId: string) {
 }
 
 // provides use market assignments
-export function useMarketAssignments() {
+export function useMarketOffers() {
   return useQuery({
     queryKey: ['market', 'assignments'],
     // implements query fn
-    queryFn: () => marketApi.listAssignments(),
+    queryFn: () => marketApi.listOffers(),
     refetchInterval: 30_000,
   })
 }
 
 // provides use pending market assignment
-export function usePendingMarketAssignment() {
+export function usePendingMarketOffer() {
   return useQuery({
     queryKey: ['market', 'assignment', 'pending'],
     // implements query fn
-    queryFn: () => marketApi.getPendingAssignment(),
+    queryFn: () => marketApi.getPendingOffer(),
     refetchInterval: 30_000,
   })
 }

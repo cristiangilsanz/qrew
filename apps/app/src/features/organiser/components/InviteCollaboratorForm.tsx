@@ -20,7 +20,7 @@ import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-fi
 import { profileApi } from '@/features/profile/api'
 import { cn } from '@/lib/utils'
 
-import { useInviteMember } from '../hooks/useInviteMember'
+import { useInviteCollaborator } from '../hooks/useInviteCollaborator'
 
 const schema = z.object({
   user_id: z.string().uuid(),
@@ -33,12 +33,12 @@ const MIN_QUERY_LENGTH = 2
 
 interface Props {
   orgId: string
-  existingMemberIds?: string[]
+  existingCollaboratorIds?: string[]
   onSuccess?: () => void
 }
 
 // renders the invite member form component
-export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: Props) {
+export function InviteCollaboratorForm({ orgId, existingCollaboratorIds = [], onSuccess }: Props) {
   const { t } = useTranslation()
   const [searchQ, setSearchQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
@@ -63,14 +63,14 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
   })
 
   // implements filtered
-  const filtered = matches.filter((u) => !existingMemberIds.includes(u.id))
+  const filtered = matches.filter((u) => !existingCollaboratorIds.includes(u.id))
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { user_id: '', role: 'member' },
   })
 
-  const invite = useInviteMember(orgId)
+  const invite = useInviteCollaborator(orgId)
 
   useEffect(() => {
     // handles on click outside
@@ -108,14 +108,14 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
         <input type="hidden" {...form.register('user_id')} />
 
         <FormItem>
-          <FormLabel>{t('organiser.members.emailLabel')}</FormLabel>
+          <FormLabel>{t('organiser.collaborators.emailLabel')}</FormLabel>
           <div ref={containerRef} className="relative">
             <Search className={SEARCH_ICON_CLASS} />
             <input
               type="search"
               autoComplete="off"
               className={SEARCH_INPUT_CLASS}
-              placeholder={t('organiser.members.emailPlaceholder')}
+              placeholder={t('organiser.collaborators.emailPlaceholder')}
               value={searchQ}
               onChange={(e) => {
                 setSearchQ(e.target.value)
@@ -131,7 +131,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
                 )}
                 {!isFetching && filtered.length === 0 && (
                   <li className="text-muted-foreground px-4 py-3 text-xs">
-                    {t('organiser.members.noMatches')}
+                    {t('organiser.collaborators.noMatches')}
                   </li>
                 )}
                 {filtered.map((u) => (
@@ -158,7 +158,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
             )}
           </div>
           {form.formState.errors.user_id && (
-            <p className="text-destructive text-sm">{t('organiser.members.selectUser')}</p>
+            <p className="text-destructive text-sm">{t('organiser.collaborators.selectUser')}</p>
           )}
         </FormItem>
         <FormField
@@ -166,7 +166,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('organiser.members.roleLabel')}</FormLabel>
+              <FormLabel>{t('organiser.collaborators.roleLabel')}</FormLabel>
               <FormControl>
                 <div className="grid grid-cols-2 items-stretch gap-2">
                   {(['manager', 'member'] as const).map((role) => (
@@ -184,7 +184,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
                       <p className="text-sm font-semibold capitalize">{role}</p>
                       <p className="text-muted-foreground mt-0.5 text-xs leading-tight">
                         {t(
-                          `organiser.members.role${role.charAt(0).toUpperCase() + role.slice(1)}Desc`,
+                          `organiser.collaborators.role${role.charAt(0).toUpperCase() + role.slice(1)}Desc`,
                         )}
                       </p>
                     </button>
@@ -193,7 +193,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
               </FormControl>
               <p className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs">
                 <Info className="h-3 w-3 shrink-0 opacity-60" />
-                {t('organiser.members.roleValidationNote')}
+                {t('organiser.collaborators.roleValidationNote')}
               </p>
               <FormMessage />
             </FormItem>
@@ -201,7 +201,7 @@ export function InviteMemberForm({ orgId, existingMemberIds = [], onSuccess }: P
         />
         <div className="flex justify-end">
           <Button type="submit" isLoading={invite.isPending}>
-            {t('organiser.members.inviteButton')}
+            {t('organiser.collaborators.inviteButton')}
           </Button>
         </div>
       </form>

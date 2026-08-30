@@ -10,7 +10,7 @@ import { toastErrorMessage } from '@/lib/errors'
 import { organiserApi } from '../api'
 
 // provides use invite member
-export function useInviteMember(orgId: string) {
+export function useInviteCollaborator(orgId: string) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
 
@@ -21,7 +21,7 @@ export function useInviteMember(orgId: string) {
     // handles on success
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['org-members', orgId] })
-      toast.success(t('organiser.members.inviteSuccess'))
+      toast.success(t('organiser.collaborators.inviteSuccess'))
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
