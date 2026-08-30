@@ -1,5 +1,5 @@
 // renders the kyc upload step component
-import { ChevronDown, ShieldCheck, Upload } from 'lucide-react'
+import { ArrowUpFromLine, ChevronDown, Upload } from 'lucide-react'
 import { type ChangeEvent, type FormEvent, type KeyboardEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -123,7 +123,7 @@ export function KycUploadStep({ onSuccess }: Props) {
         disabled={!file || !documentValid}
         isLoading={upload.isPending}
       >
-        <ShieldCheck className="mr-2 h-4 w-4" />
+        <ArrowUpFromLine className="mr-2 h-4 w-4" />
         {t('onboarding.kyc.submit')}
       </Button>
     </form>

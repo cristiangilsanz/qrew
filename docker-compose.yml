@@ -50,6 +50,7 @@ services:
       dockerfile: apps/api/services/identity/Dockerfile
     volumes:
       - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - identity_storage:/app/var/storage
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -82,6 +83,7 @@ services:
     command: ["python", "-m", "com.qode.qrew.v1.identity.worker"]
     volumes:
       - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - identity_storage:/app/var/storage
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -99,6 +101,7 @@ services:
     command: ["python", "-m", "com.qode.qrew.v1.identity.worker.runner"]
     volumes:
       - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - identity_storage:/app/var/storage
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
@@ -462,3 +465,4 @@ volumes:
   postgres_data:
   redis_data:
   nats_data:
+  identity_storage:
