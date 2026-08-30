@@ -165,11 +165,19 @@ function ReservationPage() {
     (h) => h.holder_name.trim().length > 0 && validateDni(h.holder_dni),
   )
 
-  // implements ticket type
-  const ticketType = event?.ticket_types.find((tt) => tt.id === reservation.ticket_type_id)
-  const unitPrice = ticketType?.price_cents ?? 0
-  const currency = ticketType?.currency ?? 'EUR'
-  const totalPrice = unitPrice * quantity
+  // implements order lines
+  const lines = reservation.items.map((item) => {
+    const tier = event?.ticket_types.find((tt) => tt.id === item.ticket_type_id)
+    return {
+      id: item.ticket_type_id,
+      name: tier?.name ?? '—',
+      quantity: item.quantity,
+      subtotal: (tier?.price_cents ?? 0) * item.quantity,
+      currency: tier?.currency ?? 'EUR',
+    }
+  })
+  const currency = lines[0]?.currency ?? 'EUR'
+  const totalPrice = lines.reduce((sum, line) => sum + line.subtotal, 0)
 
   const isPaid = reservation.status === 'paid'
   const isExpired = reservation.status === 'expired'
@@ -208,25 +216,24 @@ function ReservationPage() {
           <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
             {event?.name ?? '—'}
           </p>
-          <h2 className="text-lg leading-tight font-bold">{ticketType?.name ?? '—'}</h2>
-          {ticketType?.description && (
-            <p className="text-muted-foreground mt-1 text-sm">{ticketType.description}</p>
-          )}
+          <h2 className="text-lg leading-tight font-bold">{t('tickets.reservation.title')}</h2>
         </div>
 
         <div className="border-t border-white/10" />
 
         <div className="space-y-2.5">
+          {lines.map((line) => (
+            <div key={line.id} className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {line.name} <span className="text-white/40">x{line.quantity}</span>
+              </span>
+              <span className="font-semibold">{formatPrice(line.subtotal, line.currency)}</span>
+            </div>
+          ))}
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Quantity</span>
+            <span className="text-muted-foreground">{t('tickets.checkout.quantity')}</span>
             <span className="font-semibold">{quantity}</span>
           </div>
-          {unitPrice > 0 && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Unit price</span>
-              <span className="font-semibold">{formatPrice(unitPrice, currency)}</span>
-            </div>
-          )}
           <div className="flex items-center justify-between">
             <span className="font-semibold">Total</span>
             <span className="text-primary text-lg font-bold">

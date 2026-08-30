@@ -38,7 +38,6 @@ class Reservation(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     event_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
-    ticket_type_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[ReservationStatus] = mapped_column(
         String(16),

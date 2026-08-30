@@ -35,16 +35,25 @@ def validate_spanish_id(value: str) -> str:
     )
 
 
-class ReservationCreateRequest(BaseModel):
+class ReservationItemInput(BaseModel):
     ticket_type_id: uuid.UUID
     quantity: int = Field(..., ge=1, le=20)
+
+
+class ReservationCreateRequest(BaseModel):
+    items: list[ReservationItemInput] = Field(..., min_length=1, max_length=10)
     reservation_window_token: str | None = Field(default=None, min_length=1)
+
+
+class ReservationItemResponse(BaseModel):
+    ticket_type_id: uuid.UUID
+    quantity: int
 
 
 class ReservationResponse(BaseModel):
     id: uuid.UUID
     event_id: uuid.UUID
-    ticket_type_id: uuid.UUID
+    items: list[ReservationItemResponse]
     quantity: int
     status: ReservationStatus
     expires_at: datetime

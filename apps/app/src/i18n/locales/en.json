@@ -196,7 +196,8 @@
       "reserveButton": "Reserve Tickets",
       "selected": "selected",
       "limitReached": "You already hold the maximum number of tickets for this event.",
-      "walletLimit": "Max {{count}} tickets"
+      "walletLimit": "Max {{count}} tickets",
+      "quantity": "Quantity"
     },
     "reservation": {
       "title": "Your Reservation",

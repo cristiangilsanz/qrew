@@ -1,5 +1,6 @@
 # tests billing
 import uuid
+from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
@@ -45,6 +46,9 @@ def _make_db(
     return db
 
 
+_DEFAULT_ITEM = SimpleNamespace(ticket_type_id=uuid.uuid4(), quantity=2)
+
+
 # handles billing
 async def _billing(
     *,
@@ -53,6 +57,7 @@ async def _billing(
     reservation: object = None,
     inventory: object = None,
     currency: str = "EUR",
+    items: list[object] | None = None,
 ) -> PaymentContext:
     from unittest.mock import patch
 
@@ -65,6 +70,9 @@ async def _billing(
         ) as MockInv,
     ):
         MockRepo.return_value.get_by_id = AsyncMock(return_value=reservation)
+        MockRepo.return_value.list_items = AsyncMock(
+            return_value=items if items is not None else [_DEFAULT_ITEM]
+        )
         MockInv.return_value.get_by_id = AsyncMock(return_value=inventory)
         db = MagicMock()
         return await get_payment_context(
@@ -161,6 +169,7 @@ class TestGetPaymentContext:
             reservation_id=reservation.id,
             reservation=reservation,
             inventory=inventory,
+            items=[SimpleNamespace(ticket_type_id=ticket_type_id, quantity=3)],
         )
         assert result.amount_cents == 1500
         assert result.currency == "GBP"

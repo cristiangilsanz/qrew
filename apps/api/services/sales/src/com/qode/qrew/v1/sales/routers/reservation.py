@@ -14,10 +14,12 @@ from locking import LockUnavailableError
 from com.qode.qrew.v1.sales.models.reservation import Reservation
 from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
 from com.qode.qrew.v1.sales.models.reservation_holder import ReservationHolder
+from com.qode.qrew.v1.sales.models.reservation_item import ReservationItem
 from com.qode.qrew.v1.sales.repositories.reservation_holder import ReservationHolderRepository
 from com.qode.qrew.v1.sales.schemas.reservation import (
     HolderResponse,
     ReservationCreateRequest,
+    ReservationItemResponse,
     ReservationResponse,
     SetHoldersRequest,
 )
@@ -39,11 +41,14 @@ router = APIRouter(prefix="/reservations", tags=["reservations"])
 
 
 # converts a reservation into its response
-def _to_response(reservation: Reservation) -> ReservationResponse:
+def _to_response(reservation: Reservation, items: list[ReservationItem]) -> ReservationResponse:
     return ReservationResponse(
         id=reservation.id,
         event_id=reservation.event_id,
-        ticket_type_id=reservation.ticket_type_id,
+        items=[
+            ReservationItemResponse(ticket_type_id=i.ticket_type_id, quantity=i.quantity)
+            for i in items
+        ],
         quantity=reservation.quantity,
         status=reservation.status,
         expires_at=reservation.expires_at,
@@ -95,11 +100,10 @@ async def create_reservation(
     fingerprint = raw_fp if raw_fp and _FINGERPRINT_RE.match(raw_fp) else None
 
     try:
-        reservation = await service.reserve(
+        reservation, items = await service.reserve(
             user_id=current_user.id,
             event_id=event_id,
-            ticket_type_id=body.ticket_type_id,
-            quantity=body.quantity,
+            items=[(i.ticket_type_id, i.quantity) for i in body.items],
             ip_address=ip_address,
             fingerprint_hash=fingerprint,
             reservation_window_token=body.reservation_window_token,
@@ -128,7 +132,7 @@ async def create_reservation(
             },
         ) from exc
 
-    return _to_response(reservation)
+    return _to_response(reservation, items)
 
 
 # cancels an open reservation
@@ -149,7 +153,9 @@ async def cancel_reservation(
 ) -> ReservationResponse:
     del request
     try:
-        reservation = await service.cancel(actor_id=current_user.id, reservation_id=reservation_id)
+        reservation, items = await service.cancel(
+            actor_id=current_user.id, reservation_id=reservation_id
+        )
     except ReservationError as exc:
         raise _bad_request(exc) from exc
     except LockUnavailableError as exc:
@@ -160,7 +166,7 @@ async def cancel_reservation(
                 "field": None,
             },
         ) from exc
-    return _to_response(reservation)
+    return _to_response(reservation, items)
 
 
 # reads a reservation owned by the caller
@@ -180,12 +186,12 @@ async def get_reservation(
 ) -> ReservationResponse:
     del request
     try:
-        reservation = await service.get_for_user(
+        reservation, items = await service.get_for_user(
             actor_id=current_user.id, reservation_id=reservation_id
         )
     except ReservationError as exc:
         raise _bad_request(exc) from exc
-    return _to_response(reservation)
+    return _to_response(reservation, items)
 
 
 # names each ticket holder of a still open reservation

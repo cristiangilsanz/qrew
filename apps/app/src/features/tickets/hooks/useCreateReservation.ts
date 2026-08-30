@@ -10,8 +10,7 @@ import { toastErrorMessage } from '@/lib/errors'
 import { type Reservation, ticketsApi } from '../api'
 
 interface CreateReservationData {
-  ticket_type_id: string
-  quantity: number
+  items: { ticket_type_id: string; quantity: number }[]
   reservation_window_token?: string
 }
 

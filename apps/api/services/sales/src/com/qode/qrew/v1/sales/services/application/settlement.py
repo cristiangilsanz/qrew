@@ -1,6 +1,7 @@
 # marks reservations as paid or cancelled and publishes the outcome
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
 from com.qode.qrew.v1.sales.models.reservation_holder import ReservationHolder
+from com.qode.qrew.v1.sales.models.reservation_item import ReservationItem
 from com.qode.qrew.v1.sales.repositories.projections import TicketTypeInventoryRepository
 from com.qode.qrew.v1.sales.repositories.reservation import ReservationRepository
 from locking import redlock
@@ -49,7 +51,8 @@ class SettlementService:
         holders = await ReservationHolderRepository(self._session).list_by_reservation(
             reservation_id
         )
-        await _publish_paid(reservation, holders)
+        items = await self._reservations.list_items(reservation_id)
+        await _publish_paid(reservation, items, holders)
         return reservation
 
     # cancels a reservation and releases the inventory it held
@@ -64,17 +67,30 @@ class SettlementService:
                 return None
             if reservation.status in {ReservationStatus.cancelled, ReservationStatus.expired}:
                 return None
-            inventory = await self._inventory.get_by_id(reservation.ticket_type_id)
+            items = await self._reservations.list_items(reservation_id)
+            for item in items:
+                inventory = await self._inventory.get_by_id(item.ticket_type_id)
+                if inventory is not None:
+                    inventory.reserved_count = max(0, inventory.reserved_count - item.quantity)
             reservation.status = ReservationStatus.cancelled
-            if inventory is not None:
-                inventory.reserved_count = max(0, inventory.reserved_count - reservation.quantity)
             await self._session.commit()
-        await _publish_cancelled(reservation, reason=reason)
+        await _publish_cancelled(reservation, items, reason=reason)
         return reservation
 
 
+# renders a reservation's tiers for a message payload
+def _items_payload(items: list[ReservationItem]) -> list[dict[str, Any]]:
+    return [
+        {"ticket_type_id": str(item.ticket_type_id), "quantity": item.quantity} for item in items
+    ]
+
+
 # publishes that a reservation was paid onto the shared nats connection
-async def _publish_paid(reservation: Reservation, holders: list[ReservationHolder]) -> None:
+async def _publish_paid(
+    reservation: Reservation,
+    items: list[ReservationItem],
+    holders: list[ReservationHolder],
+) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
@@ -88,7 +104,7 @@ async def _publish_paid(reservation: Reservation, holders: list[ReservationHolde
                 "reservation_id": str(reservation.id),
                 "user_id": str(reservation.user_id),
                 "event_id": str(reservation.event_id),
-                "ticket_type_id": str(reservation.ticket_type_id),
+                "items": _items_payload(items),
                 "quantity": reservation.quantity,
                 "holders": [
                     {
@@ -108,7 +124,9 @@ async def _publish_paid(reservation: Reservation, holders: list[ReservationHolde
 
 
 # publishes that a reservation was cancelled onto the shared nats connection
-async def _publish_cancelled(reservation: Reservation, *, reason: str) -> None:
+async def _publish_cancelled(
+    reservation: Reservation, items: list[ReservationItem], *, reason: str
+) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
@@ -122,7 +140,7 @@ async def _publish_cancelled(reservation: Reservation, *, reason: str) -> None:
                 "reservation_id": str(reservation.id),
                 "user_id": str(reservation.user_id),
                 "event_id": str(reservation.event_id),
-                "ticket_type_id": str(reservation.ticket_type_id),
+                "items": _items_payload(items),
                 "quantity": reservation.quantity,
             },
         )

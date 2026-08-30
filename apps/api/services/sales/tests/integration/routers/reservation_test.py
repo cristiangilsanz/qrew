@@ -18,13 +18,13 @@ async def test_create_reservation_success(
     _, headers = auth_headers
     resp = await client.post(
         f"/v1/events/{event_id}/reserve",
-        json={"ticket_type_id": str(ticket_type_id), "quantity": 2},
+        json={"items": [{"ticket_type_id": str(ticket_type_id), "quantity": 2}]},
         headers=headers,
     )
     assert resp.status_code == 201
     data = resp.json()
     assert data["event_id"] == str(event_id)
-    assert data["ticket_type_id"] == str(ticket_type_id)
+    assert data["items"] == [{"ticket_type_id": str(ticket_type_id), "quantity": 2}]
     assert data["quantity"] == 2
     assert data["status"] == "reserved"
 
@@ -38,7 +38,7 @@ async def test_create_reservation_event_not_found(
     _, headers = auth_headers
     resp = await client.post(
         f"/v1/events/{uuid.uuid4()}/reserve",
-        json={"ticket_type_id": str(uuid.uuid4()), "quantity": 1},
+        json={"items": [{"ticket_type_id": str(uuid.uuid4()), "quantity": 1}]},
         headers=headers,
     )
     assert resp.status_code == 404
@@ -84,7 +84,7 @@ async def test_create_reservation_sold_out(
     _, headers = auth_headers
     resp = await client.post(
         f"/v1/events/{event_id}/reserve",
-        json={"ticket_type_id": str(ticket_type_id), "quantity": 1},
+        json={"items": [{"ticket_type_id": str(ticket_type_id), "quantity": 1}]},
         headers=headers,
     )
     assert resp.status_code == 409
@@ -101,7 +101,7 @@ async def test_get_reservation_success(
     _, headers = auth_headers
     create_resp = await client.post(
         f"/v1/events/{event_id}/reserve",
-        json={"ticket_type_id": str(ticket_type_id), "quantity": 1},
+        json={"items": [{"ticket_type_id": str(ticket_type_id), "quantity": 1}]},
         headers=headers,
     )
     assert create_resp.status_code == 201
@@ -127,7 +127,7 @@ async def test_get_reservation_not_owned(
     user_id, headers = auth_headers
     create_resp = await client.post(
         f"/v1/events/{event_id}/reserve",
-        json={"ticket_type_id": str(ticket_type_id), "quantity": 1},
+        json={"items": [{"ticket_type_id": str(ticket_type_id), "quantity": 1}]},
         headers=headers,
     )
     assert create_resp.status_code == 201
@@ -154,7 +154,7 @@ async def test_cancel_reservation_success(
     _, headers = auth_headers
     create_resp = await client.post(
         f"/v1/events/{event_id}/reserve",
-        json={"ticket_type_id": str(ticket_type_id), "quantity": 1},
+        json={"items": [{"ticket_type_id": str(ticket_type_id), "quantity": 1}]},
         headers=headers,
     )
     assert create_resp.status_code == 201

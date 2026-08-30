@@ -42,7 +42,12 @@ def now() -> datetime:
     return datetime.now(UTC)
 
 
-# handles make reservation
+# builds a stand in reservation item row for the unit tests
+def make_reservation_item(*, ticket_type_id: uuid.UUID, quantity: int = 2) -> SimpleNamespace:
+    return SimpleNamespace(id=uuid.uuid4(), ticket_type_id=ticket_type_id, quantity=quantity)
+
+
+# builds a stand in reservation row for the unit tests
 def make_reservation(
     *,
     user_id: uuid.UUID,

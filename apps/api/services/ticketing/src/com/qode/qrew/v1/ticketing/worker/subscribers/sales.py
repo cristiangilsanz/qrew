@@ -29,11 +29,17 @@ async def handle_reservation_created(raw: bytes) -> None:
         reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
         user_id = uuid.UUID(str(data["data"]["user_id"]))
         event_id = uuid.UUID(str(data["data"]["event_id"]))
-        ticket_type_id = uuid.UUID(str(data["data"]["ticket_type_id"]))
-        quantity = int(data["data"]["quantity"])
-    except (KeyError, ValueError):
+        items = [
+            (uuid.UUID(str(item["ticket_type_id"])), int(item["quantity"]))
+            for item in data["data"]["items"]
+        ]
+    except (KeyError, TypeError, ValueError):
         await logger.awarning("sales_events.reservation_created.bad_payload")
         return
+    if not items:
+        await logger.awarning("sales_events.reservation_created.bad_payload")
+        return
+    quantity = sum(qty for _, qty in items)
 
     async with AsyncSessionLocal() as session:
         async with redlock(
@@ -46,16 +52,17 @@ async def handle_reservation_created(raw: bytes) -> None:
                     reservation_id=str(reservation_id),
                 )
                 return
-            for _ in range(quantity):
-                session.add(
-                    Ticket(
-                        reservation_id=reservation_id,
-                        event_id=event_id,
-                        ticket_type_id=ticket_type_id,
-                        owner_user_id=user_id,
-                        state=TicketState.reserved,
+            for ticket_type_id, item_quantity in items:
+                for _ in range(item_quantity):
+                    session.add(
+                        Ticket(
+                            reservation_id=reservation_id,
+                            event_id=event_id,
+                            ticket_type_id=ticket_type_id,
+                            owner_user_id=user_id,
+                            state=TicketState.reserved,
+                        )
                     )
-                )
             await session.commit()
     await logger.ainfo(
         "sales_events.tickets_created",

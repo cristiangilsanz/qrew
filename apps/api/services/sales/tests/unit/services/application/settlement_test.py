@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
 from com.qode.qrew.v1.sales.services.application.settlement import SettlementService
-from conftest import make_inventory, make_reservation
+from conftest import make_inventory, make_reservation, make_reservation_item
 
 _PATCH_REDLOCK = "com.qode.qrew.v1.sales.services.application.settlement.redlock"
 _PATCH_SETTINGS = "com.qode.qrew.v1.sales.services.application.settlement.settings"
@@ -20,12 +20,14 @@ def _make_svc(
     *,
     reservation: object = None,
     inventory: object = None,
+    items: list[object] | None = None,
 ) -> tuple[SettlementService, MagicMock]:
     session = MagicMock()
     session.commit = AsyncMock()
     svc = SettlementService(session)
     svc._reservations = MagicMock()
     svc._reservations.get_by_id = AsyncMock(return_value=reservation)
+    svc._reservations.list_items = AsyncMock(return_value=items if items is not None else [])
     svc._inventory = MagicMock()
     svc._inventory.get_by_id = AsyncMock(return_value=inventory)
     return svc, session
@@ -166,7 +168,11 @@ class TestSettlementCancel:
         inventory = make_inventory(
             ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=10
         )
-        svc, session = _make_svc(reservation=reservation, inventory=inventory)
+        svc, session = _make_svc(
+            reservation=reservation,
+            inventory=inventory,
+            items=[make_reservation_item(ticket_type_id=ticket_type_id, quantity=3)],
+        )
         with (
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
@@ -191,7 +197,11 @@ class TestSettlementCancel:
         inventory = make_inventory(
             ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=3
         )
-        svc, _ = _make_svc(reservation=reservation, inventory=inventory)
+        svc, _ = _make_svc(
+            reservation=reservation,
+            inventory=inventory,
+            items=[make_reservation_item(ticket_type_id=ticket_type_id, quantity=5)],
+        )
         with (
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),

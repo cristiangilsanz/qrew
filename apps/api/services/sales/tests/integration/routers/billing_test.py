@@ -20,7 +20,7 @@ async def test_create_charge_success(
     user_id, headers = auth_headers
     create_resp = await client.post(
         f"/v1/events/{event_id}/reserve",
-        json={"ticket_type_id": str(ticket_type_id), "quantity": 2},
+        json={"items": [{"ticket_type_id": str(ticket_type_id), "quantity": 2}]},
         headers=headers,
     )
     assert create_resp.status_code == 201
@@ -48,7 +48,7 @@ async def test_create_charge_no_internal_key(
     user_id, headers = auth_headers
     create_resp = await client.post(
         f"/v1/events/{event_id}/reserve",
-        json={"ticket_type_id": str(ticket_type_id), "quantity": 1},
+        json={"items": [{"ticket_type_id": str(ticket_type_id), "quantity": 1}]},
         headers=headers,
     )
     assert create_resp.status_code == 201

@@ -79,20 +79,31 @@ async def write(
         await conn.execute(
             """
             INSERT INTO sales.reservations (
-                id, user_id, event_id, ticket_type_id, quantity, status, expires_at,
+                id, user_id, event_id, quantity, status, expires_at,
                 requires_review, risk_score, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
             """,
             reservation.id,
             data.person(reservation.user).id,
             event.id,
-            tier.id(event.key),
             reservation.quantity,
             reservation.status,
             when.minutes(reservation.expires_in_minutes),
             reservation.requires_review,
             reservation.risk_score,
             when.hours(-reservation.created_hours_ago),
+        )
+        await conn.execute(
+            """
+            INSERT INTO sales.reservation_items (
+                id, reservation_id, ticket_type_id, quantity
+            )
+            VALUES ($1, $2, $3, $4)
+            """,
+            ident("reservation-item", reservation.key, reservation.ticket_type),
+            reservation.id,
+            tier.id(event.key),
+            reservation.quantity,
         )
         for position, (holder_name, holder_dni) in enumerate(
             reservation.holders, start=1

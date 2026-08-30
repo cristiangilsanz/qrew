@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import structlog
+from jobs import job, parse_crontab
 from sqlalchemy import text
 
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
@@ -15,7 +16,7 @@ _NATS_PUBLISH_TIMEOUT = 5.0
 
 _SELECT_EXPIRED = text(
     """
-    SELECT id, user_id, event_id, ticket_type_id, quantity
+    SELECT id, user_id, event_id, quantity
     FROM sales.reservations
     WHERE status = 'reserved' AND expires_at < now()
     ORDER BY expires_at
@@ -26,6 +27,11 @@ _SELECT_EXPIRED = text(
 
 _EXPIRE_RESERVATION = text(
     "UPDATE sales.reservations SET status = 'expired', updated_at = now() WHERE id = :id"
+)
+
+_SELECT_ITEMS = text(
+    "SELECT ticket_type_id, quantity FROM sales.reservation_items "
+    "WHERE reservation_id = :reservation_id"
 )
 
 _DECREMENT_INVENTORY = text(
@@ -47,12 +53,16 @@ async def sweep_expired() -> int:
         )
         rows = list(result.mappings())
         for row in rows:
-            await session.execute(
-                _DECREMENT_INVENTORY,
-                {"tier_id": row["ticket_type_id"], "qty": row["quantity"]},
+            items = list(
+                (await session.execute(_SELECT_ITEMS, {"reservation_id": row["id"]})).mappings()
             )
+            for item in items:
+                await session.execute(
+                    _DECREMENT_INVENTORY,
+                    {"tier_id": item["ticket_type_id"], "qty": item["quantity"]},
+                )
             await session.execute(_EXPIRE_RESERVATION, {"id": row["id"]})
-            expired_rows.append(dict(row))
+            expired_rows.append({**dict(row), "items": [dict(item) for item in items]})
             swept += 1
 
     for row in expired_rows:
@@ -77,7 +87,13 @@ async def _publish_expired(row: dict[str, Any]) -> None:
                 "reservation_id": str(row["id"]),
                 "user_id": str(row["user_id"]),
                 "event_id": str(row["event_id"]),
-                "ticket_type_id": str(row["ticket_type_id"]),
+                "items": [
+                    {
+                        "ticket_type_id": str(item["ticket_type_id"]),
+                        "quantity": item["quantity"],
+                    }
+                    for item in row["items"]
+                ],
                 "quantity": row["quantity"],
             },
         )
@@ -92,3 +108,10 @@ async def _publish_expired(row: dict[str, Any]) -> None:
             reservation_id=str(row["id"]),
             error=repr(exc),
         )
+
+
+# expires overdue reservations and releases the inventory they held on a periodic schedule
+@job("reservations.sweep_expired", cron=parse_crontab("* * * * *"), max_attempts=1)
+async def run_sweep_expired(ctx: dict[str, Any]) -> None:
+    del ctx
+    await sweep_expired()

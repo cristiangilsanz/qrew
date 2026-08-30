@@ -18,10 +18,15 @@ export interface QueueRedeemResponse {
 
 export type ReservationStatus = 'reserved' | 'paid' | 'cancelled' | 'expired'
 
+export interface ReservationItem {
+  ticket_type_id: string
+  quantity: number
+}
+
 export interface Reservation {
   id: string
   event_id: string
-  ticket_type_id: string
+  items: ReservationItem[]
   quantity: number
   status: ReservationStatus
   expires_at: string
@@ -96,7 +101,7 @@ export const ticketsApi = {
   // implements create reservation
   createReservation: (
     eventId: string,
-    data: { ticket_type_id: string; quantity: number; reservation_window_token?: string },
+    data: { items: ReservationItem[]; reservation_window_token?: string },
   ) => salesClient.post<Reservation>(`/v1/events/${eventId}/reserve`, data).then((r) => r.data),
 
   // implements get reservation

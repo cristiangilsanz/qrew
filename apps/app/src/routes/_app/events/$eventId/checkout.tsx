@@ -124,23 +124,17 @@ function CheckoutPage() {
     if (!canReserve) return
     setIsPending(true)
     try {
-      let firstReservationId: string | null = null
-      for (const tt of selectedTypes) {
-        const reservation = await ticketsApi.createReservation(eventId, {
+      const reservation = await ticketsApi.createReservation(eventId, {
+        items: selectedTypes.map((tt) => ({
           ticket_type_id: tt.id,
           quantity: quantities[tt.id]!,
-          reservation_window_token,
-        })
-        if (firstReservationId === null) firstReservationId = reservation.id
-      }
-      if (firstReservationId) {
-        void navigate({
-          to: '/reservations/$reservationId',
-          params: { reservationId: firstReservationId },
-        })
-      } else {
-        void navigate({ to: '/tickets' })
-      }
+        })),
+        reservation_window_token,
+      })
+      void navigate({
+        to: '/reservations/$reservationId',
+        params: { reservationId: reservation.id },
+      })
     } catch (err) {
       console.error('[checkout] reservation failed', err)
       toast.error(fieldErrorMessage(err) ?? t('tickets.reservation.createFailed'))

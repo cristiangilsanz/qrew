@@ -72,7 +72,7 @@ export function CheckoutForm({
       <form
         onSubmit={form.handleSubmit((v) =>
           createReservation.mutate({
-            ...v,
+            items: [{ ticket_type_id: v.ticket_type_id, quantity: v.quantity }],
             reservation_window_token: reservationWindowToken,
           }),
         )}

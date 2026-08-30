@@ -49,15 +49,26 @@ async def test_sweep_expired_marks_reservation_expired(
         await session.execute(
             text("""
                 INSERT INTO sales.reservations
-                (id, user_id, event_id, ticket_type_id, quantity, status, expires_at)
-                VALUES (:id, :user_id, :event_id, :ticket_type_id, 2, 'reserved', :expires_at)
+                (id, user_id, event_id, quantity, status, expires_at)
+                VALUES (:id, :user_id, :event_id, 2, 'reserved', :expires_at)
             """),
             {
                 "id": reservation_id,
                 "user_id": uuid.uuid4(),
                 "event_id": event_id,
-                "ticket_type_id": ticket_type_id,
                 "expires_at": now - timedelta(minutes=5),
+            },
+        )
+        await session.execute(
+            text("""
+                INSERT INTO sales.reservation_items
+                (id, reservation_id, ticket_type_id, quantity)
+                VALUES (:id, :reservation_id, :ticket_type_id, 2)
+            """),
+            {
+                "id": uuid.uuid4(),
+                "reservation_id": reservation_id,
+                "ticket_type_id": ticket_type_id,
             },
         )
 
@@ -113,15 +124,26 @@ async def test_sweep_expired_decrements_inventory(
         await session.execute(
             text("""
                 INSERT INTO sales.reservations
-                (id, user_id, event_id, ticket_type_id, quantity, status, expires_at)
-                VALUES (:id, :user_id, :event_id, :ticket_type_id, 3, 'reserved', :expires_at)
+                (id, user_id, event_id, quantity, status, expires_at)
+                VALUES (:id, :user_id, :event_id, 3, 'reserved', :expires_at)
             """),
             {
                 "id": reservation_id,
                 "user_id": uuid.uuid4(),
                 "event_id": event_id,
-                "ticket_type_id": ticket_type_id,
                 "expires_at": now - timedelta(minutes=5),
+            },
+        )
+        await session.execute(
+            text("""
+                INSERT INTO sales.reservation_items
+                (id, reservation_id, ticket_type_id, quantity)
+                VALUES (:id, :reservation_id, :ticket_type_id, 3)
+            """),
+            {
+                "id": uuid.uuid4(),
+                "reservation_id": reservation_id,
+                "ticket_type_id": ticket_type_id,
             },
         )
 

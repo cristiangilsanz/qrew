@@ -186,7 +186,8 @@
       "reserveButton": "Reservar Entradas",
       "selected": "seleccionada",
       "limitReached": "Ya tienes el número máximo de entradas para este evento.",
-      "walletLimit": "Max {{count}} entradas"
+      "walletLimit": "Max {{count}} entradas",
+      "quantity": "Cantidad"
     },
     "reservation": {
       "title": "Tu reserva",
