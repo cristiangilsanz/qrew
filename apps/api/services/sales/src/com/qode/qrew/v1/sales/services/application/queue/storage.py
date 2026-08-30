@@ -158,20 +158,20 @@ async def redeem_window_token(*, token: str, user_id: uuid.UUID) -> str:
 
     payload = jwt_keys.verify(jwt_keys.Purpose.QUEUE, token)
     if payload.get("scope") != REDEEM_SCOPE:
-        raise InvalidTokenError("Unexpected scope")
+        raise InvalidTokenError("Token scope rejected.")
     if payload.get("sub") != str(user_id):
-        raise InvalidTokenError("Subject mismatch")
+        raise InvalidTokenError("Token subject mismatched.")
     event_raw = payload.get("event_id")
     if not isinstance(event_raw, str):
-        raise InvalidTokenError("event_id missing")
+        raise InvalidTokenError("Event id missing.")
     event_id = uuid.UUID(event_raw)
     jti = payload.get("jti")
     if not isinstance(jti, str):
-        raise InvalidTokenError("jti missing")
+        raise InvalidTokenError("Token id missing.")
     redis = _shared_client()
     added = await redis.sadd(_REDEEMED_KEY.format(event_id=event_id), jti)  # type: ignore[misc]
     if not added:
-        raise InvalidTokenError("Token already redeemed")
+        raise InvalidTokenError("Token already redeemed.")
     reservation_token, _ = _build_reservation_token(event_id=event_id, user_id=str(user_id))
     return reservation_token
 
@@ -183,20 +183,20 @@ async def consume_reservation_token(*, token: str, user_id: uuid.UUID) -> uuid.U
 
     payload = jwt_keys.verify(jwt_keys.Purpose.QUEUE, token)
     if payload.get("scope") != RESERVATION_SCOPE:
-        raise InvalidTokenError("Unexpected scope")
+        raise InvalidTokenError("Token scope rejected.")
     if payload.get("sub") != str(user_id):
-        raise InvalidTokenError("Subject mismatch")
+        raise InvalidTokenError("Token subject mismatched.")
     event_raw = payload.get("event_id")
     if not isinstance(event_raw, str):
-        raise InvalidTokenError("event_id missing")
+        raise InvalidTokenError("Event id missing.")
     event_id = uuid.UUID(event_raw)
     jti = payload.get("jti")
     if not isinstance(jti, str):
-        raise InvalidTokenError("jti missing")
+        raise InvalidTokenError("Token id missing.")
     redis = _shared_client()
     added = await redis.sadd(  # type: ignore[misc]
         _RESERVATION_KEY.format(event_id=event_id), jti
     )
     if not added:
-        raise InvalidTokenError("Token already consumed")
+        raise InvalidTokenError("Token already consumed.")
     return event_id

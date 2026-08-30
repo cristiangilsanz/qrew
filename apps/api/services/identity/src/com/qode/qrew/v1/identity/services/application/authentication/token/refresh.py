@@ -88,14 +88,14 @@ class RefreshService:
             payload = jwt_keys.verify(jwt_keys.REFRESH, request.refresh_token)
         except ExpiredSignatureError as exc:
             await logger.awarning("refresh_failed", reason="token_expired")
-            raise RefreshError("Refresh token has expired") from exc
+            raise RefreshError("Refresh token expired.") from exc
         except InvalidTokenError as exc:
             await logger.awarning("refresh_failed", reason="invalid_token")
-            raise RefreshError("Invalid refresh token") from exc
+            raise RefreshError("Refresh token rejected.") from exc
 
         if payload.get("type") != "refresh":
             await logger.awarning("refresh_failed", reason="wrong_token_type")
-            raise RefreshError("Invalid token type")
+            raise RefreshError("Token type rejected.")
 
         jti = payload.get("jti")
         subject = payload.get("sub")
@@ -106,7 +106,7 @@ class RefreshService:
 
         if not isinstance(subject, str):
             await logger.awarning("refresh_failed", reason="invalid_subject")
-            raise RefreshError("Invalid refresh token")
+            raise RefreshError("Refresh token rejected.")
 
         await self._check_user_revocation(subject, payload.get("iat"))
 
@@ -114,12 +114,12 @@ class RefreshService:
             user_id = uuid.UUID(subject)
         except ValueError as exc:
             await logger.awarning("refresh_failed", reason="invalid_subject")
-            raise RefreshError("Invalid refresh token") from exc
+            raise RefreshError("Refresh token rejected.") from exc
 
         user = await self._repo.get_by_id(user_id)
         if user is None or not user.is_active:
             await logger.awarning("refresh_failed", reason="user_not_found_or_inactive")
-            raise RefreshError("Invalid refresh token")
+            raise RefreshError("Refresh token rejected.")
 
         bound_device_id = await self.check_device_binding(
             jti, payload.get("iat"), device_signature, user_id
@@ -166,7 +166,7 @@ class RefreshService:
         if stored == _ROTATED and isinstance(subject, str) and isinstance(jti, str):
             await self._handle_theft(subject, jti)
         await logger.awarning("refresh_failed", reason="token_revoked")
-        raise RefreshError("Refresh token has been revoked")
+        raise RefreshError("Refresh token revoked.")
 
     # blacklists every token issued before now and kills the user's sessions
     async def _handle_theft(self, subject: str, jti: str) -> None:
@@ -206,7 +206,7 @@ class RefreshService:
             and int(iat) <= int(revoked_at_raw)
         ):
             await logger.awarning("refresh_failed", reason="all_tokens_revoked")
-            raise RefreshError("Refresh token has been revoked")
+            raise RefreshError("Refresh token revoked.")
 
     # verifies the bound device's signature over a refresh attempt
     async def check_device_binding(
@@ -222,36 +222,36 @@ class RefreshService:
         if session is None or session.device_id is None:
             return None
         if not isinstance(iat, (int, float)):
-            raise RefreshError("Invalid refresh token")
+            raise RefreshError("Refresh token rejected.")
 
         if signature is None:
             await self._audit_signature_failure(actor_id, jti, "missing_signature")
             await logger.awarning("refresh_failed", reason="missing_device_signature", jti=jti)
-            raise RefreshError("Refresh requires a device signature")
+            raise RefreshError("Device signature required.")
 
         if self._device_repo is None:
             return session.device_id
         device = await self._device_repo.get_by_id(session.device_id)
         if device is None or device.revoked_at is not None:
             await self._audit_signature_failure(actor_id, jti, "device_missing")
-            raise RefreshError("Bound device is no longer valid")
+            raise RefreshError("Device no longer valid.")
 
         signed_payload = signature_payload(jti, int(iat))
         try:
             pub_key = load_der_public_key(device.public_key)
         except Exception as exc:
             await self._audit_signature_failure(actor_id, jti, "bad_public_key")
-            raise RefreshError("Invalid bound device public key") from exc
+            raise RefreshError("Device key rejected.") from exc
         if not isinstance(pub_key, EllipticCurvePublicKey):
             await self._audit_signature_failure(actor_id, jti, "bad_public_key")
-            raise RefreshError("Invalid bound device public key")
+            raise RefreshError("Device key rejected.")
 
         try:
             verify_ecdsa(pub_key, signature, signed_payload)
         except DeviceBindingError as exc:
             await self._audit_signature_failure(actor_id, jti, "bad_signature")
             await logger.awarning("refresh_failed", reason="device_signature_invalid", jti=jti)
-            raise RefreshError("Refresh device signature invalid") from exc
+            raise RefreshError("Device signature rejected.") from exc
         return session.device_id
 
     # records why a device signature check failed

@@ -143,27 +143,28 @@ class PaymentService:
         ctx = await _get_assignment_context(assignment_id, actor_id)
         if not ctx.is_valid:
             if ctx.error_code in ("410", "expires_at"):
-                raise PaymentExpiredError("Assignment has expired", field="expires_at")
+                raise PaymentExpiredError("Assignment expired.", field="expires_at")
             if ctx.error_code in ("404", "assignment_id"):
-                raise PaymentError("Assignment not found", field="assignment_id")
-            raise PaymentError("Assignment is not ready for payment", field="state")
+                raise PaymentError("Assignment not found.", field="assignment_id")
+            raise PaymentError("Assignment not ready for payment.", field="state")
 
         existing = await self._repo.get_by_assignment_id(assignment_id)
         if existing is not None and existing.provider_payment_intent_id:
             return existing
 
-        intent = await self._stripe.create_payment_intent(
-            amount_cents=ctx.amount_cents,
-            currency=ctx.currency,
-            idempotency_key=f"market_assignment:{assignment_id}",
-            metadata={"market_assignment_id": str(assignment_id)},
-        )
         payment = existing or Payment(
+            id=uuid.uuid4(),
             reservation_id=None,
             market_assignment_id=assignment_id,
             user_id=actor_id,
             amount_cents=ctx.amount_cents,
             currency=ctx.currency,
+        )
+        intent = await self._stripe.create_payment_intent(
+            amount_cents=ctx.amount_cents,
+            currency=ctx.currency,
+            idempotency_key=f"market_assignment:{assignment_id}:{payment.id}",
+            metadata={"market_assignment_id": str(assignment_id)},
         )
         payment.provider_payment_intent_id = intent.intent_id
         payment.client_secret_ciphertext = pii_crypto.encrypt(intent.client_secret)
@@ -192,26 +193,27 @@ class PaymentService:
         ctx = await _get_reservation_context(reservation_id, actor_id)
         if not ctx.is_valid:
             if ctx.error_code in ("410", "expired"):
-                raise PaymentExpiredError("Reservation has expired", field="expires_at")
+                raise PaymentExpiredError("Reservation expired.", field="expires_at")
             if ctx.error_code in ("404", "not_found", "wrong_owner"):
-                raise PaymentError("Reservation not found", field="reservation_id")
-            raise PaymentError("Reservation is not pending payment", field="status")
+                raise PaymentError("Reservation not found.", field="reservation_id")
+            raise PaymentError("Reservation not pending payment.", field="status")
 
         existing = await self._repo.get_by_reservation_id(reservation_id)
         if existing is not None and existing.provider_payment_intent_id:
             return existing
 
-        intent = await self._stripe.create_payment_intent(
-            amount_cents=ctx.amount_cents,
-            currency=ctx.currency,
-            idempotency_key=f"reservation:{reservation_id}",
-            metadata={"reservation_id": str(reservation_id)},
-        )
         payment = existing or Payment(
+            id=uuid.uuid4(),
             reservation_id=reservation_id,
             user_id=actor_id,
             amount_cents=ctx.amount_cents,
             currency=ctx.currency,
+        )
+        intent = await self._stripe.create_payment_intent(
+            amount_cents=ctx.amount_cents,
+            currency=ctx.currency,
+            idempotency_key=f"reservation:{reservation_id}:{payment.id}",
+            metadata={"reservation_id": str(reservation_id)},
         )
         payment.provider_payment_intent_id = intent.intent_id
         payment.client_secret_ciphertext = pii_crypto.encrypt(intent.client_secret)
@@ -374,14 +376,14 @@ class PaymentService:
         )
 
         if signature is None:
-            raise WebhookError("Missing Stripe-Signature header")
+            raise WebhookError("Stripe signature missing.")
         try:
             event = await self._stripe.verify_webhook(payload, signature)
         except Exception as exc:
-            raise WebhookError("Invalid Stripe signature") from exc
+            raise WebhookError("Stripe signature rejected.") from exc
         event_id = str(event.get("id") or "")
         if not event_id:
-            raise WebhookError("Webhook payload missing id")
+            raise WebhookError("Webhook payload rejected.")
         if not await claim_event(event_id):
             return {"status": "duplicate"}
         await dispatch_webhook_event(self, event)

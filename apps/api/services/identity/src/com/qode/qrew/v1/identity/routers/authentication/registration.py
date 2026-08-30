@@ -110,7 +110,7 @@ async def verify_phone(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
-                "message": "Phone number does not match your account",
+                "message": "Phone number mismatched.",
                 "field": "phone_number",
             },
         )

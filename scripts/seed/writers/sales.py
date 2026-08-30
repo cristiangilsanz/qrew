@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncpg
 
-from ..core import SeedConfig, Timeline, hash_pii, ident
+from ..core import SeedConfig, Timeline, encrypt, hash_pii, ident
 from ..data import Dataset
 
 NAME = "sales"
@@ -99,15 +99,16 @@ async def write(
         ):
             await conn.execute(
                 """
-                INSERT INTO sales.reservation_holders (id, reservation_id, position,
-                                                       holder_name, holder_dni)
+                INSERT INTO sales.reservation_holders (
+                    id, reservation_id, position, holder_name, holder_dni_ciphertext
+                )
                 VALUES ($1, $2, $3, $4, $5)
                 """,
                 ident("holder", reservation.key, str(position)),
                 reservation.id,
                 position,
                 holder_name,
-                holder_dni,
+                encrypt(cfg.fernet, holder_dni),
             )
 
     for listing in data.listings:
@@ -137,7 +138,7 @@ async def write(
             INSERT INTO sales.market_assignments (
                 id, listing_id, event_id, buyer_user_id, assigned_at, expires_at,
                 paid_at,
-                payment_intent_id, holder_name, holder_dni, state
+                payment_intent_id, holder_name, holder_dni_ciphertext, state
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             """,
             assignment.id,
@@ -151,7 +152,9 @@ async def write(
             else None,
             f"pi_seed_{assignment.key}" if assignment.paid else None,
             assignment.holder_name,
-            assignment.holder_dni,
+            encrypt(cfg.fernet, assignment.holder_dni)
+            if assignment.holder_dni is not None
+            else None,
             assignment.state,
         )
 

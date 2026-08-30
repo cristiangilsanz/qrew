@@ -78,7 +78,7 @@ class ReservationService:
             )
         except DBAPIError as exc:
             raise TierBusyError(
-                "Ticket type is being purchased by another caller",
+                "Ticket type busy.",
                 field="ticket_type_id",
             ) from exc
 
@@ -96,7 +96,7 @@ class ReservationService:
         reservation_window_token: str | None = None,
     ) -> Reservation:
         if quantity < 1:
-            raise ReservationError("Quantity must be at least 1", field="quantity")
+            raise ReservationError("Quantity must be at least 1.", field="quantity")
 
         engine = await build_engine_for_user(
             self._session, user_id=user_id, fingerprint_hash=fingerprint_hash
@@ -114,7 +114,7 @@ class ReservationService:
             await self._record_blocked(
                 actor_id=user_id, event_id=event_id, payload=evaluation.to_payload()
             )
-            raise FraudBlockedError("Reservation rejected for risk")
+            raise FraudBlockedError("Reservation rejected.")
 
         if reservation_window_token is not None:
             try:
@@ -136,18 +136,18 @@ class ReservationService:
         ):
             event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
             if event_ctx is None:
-                raise ReservationError("Event not found", field="event_id")
+                raise ReservationError("Event not found.", field="event_id")
             if event_ctx.status != "published":
-                raise ReservationError("Event is not on sale", field="status")
+                raise ReservationError("Event not on sale.", field="status")
             if quantity > event_ctx.max_tickets_per_user:
                 raise ReservationError(
                     "Quantity exceeds the per-user maximum for this event", field="quantity"
                 )
             now = _now()
             if event_ctx.sale_starts_at is None or event_ctx.sale_ends_at is None:
-                raise ReservationError("Sale window not configured", field="sale_window")
+                raise ReservationError("Sale window not configured.", field="sale_window")
             if now < event_ctx.sale_starts_at or now > event_ctx.sale_ends_at:
-                raise ReservationError("Sale window is closed", field="sale_window")
+                raise ReservationError("Sale window closed.", field="sale_window")
             if reservation_window_token is None and event_ctx.queue_required:
                 raise ReservationError(
                     "Reservation window token is required for this event",
@@ -155,12 +155,12 @@ class ReservationService:
                 )
             inventory = await self._lock_inventory_nowait(ticket_type_id)
             if inventory is None or inventory.event_id != event_id:
-                raise ReservationError("Ticket type not found", field="ticket_type_id")
+                raise ReservationError("Ticket type not found.", field="ticket_type_id")
             if inventory.reserved_count + quantity > inventory.capacity:
-                raise ReservationError("Not enough capacity remaining", field="quantity")
+                raise ReservationError("Capacity exhausted.", field="quantity")
             held = await self._repo.active_quantity_for_user(user_id, event_id)
             if held + quantity > event_ctx.max_tickets_per_user:
-                raise ReservationError("Would exceed your per-user ticket limit", field="quantity")
+                raise ReservationError("Ticket limit exceeded.", field="quantity")
             expires_at = now + timedelta(seconds=settings.reservation_ttl_seconds)
             reservation = Reservation(
                 user_id=user_id,
@@ -202,7 +202,7 @@ class ReservationService:
     async def cancel(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Reservation:
         reservation = await self._repo.get_by_id(reservation_id)
         if reservation is None or reservation.user_id != actor_id:
-            raise ReservationError("Reservation not found", field="reservation_id")
+            raise ReservationError("Reservation not found.", field="reservation_id")
         if reservation.status in {ReservationStatus.cancelled, ReservationStatus.expired}:
             return reservation
         if reservation.status == ReservationStatus.paid:
@@ -214,7 +214,7 @@ class ReservationService:
         ):
             inventory = await self._lock_inventory_nowait(reservation.ticket_type_id)
             if inventory is None:
-                raise ReservationError("Ticket type not found", field="ticket_type_id")
+                raise ReservationError("Ticket type not found.", field="ticket_type_id")
             reservation.status = ReservationStatus.cancelled
             inventory.reserved_count = max(0, inventory.reserved_count - reservation.quantity)
             await self._session.flush()
@@ -232,7 +232,7 @@ class ReservationService:
     async def get_for_user(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Reservation:
         reservation = await self._repo.get_by_id(reservation_id)
         if reservation is None or reservation.user_id != actor_id:
-            raise ReservationError("Reservation not found", field="reservation_id")
+            raise ReservationError("Reservation not found.", field="reservation_id")
         return reservation
 
     # records that a reservation was blocked for fraud risk

@@ -21,7 +21,7 @@ _bearer = HTTPBearer(auto_error=False)
 
 _CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail={"message": "Invalid or expired token", "field": None},
+    detail={"message": "Token expired.", "field": None},
 )
 
 
@@ -112,7 +112,7 @@ def verify(purpose: str, token: str) -> dict[str, object]:
     kid = header.get("kid")
     public_pem = keys.verifiers.get(kid) if isinstance(kid, str) else None
     if public_pem is None:
-        raise InvalidTokenError("Unknown signing key")
+        raise InvalidTokenError("Signing key unknown.")
     return _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[no-any-return]
 
 

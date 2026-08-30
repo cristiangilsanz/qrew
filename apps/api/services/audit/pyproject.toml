@@ -24,7 +24,10 @@ dependencies = [
     "middleware",
     "locking",
     "observability",
+    "messaging",
+    "contracts",
     "worker",
+    "security",
 ]
 
 [tool.uv.sources]
@@ -33,7 +36,10 @@ idempotency = { workspace = true }
 middleware = { workspace = true }
 locking = { workspace = true }
 observability = { workspace = true }
+messaging = { workspace = true }
+contracts = { workspace = true }
 worker = { workspace = true }
+security = { workspace = true }
 
 [project.scripts]
 audit-dev = "com.qode.qrew.v1.audit.__main__:main"

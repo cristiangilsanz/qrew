@@ -34,14 +34,14 @@ async def get_payment_context(
 ) -> PaymentContext:
     reservation = await ReservationRepository(db).get_by_id(reservation_id)
     if reservation is None or reservation.user_id != user_id:
-        raise PaymentContextError("Reservation not found", "not_found")
+        raise PaymentContextError("Reservation not found.", "not_found")
     if reservation.status != ReservationStatus.reserved:
-        raise PaymentContextError("Reservation is not pending payment", "not_reserved")
+        raise PaymentContextError("Reservation not pending payment.", "not_reserved")
     if reservation.expires_at <= datetime.now(UTC):
-        raise PaymentContextError("Reservation has expired", "expired")
+        raise PaymentContextError("Reservation expired.", "expired")
     inventory = await TicketTypeInventoryRepository(db).get_by_id(reservation.ticket_type_id)
     if inventory is None:
-        raise PaymentContextError("Ticket type not found", "not_found")
+        raise PaymentContextError("Ticket type not found.", "not_found")
     amount_cents = inventory.price_cents * reservation.quantity
     currency = inventory.currency or default_currency
     return PaymentContext(amount_cents=amount_cents, currency=currency)

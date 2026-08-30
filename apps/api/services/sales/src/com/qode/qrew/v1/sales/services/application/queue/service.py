@@ -45,16 +45,16 @@ class QueueService:
     async def join(self, *, user_id: uuid.UUID, event_id: uuid.UUID, tiebreak: int) -> int:
         event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
         if event_ctx is None or event_ctx.status != "published":
-            raise QueueError("Event not found", field="event_id")
+            raise QueueError("Event not found.", field="event_id")
         if not event_ctx.queue_required:
-            raise QueueError("Event has no queue", field="queue_required")
+            raise QueueError("Event has no queue.", field="queue_required")
         now = _now()
         if event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at:
-            raise QueueError("Sale window is closed", field="sale_window")
+            raise QueueError("Sale window closed.", field="sale_window")
         lead = settings.queue_join_lead_seconds
         if event_ctx.sale_starts_at is not None:
             if (event_ctx.sale_starts_at - now).total_seconds() > lead:
-                raise QueueError("Queue is not yet open for this event", field="sale_starts_at")
+                raise QueueError("Queue not open.", field="sale_starts_at")
         sale_start_ms = (
             int(event_ctx.sale_starts_at.timestamp() * 1000)
             if event_ctx.sale_starts_at
@@ -71,7 +71,7 @@ class QueueService:
         if result is None:
             position = await queue_position(event_id, user_id)
             if position is None:
-                raise QueueError("Failed to join the queue", field="event_id")
+                raise QueueError("Queue not joined.", field="event_id")
             return position
         await self._record(
             _QUEUE_JOINED,
@@ -102,7 +102,7 @@ class QueueService:
                 event_id=None,
                 payload={"reason": str(exc)},
             )
-            raise QueueError("Invalid redeem token", field="redeem_window_token") from exc
+            raise QueueError("Redeem token rejected.", field="redeem_window_token") from exc
         await self._record(_QUEUE_REDEEMED, actor_id=user_id, event_id=None, payload={})
         return reservation_token
 

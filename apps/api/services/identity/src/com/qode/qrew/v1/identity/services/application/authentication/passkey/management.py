@@ -49,7 +49,7 @@ class PasskeyManagementService:
     async def delete_passkey(self, passkey_id: uuid.UUID, user_id: uuid.UUID) -> None:
         credential = await self._passkey_repo.get_by_id(passkey_id)
         if credential is None or credential.user_id != user_id:
-            raise PasskeyError("Passkey not found", field="id")
+            raise PasskeyError("Passkey not found.", field="id")
 
         count = await self._passkey_repo.count_by_user_id(user_id)
         if count <= 1:
@@ -68,7 +68,7 @@ class PasskeyManagementService:
     ) -> PasskeyResponse:
         credential = await self._passkey_repo.get_by_id(passkey_id)
         if credential is None or credential.user_id != user_id:
-            raise PasskeyError("Passkey not found", field="id")
+            raise PasskeyError("Passkey not found.", field="id")
 
         credential.name = name
         updated = await self._passkey_repo.save(credential)

@@ -102,4 +102,4 @@ async def unlock_user(
     lockout: LoginLockoutService = Depends(get_login_lockout_service),
 ) -> dict[str, str]:
     await lockout.admin_unlock(user_id, admin.id)
-    return {"message": "User account unlocked."}
+    return {"message": "Account unlocked."}

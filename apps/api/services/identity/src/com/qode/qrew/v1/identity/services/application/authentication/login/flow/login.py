@@ -42,7 +42,7 @@ from com.qode.qrew.v1.identity.services.application.authentication.login.guards.
 logger = structlog.get_logger(__name__)
 
 _DUMMY_HASH = hash_password("dummy-timing-pad")
-_INVALID_CREDENTIALS = "Invalid email or password"
+_INVALID_CREDENTIALS = "Email or password rejected."
 
 
 class LoginError(DomainError):

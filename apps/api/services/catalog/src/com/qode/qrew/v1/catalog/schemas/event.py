@@ -95,6 +95,7 @@ class PublicEventDetailResponse(BaseModel):
     max_tickets_per_user: int
     queue_required: bool
     published_at: datetime | None
+    status: str
     availability_status: Literal["not_started", "open", "ended", "sold_out"]
     organisation: OrganisationPublicResponse
     venue: VenuePublicResponse

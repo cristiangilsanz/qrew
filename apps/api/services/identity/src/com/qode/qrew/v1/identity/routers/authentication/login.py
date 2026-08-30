@@ -80,7 +80,7 @@ async def login(
     except LoginLockoutError as exc:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail={"message": "Invalid email or password", "field": None},
+            detail={"message": "Email or password rejected.", "field": None},
             headers={"Retry-After": str(exc.retry_after_seconds)},
         ) from exc
     except LoginError as exc:

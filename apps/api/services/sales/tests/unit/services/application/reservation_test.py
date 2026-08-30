@@ -185,7 +185,7 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="Event not found"),
+            pytest.raises(ReservationError, match="Event not found."),
         ):
             await svc.reserve(
                 user_id=user_id,
@@ -250,7 +250,7 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="Sale window not configured"),
+            pytest.raises(ReservationError, match="Sale window not configured."),
         ):
             await svc.reserve(
                 user_id=user_id,
@@ -276,7 +276,7 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="Sale window is closed"),
+            pytest.raises(ReservationError, match="Sale window closed."),
         ):
             await svc.reserve(
                 user_id=user_id,
@@ -325,7 +325,7 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="capacity"),
+            pytest.raises(ReservationError, match="Capacity exhausted"),
         ):
             await svc.reserve(
                 user_id=user_id,
@@ -347,7 +347,7 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="per-user ticket limit"),
+            pytest.raises(ReservationError, match="Ticket limit exceeded"),
         ):
             await svc.reserve(
                 user_id=user_id,

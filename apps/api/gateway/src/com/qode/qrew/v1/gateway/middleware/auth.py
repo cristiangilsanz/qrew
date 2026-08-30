@@ -8,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from com.qode.qrew.v1.gateway.core.config import settings
 from com.qode.qrew.v1.gateway.core.auth import (
     access_public_keys,
     scanner_public_keys,
@@ -24,6 +25,9 @@ _PUBLIC_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"^POST /api/identity/v1/auth/passkeys/"),
     re.compile(r"^POST /api/identity/v1/auth/otp/"),
     re.compile(r"^POST /api/identity/v1/auth/totp/verify$"),
+    re.compile(r"^POST /api/payments/v1/payments/webhook$"),
+    re.compile(r"^PUT /api/identity/v1/uploads/local/"),
+    re.compile(r"^(GET|HEAD) /api/identity/v1/uploads/public/"),
     re.compile(r"^(GET|HEAD) /api/\w+/v?1?/?health"),
     re.compile(r"^(GET|HEAD) /api/\w+/healthz"),
     re.compile(r"^(GET|HEAD) /api/\w+/ready"),
@@ -104,7 +108,9 @@ class AuthMiddleware:
 
         scanner_keys = scanner_public_keys()
         if scanner_keys:
-            claims = try_verify(token, scanner_keys)
+            claims = try_verify(
+                token, scanner_keys, audience_override=settings.scanner_jwt_audience or None
+            )
             if claims is not None and claims.get("type") == "scanner":
                 scanner_id = str(claims.get("scanner_id", ""))
                 headers = MutableHeaders(scope=scope)

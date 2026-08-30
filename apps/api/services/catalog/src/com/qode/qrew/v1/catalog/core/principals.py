@@ -109,7 +109,7 @@ def verify(purpose: str, token: str) -> dict[str, object]:
     kid = header.get("kid")
     public_pem = keys.verifiers.get(kid) if isinstance(kid, str) else None
     if public_pem is None:
-        raise InvalidTokenError("Unknown signing key")
+        raise InvalidTokenError("Signing key unknown.")
     return _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[no-any-return]
 
 

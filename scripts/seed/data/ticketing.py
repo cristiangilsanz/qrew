@@ -6,6 +6,39 @@ from .models import Ticket
 
 TICKETS = (
     Ticket(
+        key="reserved-admin",
+        reservation="pending-admin",
+        user="admin",
+        event="event-a",
+        ticket_type="vip",
+        state="reserved",
+        issued_hours_ago=0.1,
+        holder_name="Admin",
+        holder_dni="00000001R",
+    ),
+    Ticket(
+        key="review-admin-one",
+        reservation="review-admin",
+        user="admin",
+        event="event-a",
+        ticket_type="vip",
+        state="reserved",
+        issued_hours_ago=0.2,
+        holder_name="Admin",
+        holder_dni="00000001R",
+    ),
+    Ticket(
+        key="review-admin-two",
+        reservation="review-admin",
+        user="admin",
+        event="event-a",
+        ticket_type="vip",
+        state="reserved",
+        issued_hours_ago=0.2,
+        holder_name="Guest Two",
+        holder_dni="00000011B",
+    ),
+    Ticket(
         key="issued-admin",
         reservation="paid-admin",
         user="admin",
@@ -14,7 +47,7 @@ TICKETS = (
         state="issued",
         issued_hours_ago=47,
         holder_name="Admin",
-        holder_dni="00000001A",
+        holder_dni="00000001R",
         bound_device="admin",
     ),
     Ticket(
@@ -26,7 +59,7 @@ TICKETS = (
         state="on_sale",
         issued_hours_ago=47,
         holder_name="Guest One",
-        holder_dni="00000010K",
+        holder_dni="00000010X",
     ),
     Ticket(
         key="gate-admin",
@@ -37,7 +70,7 @@ TICKETS = (
         state="issued",
         issued_hours_ago=71,
         holder_name="Admin",
-        holder_dni="00000001A",
+        holder_dni="00000001R",
         bound_device="admin",
     ),
     Ticket(
@@ -49,7 +82,7 @@ TICKETS = (
         state="scanning",
         issued_hours_ago=70,
         holder_name="Guest Two",
-        holder_dni="00000011L",
+        holder_dni="00000011B",
         bound_device="admin",
     ),
     Ticket(
@@ -61,7 +94,7 @@ TICKETS = (
         state="redeemed",
         issued_hours_ago=24 * 4,
         holder_name="Admin",
-        holder_dni="00000001A",
+        holder_dni="00000001R",
         bound_device="admin",
     ),
     Ticket(
@@ -73,7 +106,7 @@ TICKETS = (
         state="expired",
         issued_hours_ago=24 * 4,
         holder_name="Guest Two",
-        holder_dni="00000011L",
+        holder_dni="00000011B",
         expired_hours_ago=25,
     ),
     Ticket(
@@ -85,7 +118,7 @@ TICKETS = (
         state="flagged",
         issued_hours_ago=20,
         holder_name="Admin",
-        holder_dni="00000001A",
+        holder_dni="00000001R",
     ),
     Ticket(
         key="cancelled-admin",
@@ -96,7 +129,7 @@ TICKETS = (
         state="cancelled",
         issued_hours_ago=30,
         holder_name="Admin",
-        holder_dni="00000001A",
+        holder_dni="00000001R",
     ),
     Ticket(
         key="issued-user-a",
@@ -107,7 +140,7 @@ TICKETS = (
         state="issued",
         issued_hours_ago=29,
         holder_name="User A",
-        holder_dni="00000004D",
+        holder_dni="00000004G",
         bound_device="user-a",
     ),
     Ticket(
@@ -119,6 +152,18 @@ TICKETS = (
         state="on_sale",
         issued_hours_ago=28,
         holder_name="User A",
-        holder_dni="00000004D",
+        holder_dni="00000004G",
+    ),
+    Ticket(
+        key="resale-ready-admin",
+        reservation="paid-admin-resale",
+        user="admin",
+        event="event-h",
+        ticket_type="general",
+        state="issued",
+        issued_hours_ago=71,
+        holder_name="Admin",
+        holder_dni="00000001R",
+        bound_device="admin",
     ),
 )

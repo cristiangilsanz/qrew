@@ -20,7 +20,7 @@ router = APIRouter(prefix="/tickets", tags=["ticket-restore"])
 def _domain_to_http(error: TicketRestoreError) -> HTTPException:
     code = (
         status.HTTP_404_NOT_FOUND
-        if error.field in {"ticket_id", "device_id"} and error.message.endswith("not found")
+        if error.field in {"ticket_id", "device_id"} and error.message.endswith("not found.")
         else status.HTTP_403_FORBIDDEN
         if error.field in {"reassertion", "attestation"}
         else status.HTTP_409_CONFLICT

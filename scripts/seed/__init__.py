@@ -5,23 +5,24 @@ from __future__ import annotations
 import asyncpg
 
 from .core import SeedConfig, Timeline, load, truncate
-from .data import Dataset, build
-from .writers import WRITERS
+from .data import Dataset, build, build_accounts
+from .writers import WRITERS, identity
 
 __all__ = ["SeedConfig", "load", "run"]
 
 
 # truncates every table then writes each service's fixtures in order
-async def run(*, verbose: bool = True) -> None:
+async def run(*, verbose: bool = True, accounts_only: bool = False) -> None:
     cfg = load()
-    data = build()
+    data = build_accounts() if accounts_only else build()
+    writers = (identity,) if accounts_only else WRITERS
     when = Timeline()
     conn = await asyncpg.connect(cfg.dsn)
     try:
         async with conn.transaction():
             await truncate(conn)
             _say(verbose, "reset", "every application table truncated")
-            for writer in WRITERS:
+            for writer in writers:
                 await writer.write(conn, data, when, cfg)
                 _say(verbose, writer.NAME, "seeded")
     finally:

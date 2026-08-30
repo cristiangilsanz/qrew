@@ -48,25 +48,25 @@ class KycService:
             await logger.awarning(
                 "kyc_upload_failed", reason="already_approved", user_id=str(user.id)
             )
-            raise KycError("KYC is already approved")
+            raise KycError("Verification already approved.")
         if user.kyc_status == KycStatus.pending:
             await logger.awarning(
                 "kyc_upload_failed",
                 reason="already_pending",
                 user_id=str(user.id),
             )
-            raise KycError("KYC is already under review")
+            raise KycError("Verification already under review.")
 
         if len(content) == 0:
             await logger.awarning(
                 "kyc_upload_failed", reason="empty_document", user_id=str(user.id)
             )
-            raise KycError("Document cannot be empty")
+            raise KycError("Document empty.")
         if len(content) > _MAX_FILE_BYTES:
             await logger.awarning(
                 "kyc_upload_failed", reason="document_too_large", user_id=str(user.id)
             )
-            raise KycError("Document exceeds the maximum allowed size of 10 MB")
+            raise KycError("Document exceeds the maximum size of 10 MB.")
 
         try:
             id_number = self._ocr.extract_national_id(content)

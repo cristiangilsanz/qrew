@@ -53,7 +53,7 @@ def verify(
 ) -> None:
     current = now if now is not None else int(time.time())
     if expires_at < current:
-        raise SignatureExpiredError("signed url expired")
+        raise SignatureExpiredError("Signed url expired.")
     expected = _digest(secret, method.upper(), key, content_type, expires_at)
     if not hmac.compare_digest(expected, signature):
-        raise SignatureInvalidError("signed url signature mismatch")
+        raise SignatureInvalidError("Signed url signature rejected.")

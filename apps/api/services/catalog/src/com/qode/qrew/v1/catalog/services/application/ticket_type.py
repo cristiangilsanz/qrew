@@ -57,19 +57,21 @@ class TicketTypeError(DomainError):
 # rejects a ticket type name outside the allowed pattern
 def _validate_name(name: str) -> None:
     if not _NAME_PATTERN.match(name):
-        raise TicketTypeError("Name must be lowercase letters, digits or underscores", field="name")
+        raise TicketTypeError(
+            "Name must be lowercase letters, digits or underscores.", field="name"
+        )
 
 
 # rejects a capacity outside the allowed range
 def _validate_capacity(capacity: int) -> None:
     if capacity < 1 or capacity > 100_000:
-        raise TicketTypeError("Capacity must be between 1 and 100000", field="capacity")
+        raise TicketTypeError("Capacity must be between 1 and 100000.", field="capacity")
 
 
 # rejects a price outside the allowed range
 def _validate_price(price_cents: int) -> None:
     if price_cents < 0 or price_cents > 10_000_000:
-        raise TicketTypeError("Price must be between 0 and 10000000 cents", field="price_cents")
+        raise TicketTypeError("Price must be between 0 and 10000000 cents.", field="price_cents")
 
 
 # rejects a currency outside the allowed set
@@ -119,14 +121,14 @@ class TicketTypeService:
         ):
             event = await self._event_repo.get_by_id(event_id)
             if event is None:
-                raise TicketTypeError("Event not found", field="event_id")
+                raise TicketTypeError("Event not found.", field="event_id")
             if event.status in (EventStatus.cancelled, EventStatus.ongoing):
                 raise TicketTypeError(
                     "Cannot add ticket types to a cancelled or ongoing event", field="status"
                 )
             existing = await self._repo.get_by_event_and_name(event_id, name)
             if existing is not None:
-                raise TicketTypeError("A ticket type with that name already exists", field="name")
+                raise TicketTypeError("Ticket type name already taken.", field="name")
             ticket_type = TicketType(
                 event_id=event_id,
                 name=name,
@@ -165,22 +167,20 @@ class TicketTypeService:
         ):
             event = await self._event_repo.get_by_id(event_id)
             if event is None:
-                raise TicketTypeError("Event not found", field="event_id")
+                raise TicketTypeError("Event not found.", field="event_id")
             if event.status in (EventStatus.cancelled, EventStatus.ongoing):
                 raise TicketTypeError(
                     "Cannot edit ticket types of a cancelled or ongoing event", field="status"
                 )
             ticket_type = await self._repo.get_by_id(ticket_type_id)
             if ticket_type is None or ticket_type.event_id != event_id:
-                raise TicketTypeError("Ticket type not found", field="ticket_type_id")
+                raise TicketTypeError("Ticket type not found.", field="ticket_type_id")
             if "name" in changes:
                 _validate_name(changes["name"])
                 if changes["name"] != ticket_type.name:
                     conflict = await self._repo.get_by_event_and_name(event_id, changes["name"])
                     if conflict is not None and conflict.id != ticket_type.id:
-                        raise TicketTypeError(
-                            "A ticket type with that name already exists", field="name"
-                        )
+                        raise TicketTypeError("Ticket type name already taken.", field="name")
             if "capacity" in changes:
                 _validate_capacity(changes["capacity"])
                 if changes["capacity"] < ticket_type.capacity:
@@ -217,14 +217,14 @@ class TicketTypeService:
         ):
             event = await self._event_repo.get_by_id(event_id)
             if event is None:
-                raise TicketTypeError("Event not found", field="event_id")
+                raise TicketTypeError("Event not found.", field="event_id")
             if event.status in (EventStatus.cancelled, EventStatus.ongoing):
                 raise TicketTypeError(
                     "Cannot delete ticket types of a cancelled or ongoing event", field="status"
                 )
             ticket_type = await self._repo.get_by_id(ticket_type_id)
             if ticket_type is None or ticket_type.event_id != event_id:
-                raise TicketTypeError("Ticket type not found", field="ticket_type_id")
+                raise TicketTypeError("Ticket type not found.", field="ticket_type_id")
             if ticket_type.reserved_count > 0:
                 raise TicketTypeError(
                     "Cannot delete a tier with live reservations", field="reserved_count"

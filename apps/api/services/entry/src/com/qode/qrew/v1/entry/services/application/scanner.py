@@ -73,9 +73,9 @@ class ScannerService:
     ) -> tuple[Scanner, str]:
         scanner = await self._repo.get_by_id(scanner_id)
         if scanner is None:
-            raise ScannerError("Scanner not found", field="scanner_id")
+            raise ScannerError("Scanner not found.", field="scanner_id")
         if not scanner.is_active:
-            raise ScannerError("Scanner is deactivated", field="scanner_id")
+            raise ScannerError("Scanner deactivated.", field="scanner_id")
         if scanner.venue_id != venue_id:
             raise ScannerError(
                 "Scanner is registered to a different venue", field="venue_id"
@@ -103,9 +103,9 @@ class ScannerService:
     async def deactivate(self, admin_id: uuid.UUID, scanner_id: uuid.UUID) -> Scanner:
         scanner = await self._repo.get_by_id(scanner_id)
         if scanner is None:
-            raise ScannerError("Scanner not found", field="scanner_id")
+            raise ScannerError("Scanner not found.", field="scanner_id")
         if not scanner.is_active:
-            raise ScannerError("Scanner already deactivated", field="scanner_id")
+            raise ScannerError("Scanner already deactivated.", field="scanner_id")
         scanner = await self._repo.deactivate(scanner)
         await logger.ainfo("scanner_deactivated", scanner_id=str(scanner.id))
         try:
@@ -134,7 +134,7 @@ class ScannerService:
         scanner = await self._repo.get_by_id(scanner_id)
         if scanner is None or not scanner.is_active:
             await self._record_refresh_failure(scanner_id, reason="scanner_inactive")
-            raise ScannerError("Scanner is not active", field="scanner_id")
+            raise ScannerError("Scanner not active.", field="scanner_id")
         if scanner.venue_id != venue_id:
             await self._record_refresh_failure(scanner_id, reason="venue_mismatch")
             raise ScannerError(
@@ -165,7 +165,7 @@ class ScannerService:
     async def get_by_id(self, scanner_id: uuid.UUID) -> Scanner:
         scanner = await self._repo.get_by_id(scanner_id)
         if scanner is None:
-            raise ScannerError("Scanner not found", field="scanner_id")
+            raise ScannerError("Scanner not found.", field="scanner_id")
         return scanner
 
     # records why a self refresh was denied

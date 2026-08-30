@@ -50,7 +50,7 @@ class CloudflareTurnstileCaptchaService:
             if not data.get("success"):
                 error_codes = data.get("error-codes", [])
                 await logger.awarning("captcha_failed", error_codes=error_codes)
-                raise CaptchaError("CAPTCHA verification failed", field="captcha_token")
+                raise CaptchaError("Captcha rejected.", field="captcha_token")
 
         except CaptchaError:
             raise

@@ -21,8 +21,8 @@ def verification_link_email(
         f"{fallback_link(link)}"
     )
     return base_email(
-        title="Verify your Qrew account",
-        preheader="Verify your email address to get started with Qrew.",
+        title="Verify your QREW account",
+        preheader="Verify your email address to get started with QREW.",
         logo_url=logo_url,
         content_html=content,
     )

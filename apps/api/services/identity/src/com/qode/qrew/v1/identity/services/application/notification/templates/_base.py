@@ -35,10 +35,10 @@ def fallback_link(url: str) -> str:
 # wraps a template's content in the shared email layout
 def base_email(*, title: str, preheader: str, logo_url: str | None, content_html: str) -> str:
     masthead = (
-        f'<a href="https://qrew.com"><img src="{logo_url}" alt="Qrew" height="240"'
+        f'<a href="https://qrew.com"><img src="{logo_url}" alt="QREW" height="240"'
         ' style="display:inline-block;border:none;max-height:240px;" /></a>'
         if logo_url
-        else '<a href="https://qrew.com" class="email-masthead_name">Qrew</a>'
+        else '<a href="https://qrew.com" class="email-masthead_name">QREW</a>'
     )
     return f"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -213,7 +213,7 @@ def base_email(*, title: str, preheader: str, logo_url: str | None, content_html
                 <table class="email-footer" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
                   <tr>
                     <td class="content-cell" align="center">
-                      <p class="sub">Qrew. All rights reserved.</p>
+                      <p class="sub">QREW. All rights reserved.</p>
                       <p class="sub">If you have questions, reply to this email or contact <a href="mailto:support@qrew.com">support@qrew.com</a>.</p>
                     </td>
                   </tr>

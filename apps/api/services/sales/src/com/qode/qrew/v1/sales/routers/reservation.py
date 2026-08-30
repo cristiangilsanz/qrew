@@ -107,7 +107,7 @@ async def create_reservation(
     except FraudBlockedError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Reservation rejected for risk", "field": None},
+            detail={"message": "Reservation rejected.", "field": None},
         ) from exc
     except ReservationError as exc:
         raise _bad_request(exc) from exc
@@ -115,7 +115,7 @@ async def create_reservation(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={
-                "message": "Ticket type is being purchased by another caller",
+                "message": "Ticket type busy.",
                 "field": "ticket_type_id",
             },
         ) from exc
@@ -123,7 +123,7 @@ async def create_reservation(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={
-                "message": "Another reservation by this user is in progress",
+                "message": "Reservation already in progress.",
                 "field": None,
             },
         ) from exc
@@ -156,7 +156,7 @@ async def cancel_reservation(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={
-                "message": "Another lifecycle change is in progress",
+                "message": "Event change already in progress.",
                 "field": None,
             },
         ) from exc
@@ -208,12 +208,12 @@ async def set_holders(
     if reservation is None or reservation.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Reservation not found", "field": "reservation_id"},
+            detail={"message": "Reservation not found.", "field": "reservation_id"},
         )
     if reservation.status != ReservationStatus.reserved:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Reservation is no longer modifiable", "field": "status"},
+            detail={"message": "Reservation already closed.", "field": "status"},
         )
     if len(body.holders) != reservation.quantity:
         raise HTTPException(
@@ -224,7 +224,7 @@ async def set_holders(
     if positions != list(range(1, reservation.quantity + 1)):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={"message": "Positions must be 1..quantity with no gaps", "field": "holders"},
+            detail={"message": "Positions must be 1..quantity with no gaps.", "field": "holders"},
         )
     holder_models = [
         ReservationHolder(

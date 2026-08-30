@@ -52,47 +52,47 @@ class AndroidPlayIntegrityVerifier:
                 options={"verify_aud": False},
             )
         except Exception as exc:
-            raise AttestationVerifierError("Play Integrity token signature invalid") from exc
+            raise AttestationVerifierError("App integrity rejected.") from exc
 
         request = payload.get("requestDetails", {})
         app_integrity = payload.get("appIntegrity", {})
         device_integrity = payload.get("deviceIntegrity", {})
 
         if request.get("nonce") != expected_nonce:
-            raise AttestationVerifierError("Attestation nonce mismatch")
+            raise AttestationVerifierError("Attestation rejected.")
 
         if request.get("requestPackageName") != settings.android_package_name:
-            raise AttestationVerifierError("Unexpected package name")
+            raise AttestationVerifierError("App integrity rejected.")
 
         if app_integrity.get("appRecognitionVerdict") != "PLAY_RECOGNIZED":
-            raise AttestationVerifierError("App not recognised by Play")
+            raise AttestationVerifierError("App integrity rejected.")
 
         if app_integrity.get("packageName") != settings.android_package_name:
-            raise AttestationVerifierError("App integrity package name mismatch")
+            raise AttestationVerifierError("App integrity rejected.")
 
         digests: list[str] = list(app_integrity.get("certificateSha256Digest") or [])
         if settings.android_app_cert_digest_sha256 not in digests:
-            raise AttestationVerifierError("App signing cert digest mismatch")
+            raise AttestationVerifierError("App integrity rejected.")
 
         verdicts = set(device_integrity.get("deviceRecognitionVerdict") or [])
         if "MEETS_DEVICE_INTEGRITY" not in verdicts:
-            raise AttestationVerifierError("Device fails MEETS_DEVICE_INTEGRITY")
+            raise AttestationVerifierError("Device integrity rejected.")
         if "MEETS_BASIC_INTEGRITY" not in verdicts:
-            raise AttestationVerifierError("Device fails MEETS_BASIC_INTEGRITY")
+            raise AttestationVerifierError("Device integrity rejected.")
         if verdicts == {"MEETS_VIRTUAL_INTEGRITY"}:
-            raise AttestationVerifierError("Virtual/emulator-only verdict not accepted")
+            raise AttestationVerifierError("Device integrity rejected.")
 
         return AttestationResult(platform="android")
 
     async def verify_ios(self, token: str, expected_nonce: str) -> AttestationResult:
-        raise AttestationVerifierError("Android verifier cannot verify iOS tokens")
+        raise AttestationVerifierError("Token platform mismatched.")
 
 
 class IosAppAttestVerifier:
     """Validate an Apple App Attest assertion."""
 
     async def verify_android(self, token: str, expected_nonce: str) -> AttestationResult:
-        raise AttestationVerifierError("iOS verifier cannot verify Android tokens")
+        raise AttestationVerifierError("Token platform mismatched.")
 
     async def verify_ios(self, token: str, expected_nonce: str) -> AttestationResult:
         """Validate an iOS App Attest assertion."""

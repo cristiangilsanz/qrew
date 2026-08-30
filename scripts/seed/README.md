@@ -1,41 +1,30 @@
-# Seed
+# Seed the Database
 
-Loads the local database with a catalogue of fixtures that reaches every state the product
-supports.
+Use the database seed command to populate the local database with a catalogue of fixtures covering all supported product states.
 
-```bash
-just db-seed
-just db-truncate
-```
+Run:
 
-Identifiers derive from a fixed namespace and timestamps hang off the moment it runs, so
-two runs leave the database in the same shape with the deadlines always fresh: a
-reservation about to expire still has minutes left, and an event that is on now still is.
+    just db-seed
 
-## Accounts
+This creates the following test accounts:
 
-All of them share the password `Password1!`.
+| Role    | Email              |
+|---------|--------------------|
+| Admin   | admin@qrew.test    |
+| Manager | manager@qrew.test  |
+| Member  | member@qrew.test   |
+| User A  | user-a@qrew.test   |
+| User B  | user-b@qrew.test   |
+| User C  | user-c@qrew.test   |
 
-| Account | Email |
-|---|---|
-| Admin | `admin@qrew.test` |
-| Manager | `manager@qrew.test` |
-| Member | `member@qrew.test` |
-| User A | `user-a@qrew.test` |
-| User B | `user-b@qrew.test` |
-| User C | `user-c@qrew.test` |
+All seeded accounts use the same password:
 
-Admin owns Org A, holds tickets in every state, sells and buys on the market and carries a
-payment of each outcome, so almost any screen can be reached without switching accounts.
+    Password1!
 
-## Events
+> Note: These credentials are intended for local development and testing only.
 
-| Event | State |
-|---|---|
-| Event A | Published, on sale |
-| Event B | Published, sale not open |
-| Event C | Ongoing |
-| Event D | Draft |
-| Event E | Cancelled |
-| Event F | Published, queue required |
-| Event G | Finished |
+## Reset the Database
+
+To remove the seeded data and truncate the database, run:
+
+    just db-truncate

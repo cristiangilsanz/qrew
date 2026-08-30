@@ -30,9 +30,9 @@ def kyc_status_email(
         f"{next_steps}"
     )
     preheader = (
-        "Your Qrew identity check has been approved."
+        "Your QREW identity check has been approved."
         if approved
-        else "Your Qrew identity check needs attention."
+        else "Your QREW identity check needs attention."
     )
     return base_email(
         title=heading,

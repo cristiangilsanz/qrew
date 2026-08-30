@@ -63,11 +63,11 @@ class PasskeyAuthenticationService:
     async def begin(self, email: str) -> str:
         user = await self._user_repo.get_by_email(email)
         if user is None or not user.is_active or not user.email_verified:
-            raise PasskeyError("No passkey found for this account")
+            raise PasskeyError("Passkey not found.")
 
         credentials = await self._passkey_repo.get_all_by_user_id(user.id)
         if not credentials:
-            raise PasskeyError("No passkey registered for this account")
+            raise PasskeyError("Passkey not registered.")
 
         options = build_authentication_options(credentials)
         await self._redis.set(
@@ -105,7 +105,7 @@ class PasskeyAuthenticationService:
         stored = await self._passkey_repo.get_by_credential_id(raw_id)
         if stored is None:
             await logger.awarning("passkey_authentication_failed", reason="credential_not_found")
-            raise PasskeyError("Passkey not recognised")
+            raise PasskeyError("Passkey rejected.")
         return stored
 
     # resolves the active user a credential belongs to
@@ -115,7 +115,7 @@ class PasskeyAuthenticationService:
             await logger.awarning(
                 "passkey_authentication_failed", reason="user_not_found_or_inactive"
             )
-            raise PasskeyError("Authentication failed")
+            raise PasskeyError("Authentication failed.")
         return user
 
     # reads and deletes the pending authentication challenge
@@ -128,7 +128,7 @@ class PasskeyAuthenticationService:
                 reason="challenge_expired",
                 user_id=str(user_id),
             )
-            raise PasskeyError("Authentication session expired. Please start again.")
+            raise PasskeyError("Authentication session expired.")
         await self._redis.delete(key)
         return raw_challenge
 

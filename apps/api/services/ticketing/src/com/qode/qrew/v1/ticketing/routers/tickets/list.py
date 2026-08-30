@@ -76,6 +76,6 @@ async def get_ticket(
     ticket = await TicketRepository(db).get_by_id(ticket_id)
     if ticket is None or ticket.owner_user_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail={"message": "Ticket not found"}
+            status_code=status.HTTP_404_NOT_FOUND, detail={"message": "Ticket not found."}
         )
     return _to_response(ticket)

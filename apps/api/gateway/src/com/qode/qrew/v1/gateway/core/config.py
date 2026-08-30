@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     access_jwt_previous_public_keys: str = ""
     scanner_jwt_private_key: str = ""
     jwt_audience: str = ""
+    scanner_jwt_audience: str = "qrew.scan"
     jwt_issuer: str = ""
 
     identity_url: str = "http://identity:8001"

@@ -59,7 +59,7 @@ class TestLoginUnknownEmail:
         svc = _make_svc(user=None)
         with (
             patch(_PATCH_VERIFY, return_value=False),
-            pytest.raises(LoginError, match="Invalid email or password"),
+            pytest.raises(LoginError, match="Email or password rejected."),
         ):
             await svc.login(_make_request())
 
@@ -71,7 +71,7 @@ class TestLoginWrongPassword:
         svc = _make_svc(user=user)
         with (
             patch(_PATCH_VERIFY, return_value=False),
-            pytest.raises(LoginError, match="Invalid email or password"),
+            pytest.raises(LoginError, match="Email or password rejected."),
         ):
             await svc.login(_make_request())
 
@@ -118,7 +118,7 @@ class TestLoginEmailNotVerified:
         svc = _make_svc(user=user)
         with (
             patch(_PATCH_VERIFY, return_value=True),
-            pytest.raises(LoginError, match="Invalid email or password"),
+            pytest.raises(LoginError, match="Email or password rejected."),
         ):
             await svc.login(_make_request())
 
@@ -130,7 +130,7 @@ class TestLoginInactiveAccount:
         svc = _make_svc(user=user)
         with (
             patch(_PATCH_VERIFY, return_value=True),
-            pytest.raises(LoginError, match="Invalid email or password"),
+            pytest.raises(LoginError, match="Email or password rejected."),
         ):
             await svc.login(_make_request())
 

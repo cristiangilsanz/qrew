@@ -138,13 +138,13 @@ _bearer = HTTPBearer(auto_error=False)
 
 _CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail={"message": "Invalid or expired token", "field": None},
+    detail={"message": "Token expired.", "field": None},
 )
 
 _SETUP_REQUIRED_EXCEPTION = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
     detail={
-        "message": "Setup not complete. Use /auth/complete-setup first.",
+        "message": "Setup not complete.",
         "field": None,
     },
 )
@@ -303,7 +303,7 @@ async def get_admin_user(
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Admin access required", "field": None},
+            detail={"message": "Admin access required.", "field": None},
         )
     return current_user
 

@@ -48,7 +48,7 @@ class PasskeyReassertionService:
     async def begin(self, user: User, session_jti: str) -> str:
         credentials = await self._passkey_repo.get_all_by_user_id(user.id)
         if not credentials:
-            raise PasskeyError("No passkey registered for this account")
+            raise PasskeyError("Passkey not registered.")
         options = build_authentication_options(credentials)
         await self._redis.set(
             assert_challenge_key(session_jti),
@@ -68,7 +68,7 @@ class PasskeyReassertionService:
         raw_id = base64url_to_bytes(request.raw_id)
         stored = await self._passkey_repo.get_by_credential_id(raw_id)
         if stored is None or stored.user_id != user.id:
-            raise PasskeyError("Passkey not recognised")
+            raise PasskeyError("Passkey rejected.")
 
         raw_challenge = await self._consume_challenge(session.jti)
         credential = build_assertion_credential(request)
@@ -100,7 +100,7 @@ class PasskeyReassertionService:
         key = assert_challenge_key(session_jti)
         raw_challenge: bytes | None = await self._redis.get(key)
         if raw_challenge is None:
-            raise PasskeyError("Re-assertion challenge expired. Please start again.")
+            raise PasskeyError("Reassertion challenge expired.")
         await self._redis.delete(key)
         return raw_challenge
 

@@ -33,6 +33,7 @@ dependencies = [
     "worker",
     "db",
     "probes",
+    "messaging",
     "contracts",
     "security",
 ]
@@ -46,6 +47,7 @@ locking = { workspace = true }
 worker = { workspace = true }
 db = { workspace = true }
 probes = { workspace = true }
+messaging = { workspace = true }
 contracts = { workspace = true }
 security = { workspace = true }
 

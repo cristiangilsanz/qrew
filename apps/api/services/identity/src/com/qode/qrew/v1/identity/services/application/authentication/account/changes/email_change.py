@@ -40,7 +40,7 @@ class EmailChangeService:
     # verifies the password and sends a confirmation link to the new email
     async def request_change(self, user: User, new_email: str, current_password: str) -> None:
         if not verify_password(current_password, user.hashed_password):
-            raise EmailChangeError("Current password is incorrect", field="current_password")
+            raise EmailChangeError("Current password rejected.", field="current_password")
 
         if new_email == user.email:
             raise EmailChangeError(
@@ -48,7 +48,7 @@ class EmailChangeService:
             )
 
         if await self._user_repo.exists_by_email(new_email):
-            raise EmailChangeError("Email already in use", field="new_email")
+            raise EmailChangeError("Email already taken.", field="new_email")
 
         token = generate_token()
         expires_at = datetime.now(UTC) + timedelta(
@@ -79,18 +79,18 @@ class EmailChangeService:
     async def confirm_change(self, token: str) -> None:
         user = await self._user_repo.get_by_pending_email_token(token)
         if user is None or user.pending_email is None:
-            raise EmailChangeError("Invalid or expired token", field="token")
+            raise EmailChangeError("Token expired.", field="token")
 
         if (
             user.pending_email_token_expires_at is None
             or user.pending_email_token_expires_at < datetime.now(UTC)
         ):
-            raise EmailChangeError("Invalid or expired token", field="token")
+            raise EmailChangeError("Token expired.", field="token")
 
         new_email = user.pending_email
 
         if await self._user_repo.exists_by_email(new_email):
-            raise EmailChangeError("This email address is no longer available", field="token")
+            raise EmailChangeError("Email already taken.", field="token")
 
         user.email = new_email
         user.pending_email = None

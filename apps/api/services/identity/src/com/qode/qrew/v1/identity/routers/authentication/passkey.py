@@ -201,7 +201,7 @@ async def delete_passkey(
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={"message": "Invalid passkey ID", "field": "passkey_id"},
+            detail={"message": "Passkey rejected.", "field": "passkey_id"},
         ) from exc
     try:
         await service.delete_passkey(pk_id, current_user.id)
@@ -232,7 +232,7 @@ async def rename_passkey(
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={"message": "Invalid passkey ID", "field": "passkey_id"},
+            detail={"message": "Passkey rejected.", "field": "passkey_id"},
         ) from exc
     try:
         return await service.rename_passkey(pk_id, current_user.id, body.name)

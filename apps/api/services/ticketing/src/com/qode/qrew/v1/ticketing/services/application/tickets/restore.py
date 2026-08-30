@@ -33,36 +33,36 @@ async def restore_on_sale_ticket(
 ) -> Ticket:
     ticket = await db.get(Ticket, ticket_id)
     if ticket is None or ticket.owner_user_id != actor_id:
-        raise TicketRestoreError("Ticket not found", field="ticket_id")
+        raise TicketRestoreError("Ticket not found.", field="ticket_id")
     if ticket.state != TicketState.on_sale:
-        raise TicketRestoreError("Ticket is not on sale", field="state")
+        raise TicketRestoreError("Ticket not on sale.", field="state")
     if session_device_id is None:
         raise TicketRestoreError(
             "Restore requires an authenticated device session", field="device_id"
         )
     if ticket.bound_device_id is not None and ticket.bound_device_id == session_device_id:
-        raise TicketRestoreError("Re-enrol onto a new device before restoring", field="device_id")
+        raise TicketRestoreError("Device enrolment required.", field="device_id")
     now = datetime.now(UTC)
     if last_asserted_at is None:
-        raise TicketRestoreError("Fresh passkey reassertion is required", field="reassertion")
+        raise TicketRestoreError("Passkey reassertion required.", field="reassertion")
     la = last_asserted_at
     if la.tzinfo is None:
         la = la.replace(tzinfo=UTC)
     window = timedelta(seconds=settings.ticket_qr_reassert_window_seconds)
     if now - la > window:
-        raise TicketRestoreError("Fresh passkey reassertion is required", field="reassertion")
+        raise TicketRestoreError("Passkey reassertion required.", field="reassertion")
     device = await db.get(DeviceContext, session_device_id)
     if device is None or device.user_id != actor_id:
-        raise TicketRestoreError("Device not found", field="device_id")
+        raise TicketRestoreError("Device not found.", field="device_id")
     if device.revoked_at is not None:
-        raise TicketRestoreError("Device is revoked", field="device_id")
+        raise TicketRestoreError("Device revoked.", field="device_id")
     if device.attested_at is None:
-        raise TicketRestoreError("Device attestation is required", field="attestation")
+        raise TicketRestoreError("Device attestation required.", field="attestation")
     attested = device.attested_at
     if attested.tzinfo is None:
         attested = attested.replace(tzinfo=UTC)
     if now - attested > timedelta(hours=settings.ticket_qr_attestation_max_age_hours):
-        raise TicketRestoreError("Device attestation is stale", field="attestation")
+        raise TicketRestoreError("Device attestation expired.", field="attestation")
     previous_device = ticket.bound_device_id
     await transition_ticket(
         db,

@@ -58,4 +58,4 @@ class TestPasskeyAuthBegin:
             json={"email": "nobody@example.com"},
         )
         assert resp.status_code == 400
-        assert resp.json()["detail"]["message"] == "No passkey found for this account"
+        assert resp.json()["detail"]["message"] == "Passkey not found."

@@ -162,7 +162,7 @@ class TestRestoreFrozenTicket:
             owner_user_id=user_id, state=TicketState.on_sale, bound_device_id=device_id
         )
         db = _make_db(ticket=ticket)
-        with pytest.raises(TicketRestoreError, match="new device"):
+        with pytest.raises(TicketRestoreError, match="enrolment required"):
             await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
@@ -225,7 +225,7 @@ class TestRestoreFrozenTicket:
     ) -> None:
         ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         db = _make_db(ticket=ticket, device=None)
-        with pytest.raises(TicketRestoreError, match="Device not found"):
+        with pytest.raises(TicketRestoreError, match="Device not found."):
             await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
@@ -247,7 +247,7 @@ class TestRestoreFrozenTicket:
         ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         device = make_device(user_id=uuid.uuid4(), device_id=device_id)
         db = _make_db(ticket=ticket, device=device)
-        with pytest.raises(TicketRestoreError, match="Device not found"):
+        with pytest.raises(TicketRestoreError, match="Device not found."):
             await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,
@@ -316,7 +316,7 @@ class TestRestoreFrozenTicket:
         ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
         device = make_device(user_id=user_id, device_id=device_id, attested_at=stale_attested)
         db = _make_db(ticket=ticket, device=device)
-        with pytest.raises(TicketRestoreError, match="stale"):
+        with pytest.raises(TicketRestoreError, match="attestation expired"):
             await restore_on_sale_ticket(
                 db,
                 actor_id=user_id,

@@ -11,9 +11,9 @@ def validate_phone_number(v: str) -> str:
     try:
         parsed = phonenumbers.parse(v, None)
     except phonenumbers.NumberParseException as exc:
-        raise ValueError("Invalid phone number") from exc
+        raise ValueError("Phone number rejected.") from exc
     if not phonenumbers.is_valid_number(parsed):
-        raise ValueError("Phone number is not valid for its region")
+        raise ValueError("Phone number rejected.")
     return v
 
 
@@ -29,5 +29,5 @@ def validate_strong_password(v: str) -> str:
 # rejects an email address from a disposable domain
 def validate_non_disposable_email(v: str) -> str:
     if not MailChecker.is_valid(v):  # type: ignore[no-untyped-call]
-        raise ValueError("Disposable email addresses are not allowed")
+        raise ValueError("Disposable email rejected.")
     return v.lower()

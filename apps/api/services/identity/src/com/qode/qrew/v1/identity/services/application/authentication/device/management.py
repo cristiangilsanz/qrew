@@ -80,7 +80,7 @@ class DeviceService:
         if device is None or device.user_id != user.id:
             raise DeviceError("Device not found.", field=None)
         if device.revoked_at is not None:
-            raise DeviceError("Device is already revoked.", field=None)
+            raise DeviceError("Device already revoked.", field=None)
 
         device.revoked_at = datetime.now(UTC)
         await self._device_repo.save(device)

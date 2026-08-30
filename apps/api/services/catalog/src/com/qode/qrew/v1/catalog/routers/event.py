@@ -161,7 +161,7 @@ async def publish_event(
     except LockUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Another lifecycle change is in progress", "field": None},
+            detail={"message": "Event change already in progress.", "field": None},
         ) from exc
     return _event_response(event)
 
@@ -189,7 +189,7 @@ async def start_event(
     except LockUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Another lifecycle change is in progress", "field": None},
+            detail={"message": "Event change already in progress.", "field": None},
         ) from exc
     return _event_response(event)
 
@@ -217,7 +217,7 @@ async def cancel_event(
     except LockUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Another lifecycle change is in progress", "field": None},
+            detail={"message": "Event change already in progress.", "field": None},
         ) from exc
     return _event_response(event)
 
@@ -255,7 +255,7 @@ async def create_ticket_type(
     except LockUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Another ticket-type change is in progress", "field": None},
+            detail={"message": "Ticket type change already in progress.", "field": None},
         ) from exc
     return _ticket_type_response(ticket_type)
 
@@ -323,7 +323,7 @@ async def update_ticket_type(
     except LockUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Another ticket-type change is in progress", "field": None},
+            detail={"message": "Ticket type change already in progress.", "field": None},
         ) from exc
     return _ticket_type_response(ticket_type)
 
@@ -354,7 +354,7 @@ async def delete_ticket_type(
     except LockUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Another ticket-type change is in progress", "field": None},
+            detail={"message": "Ticket type change already in progress.", "field": None},
         ) from exc
 
 
@@ -425,7 +425,7 @@ async def get_public_event(
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Event not found", "field": "event_id"},
+            detail={"message": "Event not found.", "field": "event_id"},
         )
     event, org, venue = result
     tiers = await svc.get_ticket_types(event_id)
@@ -451,6 +451,7 @@ async def get_public_event(
         max_tickets_per_user=event.max_tickets_per_user,
         queue_required=event.queue_required,
         published_at=event.published_at,
+        status=str(event.status.value if hasattr(event.status, "value") else event.status),
         availability_status=availability_status,
         organisation=OrganisationPublicResponse(
             id=org.id, slug=org.slug, name=org.name, description=org.description
@@ -501,7 +502,7 @@ async def get_event_availability(
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Event not found", "field": "event_id"},
+            detail={"message": "Event not found.", "field": "event_id"},
         )
     _event, tiers = result
     return EventAvailabilityResponse(

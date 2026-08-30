@@ -48,7 +48,7 @@ def _logo_url() -> str:
 def _verification_link(payload: dict[str, Any]) -> RenderedEmail:
     link = f"{settings.base_url}/verify-email?token={payload['token']}"
     return RenderedEmail(
-        subject="Verify your Qrew account",
+        subject="Verify your QREW account",
         body_html=verification_link_email(
             full_name=payload["full_name"],
             link=link,
@@ -62,9 +62,9 @@ def _verification_link(payload: dict[str, Any]) -> RenderedEmail:
 def _kyc_status(payload: dict[str, Any]) -> RenderedEmail:
     status = str(payload["status"])
     subject = (
-        "Your Qrew account is verified"
+        "Your QREW account is verified"
         if status == "approved"
-        else "Your Qrew identity check needs attention"
+        else "Your QREW identity check needs attention"
     )
     return RenderedEmail(
         subject=subject,
@@ -81,7 +81,7 @@ def _kyc_status(payload: dict[str, Any]) -> RenderedEmail:
 def _email_address_confirm(payload: dict[str, Any]) -> RenderedEmail:
     link = f"{settings.base_url}/verify-email-change?token={payload['token']}"
     return RenderedEmail(
-        subject="Confirm your new Qrew email",
+        subject="Confirm your new QREW email",
         body_html=email_change_verify_email(
             full_name=payload["full_name"],
             link=link,
@@ -94,7 +94,7 @@ def _email_address_confirm(payload: dict[str, Any]) -> RenderedEmail:
 # renders the email that alerts of a completed email address change
 def _email_address_changed(payload: dict[str, Any]) -> RenderedEmail:
     return RenderedEmail(
-        subject="Your Qrew email was changed",
+        subject="Your QREW email was changed",
         body_html=email_change_alert_email(
             full_name=payload["full_name"],
             new_email=payload["new_email"],
@@ -106,7 +106,7 @@ def _email_address_changed(payload: dict[str, Any]) -> RenderedEmail:
 # renders the email that alerts of an unusual sign in
 def _login_anomaly_alert(payload: dict[str, Any]) -> RenderedEmail:
     return RenderedEmail(
-        subject="Unusual sign-in to your Qrew account",
+        subject="Unusual sign-in to your QREW account",
         body_html=login_anomaly_alert_email(
             full_name=payload["full_name"],
             ip_address=payload.get("ip_address") or "unknown",
@@ -120,7 +120,7 @@ def _login_anomaly_alert(payload: dict[str, Any]) -> RenderedEmail:
 def _password_reset(payload: dict[str, Any]) -> RenderedEmail:
     link = f"{settings.base_url}/reset-password?token={payload['token']}"
     return RenderedEmail(
-        subject="Reset your Qrew password",
+        subject="Reset your QREW password",
         body_html=forgot_password_email(
             full_name=payload["full_name"],
             link=link,

@@ -138,7 +138,7 @@ class RecoveryService:
         key = _CHALLENGE_PREFIX + str(user_id)
         raw_challenge: bytes | None = await self._redis.get(key)
         if raw_challenge is None:
-            raise RecoveryError("Recovery session expired. Please start again.", field=None)
+            raise RecoveryError("Recovery session expired.", field=None)
         await self._redis.delete(key)
         return raw_challenge
 

@@ -61,7 +61,16 @@ async def load_inputs(
         return DenialReason.not_found
     device_ctx = await session.get(DeviceContext, device_id)
     if device_ctx is None:
-        return DenialReason.attestation
+        if not settings.ticket_qr_skip_attestation:
+            return DenialReason.attestation
+        now = datetime.now(UTC)
+        device_ctx = DeviceContext(
+            device_id=device_id,
+            user_id=user_id,
+            attested_at=now,
+            revoked_at=None,
+            updated_at=now,
+        )
     return GateInputs(ticket=ticket, event_ctx=event_ctx, device_ctx=device_ctx)
 
 
@@ -76,37 +85,40 @@ def evaluate_gate(
 ) -> DenialReason | None:
     if inputs.ticket.state not in {TicketState.issued, TicketState.scanning}:
         return DenialReason.state
-    if last_asserted_at is None:
-        return DenialReason.reassertion
-    la = last_asserted_at
-    if la.tzinfo is None:
-        la = la.replace(tzinfo=UTC)
-    if now - la > timedelta(seconds=settings.ticket_qr_reassert_window_seconds):
-        return DenialReason.reassertion
-    if inputs.device_ctx.revoked_at is not None:
-        return DenialReason.attestation
-    if inputs.device_ctx.attested_at is None:
-        return DenialReason.attestation
-    attested = inputs.device_ctx.attested_at
-    if attested.tzinfo is None:
-        attested = attested.replace(tzinfo=UTC)
-    if now - attested > timedelta(hours=settings.ticket_qr_attestation_max_age_hours):
-        return DenialReason.attestation
+    if not settings.ticket_qr_skip_attestation:
+        if last_asserted_at is None:
+            return DenialReason.reassertion
+        la = last_asserted_at
+        if la.tzinfo is None:
+            la = la.replace(tzinfo=UTC)
+        if now - la > timedelta(seconds=settings.ticket_qr_reassert_window_seconds):
+            return DenialReason.reassertion
+    if not settings.ticket_qr_skip_attestation:
+        if inputs.device_ctx.revoked_at is not None:
+            return DenialReason.attestation
+        if inputs.device_ctx.attested_at is None:
+            return DenialReason.attestation
+        attested = inputs.device_ctx.attested_at
+        if attested.tzinfo is None:
+            attested = attested.replace(tzinfo=UTC)
+        if now - attested > timedelta(hours=settings.ticket_qr_attestation_max_age_hours):
+            return DenialReason.attestation
     event_ctx = inputs.event_ctx
-    if (
-        event_ctx.latitude is None  # type: ignore[reportUnnecessaryComparison]
-        or event_ctx.longitude is None  # type: ignore[reportUnnecessaryComparison]
-        or event_ctx.geofence_radius_m is None  # type: ignore[reportUnnecessaryComparison]
-    ):
-        return DenialReason.geofence
-    distance = haversine_metres(
-        lat1=latitude,
-        lon1=longitude,
-        lat2=float(event_ctx.latitude),
-        lon2=float(event_ctx.longitude),
-    )
-    if distance > event_ctx.geofence_radius_m:
-        return DenialReason.geofence
+    if not settings.ticket_qr_skip_geofence:
+        if (
+            event_ctx.latitude is None  # type: ignore[reportUnnecessaryComparison]
+            or event_ctx.longitude is None  # type: ignore[reportUnnecessaryComparison]
+            or event_ctx.geofence_radius_m is None  # type: ignore[reportUnnecessaryComparison]
+        ):
+            return DenialReason.geofence
+        distance = haversine_metres(
+            lat1=latitude,
+            lon1=longitude,
+            lat2=float(event_ctx.latitude),
+            lon2=float(event_ctx.longitude),
+        )
+        if distance > event_ctx.geofence_radius_m:
+            return DenialReason.geofence
     starts_at = event_ctx.starts_at
     ends_at = event_ctx.ends_at
     if starts_at is not None and ends_at is not None:

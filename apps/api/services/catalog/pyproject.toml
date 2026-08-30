@@ -12,6 +12,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic-settings[yaml]>=2.0",
+    "email-validator>=2.2",
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.29",
     "alembic>=1.13",
@@ -35,6 +36,7 @@ dependencies = [
     "locking",
     "messaging",
     "pagination",
+    "probes",
     "contracts",
     "security",
 ]
@@ -49,6 +51,7 @@ jobs = { workspace = true }
 locking = { workspace = true }
 messaging = { workspace = true }
 pagination = { workspace = true }
+probes = { workspace = true }
 contracts = { workspace = true }
 security = { workspace = true }
 

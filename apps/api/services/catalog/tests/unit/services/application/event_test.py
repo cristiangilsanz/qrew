@@ -168,7 +168,7 @@ class TestEventServiceCreate:
     ) -> None:
         svc, _ = _make_svc(org=None)
         now = datetime.now(UTC)
-        with pytest.raises(EventError, match="Organisation not found"):
+        with pytest.raises(EventError, match="Organisation not found."):
             await svc.create_event(
                 actor_id=actor_id,
                 organisation_id=org_id,
@@ -189,7 +189,7 @@ class TestEventServiceCreate:
     ) -> None:
         svc, _ = _make_svc(org=make_org(org_id=org_id), venue=None)
         now = datetime.now(UTC)
-        with pytest.raises(EventError, match="Venue not found"):
+        with pytest.raises(EventError, match="Venue not found."):
             await svc.create_event(
                 actor_id=actor_id,
                 organisation_id=org_id,
@@ -241,7 +241,7 @@ class TestEventServiceUpdate:
     async def test_raises_when_cancelled(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.cancelled)
         svc, _ = _make_svc(event=event)
-        with pytest.raises(EventError, match="Cancelled"):
+        with pytest.raises(EventError, match="not editable"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
     # verifies that raises when unknown fields
@@ -316,7 +316,7 @@ class TestEventServicePublish:
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
             patch(_PATCH_REINDEX, new=AsyncMock()),
-            pytest.raises(EventError, match="draft"),
+            pytest.raises(EventError, match="not publishable"),
         ):
             await svc.publish_event(actor_id=actor_id, event_id=event_id)
 

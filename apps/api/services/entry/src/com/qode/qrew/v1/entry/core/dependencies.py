@@ -36,7 +36,7 @@ _bearer = HTTPBearer(auto_error=False)
 
 _CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail={"message": "Invalid or expired token", "field": None},
+    detail={"message": "Token expired.", "field": None},
 )
 
 
@@ -70,7 +70,7 @@ async def get_admin_user(
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Admin access required", "field": None},
+            detail={"message": "Admin access required.", "field": None},
         )
     return current_user
 
@@ -125,7 +125,7 @@ async def event_membership(event_id: uuid.UUID, user_id: uuid.UUID) -> EventMemb
     except CatalogUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"message": "The catalog is unavailable", "field": None},
+            detail={"message": "Catalog unavailable.", "field": None},
         ) from exc
 
 

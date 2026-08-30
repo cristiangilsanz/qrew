@@ -26,9 +26,9 @@ class VenueError(DomainError):
 # rejects coordinates outside the valid latitude and longitude range
 def _validate_coordinates(latitude: Decimal, longitude: Decimal) -> None:
     if latitude < Decimal("-90") or latitude > Decimal("90"):
-        raise VenueError("Latitude out of range", field="latitude")
+        raise VenueError("Latitude out of range.", field="latitude")
     if longitude < Decimal("-180") or longitude > Decimal("180"):
-        raise VenueError("Longitude out of range", field="longitude")
+        raise VenueError("Longitude out of range.", field="longitude")
 
 
 # rejects a geofence radius outside the allowed range
@@ -43,13 +43,13 @@ def _validate_radius(radius_m: int) -> None:
 # rejects a timezone that is not recognised
 def _validate_timezone(timezone: str) -> None:
     if timezone not in _AVAILABLE_TIMEZONES:
-        raise VenueError("Unknown timezone", field="timezone")
+        raise VenueError("Timezone unknown.", field="timezone")
 
 
 # rejects a country that is not a two letter code
 def _validate_country(country: str) -> None:
     if len(country) != 2 or not country.isalpha():
-        raise VenueError("Country must be an ISO-3166-1 alpha-2 code", field="country")
+        raise VenueError("Country must be an ISO-3166-1 alpha-2 code.", field="country")
 
 
 class VenueService:

@@ -23,12 +23,12 @@ def validate_spanish_id(value: str) -> str:
     v = value.strip().upper()
     if _DNI_RE.match(v):
         if not _valid_dni_letter(v[:8], v[8]):
-            raise ValueError("Invalid DNI check letter")
+            raise ValueError("DNI check letter rejected.")
         return v
     if _NIE_RE.match(v):
         digits = _NIE_PREFIX[v[0]] + v[1:8]
         if not _valid_dni_letter(digits, v[8]):
-            raise ValueError("Invalid NIE check letter")
+            raise ValueError("NIE check letter rejected.")
         return v
     raise ValueError(
         "Must be a valid Spanish DNI (8 digits + letter) or NIE (X/Y/Z + 7 digits + letter)"

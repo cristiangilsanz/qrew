@@ -72,8 +72,10 @@ def _extract_token(websocket: WebSocket) -> tuple[str, str | None] | None:
 
 
 # verifies a token against whichever of the given keys matches
-def try_verify(token: str, public_keys: list[str]) -> dict[str, object] | None:
-    audience = settings.jwt_audience or None
+def try_verify(
+    token: str, public_keys: list[str], *, audience_override: str | None = None
+) -> dict[str, object] | None:
+    audience = audience_override or settings.jwt_audience or None
     issuer = settings.jwt_issuer or None
     for public_pem in public_keys:
         try:
@@ -104,7 +106,9 @@ def authenticate(websocket: WebSocket) -> WebSocketIdentity:
 
     scanner_keys = scanner_public_keys()
     if scanner_keys:
-        claims = try_verify(token, scanner_keys)
+        claims = try_verify(
+            token, scanner_keys, audience_override=settings.scanner_jwt_audience or None
+        )
         if claims is not None and claims.get("type") == "scanner":
             return WebSocketIdentity(claims=claims, accepted_subprotocol=protocol_value)
 

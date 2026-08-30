@@ -144,6 +144,6 @@ async def get_public_venue(
     if venue is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Venue not found", "field": "venue_id"},
+            detail={"message": "Venue not found.", "field": "venue_id"},
         )
     return _to_public(venue)

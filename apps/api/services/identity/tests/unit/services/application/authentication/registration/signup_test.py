@@ -78,7 +78,7 @@ class TestRegistrationService:
         svc, _ = _make_svc(email_exists=True)
         with (
             patch(_PATCH_PWNED, new=AsyncMock(return_value=False)),
-            pytest.raises(RegistrationError, match="Email already registered"),
+            pytest.raises(RegistrationError, match="Email already registered."),
         ):
             await svc.register(_make_request(), ip_address="1.2.3.4")
 
@@ -87,7 +87,7 @@ class TestRegistrationService:
         svc, _ = _make_svc(phone_exists=True)
         with (
             patch(_PATCH_PWNED, new=AsyncMock(return_value=False)),
-            pytest.raises(RegistrationError, match="Phone number already registered"),
+            pytest.raises(RegistrationError, match="Phone number already registered."),
         ):
             await svc.register(_make_request(), ip_address="1.2.3.4")
 

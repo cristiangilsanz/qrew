@@ -55,13 +55,13 @@ class ForgotPasswordService:
     async def reset_password(self, token: str, new_password: str) -> None:
         user = await self._user_repo.get_by_password_reset_token(token)
         if user is None or user.password_reset_token != token:
-            raise ForgotPasswordError("Invalid or expired reset link.", field="token")
+            raise ForgotPasswordError("Reset link expired.", field="token")
 
         if (
             user.password_reset_token_expires_at is None
             or user.password_reset_token_expires_at < datetime.now(UTC)
         ):
-            raise ForgotPasswordError("Invalid or expired reset link.", field="token")
+            raise ForgotPasswordError("Reset link expired.", field="token")
 
         user.hashed_password = hash_password(new_password)
         user.password_reset_token = None

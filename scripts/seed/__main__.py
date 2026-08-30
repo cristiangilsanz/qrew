@@ -22,12 +22,17 @@ def main() -> None:
     parser.add_argument(
         "--truncate", action="store_true", help="only wipe, do not seed"
     )
+    parser.add_argument(
+        "--accounts-only",
+        action="store_true",
+        help="seed the accounts and their devices but no catalogue data",
+    )
     parser.add_argument("--quiet", action="store_true", help="only report failures")
     args = parser.parse_args()
     if args.truncate:
         asyncio.run(_truncate(verbose=not args.quiet))
         return
-    asyncio.run(run(verbose=not args.quiet))
+    asyncio.run(run(verbose=not args.quiet, accounts_only=args.accounts_only))
 
 
 # truncates every table without reseeding

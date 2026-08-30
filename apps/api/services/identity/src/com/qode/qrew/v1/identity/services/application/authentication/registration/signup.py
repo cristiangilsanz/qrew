@@ -164,13 +164,13 @@ class RegistrationService:
     async def _assert_email_available(self, email: str) -> None:
         if await self._repo.exists_by_email(email):
             await logger.awarning("registration_failed", reason="email_taken")
-            raise RegistrationError("Email already registered", field="email")
+            raise RegistrationError("Email already registered.", field="email")
 
     # rejects the request if the phone number is already registered
     async def _assert_phone_available(self, phone_number: str) -> None:
         if await self._repo.exists_by_phone(phone_number):
             await logger.awarning("registration_failed", reason="phone_number_taken")
-            raise RegistrationError("Phone number already registered", field="phone_number")
+            raise RegistrationError("Phone number already registered.", field="phone_number")
 
     # rejects the request if the password appears in a known breach
     async def _assert_password_not_breached(self, password: str) -> None:

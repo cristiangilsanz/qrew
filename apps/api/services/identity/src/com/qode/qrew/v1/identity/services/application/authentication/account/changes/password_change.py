@@ -42,7 +42,7 @@ class PasswordChangeService:
     # verifies the current password and revokes every other session
     async def change_password(self, user: User, current_password: str, new_password: str) -> None:
         if not verify_password(current_password, user.hashed_password):
-            raise PasswordChangeError("Current password is incorrect", field="current_password")
+            raise PasswordChangeError("Current password rejected.", field="current_password")
 
         if await is_password_pwned(new_password):
             raise PasswordChangeError(

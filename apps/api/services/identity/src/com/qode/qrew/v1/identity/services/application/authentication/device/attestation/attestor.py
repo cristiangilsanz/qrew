@@ -59,7 +59,7 @@ class DeviceAttestationService:
             elif platform == "ios":
                 result = await self._verifier.verify_ios(token, nonce)
             else:
-                raise DeviceAttestationError("Unsupported platform.", field="platform")
+                raise DeviceAttestationError("Platform not supported.", field="platform")
         except AttestationVerifierError as exc:
             await logger.awarning(
                 "device_attestation_failed",

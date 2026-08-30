@@ -22,9 +22,9 @@ def is_known_kind(kind: str) -> bool:
 # builds a new object key scoped to a tenant kind and date
 def build_key(*, tenant: str, kind: str, now: datetime | None = None) -> ObjectKey:
     if not _TENANT_PATTERN.fullmatch(tenant):
-        raise ValueError("invalid tenant")
+        raise ValueError("Tenant rejected.")
     if not _KIND_PATTERN.fullmatch(kind):
-        raise ValueError("invalid kind")
+        raise ValueError("Object kind rejected.")
     stamp = now or datetime.now(UTC)
     return f"{tenant}/{kind}/{stamp:%Y/%m/%d}/{uuid.uuid4().hex}"
 

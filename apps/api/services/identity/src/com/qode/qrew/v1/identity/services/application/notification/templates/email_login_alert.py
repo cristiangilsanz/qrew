@@ -30,8 +30,8 @@ def login_anomaly_alert_email(
         f"                      <p>If that wasn't you, change your password and revoke sessions.</p>"
     )
     return base_email(
-        title="Unusual sign-in to your Qrew account",
-        preheader="We detected an unusual sign-in to your Qrew account.",
+        title="Unusual sign-in to your QREW account",
+        preheader="We detected an unusual sign-in to your QREW account.",
         logo_url=logo_url,
         content_html=content,
     )

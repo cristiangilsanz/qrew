@@ -11,6 +11,7 @@ COPY packages/shared-python/idempotency/pyproject.toml packages/shared-python/id
 COPY packages/shared-python/middleware/pyproject.toml packages/shared-python/middleware/pyproject.toml
 COPY packages/shared-python/security/pyproject.toml packages/shared-python/security/pyproject.toml
 COPY packages/shared-python/observability/pyproject.toml packages/shared-python/observability/pyproject.toml
+COPY packages/shared-python/messaging/pyproject.toml packages/shared-python/messaging/pyproject.toml
 COPY packages/shared-python/db/pyproject.toml packages/shared-python/db/pyproject.toml
 COPY packages/shared-python/probes/pyproject.toml packages/shared-python/probes/pyproject.toml
 COPY packages/contracts/pyproject.toml packages/contracts/pyproject.toml
@@ -31,6 +32,7 @@ COPY packages/shared-python/idempotency/src/ ./src/
 COPY packages/shared-python/middleware/src/ ./src/
 COPY packages/shared-python/security/src/ ./src/
 COPY packages/shared-python/observability/src/ ./src/
+COPY packages/shared-python/messaging/src/ ./src/
 COPY packages/shared-python/db/src/ ./src/
 COPY packages/shared-python/probes/src/ ./src/
 COPY packages/contracts/src/ ./src/

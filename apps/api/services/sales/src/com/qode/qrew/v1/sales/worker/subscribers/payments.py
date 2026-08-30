@@ -49,8 +49,14 @@ async def handle_payment_succeeded(raw: bytes) -> None:
                 assignment_ttl_hours=settings.market_assignment_ttl_hours,
                 listing_ttl_days=settings.market_listing_ttl_days,
             )
-            await service.complete_assignment(payment_intent_id=payment_intent_id)
-        await session.commit()
+            try:
+                assignment_id = uuid.UUID(raw_assignment_id)
+            except ValueError:
+                assignment_id = None
+            await service.complete_assignment(
+                payment_intent_id=payment_intent_id, assignment_id=assignment_id
+            )
+            await session.commit()
         await logger.ainfo(
             "payment_events.market.succeeded",
             market_assignment_id=raw_assignment_id,

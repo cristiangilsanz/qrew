@@ -135,7 +135,7 @@ def verify(purpose: str, token: str) -> dict[str, object]:
     kid = header.get("kid")
     public_pem = keys.verifiers.get(kid) if isinstance(kid, str) else None
     if public_pem is None:
-        raise InvalidTokenError("Unknown signing key")
+        raise InvalidTokenError("Signing key unknown.")
     return _sec_jwt.decode_token(  # type: ignore[no-any-return]
         token,
         public_pem,
@@ -148,10 +148,10 @@ def verify_any(purposes: tuple[str, ...], token: str) -> tuple[str, dict[str, ob
     header = _sec_jwt.decode_unverified_header(token)
     kid = header.get("kid")
     if not isinstance(kid, str):
-        raise InvalidTokenError("Unknown signing key")
+        raise InvalidTokenError("Signing key unknown.")
     for purpose in purposes:
         public_pem = _KEYS[purpose].verifiers.get(kid)
         if public_pem is not None:
             payload = _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])
             return purpose, payload
-    raise InvalidTokenError("Unknown signing key")
+    raise InvalidTokenError("Signing key unknown.")
