@@ -22,12 +22,12 @@ async def write(
                 id, full_name_ciphertext, email_ciphertext, email_hash,
                 phone_number_ciphertext, phone_number_hash, hashed_password,
                 email_verified, phone_number_verified, national_id_hash,
-                national_id_number,
+                national_id_number, national_id_type, kyc_ocr_result,
                 kyc_status, terms_accepted_at, registration_ip, created_at, updated_at,
                 is_active, is_admin
             ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::kyc_status,
-                $13, $14, $15, $15, TRUE, $16
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::kyc_status,
+                $15, $16, $17, $17, TRUE, $18
             )
             """,
             person.id,
@@ -43,6 +43,8 @@ async def write(
             encrypt(cfg.fernet, person.national_id).decode()
             if person.national_id
             else None,
+            "dni" if person.national_id else None,
+            "match" if person.national_id else None,
             person.kyc,
             when.days(-30),
             "127.0.0.1",

@@ -77,6 +77,8 @@ async def list_users(
                 email=u.email,
                 full_name=u.full_name,
                 kyc_status=u.kyc_status,
+                national_id_type=u.national_id_type,
+                kyc_ocr_result=u.kyc_ocr_result,
                 email_verified=u.email_verified,
                 phone_verified=u.phone_number_verified,
                 is_admin=u.is_admin,

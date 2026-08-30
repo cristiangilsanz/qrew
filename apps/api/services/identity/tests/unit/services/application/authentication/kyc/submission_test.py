@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from cryptography.fernet import Fernet
 
-from com.qode.qrew.v1.identity.models.user import KycStatus
+from com.qode.qrew.v1.identity.models.user import KycOcrResult, KycStatus
 from com.qode.qrew.v1.identity.services.application.authentication.kyc.ocr import OcrError
 from com.qode.qrew.v1.identity.services.application.authentication.kyc.submission import (
     KycError,
@@ -37,6 +37,7 @@ def _user(status: KycStatus = KycStatus.not_submitted) -> SimpleNamespace:
         national_id_hash=None,
         national_id_number=None,
         national_id_type=None,
+        kyc_ocr_result=None,
     )
 
 
@@ -119,6 +120,7 @@ class TestUploadAcceptance:
         assert user.national_id_type == "dni"
         assert user.national_id_hash is not None
         assert user.kyc_document_object_key == "kyc/object-key"
+        assert user.kyc_ocr_result == KycOcrResult.match
         repo.save.assert_awaited()
         notifier.send_kyc_status_update.assert_not_awaited()
 
@@ -130,6 +132,7 @@ class TestUploadAcceptance:
             status = await _upload(service, user, document_type="other", document_number="AB123456")
         assert status == KycStatus.pending
         assert user.national_id_type == "other"
+        assert user.kyc_ocr_result == KycOcrResult.not_applicable
 
     # verifies that a scan disagreeing with the declared number does not block the submission
     async def test_accepts_a_dni_whose_scan_disagrees(self) -> None:
@@ -138,6 +141,16 @@ class TestUploadAcceptance:
         with patch(f"{_MODULE}.settings", _settings()):
             status = await _upload(service, user, document_type="dni", document_number="00000001R")
         assert status == KycStatus.pending
+        assert user.kyc_ocr_result == KycOcrResult.mismatch
+
+    # verifies that an image no scan can read is recorded as such rather than passing silently
+    async def test_records_a_spanish_document_the_scan_cannot_read(self) -> None:
+        service, _, _ = _make_service(scanned=None)
+        user = _user()
+        with patch(f"{_MODULE}.settings", _settings()):
+            status = await _upload(service, user, document_type="dni", document_number="00000001R")
+        assert status == KycStatus.pending
+        assert user.kyc_ocr_result == KycOcrResult.unreadable
 
     # verifies that the development shortcut approves and tells the account
     async def test_approves_outright_when_configured_to(self) -> None:

@@ -33,6 +33,8 @@ class UserSummaryResponse(BaseModel):
     email: str
     full_name: str
     kyc_status: str
+    national_id_type: str | None = None
+    kyc_ocr_result: str | None = None
     email_verified: bool
     phone_verified: bool
     is_admin: bool

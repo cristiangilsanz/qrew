@@ -114,6 +114,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("kyc_document_object_key", sa.String(length=255), nullable=True),
+        sa.Column("kyc_ocr_result", sa.String(length=16), nullable=True),
         sa.Column("terms_accepted_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("registration_ip", sa.String(length=45), nullable=False),
         sa.Column("device_fingerprint", sa.String(length=255), nullable=True),

@@ -8,7 +8,7 @@ from security import DocumentType, validate_document
 from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.services.application.storage import storage
 from com.qode.qrew.v1.identity.models.audit import AuditAction
-from com.qode.qrew.v1.identity.models.user import KycStatus, User
+from com.qode.qrew.v1.identity.models.user import KycOcrResult, KycStatus, User
 from com.qode.qrew.v1.identity.repositories.user import UserRepository
 from com.qode.qrew.v1.identity.services.application.audit import AuditService
 from com.qode.qrew.v1.identity.services.application.notification.dispatcher import (
@@ -84,18 +84,7 @@ class KycService:
             )
             raise KycError(str(exc), field="document_number") from exc
 
-        # a spanish document can be read back off the image, so disagreement is worth flagging
-        if document_type in {DocumentType.dni, DocumentType.nie}:
-            try:
-                scanned = self._ocr.extract_national_id(content)
-            except OcrError:
-                scanned = None
-            if scanned is not None and scanned != id_number:
-                await logger.awarning(
-                    "kyc_document_mismatch",
-                    user_id=str(user.id),
-                    document_type=str(document_type),
-                )
+        ocr_result = await self._read_back(user, content, document_type, id_number)
 
         id_hash = hashlib.sha256(id_number.encode()).hexdigest()
 
@@ -123,6 +112,7 @@ class KycService:
             content_type="application/octet-stream",
         )
         user.kyc_document_object_key = object_key
+        user.kyc_ocr_result = str(ocr_result)
         user.kyc_status = KycStatus.pending
         await self._repo.save(user)
         if previous_key:
@@ -149,7 +139,7 @@ class KycService:
                 actor_id=user.id,
                 entity_type="user",
                 entity_id=str(user.id),
-                payload={"kyc_status": user.kyc_status},
+                payload={"kyc_status": user.kyc_status, "ocr_result": user.kyc_ocr_result},
             )
         except Exception as exc:
             await logger.awarning(
@@ -157,3 +147,37 @@ class KycService:
             )
 
         return user.kyc_status
+
+    # reads the number back off the image and reports how it compared, leaving a
+    # trace of every outcome so a reviewer knows where the automatic check stopped
+    async def _read_back(
+        self,
+        user: User,
+        content: bytes,
+        document_type: DocumentType,
+        id_number: str,
+    ) -> KycOcrResult:
+        if document_type not in {DocumentType.dni, DocumentType.nie}:
+            await logger.ainfo(
+                "kyc_ocr_skipped", user_id=str(user.id), document_type=str(document_type)
+            )
+            return KycOcrResult.not_applicable
+
+        try:
+            scanned = self._ocr.extract_national_id(content)
+        except OcrError:
+            await logger.awarning(
+                "kyc_ocr_unreadable", user_id=str(user.id), document_type=str(document_type)
+            )
+            return KycOcrResult.unreadable
+
+        if scanned != id_number:
+            await logger.awarning(
+                "kyc_document_mismatch",
+                user_id=str(user.id),
+                document_type=str(document_type),
+            )
+            return KycOcrResult.mismatch
+
+        await logger.ainfo("kyc_ocr_match", user_id=str(user.id))
+        return KycOcrResult.match

@@ -18,6 +18,13 @@ class KycStatus(enum.StrEnum):
     rejected = "rejected"
 
 
+class KycOcrResult(enum.StrEnum):
+    match = "match"
+    mismatch = "mismatch"
+    unreadable = "unreadable"
+    not_applicable = "not_applicable"
+
+
 class User(Base):
     __tablename__ = "users"
     __table_args__ = {"schema": "identity"}
@@ -79,6 +86,7 @@ class User(Base):
         default=KycStatus.not_submitted,
     )
     kyc_document_object_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    kyc_ocr_result: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     terms_accepted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
