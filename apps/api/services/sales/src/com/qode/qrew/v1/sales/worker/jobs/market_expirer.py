@@ -1,7 +1,9 @@
 # expires overdue market assignments and cancels listings past their deadline
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import structlog
+from jobs import job, parse_crontab
 from sqlalchemy import text
 
 from com.qode.qrew.v1.sales.core.config import settings
@@ -208,3 +210,10 @@ async def _publish_listing_expired(*, ticket_id: object, seller_user_id: object)
         await logger.awarning(
             "nats_publish_failed", subject="market.listing.expired.v1", error=repr(exc)
         )
+
+
+# expires overdue market assignments and cancels overdue listings on a periodic schedule
+@job("market.sweep_expired", cron=parse_crontab("* * * * *"), max_attempts=1)
+async def run_sweep_expired(ctx: dict[str, Any]) -> None:
+    del ctx
+    await sweep_expired()

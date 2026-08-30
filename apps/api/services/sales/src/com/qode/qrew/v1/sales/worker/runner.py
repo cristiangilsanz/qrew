@@ -1,4 +1,4 @@
-# entry point that starts the catalog arq worker
+# entry point that starts the sales arq worker
 import asyncio
 from typing import Any
 
@@ -6,24 +6,25 @@ import structlog
 from db.redis import redis_settings_from_url
 from jobs import build_worker_settings
 from messaging.client import close_nats, init_nats
-from com.qode.qrew.v1.catalog.core.config import settings
+from com.qode.qrew.v1.sales.core.config import settings
 
-import com.qode.qrew.v1.catalog.worker.jobs.event_lifecycle  # noqa: F401  # pyright: ignore[reportUnusedImport]
-import com.qode.qrew.v1.catalog.worker.jobs.search_reindexer  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import com.qode.qrew.v1.sales.worker.jobs.market_assigner  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import com.qode.qrew.v1.sales.worker.jobs.market_expirer  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import com.qode.qrew.v1.sales.worker.jobs.queue_admitter  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import com.qode.qrew.v1.sales.worker.jobs.reservation_expirer  # noqa: F401  # pyright: ignore[reportUnusedImport]
 
 logger = structlog.get_logger(__name__)
 
-
 WorkerSettings = build_worker_settings(
-    redis_settings_from_url(settings.redis_url), queue_name="qrew:jobs:catalog"
+    redis_settings_from_url(settings.redis_url), queue_name="qrew:jobs:sales"
 )
 
 
-# opens the nats connection the jobs publish their events through
+# opens the nats connection the sweepers publish their events through
 async def _on_startup(ctx: dict[str, Any]) -> None:
     del ctx
     if not settings.nats_url:
-        await logger.awarning("catalog_worker.no_nats_url")
+        await logger.awarning("sales_arq_worker.no_nats_url")
         return
     await init_nats(settings.nats_url)
 

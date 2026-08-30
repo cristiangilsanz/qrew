@@ -16,6 +16,7 @@ async def enqueue(
     *,
     redis_settings: RedisSettings,
     defer_seconds: int | None = None,
+    queue_name: str | None = None,
 ) -> Job | None:
     spec = get_spec(job_name)
     pool = await get_pool(redis_settings)
@@ -23,4 +24,8 @@ async def enqueue(
     carrier = inject_current_context()
     if carrier and CARRIER_KEY not in body:
         body[CARRIER_KEY] = carrier
+    if queue_name is not None:
+        return await pool.enqueue_job(
+            spec.name, body, _defer_by=defer_seconds, _queue_name=queue_name
+        )
     return await pool.enqueue_job(spec.name, body, _defer_by=defer_seconds)

@@ -314,6 +314,25 @@ services:
       nats:
         condition: service_healthy
 
+  sales-arq-worker:
+    build:
+      context: .
+      dockerfile: apps/api/services/sales/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.sales.worker.runner"]
+    volumes:
+      - ./apps/api/services/sales/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
   audit:
     build:
       context: .
