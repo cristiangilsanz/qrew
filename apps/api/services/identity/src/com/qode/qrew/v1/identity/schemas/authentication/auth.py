@@ -66,6 +66,7 @@ class OnboardingStatusResponse(BaseModel):
     email_verified: bool
     phone_verified: bool
     kyc_submitted: bool
+    kyc_status: str
     passkey_registered: bool
     is_complete: bool
     current_step: Literal["email", "phone", "kyc", "passkey", "pending"]

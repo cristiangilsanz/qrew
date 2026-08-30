@@ -39,7 +39,7 @@ export function KycPendingStep({ onRetry }: Props) {
     )
   }
 
-  if (status && !status.kyc_submitted) {
+  if (status?.kyc_status === 'rejected') {
     return (
       <div className="space-y-4 text-center">
         <XCircle className="text-destructive mx-auto h-12 w-12" />

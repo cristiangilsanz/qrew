@@ -8,6 +8,7 @@ export interface OnboardingStatus {
   email_verified: boolean
   phone_verified: boolean
   kyc_submitted: boolean
+  kyc_status: 'not_submitted' | 'pending' | 'approved' | 'rejected'
   passkey_registered: boolean
   is_complete: boolean
   current_step: 'email' | 'phone' | 'kyc' | 'passkey' | 'pending'
