@@ -153,7 +153,7 @@ export function LoginForm() {
       <Button
         type="button"
         variant="outline"
-        className="w-full"
+        className="w-full rounded-full"
         isLoading={passkeyLogin.isPending}
         onClick={onPasskeyLogin}
       >

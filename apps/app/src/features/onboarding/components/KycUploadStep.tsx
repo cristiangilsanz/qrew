@@ -1,5 +1,5 @@
 // renders the kyc upload step component
-import { Upload } from 'lucide-react'
+import { ShieldCheck, Upload } from 'lucide-react'
 import { type ChangeEvent, type FormEvent, type KeyboardEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -116,10 +116,11 @@ export function KycUploadStep({ onSuccess }: Props) {
 
       <Button
         type="submit"
-        className="w-full"
+        className="w-full rounded-full"
         disabled={!file || !documentValid}
         isLoading={upload.isPending}
       >
+        <ShieldCheck className="mr-2 h-4 w-4" />
         {t('onboarding.kyc.submit')}
       </Button>
     </form>

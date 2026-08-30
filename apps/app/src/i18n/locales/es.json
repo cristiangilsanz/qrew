@@ -45,6 +45,7 @@
     "fullName": "Nombre completo",
     "fullNamePlaceholder": "Jane Doe",
     "phoneNumber": "Número de teléfono",
+    "dialCode": "Prefijo",
     "acceptTerms": "Acepto los términos y condiciones",
     "noAccount": "¿No tienes cuenta?",
     "hasAccount": "¿Ya tienes cuenta?",
@@ -64,7 +65,22 @@
       "verify": "Verificar",
       "invalidCode": "Código rechazado."
     },
-    "resetPasswordSuccess": "Contraseña restablecida."
+    "resetPasswordSuccess": "Contraseña restablecida.",
+    "verifyEmail": {
+      "title": "Revisa tu correo",
+      "sent": "Te hemos enviado un enlace para confirmar tu cuenta.",
+      "sentTo": "Te hemos enviado un enlace a {{email}} para confirmar tu cuenta.",
+      "spamHint": "Si no lo ves, revisa la carpeta de spam.",
+      "resend": "Reenviar correo",
+      "resent": "Correo de verificación enviado.",
+      "resendFailed": "Correo de verificación no enviado.",
+      "backToLogin": "Volver a iniciar sesión",
+      "confirming": "Confirmando tu correo…",
+      "confirmed": "Correo confirmado",
+      "confirmedHint": "Ya puedes iniciar sesión y terminar de configurar tu cuenta.",
+      "linkExpired": "El enlace ya no es válido",
+      "linkExpiredHint": "Inicia sesión y solicita uno nuevo."
+    }
   },
   "events": {
     "title": "Eventos",
@@ -224,7 +240,7 @@
       "documentType": {
         "dni": "DNI",
         "nie": "NIE",
-        "passport": "Pasaporte"
+        "passport": "PASAPORTE"
       },
       "documentPlaceholder": {
         "dni": "00000000A",
@@ -466,7 +482,7 @@
     "renameSuccess": "Passkey renombrada.",
     "register": {
       "title": "Añadir una passkey",
-      "description": "Usa el sensor biométrico o PIN de tu dispositivo para autenticarte de forma rápida y segura.",
+      "description": "Usa el sensor biométrico o PIN de tu dispositivo",
       "submit": "Registrar Passkey"
     },
     "errors": {
@@ -653,7 +669,7 @@
     "steps": {
       "email": "Verificar correo",
       "phone": "Verificar teléfono",
-      "kyc": "Identidad",
+      "kyc": "Añadir identidad",
       "passkey": "Añadir passkey"
     },
     "email": {
@@ -672,7 +688,8 @@
       "submit": "Verificar Número De Teléfono",
       "resend": "Reenviar Código",
       "resendSuccess": "Código reenviado.",
-      "successToast": "Teléfono verificado."
+      "successToast": "Teléfono verificado.",
+      "sentTo": "Hemos enviado un código de 6 dígitos a {{phone}}."
     },
     "kyc": {
       "title": "Verificación de identidad",

@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthVerifyTotpRouteImport } from './routes/_auth/verify-totp'
+import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as AuthSetupRouteImport } from './routes/_auth/setup'
 import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
@@ -77,6 +78,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthVerifyTotpRoute = AuthVerifyTotpRouteImport.update({
   id: '/verify-totp',
   path: '/verify-totp',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthSetupRoute = AuthSetupRouteImport.update({
@@ -189,11 +195,12 @@ const AppManagementNewRoute = AppManagementNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AppManagementRoute,
 } as any)
-const AppReservationsReservationIdIndexRoute = AppReservationsReservationIdIndexRouteImport.update({
-  id: '/reservations/$reservationId/',
-  path: '/reservations/$reservationId/',
-  getParentRoute: () => AppRoute,
-} as any)
+const AppReservationsReservationIdIndexRoute =
+  AppReservationsReservationIdIndexRouteImport.update({
+    id: '/reservations/$reservationId/',
+    path: '/reservations/$reservationId/',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppMarketWaitlistsIndexRoute = AppMarketWaitlistsIndexRouteImport.update({
   id: '/market/waitlists/',
   path: '/market/waitlists/',
@@ -224,37 +231,42 @@ const AppEventsEventIdQueueRoute = AppEventsEventIdQueueRouteImport.update({
   path: '/events/$eventId/queue',
   getParentRoute: () => AppRoute,
 } as any)
-const AppEventsEventIdCheckoutRoute = AppEventsEventIdCheckoutRouteImport.update({
-  id: '/events/$eventId/checkout',
-  path: '/events/$eventId/checkout',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMarketOffersOfferIdIndexRoute = AppMarketOffersOfferIdIndexRouteImport.update({
-  id: '/market/offers/$offerId/',
-  path: '/market/offers/$offerId/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppManagementOrgIdEventsIndexRoute = AppManagementOrgIdEventsIndexRouteImport.update({
-  id: '/$orgId/events/',
-  path: '/$orgId/events/',
-  getParentRoute: () => AppManagementRoute,
-} as any)
+const AppEventsEventIdCheckoutRoute =
+  AppEventsEventIdCheckoutRouteImport.update({
+    id: '/events/$eventId/checkout',
+    path: '/events/$eventId/checkout',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppMarketOffersOfferIdIndexRoute =
+  AppMarketOffersOfferIdIndexRouteImport.update({
+    id: '/market/offers/$offerId/',
+    path: '/market/offers/$offerId/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppManagementOrgIdEventsIndexRoute =
+  AppManagementOrgIdEventsIndexRouteImport.update({
+    id: '/$orgId/events/',
+    path: '/$orgId/events/',
+    getParentRoute: () => AppManagementRoute,
+  } as any)
 const AppManagementOrgIdCollaboratorsIndexRoute =
   AppManagementOrgIdCollaboratorsIndexRouteImport.update({
     id: '/$orgId/collaborators/',
     path: '/$orgId/collaborators/',
     getParentRoute: () => AppManagementRoute,
   } as any)
-const AppManagementOrgIdVenuesNewRoute = AppManagementOrgIdVenuesNewRouteImport.update({
-  id: '/$orgId/venues/new',
-  path: '/$orgId/venues/new',
-  getParentRoute: () => AppManagementRoute,
-} as any)
-const AppManagementOrgIdEventsNewRoute = AppManagementOrgIdEventsNewRouteImport.update({
-  id: '/$orgId/events/new',
-  path: '/$orgId/events/new',
-  getParentRoute: () => AppManagementRoute,
-} as any)
+const AppManagementOrgIdVenuesNewRoute =
+  AppManagementOrgIdVenuesNewRouteImport.update({
+    id: '/$orgId/venues/new',
+    path: '/$orgId/venues/new',
+    getParentRoute: () => AppManagementRoute,
+  } as any)
+const AppManagementOrgIdEventsNewRoute =
+  AppManagementOrgIdEventsNewRouteImport.update({
+    id: '/$orgId/events/new',
+    path: '/$orgId/events/new',
+    getParentRoute: () => AppManagementRoute,
+  } as any)
 const AppManagementOrgIdCollaboratorsNewRoute =
   AppManagementOrgIdCollaboratorsNewRouteImport.update({
     id: '/$orgId/collaborators/new',
@@ -302,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/setup': typeof AuthSetupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/verify-totp': typeof AuthVerifyTotpRoute
   '/management/new': typeof AppManagementNewRoute
   '/profile/about': typeof AppProfileAboutRoute
@@ -347,6 +360,7 @@ export interface FileRoutesByTo {
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/setup': typeof AuthSetupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/verify-totp': typeof AuthVerifyTotpRoute
   '/management/new': typeof AppManagementNewRoute
   '/profile/about': typeof AppProfileAboutRoute
@@ -396,6 +410,7 @@ export interface FileRoutesById {
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/setup': typeof AuthSetupRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_auth/verify-totp': typeof AuthVerifyTotpRoute
   '/_app/management/new': typeof AppManagementNewRoute
   '/_app/profile/about': typeof AppProfileAboutRoute
@@ -444,6 +459,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/setup'
+    | '/verify-email'
     | '/verify-totp'
     | '/management/new'
     | '/profile/about'
@@ -489,6 +505,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/setup'
+    | '/verify-email'
     | '/verify-totp'
     | '/management/new'
     | '/profile/about'
@@ -537,6 +554,7 @@ export interface FileRouteTypes {
     | '/_auth/register'
     | '/_auth/reset-password'
     | '/_auth/setup'
+    | '/_auth/verify-email'
     | '/_auth/verify-totp'
     | '/_app/management/new'
     | '/_app/profile/about'
@@ -616,6 +634,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-totp'
       fullPath: '/verify-totp'
       preLoaderRoute: typeof AuthVerifyTotpRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/setup': {
@@ -928,16 +953,23 @@ const AppManagementRouteChildren: AppManagementRouteChildren = {
   AppManagementNewRoute: AppManagementNewRoute,
   AppManagementIndexRoute: AppManagementIndexRoute,
   AppManagementOrgIdIndexRoute: AppManagementOrgIdIndexRoute,
-  AppManagementOrgIdCollaboratorsNewRoute: AppManagementOrgIdCollaboratorsNewRoute,
+  AppManagementOrgIdCollaboratorsNewRoute:
+    AppManagementOrgIdCollaboratorsNewRoute,
   AppManagementOrgIdEventsNewRoute: AppManagementOrgIdEventsNewRoute,
   AppManagementOrgIdVenuesNewRoute: AppManagementOrgIdVenuesNewRoute,
-  AppManagementOrgIdCollaboratorsIndexRoute: AppManagementOrgIdCollaboratorsIndexRoute,
+  AppManagementOrgIdCollaboratorsIndexRoute:
+    AppManagementOrgIdCollaboratorsIndexRoute,
   AppManagementOrgIdEventsIndexRoute: AppManagementOrgIdEventsIndexRoute,
-  AppManagementOrgIdEventsEventIdEditRoute: AppManagementOrgIdEventsEventIdEditRoute,
-  AppManagementOrgIdEventsEventIdScanRoute: AppManagementOrgIdEventsEventIdScanRoute,
-  AppManagementOrgIdEventsEventIdStatsRoute: AppManagementOrgIdEventsEventIdStatsRoute,
-  AppManagementOrgIdEventsEventIdTicketsRoute: AppManagementOrgIdEventsEventIdTicketsRoute,
-  AppManagementOrgIdEventsEventIdIndexRoute: AppManagementOrgIdEventsEventIdIndexRoute,
+  AppManagementOrgIdEventsEventIdEditRoute:
+    AppManagementOrgIdEventsEventIdEditRoute,
+  AppManagementOrgIdEventsEventIdScanRoute:
+    AppManagementOrgIdEventsEventIdScanRoute,
+  AppManagementOrgIdEventsEventIdStatsRoute:
+    AppManagementOrgIdEventsEventIdStatsRoute,
+  AppManagementOrgIdEventsEventIdTicketsRoute:
+    AppManagementOrgIdEventsEventIdTicketsRoute,
+  AppManagementOrgIdEventsEventIdIndexRoute:
+    AppManagementOrgIdEventsEventIdIndexRoute,
 }
 
 const AppManagementRouteWithChildren = AppManagementRoute._addFileChildren(
@@ -992,7 +1024,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppMarketOffersIndexRoute: AppMarketOffersIndexRoute,
   AppMarketOnSaleIndexRoute: AppMarketOnSaleIndexRoute,
   AppMarketWaitlistsIndexRoute: AppMarketWaitlistsIndexRoute,
-  AppReservationsReservationIdIndexRoute: AppReservationsReservationIdIndexRoute,
+  AppReservationsReservationIdIndexRoute:
+    AppReservationsReservationIdIndexRoute,
   AppMarketOffersOfferIdIndexRoute: AppMarketOffersOfferIdIndexRoute,
 }
 
@@ -1004,6 +1037,7 @@ interface AuthRouteChildren {
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetupRoute: typeof AuthSetupRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   AuthVerifyTotpRoute: typeof AuthVerifyTotpRoute
 }
 
@@ -1013,6 +1047,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthRegisterRoute: AuthRegisterRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetupRoute: AuthSetupRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   AuthVerifyTotpRoute: AuthVerifyTotpRoute,
 }
 

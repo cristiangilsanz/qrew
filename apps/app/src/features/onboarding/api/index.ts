@@ -3,6 +3,8 @@ import { apiClient } from '@/lib/api'
 import type { DocumentType } from '@/lib/documents'
 
 export interface OnboardingStatus {
+  email: string
+  phone_number: string
   email_verified: boolean
   phone_verified: boolean
   kyc_submitted: boolean

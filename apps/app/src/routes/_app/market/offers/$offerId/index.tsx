@@ -352,7 +352,7 @@ function AssignmentPage() {
 
       {isPending && !clientSecret && (
         <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
-          <div className="mx-auto w-full max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
+          <div className="mx-auto w-full max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8">
             <div className="flex items-center justify-between border-t border-white/10 pt-3 pb-1">
               <span className="text-muted-foreground text-sm">{t('market.offer.total')}</span>
               <span className="text-lg font-bold">

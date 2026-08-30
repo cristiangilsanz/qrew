@@ -64,7 +64,7 @@ function CheckoutPage() {
       <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">
         <BackButton to="/events/$eventId" params={{ eventId }} />
         <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
-          <div className="mx-auto max-w-[430px] bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-3 pb-6">
+          <div className="mx-auto w-full max-w-[430px] bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-3">
             <button
               className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 w-full rounded-full text-sm font-semibold"
               onClick={() => void navigate({ to: '/events/$eventId/queue', params: { eventId } })}
@@ -244,7 +244,7 @@ function CheckoutPage() {
       </div>
 
       <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
-        <div className="mx-auto max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-0">
+        <div className="mx-auto w-full max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8">
           {totalSelected > 0 && (
             <div className="border-border flex items-center justify-between border-t pt-3 pb-1">
               <span className="text-muted-foreground text-sm">{t('tickets.checkout.total')}</span>

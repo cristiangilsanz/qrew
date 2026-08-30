@@ -16,6 +16,11 @@ const queryClient = new QueryClient({
       staleTime: 0,
       gcTime: 0,
       retry: 1,
+      // failing offline shows the standard error state instead of pausing on a blank screen
+      networkMode: 'always',
+    },
+    mutations: {
+      networkMode: 'always',
     },
   },
 })

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
+import { FloatingActions } from '@/components/ui/floating-actions'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { NotFound } from '@/components/ui/not-found'
 import { PageError } from '@/components/ui/page-error'
@@ -243,54 +244,54 @@ function EventDetailPage() {
         )}
       </div>
 
-      {showResaleQueue ? (
-        inQueue ? (
-          <button
-            onClick={() => setLeaveOpen(true)}
-            className="keyboard-hide fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-red-600 px-5 text-white shadow-lg transition-colors hover:bg-red-700"
-            style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-          >
-            <LogOut className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">{t('market.leaveWaitlistButton')}</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => joinQueue.mutate()}
-            disabled={joinQueue.isPending}
-            className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
-            style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-          >
-            <Shuffle className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">{t('market.joinWaitlistButton')}</span>
-          </button>
-        )
-      ) : saleOpen ? (
-        event.queue_required ? (
-          <button
-            onClick={() => setShowQueue(true)}
-            className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
-            style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-          >
-            <Users className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">
-              {queueAdmitted
-                ? t('tickets.queue.admittedButton')
-                : queuePosition !== null
-                  ? t('tickets.queue.resumeButton')
-                  : t('tickets.queue.joinButton')}
-            </span>
-          </button>
-        ) : (
-          <button
-            onClick={() => void navigate({ to: '/events/$eventId/checkout', params: { eventId } })}
-            className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 z-40 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
-            style={{ right: 'max(calc((100vw - 430px) / 2 + 1rem), 1rem)' }}
-          >
-            <Ticket className="h-5 w-5 shrink-0" />
-            <span className="text-sm font-semibold">{t('tickets.checkout.buyButton')}</span>
-          </button>
-        )
-      ) : null}
+      <FloatingActions>
+        {showResaleQueue ? (
+          inQueue ? (
+            <button
+              onClick={() => setLeaveOpen(true)}
+              className="flex h-14 items-center gap-2 rounded-full bg-red-600 px-5 text-white shadow-lg transition-colors hover:bg-red-700"
+            >
+              <LogOut className="h-5 w-5 shrink-0" />
+              <span className="text-sm font-semibold">{t('market.leaveWaitlistButton')}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => joinQueue.mutate()}
+              disabled={joinQueue.isPending}
+              className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors disabled:opacity-60"
+            >
+              <Shuffle className="h-5 w-5 shrink-0" />
+              <span className="text-sm font-semibold">{t('market.joinWaitlistButton')}</span>
+            </button>
+          )
+        ) : saleOpen ? (
+          event.queue_required ? (
+            <button
+              onClick={() => setShowQueue(true)}
+              className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+            >
+              <Users className="h-5 w-5 shrink-0" />
+              <span className="text-sm font-semibold">
+                {queueAdmitted
+                  ? t('tickets.queue.admittedButton')
+                  : queuePosition !== null
+                    ? t('tickets.queue.resumeButton')
+                    : t('tickets.queue.joinButton')}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() =>
+                void navigate({ to: '/events/$eventId/checkout', params: { eventId } })
+              }
+              className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+            >
+              <Ticket className="h-5 w-5 shrink-0" />
+              <span className="text-sm font-semibold">{t('tickets.checkout.buyButton')}</span>
+            </button>
+          )
+        ) : null}
+      </FloatingActions>
 
       <AnimatePresence>
         {leaveOpen && (

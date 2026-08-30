@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { PageError } from '@/components/ui/page-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDeleteOrganisation } from '@/features/organiser/hooks/useDeleteOrganisation'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
@@ -28,7 +29,12 @@ function OrgDashboardPage() {
   const org = orgsData?.items.find((o) => o.id === orgId)
 
   const { data: collaboratorsData, isLoading: collaboratorsLoading } = useOrgCollaborators(orgId)
-  const { data: eventsData, isLoading: eventsLoading } = useOrgEvents(orgId)
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    isError: eventsError,
+    refetch: refetchEvents,
+  } = useOrgEvents(orgId)
 
   const allLoading = orgLoading || eventsLoading || collaboratorsLoading
   const collaboratorCount = collaboratorsData?.length ?? 0
@@ -66,6 +72,8 @@ function OrgDashboardPage() {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [deleteOpen])
+
+  if (eventsError) return <PageError onRetry={() => void refetchEvents()} />
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">

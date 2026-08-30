@@ -4,6 +4,7 @@ import { Plus, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { FloatingActions } from '@/components/ui/floating-actions'
 import { PageError } from '@/components/ui/page-error'
 import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { OrgCardSkeleton } from '@/components/ui/skeleton'
@@ -94,14 +95,15 @@ function OrganiserPage() {
         ))}
       </div>
 
-      <Link
-        to="/management/new"
-        className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
-        style={{ right: 'max(calc((100vw - 430px) / 2 + 1.5rem), 1.5rem)' }}
-      >
-        <Plus className="h-5 w-5 shrink-0" />
-        <span className="text-sm font-semibold">{t('organiser.org.create')}</span>
-      </Link>
+      <FloatingActions>
+        <Link
+          to="/management/new"
+          className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+        >
+          <Plus className="h-5 w-5 shrink-0" />
+          <span className="text-sm font-semibold">{t('organiser.org.create')}</span>
+        </Link>
+      </FloatingActions>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
 import { BottomDock } from '@/components/layout/BottomDock'
+import { PullToRefresh } from '@/components/layout/PullToRefresh'
 import { PageError } from '@/components/ui/page-error'
 import { RealtimeProvider } from '@/features/realtime/RealtimeProvider'
 import { useKeyboardOpen } from '@/hooks/useKeyboardOpen'
@@ -19,9 +20,11 @@ function AppLayout() {
   return (
     <RealtimeProvider>
       <div className="relative min-h-screen">
-        <div className="min-h-[calc(100dvh+1.5rem)] pb-20">
-          <Outlet />
-        </div>
+        <PullToRefresh>
+          <div className="min-h-[calc(100dvh+1.5rem)] pb-20">
+            <Outlet />
+          </div>
+        </PullToRefresh>
       </div>
       <BottomDock />
     </RealtimeProvider>

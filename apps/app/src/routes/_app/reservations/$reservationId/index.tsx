@@ -346,7 +346,7 @@ function ReservationPage() {
 
       {canPay && (
         <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
-          <div className="mx-auto flex max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-5">
+          <div className="mx-auto flex w-full max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8">
             <button
               onClick={() => initiatePayment.mutate(reservationId)}
               disabled={initiatePayment.isPending}

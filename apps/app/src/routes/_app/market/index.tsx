@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight, Clock, Tag, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { PageError } from '@/components/ui/page-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePendingMarketOffer } from '@/features/market/hooks/useMarketOffer'
 import { useMyQueues } from '@/features/market/hooks/useMyQueues'
@@ -17,7 +18,12 @@ function MarketPage() {
   const { t } = useTranslation()
   const { data: assignment, isLoading: assignmentLoading } = usePendingMarketOffer()
   const { data: tickets, isLoading: ticketsLoading } = useTickets()
-  const { data: queues, isLoading: queuesLoading } = useMyQueues()
+  const {
+    data: queues,
+    isLoading: queuesLoading,
+    isError: queuesError,
+    refetch: refetchQueues,
+  } = useMyQueues()
 
   const badgesLoading = assignmentLoading || ticketsLoading || queuesLoading
   const listedCount = (tickets ?? []).filter((t) => t.state === 'on_sale').length
@@ -44,6 +50,8 @@ function MarketPage() {
       count: waitlistCount,
     },
   ]
+
+  if (queuesError) return <PageError onRetry={() => void refetchQueues()} />
 
   return (
     <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">

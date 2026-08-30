@@ -78,6 +78,12 @@ export const authApi = {
   register: (data: RegisterRequest) =>
     apiClient.post<RegisterResponse>('/v1/auth/registration/', data).then((r) => r.data),
 
+  // implements resend email verification
+  resendEmailVerification: (email: string) =>
+    apiClient
+      .post<{ message: string }>('/v1/auth/registration/resend-email-verification', { email })
+      .then((r) => r.data),
+
   // implements passkey auth begin
   passkeyAuthBegin: (email: string) =>
     apiClient.post('/v1/auth/passkeys/authenticate/begin', { email }).then((r) => r.data),

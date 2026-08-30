@@ -45,6 +45,7 @@
     "fullName": "Full name",
     "fullNamePlaceholder": "Jane Doe",
     "phoneNumber": "Phone number",
+    "dialCode": "Country code",
     "acceptTerms": "I accept the terms and conditions",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
@@ -74,6 +75,21 @@
       "codeLabel": "Authentication Code",
       "verify": "Verify",
       "invalidCode": "Code rejected."
+    },
+    "verifyEmail": {
+      "title": "Check your email",
+      "sent": "We've sent you a link to confirm your account.",
+      "sentTo": "We've sent a link to {{email}} to confirm your account.",
+      "spamHint": "If it is not there, check your spam folder.",
+      "resend": "Resend Email",
+      "resent": "Verification email sent.",
+      "resendFailed": "Verification email not sent.",
+      "backToLogin": "Back to sign in",
+      "confirming": "Confirming your email…",
+      "confirmed": "Email confirmed",
+      "confirmedHint": "You can sign in and finish setting up your account.",
+      "linkExpired": "Link no longer valid",
+      "linkExpiredHint": "Sign in and request a new one."
     }
   },
   "events": {
@@ -234,7 +250,7 @@
       "documentType": {
         "dni": "DNI",
         "nie": "NIE",
-        "passport": "Passport"
+        "passport": "PASSPORT"
       },
       "documentPlaceholder": {
         "dni": "00000000A",
@@ -476,7 +492,7 @@
     "renameSuccess": "Passkey renamed.",
     "register": {
       "title": "Add a passkey",
-      "description": "Use your device's biometric sensor or PIN to authenticate quickly and securely.",
+      "description": "Use your device's biometric sensor or PIN",
       "submit": "Register Passkey"
     },
     "errors": {
@@ -663,7 +679,7 @@
     "steps": {
       "email": "Verify email",
       "phone": "Verify phone",
-      "kyc": "Identity",
+      "kyc": "Add identity",
       "passkey": "Add passkey"
     },
     "email": {
@@ -682,7 +698,8 @@
       "submit": "Verify Phone Number",
       "resend": "Resend Code",
       "resendSuccess": "Code resent.",
-      "successToast": "Phone number verified."
+      "successToast": "Phone number verified.",
+      "sentTo": "We sent a 6-digit code to {{phone}}."
     },
     "kyc": {
       "title": "Identity verification",

@@ -344,7 +344,7 @@ function TicketDetailPage() {
             <div className="h-5 w-5 shrink-0 translate-x-1/2 rounded-full bg-neutral-800 shadow-inner" />
           </div>
 
-          {ticket.qr_eligible && displayState !== 'scanning' ? (
+          {ticket.qr_eligible ? (
             <div className="px-5 py-5">
               <QrDisplay ticketId={ticket.id} startsAt={event?.starts_at} endsAt={event?.ends_at} />
               {saleEnded && ticket?.state === 'issued' && !existingListing && (

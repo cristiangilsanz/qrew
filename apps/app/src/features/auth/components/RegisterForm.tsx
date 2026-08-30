@@ -20,7 +20,9 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { env } from '@/config/env'
+import { DEFAULT_DIAL_ISO, DIAL_CODES, toE164 } from '@/lib/dialCodes'
 
+import { useLogin } from '../hooks/useLogin'
 import { useRegister } from '../hooks/useRegister'
 import { AuthLayout } from './AuthLayout'
 
@@ -44,6 +46,9 @@ export function RegisterForm() {
   const register = useRegister()
   const [showPassword, setShowPassword] = useState(false)
   const turnstileRef = useRef<{ reset: () => void }>(null)
+  const login = useLogin()
+  const [dialIso, setDialIso] = useState(DEFAULT_DIAL_ISO)
+  const [nationalNumber, setNationalNumber] = useState('')
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -58,25 +63,31 @@ export function RegisterForm() {
   })
 
   // handles on submit
-  const onSubmit = (values: RegisterFormValues) => {
-    register.mutate(values, {
-      // handles on success
-      onSuccess: () => {
-        toast.success(t('auth.registrationSuccess'))
-        navigate({ to: '/login' })
-      },
-      // handles on error
-      onError: () => {
-        turnstileRef.current?.reset()
-        form.setValue('captcha_token', '')
-      },
-    })
+  const onSubmit = async (values: RegisterFormValues) => {
+    try {
+      await register.mutateAsync(values)
+    } catch {
+      turnstileRef.current?.reset()
+      form.setValue('captcha_token', '')
+      return
+    }
+    toast.success(t('auth.registrationSuccess'))
+    // signing in straight away lands the new account on the first setup step
+    try {
+      const session = await login.mutateAsync({
+        email: values.email,
+        password: values.password,
+      })
+      await navigate({ to: session.setup_required ? '/setup' : '/home' })
+    } catch {
+      await navigate({ to: '/login' })
+    }
   }
 
   return (
     <AuthLayout title={t('auth.register')} subtitle={t('auth.registerSubtitle')}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit((v) => void onSubmit(v))} className="space-y-4">
           <FormField
             control={form.control}
             name="full_name"
@@ -86,12 +97,7 @@ export function RegisterForm() {
                 <div className="relative">
                   <User className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <FormControl>
-                    <Input
-                      autoComplete="name"
-                      placeholder={t('auth.fullNamePlaceholder')}
-                      className="pl-9"
-                      {...field}
-                    />
+                    <Input autoComplete="name" className="pl-9" {...field} />
                   </FormControl>
                 </div>
                 <FormMessage />
@@ -128,17 +134,39 @@ export function RegisterForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('auth.phoneNumber')}</FormLabel>
-                <div className="relative">
-                  <Phone className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                  <FormControl>
-                    <Input
-                      type="tel"
-                      autoComplete="tel"
-                      placeholder="+34 612 345 678"
-                      className="pl-9"
-                      {...field}
-                    />
-                  </FormControl>
+                <div className="flex gap-2">
+                  <select
+                    value={dialIso}
+                    onChange={(e) => {
+                      setDialIso(e.target.value)
+                      field.onChange(toE164(e.target.value, nationalNumber))
+                    }}
+                    aria-label={t('auth.dialCode')}
+                    className="border-input bg-background text-foreground w-24 shrink-0 rounded-md border px-2 py-2 text-sm focus:outline-none"
+                  >
+                    {DIAL_CODES.map((code) => (
+                      <option key={code.iso} value={code.iso}>
+                        {code.flag} {code.dial}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="relative flex-1">
+                    <Phone className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                    <FormControl>
+                      <Input
+                        type="tel"
+                        autoComplete="tel-national"
+                        inputMode="numeric"
+                        className="pl-9"
+                        value={nationalNumber}
+                        onChange={(e) => {
+                          const national = e.target.value
+                          setNationalNumber(national)
+                          field.onChange(toE164(dialIso, national))
+                        }}
+                      />
+                    </FormControl>
+                  </div>
                 </div>
                 <FormMessage />
               </FormItem>

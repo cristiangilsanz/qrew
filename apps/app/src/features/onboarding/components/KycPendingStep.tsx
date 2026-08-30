@@ -1,6 +1,6 @@
 // renders the kyc pending step component
 import { useNavigate } from '@tanstack/react-router'
-import { CheckCircle, Clock, XCircle } from 'lucide-react'
+import { CheckCircle, Clock, RotateCw, XCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -28,10 +28,11 @@ export function KycPendingStep({ onRetry }: Props) {
           <p className="font-semibold">{t('onboarding.pending.approved')}</p>
         </div>
         <Button
-          className="w-full"
+          className="w-full rounded-full"
           isLoading={completeSetup.isPending}
           onClick={() => completeSetup.mutate()}
         >
+          <CheckCircle className="mr-2 h-4 w-4" />
           {t('onboarding.pending.continue')}
         </Button>
       </div>
@@ -48,7 +49,8 @@ export function KycPendingStep({ onRetry }: Props) {
             {t('onboarding.pending.rejectedDescription')}
           </p>
         </div>
-        <Button variant="outline" className="w-full" onClick={onRetry}>
+        <Button variant="outline" className="w-full rounded-full" onClick={onRetry}>
+          <RotateCw className="mr-2 h-4 w-4" />
           {t('onboarding.pending.retry')}
         </Button>
       </div>

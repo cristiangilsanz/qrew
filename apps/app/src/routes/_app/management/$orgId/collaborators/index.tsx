@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { FloatingActions } from '@/components/ui/floating-actions'
 import { PageError } from '@/components/ui/page-error'
 import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -187,15 +188,16 @@ function OrgMembersPage() {
         )}
       </AnimatePresence>
 
-      <Link
-        to="/management/$orgId/collaborators/new"
-        params={{ orgId }}
-        className="keyboard-hide bg-primary hover:bg-primary/90 fixed bottom-24 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
-        style={{ right: 'max(calc((100vw - 430px) / 2 + 1.5rem), 1.5rem)' }}
-      >
-        <UserPlus className="h-5 w-5 shrink-0" />
-        <span className="text-sm font-semibold">{t('organiser.collaborators.addMember')}</span>
-      </Link>
+      <FloatingActions>
+        <Link
+          to="/management/$orgId/collaborators/new"
+          params={{ orgId }}
+          className="bg-primary hover:bg-primary/90 flex h-14 items-center gap-2 rounded-full px-5 text-white shadow-lg transition-colors"
+        >
+          <UserPlus className="h-5 w-5 shrink-0" />
+          <span className="text-sm font-semibold">{t('organiser.collaborators.addMember')}</span>
+        </Link>
+      </FloatingActions>
     </div>
   )
 }
