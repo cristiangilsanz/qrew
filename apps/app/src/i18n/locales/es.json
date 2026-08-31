@@ -289,7 +289,6 @@
     },
     "offer": {
       "viewEventDetails": "Ver Detalles Del Evento",
-      "total": "Total",
       "decline": "Rechazar",
       "acceptAndPay": "Aceptar Y Pagar",
       "declineTitle": "Rechazar",
@@ -302,7 +301,9 @@
       "holderTitle": "Titular de la entrada",
       "holderDescription": "Indica quién usará esta entrada. Deberá llevar este documento en la puerta.",
       "holderName": "Nombre completo",
-      "holderSaveFailed": "Titular de la entrada no guardado."
+      "holderSaveFailed": "Titular de la entrada no guardado.",
+      "checkoutTitle": "Completa tu pedido",
+      "price": "Precio"
     },
     "joinWaitlistButton": "Unirme a la lista",
     "leaveWaitlistButton": "Salir de la lista",

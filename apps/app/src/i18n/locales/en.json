@@ -289,7 +289,6 @@
     },
     "offer": {
       "viewEventDetails": "View Event Details",
-      "total": "Total",
       "decline": "Decline",
       "acceptAndPay": "Accept & Pay",
       "declineTitle": "Decline",
@@ -302,7 +301,9 @@
       "holderTitle": "Ticket Holder",
       "holderDescription": "Name the person who will use this ticket. They must carry this document at the door.",
       "holderName": "Full name",
-      "holderSaveFailed": "Ticket holder not saved."
+      "holderSaveFailed": "Ticket holder not saved.",
+      "checkoutTitle": "Complete Your Order",
+      "price": "Price"
     },
     "joinWaitlistButton": "Join Waitlist",
     "leaveWaitlistButton": "Leave Waitlist",

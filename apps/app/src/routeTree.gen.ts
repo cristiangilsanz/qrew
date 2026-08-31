@@ -48,6 +48,7 @@ import { Route as AppEventsEventIdCheckoutRouteImport } from './routes/_app/even
 import { Route as AppMarketOffersOfferIdIndexRouteImport } from './routes/_app/market/offers/$offerId/index'
 import { Route as AppManagementOrgIdEventsIndexRouteImport } from './routes/_app/management/$orgId/events/index'
 import { Route as AppManagementOrgIdCollaboratorsIndexRouteImport } from './routes/_app/management/$orgId/collaborators/index'
+import { Route as AppMarketOffersOfferIdCheckoutRouteImport } from './routes/_app/market/offers/$offerId/checkout'
 import { Route as AppManagementOrgIdVenuesNewRouteImport } from './routes/_app/management/$orgId/venues/new'
 import { Route as AppManagementOrgIdEventsNewRouteImport } from './routes/_app/management/$orgId/events/new'
 import { Route as AppManagementOrgIdCollaboratorsNewRouteImport } from './routes/_app/management/$orgId/collaborators/new'
@@ -255,6 +256,12 @@ const AppManagementOrgIdCollaboratorsIndexRoute =
     path: '/$orgId/collaborators/',
     getParentRoute: () => AppManagementRoute,
   } as any)
+const AppMarketOffersOfferIdCheckoutRoute =
+  AppMarketOffersOfferIdCheckoutRouteImport.update({
+    id: '/market/offers/$offerId/checkout',
+    path: '/market/offers/$offerId/checkout',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppManagementOrgIdVenuesNewRoute =
   AppManagementOrgIdVenuesNewRouteImport.update({
     id: '/$orgId/venues/new',
@@ -342,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/management/$orgId/collaborators/new': typeof AppManagementOrgIdCollaboratorsNewRoute
   '/management/$orgId/events/new': typeof AppManagementOrgIdEventsNewRoute
   '/management/$orgId/venues/new': typeof AppManagementOrgIdVenuesNewRoute
+  '/market/offers/$offerId/checkout': typeof AppMarketOffersOfferIdCheckoutRoute
   '/management/$orgId/collaborators/': typeof AppManagementOrgIdCollaboratorsIndexRoute
   '/management/$orgId/events/': typeof AppManagementOrgIdEventsIndexRoute
   '/market/offers/$offerId/': typeof AppMarketOffersOfferIdIndexRoute
@@ -388,6 +396,7 @@ export interface FileRoutesByTo {
   '/management/$orgId/collaborators/new': typeof AppManagementOrgIdCollaboratorsNewRoute
   '/management/$orgId/events/new': typeof AppManagementOrgIdEventsNewRoute
   '/management/$orgId/venues/new': typeof AppManagementOrgIdVenuesNewRoute
+  '/market/offers/$offerId/checkout': typeof AppMarketOffersOfferIdCheckoutRoute
   '/management/$orgId/collaborators': typeof AppManagementOrgIdCollaboratorsIndexRoute
   '/management/$orgId/events': typeof AppManagementOrgIdEventsIndexRoute
   '/market/offers/$offerId': typeof AppMarketOffersOfferIdIndexRoute
@@ -438,6 +447,7 @@ export interface FileRoutesById {
   '/_app/management/$orgId/collaborators/new': typeof AppManagementOrgIdCollaboratorsNewRoute
   '/_app/management/$orgId/events/new': typeof AppManagementOrgIdEventsNewRoute
   '/_app/management/$orgId/venues/new': typeof AppManagementOrgIdVenuesNewRoute
+  '/_app/market/offers/$offerId/checkout': typeof AppMarketOffersOfferIdCheckoutRoute
   '/_app/management/$orgId/collaborators/': typeof AppManagementOrgIdCollaboratorsIndexRoute
   '/_app/management/$orgId/events/': typeof AppManagementOrgIdEventsIndexRoute
   '/_app/market/offers/$offerId/': typeof AppMarketOffersOfferIdIndexRoute
@@ -487,6 +497,7 @@ export interface FileRouteTypes {
     | '/management/$orgId/collaborators/new'
     | '/management/$orgId/events/new'
     | '/management/$orgId/venues/new'
+    | '/market/offers/$offerId/checkout'
     | '/management/$orgId/collaborators/'
     | '/management/$orgId/events/'
     | '/market/offers/$offerId/'
@@ -533,6 +544,7 @@ export interface FileRouteTypes {
     | '/management/$orgId/collaborators/new'
     | '/management/$orgId/events/new'
     | '/management/$orgId/venues/new'
+    | '/market/offers/$offerId/checkout'
     | '/management/$orgId/collaborators'
     | '/management/$orgId/events'
     | '/market/offers/$offerId'
@@ -582,6 +594,7 @@ export interface FileRouteTypes {
     | '/_app/management/$orgId/collaborators/new'
     | '/_app/management/$orgId/events/new'
     | '/_app/management/$orgId/venues/new'
+    | '/_app/market/offers/$offerId/checkout'
     | '/_app/management/$orgId/collaborators/'
     | '/_app/management/$orgId/events/'
     | '/_app/market/offers/$offerId/'
@@ -874,6 +887,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppManagementOrgIdCollaboratorsIndexRouteImport
       parentRoute: typeof AppManagementRoute
     }
+    '/_app/market/offers/$offerId/checkout': {
+      id: '/_app/market/offers/$offerId/checkout'
+      path: '/market/offers/$offerId/checkout'
+      fullPath: '/market/offers/$offerId/checkout'
+      preLoaderRoute: typeof AppMarketOffersOfferIdCheckoutRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/management/$orgId/venues/new': {
       id: '/_app/management/$orgId/venues/new'
       path: '/$orgId/venues/new'
@@ -999,6 +1019,7 @@ interface AppRouteChildren {
   AppMarketOnSaleIndexRoute: typeof AppMarketOnSaleIndexRoute
   AppMarketWaitlistsIndexRoute: typeof AppMarketWaitlistsIndexRoute
   AppReservationsReservationIdIndexRoute: typeof AppReservationsReservationIdIndexRoute
+  AppMarketOffersOfferIdCheckoutRoute: typeof AppMarketOffersOfferIdCheckoutRoute
   AppMarketOffersOfferIdIndexRoute: typeof AppMarketOffersOfferIdIndexRoute
 }
 
@@ -1026,6 +1047,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMarketWaitlistsIndexRoute: AppMarketWaitlistsIndexRoute,
   AppReservationsReservationIdIndexRoute:
     AppReservationsReservationIdIndexRoute,
+  AppMarketOffersOfferIdCheckoutRoute: AppMarketOffersOfferIdCheckoutRoute,
   AppMarketOffersOfferIdIndexRoute: AppMarketOffersOfferIdIndexRoute,
 }
 
