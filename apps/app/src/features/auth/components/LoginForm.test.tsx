@@ -111,7 +111,7 @@ describe('LoginForm', () => {
     const { toast } = await import('sonner')
     server.use(
       http.post('http://localhost:8000/api/identity/v1/auth/login', () =>
-        HttpResponse.json({ detail: 'Invalid credentials' }, { status: 401 }),
+        HttpResponse.json({ detail: 'Email or password rejected.' }, { status: 401 }),
       ),
     )
 
@@ -122,7 +122,7 @@ describe('LoginForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Invalid credentials')
+      expect(toast.error).toHaveBeenCalledWith('Email or password rejected.')
     })
   })
 

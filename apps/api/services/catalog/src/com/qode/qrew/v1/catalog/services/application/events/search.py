@@ -60,6 +60,8 @@ class SearchService:
             )
 
         where_fragments = list(clause.where_fragments)
+        where_fragments.append("status IN ('published', 'ongoing')")
+        where_fragments.append("ends_at > now()")
         if all_cities:
             placeholders = ", ".join(f":city_{i}" for i in range(len(all_cities)))
             where_fragments.append(f"venue_city IN ({placeholders})")
@@ -105,7 +107,7 @@ class SearchService:
                 starts_at=row.get("starts_at"),
                 rank=(
                     float(row[EVENTS_SEARCH_CONFIG.rank_column_alias])
-                    if EVENTS_SEARCH_CONFIG.rank_column_alias in row
+                    if row.get(EVENTS_SEARCH_CONFIG.rank_column_alias) is not None
                     else None
                 ),
             )

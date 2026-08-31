@@ -26,8 +26,10 @@ erDiagram
         timestamp pending_phone_otp_expires_at
         string national_id_hash UK
         text national_id_number
+        string national_id_type
         string kyc_status
         string kyc_document_object_key
+        string kyc_ocr_result
         bool is_active
         bool is_admin
         string device_fingerprint

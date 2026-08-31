@@ -4,9 +4,10 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { toastErrorMessage } from '@/lib/errors'
 import { useAuthStore } from '@/store/auth'
 
-import { type ApiErrorDetail, authApi, extractErrorMessage, type LoginRequest } from '../api'
+import { type ApiErrorDetail, authApi, type LoginRequest } from '../api'
 
 // provides use login
 export function useLogin() {
@@ -33,10 +34,7 @@ export function useLogin() {
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('auth.errors.loginFailed'),
-      )
+      const message = toastErrorMessage(error, t('auth.errors.loginFailed'))
       toast.error(message)
     },
   })

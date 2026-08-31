@@ -71,11 +71,15 @@ export const authHandlers = [
 
   http.get(`${API_URL}/v1/auth/profile/onboarding-status`, () =>
     HttpResponse.json({
+      email: 'user@example.com',
+      phone_number: '+34600000000',
       email_verified: true,
       phone_verified: true,
+      kyc_submitted: true,
       kyc_status: 'approved',
-      has_passkey: true,
+      passkey_registered: true,
       is_complete: true,
+      current_step: 'pending',
     }),
   ),
 

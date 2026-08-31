@@ -72,6 +72,7 @@ File: `apps/api/gateway/config/local.yaml`
 | `nats_url` | — | yes | NATS connection string |
 | `redis_url` | — | yes | Redis connection string |
 | `access_jwt_private_key` | — | yes | ES256 private key for access tokens |
+| `setup_jwt_private_key` | — | yes | ES256 private key for the setup tokens issued during onboarding |
 | `scanner_jwt_private_key` | — | yes | RS256 public key for scanner token validation |
 | `jwt_audience` | — | no | Expected `aud` claim |
 | `jwt_issuer` | — | no | Expected `iss` claim |
@@ -226,18 +227,21 @@ flowchart TB
     k2(["pii_encryption_key"]):::key
     k3(["ticket_qr_jwt_private_key"]):::key
     k4(["scanner_jwt_private_key"]):::key
+    k5(["setup_jwt_private_key"]):::key
 
     identity["🔑 Identity"]:::svc
     gateway["🔀 Gateway"]:::svc
     catalog["📋 Catalog"]:::svc
+    sales["🛒 Sales"]:::svc
     payments["💳 Payments"]:::svc
     ticketing["🎟️ Ticketing"]:::svc
     entry["🚪 Entry"]:::svc
 
-    k1 --> identity & gateway & catalog
-    k2 --> identity & catalog & payments
+    k1 --> identity & gateway & catalog & sales & payments & ticketing & entry
+    k2 --> identity & sales & payments & ticketing
     k3 --> identity & ticketing & entry
     k4 --> entry & gateway
+    k5 --> identity & gateway
 
     classDef key fill:#fef9c3,stroke:#ca8a04,color:#000
     classDef svc fill:#dbeafe,stroke:#3b82f6,color:#000

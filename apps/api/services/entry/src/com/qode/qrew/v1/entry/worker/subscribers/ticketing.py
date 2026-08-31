@@ -14,6 +14,7 @@ from com.qode.qrew.v1.entry.repositories.projections import TicketContextReposit
 logger = structlog.get_logger(__name__)
 
 SUBJECT = "ticketing.ticket.state_changed"
+STREAM = "ticketing"
 
 
 # updates the local ticket context from a ticket state change message
@@ -86,6 +87,12 @@ async def run_projector() -> None:
     nc = get_nats()
     js = nc.js
     try:
+        try:
+            await js.find_stream_name_by_subject("ticketing.>")
+        except Exception:
+            await js.add_stream(  # pyright: ignore[reportUnknownMemberType]
+                name=STREAM, subjects=["ticketing.>"]
+            )
         await js.subscribe(
             SUBJECT, cb=handle_ticket_state_changed, durable="entry-projector"
         )

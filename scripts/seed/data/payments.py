@@ -43,10 +43,10 @@ PAYMENTS = (
         created_hours_ago=24 * 4,
     ),
     Payment(
-        key="action-admin",
-        user="admin",
+        key="action-user-b",
+        user="user-b",
         reservation=None,
-        assignment="claim-admin",
+        assignment="pending-user-b",
         amount_cents=VIP.price_cents,
         status="requires_action",
         created_hours_ago=0.04,

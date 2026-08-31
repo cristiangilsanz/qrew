@@ -1,11 +1,11 @@
 {
   "nav": {
     "home": "Home",
-    "discover": "Events",
     "tickets": "Tickets",
     "profile": "Profile",
-    "organiser": "Management",
-    "market": "Market"
+    "market": "Market",
+    "management": "Management",
+    "events": "Events"
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -21,6 +21,7 @@
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",
+    "resourceGone": "The resource is no longer valid.",
     "retry": "Try Again",
     "save": "Save",
     "update": "Update",
@@ -31,7 +32,7 @@
     "goBack": "Go Back",
     "waitSeconds": "Wait {{seconds}}s",
     "done": "Done",
-    "copied": "Copied"
+    "copied": "Copied."
   },
   "auth": {
     "login": "Sign In",
@@ -44,10 +45,11 @@
     "fullName": "Full name",
     "fullNamePlaceholder": "Jane Doe",
     "phoneNumber": "Phone number",
+    "dialCode": "Country code",
     "acceptTerms": "I accept the terms and conditions",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
-    "registrationSuccess": "Account created. Check your email to verify.",
+    "registrationSuccess": "Account created.",
     "or": "or",
     "passkeyLogin": "Sign In With Passkey",
     "emailRequiredForPasskey": "Enter your email to sign in with a passkey",
@@ -61,30 +63,47 @@
     "resetPasswordSubtitle": "Enter your new password",
     "newPassword": "New password",
     "resetPasswordSubmit": "Reset password",
-    "resetPasswordSuccess": "Password reset. You can now sign in.",
+    "resetPasswordSuccess": "Password reset.",
     "errors": {
-      "loginFailed": "Invalid email or password",
-      "registerFailed": "Registration failed. Please try again.",
-      "resetFailed": "Invalid or expired reset link."
+      "loginFailed": "Sign in failed.",
+      "registerFailed": "Account not created.",
+      "resetFailed": "Password not reset."
     },
     "totp": {
       "title": "Two-Factor Authentication",
       "subtitle": "Enter the 6-digit code:",
       "codeLabel": "Authentication Code",
       "verify": "Verify",
-      "invalidCode": "Invalid or expired code. Please try again."
+      "invalidCode": "Code rejected."
+    },
+    "verifyEmail": {
+      "title": "Check your email",
+      "sent": "We've sent you a link to confirm your account.",
+      "sentTo": "We've sent a link to {{email}} to confirm your account.",
+      "spamHint": "If it is not there, check your spam folder.",
+      "resend": "Resend Email",
+      "resent": "Verification email sent.",
+      "resendFailed": "Verification email not sent.",
+      "backToLogin": "Back to sign in",
+      "confirming": "Confirming your email…",
+      "confirmed": "Email confirmed",
+      "confirmedHint": "You can sign in and finish setting up your account.",
+      "linkExpired": "Link no longer valid",
+      "linkExpiredHint": "Sign in and request a new one."
     }
   },
   "events": {
     "title": "Events",
     "empty": "No events found.",
-    "notFound": "Event not found.",
     "backToList": "Back to events",
     "backToEvent": "Back to event",
     "searchPlaceholder": "Search events…",
+    "datePlaceholder": "Event date",
     "cityPlaceholder": "City",
     "searchButton": "Search",
-    "soldOut": "Sold out",
+    "soldOut": "Sold Out",
+    "finished": "This event has ended",
+    "cancelled": "This event was cancelled",
     "available": "{{count}} available",
     "ticketTypes": "Tickets",
     "venue": "Venue",
@@ -92,7 +111,6 @@
     "unknownOrganiser": "Unknown organiser",
     "starts": "Starts",
     "ends": "Ends",
-    "saleEnds": "Sale ends",
     "maxPerUser": "Max {{count}} per user",
     "free": "Free"
   },
@@ -115,7 +133,6 @@
       "timeLabel": "Time",
       "historyLabel": "History",
       "issuedLabel": "Issued",
-      "notFound": "Ticket not found.",
       "frozenHint": "This ticket has been frozen. Contact support if you believe this is an error.",
       "flaggedHint": "This ticket has been flagged for review. Contact support for assistance.",
       "states": {
@@ -166,8 +183,9 @@
       "denied": "QR unavailable.",
       "deniedLocation": "You must allow access to your location.",
       "deniedGeofence": "You must be at the venue to display your QR code.",
-      "deniedAttestation": "Device not verified. QR codes are available on attested devices only.",
+      "deniedAttestation": "QR codes are available on attested devices only.",
       "deniedState": "This ticket cannot be used for entry in its current state.",
+      "windowPending": "Your QR code will be available 5 hours before the event.",
       "deniedTimeWindow": "QR codes are only available from 5 hours before the event until it ends.",
       "error": "Your QR code could not be loaded."
     },
@@ -176,14 +194,16 @@
       "descriptionTitle": "This is a high-demand event",
       "descriptionSub": "Join the queue to get your tickets",
       "joinButton": "Join Queue",
-      "joinFailed": "Failed to join queue. Please try again.",
+      "resumeButton": "View Your Place",
+      "admittedButton": "Claim Your Slot",
+      "joinFailed": "Queue not joined.",
       "waiting": "Your position in the queue",
       "updatingIn": "Updating in {{seconds}}s",
       "doNotClose": "Do not close this page",
       "ready": "You're next",
       "readyDescription": "Your slot is ready. Check back shortly for your redemption link.",
       "notInQueue": "You are not in the queue.",
-      "redeemFailed": "Failed to redeem your slot. Please try again."
+      "redeemFailed": "Slot not redeemed."
     },
     "checkout": {
       "title": "Get Tickets",
@@ -193,8 +213,9 @@
       "total": "Total",
       "reserveButton": "Reserve Tickets",
       "selected": "selected",
-      "alreadyHeld": "already held",
-      "limitReached": "You already hold the maximum number of tickets for this event."
+      "limitReached": "You already hold the maximum number of tickets for this event.",
+      "walletLimit": "Max {{count}} tickets",
+      "quantity": "Quantity"
     },
     "reservation": {
       "title": "Your Reservation",
@@ -206,42 +227,69 @@
       "paid": "Payment confirmed.",
       "cancelButton": "Cancel Reservation",
       "cancelSuccess": "Reservation cancelled.",
-      "cancelFailed": "Failed to cancel reservation.",
-      "createFailed": "Could not create reservation. Please try again.",
-      "notFound": "Reservation not found."
+      "cancelFailed": "Reservation not cancelled.",
+      "createFailed": "Reservation not created.",
+      "notFound": "Reservation not found.",
+      "holdersFailed": "Holders not saved."
     },
     "payment": {
       "title": "Payment",
       "payButton": "Pay Now",
       "confirmButton": "Confirm Payment",
-      "initFailed": "Could not start payment. Please try again.",
-      "failed": "Payment failed. Please try again.",
-      "success": "Payment successful. Your ticket is on its way."
+      "unavailable": "Card payments are not configured on this build.",
+      "initFailed": "Payment not started.",
+      "failed": "Payment failed.",
+      "confirming": "Confirming your payment…",
+      "success": "Payment confirmed."
     },
     "toast": {
-      "listSuccess": "Ticket is now on sale",
-      "listFailed": "Could not list ticket for resale"
+      "listSuccess": "Ticket listed for resale.",
+      "listFailed": "Ticket not listed."
+    },
+    "holders": {
+      "documentType": {
+        "dni": "DNI",
+        "nie": "NIE",
+        "other": "OTHER"
+      },
+      "documentPlaceholder": {
+        "dni": "00000000A",
+        "nie": "X0000000A",
+        "other": "Document number"
+      },
+      "invalid": {
+        "dni": "Invalid DNI",
+        "nie": "Invalid NIE",
+        "other": "Invalid document number"
+      }
     }
   },
   "market": {
     "title": "Market",
     "myTicketsOnSale": "My Tickets on Sale",
-    "myTicketsToClaim": "My Tickets to Claim",
     "myWaitlists": "My Waitlists",
     "searchByEvent": "Search by event…",
     "noResults": "No results.",
     "noTicketsOnSale": "You have no tickets on sale.",
-    "noPendingClaims": "You have no pending claims.",
     "noWaitlists": "You're not on any waitlists.",
     "resaleMarket": "Resale market",
-    "joinQueueButton": "Join Resale Queue",
-    "leaveQueueButton": "Leave Resale Queue",
-    "leaveQueue": {
-      "title": "Leave Resale Queue",
-      "description": "If someone lists a ticket, you won't be considered for it.",
-      "confirm": "Leave Resale Queue"
+    "toast": {
+      "declined": "Offer declined.",
+      "declineFailed": "Offer not declined.",
+      "paymentSuccess": "Payment confirmed.",
+      "leftWaitlist": "Waitlist left.",
+      "leaveFailed": "Waitlist not left.",
+      "joinSuccess": "Waitlist joined.",
+      "joinFailed": "Waitlist not joined."
     },
-    "assignment": {
+    "myOffers": "My Offers",
+    "noPendingOffers": "You have no offers.",
+    "offers": {
+      "paidBadge": "Paid",
+      "declinedBadge": "Declined",
+      "expiredBadge": "Expired"
+    },
+    "offer": {
       "viewEventDetails": "View Event Details",
       "total": "Total",
       "decline": "Decline",
@@ -249,21 +297,21 @@
       "declineTitle": "Decline",
       "declineDesc": "You will lose this ticket offer and it may be reassigned to someone else.",
       "generalAdmission": "General admission",
-      "notFound": "Claim not found.",
       "paymentConfirmed": "Payment confirmed",
       "ticketTransferring": "Your ticket is being transferred.",
-      "expired": "This assignment has expired.",
-      "expiredDesc": "You've been removed from the queue. Rejoin if you want another chance.",
-      "declined": "Assignment declined."
+      "expired": "Offer Expired",
+      "declined": "Offer Declined",
+      "holderTitle": "Ticket holder",
+      "holderDescription": "Name the person who will use this ticket. They must carry this document at the door.",
+      "holderName": "Full name",
+      "holderSaveFailed": "Ticket holder not saved."
     },
-    "toast": {
-      "declined": "Assignment declined",
-      "declineFailed": "Failed to decline assignment",
-      "paymentSuccess": "Payment confirmed. Ticket is being transferred.",
-      "leftWaitlist": "Left the waitlist",
-      "leaveFailed": "Failed to leave the resale queue",
-      "joinSuccess": "You are in the resale queue.",
-      "joinFailed": "Failed to join the resale queue"
+    "joinWaitlistButton": "Join Waitlist",
+    "leaveWaitlistButton": "Leave Waitlist",
+    "leaveWaitlist": {
+      "title": "Leave Waitlist",
+      "description": "If someone lists a ticket, you won't be considered for it.",
+      "confirm": "Leave Waitlist"
     }
   },
   "profile": {
@@ -274,6 +322,7 @@
     "managePasskeys": "Manage",
     "myProfile": "My Profile",
     "myAccount": "My Account",
+    "needsAttention": "Your account needs attention",
     "privacySecurity": "Privacy & Security",
     "helpSupport": "Help & Support",
     "logout": "Log Out",
@@ -284,7 +333,7 @@
       "label": "Identity",
       "rowLabel": "KYC",
       "subtitle": "Government-issued ID required",
-      "description": "Upload a clear photo of your national ID or passport.",
+      "description": "Upload a clear photo of the identity document you selected.",
       "approved": "Verified",
       "pending": "In Review",
       "rejected": "Rejected",
@@ -356,11 +405,11 @@
       "reportBugDesc": "Open an issue on GitHub",
       "faq": {
         "q1": "How do I buy a ticket?",
-        "a1": "Head to the home screen, find an event you like, and tap on it. From there you can select your tickets and go through checkout.",
+        "a1": "Open an event from the home screen, choose your tickets and complete the checkout.",
         "q2": "What is a passkey?",
-        "a2": "A passkey lets you sign in using your face, fingerprint, or device PIN instead of a password. It is faster and much more secure.",
+        "a2": "Sign in with your face, fingerprint or device PIN instead of typing a password.",
         "q3": "How do I get a refund?",
-        "a3": "Refund policies are decided by the event organiser. You can contact them directly through the event page or get in touch with our support team."
+        "a3": "Ask the event organiser from the event page, since each organiser sets its own refund policy."
       }
     },
     "about": {
@@ -430,11 +479,11 @@
       "success": "Account deleted."
     },
     "errors": {
-      "changePasswordFailed": "Password change failed. Check your current password.",
-      "changeEmailFailed": "Email change failed. Check your password.",
-      "changePhoneFailed": "Phone change failed. Check your password.",
-      "confirmPhoneFailed": "Verification failed. Check your code.",
-      "deleteAccountFailed": "Deletion failed. Check your password.",
+      "changePasswordFailed": "Password not changed.",
+      "changeEmailFailed": "Email not changed.",
+      "changePhoneFailed": "Phone number not changed.",
+      "confirmPhoneFailed": "Phone number not confirmed.",
+      "deleteAccountFailed": "Account not deleted.",
       "fetchFailed": "Failed to load profile."
     }
   },
@@ -448,15 +497,15 @@
     "renameSuccess": "Passkey renamed.",
     "register": {
       "title": "Add a passkey",
-      "description": "Use your device's biometric sensor or PIN to authenticate quickly and securely.",
+      "description": "Use your device's biometric sensor or PIN",
       "submit": "Register Passkey"
     },
     "errors": {
-      "registerFailed": "Passkey registration failed. Please try again.",
-      "loginFailed": "Passkey sign-in failed. Please try again.",
-      "deleteFailed": "Failed to remove passkey.",
-      "lastPasskey": "Cannot remove your only passkey.",
-      "renameFailed": "Failed to rename passkey."
+      "registerFailed": "Passkey not registered.",
+      "loginFailed": "Passkey sign in failed.",
+      "deleteFailed": "Passkey not removed.",
+      "lastPasskey": "Last passkey not removed.",
+      "renameFailed": "Passkey not renamed."
     }
   },
   "organiser": {
@@ -475,7 +524,7 @@
       "descriptionLabel": "Description (optional)",
       "deleteButton": "Delete Organisation",
       "deleteTitle": "Delete organisation",
-      "deleteDesc": "This will permanently delete the organisation and all its events, ticket types and members.\n\nThis action cannot be undone.",
+      "deleteDesc": "This will permanently delete the organisation and all its events, ticket types and collaborators.\n\nThis action cannot be undone.",
       "deleteSuccess": "Organisation deleted."
     },
     "events": {
@@ -491,6 +540,10 @@
       "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
       "markStarted": "Mark As Started",
+      "markStartedTitle": "Mark As Started",
+      "markStartedDescription": "The event begins and its sale closes for good.",
+      "markStartedNote": "This cannot be undone.",
+      "markStartedConfirm": "Mark As Started",
       "cancel": "Cancel Event",
       "confirmPublish": "Confirm Publish",
       "confirmCancel": "Cancel Event",
@@ -540,6 +593,7 @@
       "updateSuccess": "Ticket type updated.",
       "deleteSuccess": "Ticket type deleted.",
       "addButton": "Add Ticket Type",
+      "empty": "No ticket types yet.",
       "deleteTitle": "Delete ticket type",
       "deleteDesc": "This ticket type will be permanently removed. Tickets already issued will not be affected.",
       "deleteConfirm": "Delete",
@@ -550,27 +604,6 @@
       "positionLabel": "Position",
       "available": "{{available}}/{{capacity}} available",
       "free": "Free"
-    },
-    "members": {
-      "title": "Members",
-      "inviteSuccess": "Member added.",
-      "removeSuccess": "Member removed.",
-      "emailLabel": "User",
-      "roleLabel": "Role",
-      "inviteButton": "Add",
-      "joined": "Joined",
-      "invite": "Add member",
-      "addMember": "Add member",
-      "empty": "No members yet.",
-      "emailPlaceholder": "Search by name or email…",
-      "roleMemberDesc": "Can view events and members",
-      "roleManagerDesc": "Can manage events and add or remove members",
-      "selectUser": "Please select a user from the list",
-      "searchPlaceholder": "Search members…",
-      "removeTitle": "Remove member",
-      "removeConfirmDesc": "This person will lose access to the organisation and its events.",
-      "removeConfirm": "Remove",
-      "roleValidationNote": "Both managers and members can validate tickets at entry"
     },
     "venues": {
       "createSuccess": "Venue created.",
@@ -600,24 +633,46 @@
       "rejected": "Rejected"
     },
     "errors": {
-      "createOrgFailed": "Failed to create organisation.",
-      "createEventFailed": "Failed to create event.",
-      "updateEventFailed": "Failed to update event.",
-      "publishFailed": "Failed to publish event.",
-      "startFailed": "Failed to mark event as started.",
-      "cancelFailed": "Failed to cancel event.",
-      "createTicketTypeFailed": "Failed to create ticket type.",
-      "updateTicketTypeFailed": "Failed to update ticket type.",
-      "deleteTicketTypeFailed": "Failed to delete ticket type.",
-      "inviteFailed": "Failed to invite member.",
-      "removeFailed": "Failed to remove member.",
-      "createVenueFailed": "Failed to create venue.",
-      "addMemberFailed": "Failed to add member.",
-      "deleteFailed": "Failed to delete organisation."
+      "createOrgFailed": "Organisation not created.",
+      "createEventFailed": "Event not created.",
+      "updateEventFailed": "Event not updated.",
+      "publishFailed": "Event not published.",
+      "startFailed": "Event not started.",
+      "cancelFailed": "Event not cancelled.",
+      "createTicketTypeFailed": "Ticket type not created.",
+      "updateTicketTypeFailed": "Ticket type not updated.",
+      "deleteTicketTypeFailed": "Ticket type not deleted.",
+      "inviteFailed": "Collaborator not invited.",
+      "removeFailed": "Collaborator not removed.",
+      "createVenueFailed": "Venue not created.",
+      "deleteFailed": "Organisation not deleted.",
+      "addCollaboratorFailed": "Collaborator not added."
     },
     "search": {
       "placeholder": "Search organisations…",
       "empty": "No organisations found."
+    },
+    "collaborators": {
+      "title": "Collaborators",
+      "inviteSuccess": "Collaborator added.",
+      "removeSuccess": "Collaborator removed.",
+      "emailLabel": "User",
+      "roleLabel": "Role",
+      "inviteButton": "Add",
+      "joined": "Joined",
+      "invite": "Add collaborator",
+      "addMember": "Add collaborator",
+      "empty": "No collaborators yet.",
+      "emailPlaceholder": "Search by name or email…",
+      "roleMemberDesc": "Can view events and collaborators",
+      "roleManagerDesc": "Can manage events and add or remove collaborators",
+      "selectUser": "Please select a user from the list",
+      "noMatches": "No users match that search",
+      "searchPlaceholder": "Search collaborators…",
+      "removeTitle": "Remove collaborator",
+      "removeConfirmDesc": "This person will lose access to the organisation and its events.",
+      "removeConfirm": "Remove",
+      "roleValidationNote": "Both managers and members can validate tickets at entry"
     }
   },
   "realtime": {
@@ -633,7 +688,7 @@
     "steps": {
       "email": "Verify email",
       "phone": "Verify phone",
-      "kyc": "Identity",
+      "kyc": "Add identity",
       "passkey": "Add passkey"
     },
     "email": {
@@ -651,16 +706,17 @@
       "placeholder": "123456",
       "submit": "Verify Phone Number",
       "resend": "Resend Code",
-      "resendSuccess": "Code resent successfully.",
-      "successToast": "Phone number verified."
+      "resendSuccess": "Code resent.",
+      "successToast": "Phone number verified.",
+      "sentTo": "We sent a 6-digit code to {{phone}}."
     },
     "kyc": {
       "title": "Identity verification",
-      "description": "Upload a clear photo of your national ID or passport.",
+      "description": "Upload a clear photo of the identity document you selected.",
       "label": "Document",
       "dropzone": "Click to select a file",
       "submit": "Upload Document",
-      "successToast": "Document uploaded successfully."
+      "successToast": "Document uploaded."
     },
     "pending": {
       "title": "In Review",
@@ -673,10 +729,10 @@
       "continue": "Continue To App"
     },
     "errors": {
-      "verifyEmailFailed": "Email verification failed. Please check your code.",
-      "verifyPhoneFailed": "Phone verification failed. Please check your code.",
-      "kycUploadFailed": "Document upload failed. Please try again.",
-      "completeFailed": "Setup completion failed. Please try again."
+      "verifyEmailFailed": "Email not verified.",
+      "verifyPhoneFailed": "Phone number not verified.",
+      "kycUploadFailed": "Document not uploaded.",
+      "completeFailed": "Setup not completed."
     }
   }
 }

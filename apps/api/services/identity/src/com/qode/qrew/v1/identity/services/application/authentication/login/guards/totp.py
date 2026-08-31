@@ -42,7 +42,7 @@ class TotpService:
         self._audit = audit or AuditService()
 
     # generates a new totp secret provisioning uri and backup codes
-    def generate_setup(self, user: User, issuer: str = "Qrew") -> tuple[str, str, list[str]]:
+    def generate_setup(self, user: User, issuer: str = "QREW") -> tuple[str, str, list[str]]:
         secret = pyotp.random_base32()
         totp = pyotp.TOTP(secret)
         uri: str = totp.provisioning_uri(name=user.email, issuer_name=issuer)  # type: ignore[assignment]
@@ -53,7 +53,7 @@ class TotpService:
     async def confirm(self, user: User, secret: str, code: str, backup_codes: list[str]) -> None:
         totp = pyotp.TOTP(secret)
         if not totp.verify(code, valid_window=2):
-            raise TotpError("Invalid code")
+            raise TotpError("Code rejected.")
         hashed_backups = [_hash_backup(c) for c in backup_codes]
         user.totp_secret = secret
         user.totp_enabled = True
@@ -69,7 +69,7 @@ class TotpService:
     # verifies a totp code or a backup code during a login challenge
     async def verify_login(self, user: User, code: str) -> None:
         if not user.totp_enabled or user.totp_secret is None:
-            raise TotpError("2FA not enabled")
+            raise TotpError("Two-factor authentication not enabled.")
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(code, valid_window=2):
             await self._audit.record(
@@ -101,15 +101,15 @@ class TotpService:
             entity_type="user",
             entity_id=str(user.id),
         )
-        raise TotpError("Invalid code")
+        raise TotpError("Code rejected.")
 
     # disables two factor authentication after verifying a code
     async def disable(self, user: User, code: str) -> None:
         if not user.totp_enabled or user.totp_secret is None:
-            raise TotpError("2FA is not enabled")
+            raise TotpError("Two-factor authentication not enabled.")
         totp = pyotp.TOTP(user.totp_secret)
         if not totp.verify(code, valid_window=1):
-            raise TotpError("Invalid code")
+            raise TotpError("Code rejected.")
         user.totp_secret = None
         user.totp_enabled = False
         user.totp_backup_codes_json = None

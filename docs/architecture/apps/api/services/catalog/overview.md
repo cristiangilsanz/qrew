@@ -39,6 +39,7 @@ Catalog is the source of truth for the public event catalog in the platform. It 
 | `POST` | `/events/{id}/start` | Mark a published event as ongoing | JWT (manager) |
 | `POST` | `/events/{id}/cancel` | Cancel an event | JWT (manager) |
 | `GET` | `/events` | Public catalog list with search and filters | Public |
+| `GET` | `/events/search` | Search published events by title, organisation or venue | Public |
 | `GET` | `/events/{id}` | Get a published event with ticket types | Public |
 | `GET` | `/events/{id}/availability` | Lightweight availability check | Public |
 | `POST` | `/events/{id}/ticket-types` | Add a ticket type (draft or published only) | JWT (manager) |
@@ -73,7 +74,8 @@ This service does not consume events from other services.
 
 | Worker | Type | Description |
 |--------|------|-------------|
-| `search_reindexer` | arq job | Rebuilds the full-text search index for events. |
+| `search_reindexer` | arq job, daily at 05:00 | Rebuilds the full-text search index for events. |
+| `event_lifecycle` | arq job, every minute | Marks a published event as ongoing once its start time has passed, so nobody has to do it by hand. |
 
 ## Internal Dependencies
 

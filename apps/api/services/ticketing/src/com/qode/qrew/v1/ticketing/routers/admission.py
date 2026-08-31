@@ -38,7 +38,7 @@ async def mark_ticket_used(
     except LockUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Ticket is busy", "field": "ticket_id"},
+            detail={"message": "Ticket busy.", "field": "ticket_id"},
         ) from exc
     except TicketNotFoundError as exc:
         raise HTTPException(

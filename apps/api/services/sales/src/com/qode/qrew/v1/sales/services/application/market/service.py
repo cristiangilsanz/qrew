@@ -14,6 +14,7 @@ from com.qode.qrew.v1.sales.models.market import (
     MarketListingState,
     MarketQueueEntry,
 )
+from com.qode.qrew.v1.sales.models.projections import EventContext
 from com.qode.qrew.v1.sales.repositories.market import MarketRepository
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
@@ -61,18 +62,23 @@ class MarketService:
         self._assignment_ttl = timedelta(hours=assignment_ttl_hours)
         self._listing_ttl = timedelta(days=listing_ttl_days)
 
-    # joins a user into an event's resale queue once the sale has closed
+    # reports whether an event can no longer be bought from, by date or by capacity
+    async def _sale_is_over(self, event_ctx: EventContext, now: datetime) -> bool:
+        if event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at:
+            return True
+        return await self._inventory.event_is_sold_out(event_ctx.event_id)
+
+    # joins a user into an event's resale queue once the sale is over
     @traced("market.service.join_queue")
     async def join_queue(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> MarketQueueEntry:
         event_ctx = await self._event_ctx.get_by_event_id(event_id)
         if event_ctx is None or event_ctx.status != "published":
-            raise MarketError("Event not found", field="event_id")
+            raise MarketError("Event not found.", field="event_id")
 
         now = _now()
-        sale_closed = event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at
-        if not sale_closed:
+        if not await self._sale_is_over(event_ctx, now):
             raise MarketError(
-                "Resale queue is only available once the sale window has closed",
+                "Resale queue opens once the event is sold out or its sale has closed",
                 field="event_id",
             )
 
@@ -139,13 +145,12 @@ class MarketService:
 
         event_ctx = await self._event_ctx.get_by_event_id(event_id)
         if event_ctx is None or event_ctx.status != "published":
-            raise MarketError("Event not found", field="event_id")
+            raise MarketError("Event not found.", field="event_id")
 
         now = _now()
-        sale_closed = event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at
-        if not sale_closed:
+        if not await self._sale_is_over(event_ctx, now):
             raise MarketError(
-                "Tickets can only be listed after the sale window closes",
+                "Tickets can be listed once the event is sold out or its sale has closed",
                 field="event_id",
             )
 
@@ -157,11 +162,11 @@ class MarketService:
 
         existing = await self._repo.get_listing_by_ticket_id(ticket_id)
         if existing is not None:
-            raise MarketError("This ticket is already listed", field="ticket_id")
+            raise MarketError("Ticket already listed.", field="ticket_id")
 
         inventory = await self._inventory.get_by_id(ticket_type_id)
         if inventory is None:
-            raise MarketError("Ticket type not found", field="ticket_type_id")
+            raise MarketError("Ticket type not found.", field="ticket_type_id")
 
         listing = MarketListing(
             ticket_id=ticket_id,
@@ -192,13 +197,20 @@ class MarketService:
     ) -> MarketAssignment:
         assignment = await self._repo.get_assignment_by_id(assignment_id)
         if assignment is None or assignment.buyer_user_id != user_id:
-            raise MarketError("Assignment not found", field="assignment_id")
+            raise MarketError("Assignment not found.", field="assignment_id")
         return assignment
 
     # reads a user's pending assignment across every event
     @traced("market.service.get_pending_assignment")
     async def get_pending_assignment(self, *, user_id: uuid.UUID) -> MarketAssignment | None:
         return await self._repo.get_pending_assignment_for_user_any_event(user_id)
+
+    # lists the caller's pending assignments and the ones that just ended
+    async def list_recent_assignments(
+        self, *, user_id: uuid.UUID, within_hours: int = 24
+    ) -> list[MarketAssignment]:
+        since = _now() - timedelta(hours=within_hours)
+        return await self._repo.list_recent_assignments_for_user(user_id, since=since)
 
     # reads a listing by its identifier
     async def get_listing(self, *, listing_id: uuid.UUID) -> MarketListing | None:
@@ -212,17 +224,19 @@ class MarketService:
         user_id: uuid.UUID,
         assignment_id: uuid.UUID,
         holder_name: str,
+        holder_document_type: str,
         holder_dni: str,
     ) -> MarketAssignment:
         assignment = await self._repo.get_assignment_by_id(assignment_id)
         if assignment is None or assignment.buyer_user_id != user_id:
-            raise MarketError("Assignment not found", field="assignment_id")
+            raise MarketError("Assignment not found.", field="assignment_id")
         if assignment.state != MarketAssignmentState.pending:
-            raise MarketError("Assignment is no longer modifiable", field="state")
+            raise MarketError("Assignment already closed.", field="state")
         if _now() >= assignment.expires_at:
-            raise MarketError("Assignment has expired", field="expires_at")
+            raise MarketError("Assignment expired.", field="expires_at")
         assignment.holder_name = holder_name
         assignment.holder_dni = holder_dni
+        assignment.holder_document_type = holder_document_type
         await self._repo.flush()
         return assignment
 
@@ -233,17 +247,17 @@ class MarketService:
     ) -> dict[str, Any]:
         assignment = await self._repo.get_assignment_by_id(assignment_id)
         if assignment is None or assignment.buyer_user_id != user_id:
-            raise MarketError("Assignment not found", field="assignment_id")
+            raise MarketError("Assignment not found.", field="assignment_id")
         if assignment.state != MarketAssignmentState.pending:
-            raise MarketError("Assignment is not pending payment", field="state")
+            raise MarketError("Assignment not pending payment.", field="state")
         if _now() >= assignment.expires_at:
-            raise MarketError("Assignment has expired", field="expires_at")
+            raise MarketError("Assignment expired.", field="expires_at")
         if not assignment.holder_name or not assignment.holder_dni:
-            raise MarketError("Holder information must be set before payment", field="holder_name")
+            raise MarketError("Holders not set.", field="holder_name")
 
         listing = await self._repo.get_listing_by_id(assignment.listing_id)
         if listing is None:
-            raise MarketError("Listing not found", field="listing_id")
+            raise MarketError("Listing not found.", field="listing_id")
 
         return {
             "amount_cents": listing.price_cents,
@@ -261,7 +275,7 @@ class MarketService:
     ) -> None:
         assignment = await self._repo.get_assignment_by_id(assignment_id)
         if assignment is None or assignment.buyer_user_id != user_id:
-            raise MarketError("Assignment not found", field="assignment_id")
+            raise MarketError("Assignment not found.", field="assignment_id")
         assignment.payment_intent_id = payment_intent_id
         await self._repo.flush()
 
@@ -270,9 +284,9 @@ class MarketService:
     async def decline_assignment(self, *, user_id: uuid.UUID, assignment_id: uuid.UUID) -> None:
         assignment = await self._repo.get_assignment_by_id(assignment_id)
         if assignment is None or assignment.buyer_user_id != user_id:
-            raise MarketError("Assignment not found", field="assignment_id")
+            raise MarketError("Assignment not found.", field="assignment_id")
         if assignment.state != MarketAssignmentState.pending:
-            raise MarketError("Assignment cannot be declined", field="state")
+            raise MarketError("Assignment not declined.", field="state")
 
         assignment.state = MarketAssignmentState.declined
         await self._repo.flush()
@@ -291,14 +305,23 @@ class MarketService:
 
     # settles a paid assignment by transferring its ticket to the buyer
     @traced("market.service.complete_assignment")
-    async def complete_assignment(self, *, payment_intent_id: str) -> None:
-        assignment = await self._repo.get_assignment_by_payment_intent(payment_intent_id)
+    async def complete_assignment(
+        self, *, payment_intent_id: str, assignment_id: uuid.UUID | None = None
+    ) -> None:
+        assignment = None
+        if assignment_id is not None:
+            assignment = await self._repo.get_assignment_by_id(assignment_id)
+        if assignment is None:
+            assignment = await self._repo.get_assignment_by_payment_intent(payment_intent_id)
         if assignment is None:
             await logger.awarning(
                 "market.complete_assignment.not_found",
                 payment_intent_id=payment_intent_id,
+                assignment_id=str(assignment_id) if assignment_id else None,
             )
             return
+        if not assignment.payment_intent_id:
+            assignment.payment_intent_id = payment_intent_id
         if assignment.state != MarketAssignmentState.pending:
             await logger.awarning(
                 "market.complete_assignment.skip",
@@ -321,6 +344,7 @@ class MarketService:
             ticket_id=listing.ticket_id,
             new_owner_user_id=assignment.buyer_user_id,
             holder_name=assignment.holder_name or "",
+            holder_document_type=assignment.holder_document_type or "",
             holder_dni=assignment.holder_dni or "",
             actor_id=assignment.buyer_user_id,
         )
@@ -336,9 +360,9 @@ class MarketService:
     ) -> dict[str, Any]:
         row = await self._repo.get_ticket_for_listing(ticket_id=ticket_id, owner_user_id=user_id)
         if row is None:
-            raise MarketError("Ticket not found", field="ticket_id")
+            raise MarketError("Ticket not found.", field="ticket_id")
         if row["state"] != "issued":
-            raise MarketError("Only issued tickets can be listed for resale", field="ticket_id")
+            raise MarketError("Ticket not listable.", field="ticket_id")
         return {"event_id": row["event_id"], "ticket_type_id": row["ticket_type_id"]}
 
     # records an audit event without letting a failure interrupt the caller
@@ -381,6 +405,7 @@ async def _publish_transfer(
     ticket_id: uuid.UUID,
     new_owner_user_id: uuid.UUID,
     holder_name: str,
+    holder_document_type: str,
     holder_dni: str,
     actor_id: uuid.UUID,
 ) -> None:
@@ -397,6 +422,7 @@ async def _publish_transfer(
                 "ticket_id": str(ticket_id),
                 "new_owner_user_id": str(new_owner_user_id),
                 "holder_name": holder_name,
+                "holder_document_type": holder_document_type,
                 "holder_dni": holder_dni,
             },
         )

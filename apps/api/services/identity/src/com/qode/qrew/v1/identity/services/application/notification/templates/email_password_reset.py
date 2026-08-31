@@ -21,8 +21,8 @@ def forgot_password_email(
         f"{fallback_link(link)}"
     )
     return base_email(
-        title="Reset your Qrew password",
-        preheader="Reset the password for your Qrew account.",
+        title="Reset your QREW password",
+        preheader="Reset the password for your QREW account.",
         logo_url=logo_url,
         content_html=content,
     )

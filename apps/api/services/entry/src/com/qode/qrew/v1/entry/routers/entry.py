@@ -49,14 +49,14 @@ def _claims_or_401(token: str) -> tuple[uuid.UUID | None, uuid.UUID]:
     except InvalidTokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Invalid scanner token", "field": None},
+            detail={"message": "Scanner token rejected.", "field": None},
         ) from exc
     venue_raw = payload.get("venue_id")
     event_raw = payload.get("event_id")
     if not isinstance(venue_raw, str):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Scanner token missing venue_id", "field": None},
+            detail={"message": "Scanner token rejected.", "field": None},
         )
     try:
         venue_id = uuid.UUID(venue_raw)
@@ -64,7 +64,7 @@ def _claims_or_401(token: str) -> tuple[uuid.UUID | None, uuid.UUID]:
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Scanner token has invalid scoping", "field": None},
+            detail={"message": "Scanner token rejected.", "field": None},
         ) from exc
     return event_id, venue_id
 
@@ -128,12 +128,12 @@ async def get_entry_stats(
     except EventNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Event not found", "field": "event_id"},
+            detail={"message": "Event not found.", "field": "event_id"},
         ) from None
     except NotEventMemberError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Not a member of this organisation", "field": None},
+            detail={"message": "Member access required.", "field": None},
         ) from None
     stats = await compute_entry_stats(db, redis, event_id=event_id, since=since)
     return EntryStatsResponse(

@@ -105,7 +105,7 @@ async def local_upload(
     if await storage.exists(key):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "object already stored", "field": "key"},
+            detail={"message": "Object already stored.", "field": "key"},
         )
     body = await request.body()
     try:
@@ -113,7 +113,7 @@ async def local_upload(
         if len(body) > constraint.max_size_bytes:
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail={"message": "payload exceeds the per-kind size limit"},
+                detail={"message": "Payload exceeds the size limit."},
             )
     except ValueError:
         pass
@@ -148,7 +148,7 @@ async def local_download(
     except ObjectNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "not found", "field": "key"},
+            detail={"message": "Object not found.", "field": "key"},
         ) from exc
     return Response(content=body, media_type="application/octet-stream")
 
@@ -169,7 +169,7 @@ async def public_image(key: str) -> Response:
     except ObjectNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "not found", "field": "key"},
+            detail={"message": "Object not found.", "field": "key"},
         ) from exc
     return Response(
         content=body,

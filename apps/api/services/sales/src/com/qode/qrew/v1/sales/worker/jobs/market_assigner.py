@@ -1,7 +1,9 @@
 # assigns pending market listings to a random eligible queue member
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import structlog
+from jobs import job, parse_crontab
 from sqlalchemy import text
 
 from com.qode.qrew.v1.sales.core.config import settings
@@ -120,3 +122,10 @@ async def _publish_assigned(*, assignment_id: object, buyer_user_id: object) -> 
             subject="market.assignment.created.v1",
             error=repr(exc),
         )
+
+
+# offers available listings to the users waiting for them on a periodic schedule
+@job("market.assign_pending", cron=parse_crontab("* * * * *"), max_attempts=1)
+async def run_assign_pending(ctx: dict[str, Any]) -> None:
+    del ctx
+    await assign_pending()

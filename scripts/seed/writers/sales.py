@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncpg
 
-from ..core import SeedConfig, Timeline, hash_pii, ident
+from ..core import SeedConfig, Timeline, encrypt, hash_pii, ident
 from ..data import Dataset
 
 NAME = "sales"
@@ -79,14 +79,13 @@ async def write(
         await conn.execute(
             """
             INSERT INTO sales.reservations (
-                id, user_id, event_id, ticket_type_id, quantity, status, expires_at,
+                id, user_id, event_id, quantity, status, expires_at,
                 requires_review, risk_score, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
             """,
             reservation.id,
             data.person(reservation.user).id,
             event.id,
-            tier.id(event.key),
             reservation.quantity,
             reservation.status,
             when.minutes(reservation.expires_in_minutes),
@@ -94,20 +93,34 @@ async def write(
             reservation.risk_score,
             when.hours(-reservation.created_hours_ago),
         )
+        await conn.execute(
+            """
+            INSERT INTO sales.reservation_items (
+                id, reservation_id, ticket_type_id, quantity
+            )
+            VALUES ($1, $2, $3, $4)
+            """,
+            ident("reservation-item", reservation.key, reservation.ticket_type),
+            reservation.id,
+            tier.id(event.key),
+            reservation.quantity,
+        )
         for position, (holder_name, holder_dni) in enumerate(
             reservation.holders, start=1
         ):
             await conn.execute(
                 """
-                INSERT INTO sales.reservation_holders (id, reservation_id, position,
-                                                       holder_name, holder_dni)
-                VALUES ($1, $2, $3, $4, $5)
+                INSERT INTO sales.reservation_holders (
+                    id, reservation_id, position, holder_name, holder_dni_ciphertext,
+                    holder_document_type
+                )
+                VALUES ($1, $2, $3, $4, $5, 'dni')
                 """,
                 ident("holder", reservation.key, str(position)),
                 reservation.id,
                 position,
                 holder_name,
-                holder_dni,
+                encrypt(cfg.fernet, holder_dni),
             )
 
     for listing in data.listings:
@@ -137,8 +150,9 @@ async def write(
             INSERT INTO sales.market_assignments (
                 id, listing_id, event_id, buyer_user_id, assigned_at, expires_at,
                 paid_at,
-                payment_intent_id, holder_name, holder_dni, state
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                payment_intent_id, holder_name, holder_dni_ciphertext,
+                holder_document_type, state
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             """,
             assignment.id,
             data.listing(assignment.listing).id,
@@ -151,11 +165,14 @@ async def write(
             else None,
             f"pi_seed_{assignment.key}" if assignment.paid else None,
             assignment.holder_name,
-            assignment.holder_dni,
+            encrypt(cfg.fernet, assignment.holder_dni)
+            if assignment.holder_dni is not None
+            else None,
+            "dni" if assignment.holder_dni is not None else None,
             assignment.state,
         )
 
-    for position, (event_key, person_key, tiebreak) in enumerate(data.queue):
+    for position, (event_key, person_key, tiebreak) in enumerate(data.waitlist):
         await conn.execute(
             """
             INSERT INTO sales.market_queue_entries (

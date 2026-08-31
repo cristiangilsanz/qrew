@@ -153,7 +153,7 @@ class TestTicketTypeServiceCreate:
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
-            pytest.raises(TicketTypeError, match="Event not found"),
+            pytest.raises(TicketTypeError, match="Event not found."),
         ):
             await svc.create(
                 actor_id=actor_id,
@@ -198,7 +198,7 @@ class TestTicketTypeServiceCreate:
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
-            pytest.raises(TicketTypeError, match="already exists"),
+            pytest.raises(TicketTypeError, match="already taken"),
         ):
             await svc.create(
                 actor_id=actor_id,
@@ -313,7 +313,7 @@ class TestTicketTypeServiceUpdate:
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
-            pytest.raises(TicketTypeError, match="already exists"),
+            pytest.raises(TicketTypeError, match="already taken"),
         ):
             await svc.update(
                 actor_id=actor_id,

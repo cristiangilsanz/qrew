@@ -81,13 +81,15 @@ twilio_from_number: ""
 
 # ── webauthn ──────────────────────────────────────────────────────────────────
 rp_id: "localhost"
-rp_name: "Qrew"
+rp_name: "QREW"
 rp_expected_origin: "http://localhost:3000"
 
 # ── storage ───────────────────────────────────────────────────────────────────
 storage_root: "./var/storage"
 storage_signing_key: ""
 storage_signed_url_ttl_seconds: 300
+# public base the signed upload url is built from, must be reachable by the device
+storage_base_url: "http://localhost:8001"
 kyc_auto_approve: false
 kyc_document_retention_days: 30
 

@@ -1,10 +1,11 @@
 // implements market api
+import type { DocumentType } from '@/lib/documents'
 import { paymentsClient } from '@/lib/paymentsApi'
 import { salesClient } from '@/lib/salesApi'
 
 export type MarketQueueState = 'in_queue' | 'not_in_queue'
 export type MarketListingState = 'available' | 'assigned' | 'completed' | 'cancelled'
-export type MarketAssignmentState = 'pending' | 'paid' | 'expired' | 'declined'
+export type MarketOfferState = 'pending' | 'paid' | 'expired' | 'declined'
 
 export interface MarketQueueStatus {
   in_queue: boolean
@@ -26,7 +27,7 @@ export interface MarketListingResponse {
   cancelled_at: string | null
 }
 
-export interface MarketAssignmentResponse {
+export interface MarketOfferResponse {
   id: string
   listing_id: string
   event_id: string
@@ -34,8 +35,9 @@ export interface MarketAssignmentResponse {
   assigned_at: string
   expires_at: string
   paid_at: string | null
-  state: MarketAssignmentState
+  state: MarketOfferState
   holder_name: string | null
+  holder_document_type: DocumentType | null
   holder_dni: string | null
   price_cents: number
   currency: string
@@ -48,7 +50,7 @@ export interface MarketQueueEntry {
   joined_at: string
 }
 
-export interface MarketAssignmentPayment {
+export interface MarketOfferPayment {
   id: string
   reservation_id: string
   amount_cents: number
@@ -89,33 +91,40 @@ export const marketApi = {
   getMyQueues: () => salesClient.get<MarketQueueEntry[]>('/v1/market/queues').then((r) => r.data),
 
   // implements get pending assignment
-  getPendingAssignment: () =>
+  listOffers: () =>
+    salesClient.get<MarketOfferResponse[]>('/v1/market/assignments').then((r) => r.data),
+
+  getPendingOffer: () =>
     salesClient
-      .get<MarketAssignmentResponse | null>('/v1/market/assignments/pending')
+      .get<MarketOfferResponse | null>('/v1/market/assignments/pending')
       .then((r) => r.data),
 
   // implements get assignment
-  getAssignment: (assignmentId: string) =>
-    salesClient
-      .get<MarketAssignmentResponse>(`/v1/market/assignments/${assignmentId}`)
-      .then((r) => r.data),
+  getOffer: (offerId: string) =>
+    salesClient.get<MarketOfferResponse>(`/v1/market/assignments/${offerId}`).then((r) => r.data),
 
   // implements set holders
-  setHolders: (assignmentId: string, holder_name: string, holder_dni: string) =>
+  setHolders: (
+    offerId: string,
+    holder_name: string,
+    holder_dni: string,
+    holder_document_type: DocumentType = 'dni',
+  ) =>
     salesClient
-      .put<MarketAssignmentResponse>(`/v1/market/assignments/${assignmentId}/holders`, {
+      .put<MarketOfferResponse>(`/v1/market/assignments/${offerId}/holders`, {
         holder_name,
+        holder_document_type,
         holder_dni,
       })
       .then((r) => r.data),
 
   // implements decline assignment
-  declineAssignment: (assignmentId: string) =>
-    salesClient.post(`/v1/market/assignments/${assignmentId}/decline`).then((r) => r.data),
+  declineOffer: (offerId: string) =>
+    salesClient.post(`/v1/market/assignments/${offerId}/decline`).then((r) => r.data),
 
   // implements initiate assignment payment
-  initiateAssignmentPayment: (assignmentId: string) =>
+  initiateOfferPayment: (offerId: string) =>
     paymentsClient
-      .post<MarketAssignmentPayment>(`/v1/market-assignments/${assignmentId}/payment`)
+      .post<MarketOfferPayment>(`/v1/market-assignments/${offerId}/payment`)
       .then((r) => r.data),
 }

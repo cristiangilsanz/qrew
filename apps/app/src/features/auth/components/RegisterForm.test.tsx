@@ -35,7 +35,7 @@ vi.mock('@marsidev/react-turnstile', async () => {
     Turnstile: ({ onSuccess }: { onSuccess: (token: string) => void }) => {
       useEffect(() => {
         onSuccess('mock-captcha-token')
-      }, [])
+      }, [onSuccess])
       return null
     },
   }
@@ -84,8 +84,20 @@ describe('RegisterForm', () => {
     })
   })
 
-  it('shows toast and navigates to /login on success', async () => {
+  it('shows toast and hands the new account to the setup wizard', async () => {
     const { toast } = await import('sonner')
+    server.use(
+      http.post('http://localhost:8000/api/identity/v1/auth/login', () =>
+        HttpResponse.json({
+          access_token: 'setup-token',
+          refresh_token: null,
+          token_type: 'bearer',
+          setup_required: true,
+          totp_required: false,
+          password_compromised: false,
+        }),
+      ),
+    )
     renderRegisterForm()
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /create account/i })).not.toBeDisabled()
@@ -94,8 +106,8 @@ describe('RegisterForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('Check your email'))
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/login' })
+      expect(toast.success).toHaveBeenCalledWith('Account created.')
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/setup' })
     })
   })
 
@@ -103,7 +115,7 @@ describe('RegisterForm', () => {
     const { toast } = await import('sonner')
     server.use(
       http.post('http://localhost:8000/api/identity/v1/auth/registration/', () =>
-        HttpResponse.json({ detail: 'Email already registered' }, { status: 409 }),
+        HttpResponse.json({ detail: 'Email already registered.' }, { status: 409 }),
       ),
     )
 
@@ -115,7 +127,7 @@ describe('RegisterForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Email already registered')
+      expect(toast.error).toHaveBeenCalledWith('Email already registered.')
     })
   })
 })

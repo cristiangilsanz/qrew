@@ -54,7 +54,7 @@ class TestOrganisationServiceCreate:
     # verifies that raises when slug invalid
     async def test_raises_when_slug_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc()
-        with pytest.raises(OrganisationError, match="slug"):
+        with pytest.raises(OrganisationError, match="Slug rejected"):
             await svc.create_organisation(
                 owner_id=actor_id, slug="A", name="Acme", description=None
             )
@@ -62,7 +62,7 @@ class TestOrganisationServiceCreate:
     # verifies that raises when slug starts with digit
     async def test_raises_when_slug_starts_with_digit(self, actor_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc()
-        with pytest.raises(OrganisationError, match="slug"):
+        with pytest.raises(OrganisationError, match="Slug rejected"):
             await svc.create_organisation(
                 owner_id=actor_id, slug="1acme", name="Acme", description=None
             )
@@ -96,7 +96,7 @@ class TestOrganisationServiceInviteMember:
         self, actor_id: uuid.UUID, org_id: uuid.UUID
     ) -> None:
         svc, _, _ = _make_svc()
-        with pytest.raises(OrganisationError, match="promoted"):
+        with pytest.raises(OrganisationError, match="not invitable"):
             await svc.invite_member(
                 actor_id=actor_id,
                 organisation_id=org_id,
@@ -107,7 +107,7 @@ class TestOrganisationServiceInviteMember:
     # verifies that raises when user not found
     async def test_raises_when_user_not_found(self, actor_id: uuid.UUID, org_id: uuid.UUID) -> None:
         svc, _, _ = _make_svc(invitee=None)
-        with pytest.raises(OrganisationError, match="email"):
+        with pytest.raises(OrganisationError, match="User not found"):
             await svc.invite_member(
                 actor_id=actor_id,
                 organisation_id=org_id,

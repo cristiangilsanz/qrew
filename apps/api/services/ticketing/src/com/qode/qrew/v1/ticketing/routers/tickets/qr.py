@@ -16,6 +16,11 @@ from com.qode.qrew.v1.ticketing.core.dependencies import get_audit_service, limi
 from com.qode.qrew.v1.ticketing.schemas.tickets.qr import QrIssueRequest, QrResponse
 from com.qode.qrew.v1.ticketing.models.projections import DeviceContext, EventVenueContext
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
+from com.qode.qrew.v1.ticketing.services.domain.tickets.lifecycle import (
+    TicketTransitionError,
+    transition_ticket,
+)
+from locking import LockUnavailableError
 from com.qode.qrew.v1.ticketing.services.domain.gate import (
     DenialReason,
     GateInputs,
@@ -44,7 +49,7 @@ _REASON_TO_STATUS: dict[DenialReason, int] = {
 def _denied_exception(reason: DenialReason) -> HTTPException:
     return HTTPException(
         status_code=_REASON_TO_STATUS[reason],
-        detail={"message": "QR mint denied", "field": reason.value},
+        detail={"message": "QR code denied.", "field": reason.value},
     )
 
 
@@ -87,6 +92,8 @@ async def _resolve_or_deny(
     if settings.gate_bypass:
         return await _resolve_or_deny_bypass(db, ticket_id=ticket_id, current_user=current_user)
     device_id = current_user.device_id
+    if device_id is None and settings.ticket_qr_skip_attestation:
+        device_id = _BYPASS_DEVICE_ID
     if device_id is None:
         await record_denial(
             audit=audit,
@@ -127,6 +134,23 @@ async def _resolve_or_deny(
     return resolved
 
 
+# moves an issued ticket into scanning so the gate can redeem it later
+async def _mark_scanning(db: AsyncSession, inputs: GateInputs, *, actor_id: uuid.UUID) -> None:
+    if inputs.ticket.state != TicketState.issued:
+        return
+    try:
+        await transition_ticket(
+            db,
+            ticket_id=inputs.ticket.id,
+            to_state=TicketState.scanning,
+            reason="qr_shown",
+            actor_id=actor_id,
+        )
+        await db.commit()
+    except (TicketTransitionError, LockUnavailableError):
+        await db.rollback()
+
+
 # mints a single fresh qr for a ticket
 @router.get(
     "/{ticket_id}/qr",
@@ -156,6 +180,7 @@ async def issue_qr(
         audit=audit,
     )
     device_id = current_user.device_id or _BYPASS_DEVICE_ID
+    await _mark_scanning(db, inputs, actor_id=current_user.id)
     minted = await mint_qr(
         inputs=inputs,
         user_id=current_user.id,

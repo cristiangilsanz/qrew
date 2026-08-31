@@ -22,7 +22,7 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
           transition={{ duration: 0.3 }}
           className="text-center"
         >
-          <img src={logo} alt="Qrew" className="mx-auto w-64" />
+          <img src={logo} alt="QREW" className="mx-auto w-64" />
         </motion.div>
 
         <motion.div

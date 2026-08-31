@@ -32,10 +32,10 @@ class LocalFilesystemBackend:
     # resolves an object key to a path confined to the storage root
     def _path_for(self, key: ObjectKey) -> Path:
         if not is_valid_key(key):
-            raise ValueError("invalid object key")
+            raise ValueError("Object key rejected.")
         candidate = (self._root / key).resolve()
         if not str(candidate).startswith(str(self._root)):
-            raise ValueError("invalid object key")
+            raise ValueError("Object key rejected.")
         return candidate
 
     # writes an object to disk atomically

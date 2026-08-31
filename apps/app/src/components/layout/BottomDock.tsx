@@ -4,21 +4,23 @@ import type { LucideIcon } from 'lucide-react'
 import { ArrowLeftRight, Building2, Compass, Home, Ticket, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { usePendingMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
+import { usePendingMarketOffer } from '@/features/market/hooks/useMarketOffer'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
+import { useAccountNeedsAttention } from '@/features/profile/hooks/useAccountNeedsAttention'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useReservedTicketsCount } from '@/features/tickets/hooks/useReservedTicketsCount'
+import { useKeyboardOpen } from '@/hooks/useKeyboardOpen'
 import { cn } from '@/lib/utils'
 
 const baseTabs = [
   { to: '/home' as const, icon: Home, labelKey: 'nav.home' },
-  { to: '/events' as const, icon: Compass, labelKey: 'nav.discover' },
+  { to: '/events' as const, icon: Compass, labelKey: 'nav.events' },
   { to: '/tickets' as const, icon: Ticket, labelKey: 'nav.tickets' },
   { to: '/market' as const, icon: ArrowLeftRight, labelKey: 'nav.market' },
   { to: '/profile' as const, icon: User, labelKey: 'nav.profile' },
 ]
 
-const organiserTab = { to: '/management' as const, icon: Building2, labelKey: 'nav.organiser' }
+const organiserTab = { to: '/management' as const, icon: Building2, labelKey: 'nav.management' }
 
 // renders the dock tab component
 function DockTab({
@@ -69,11 +71,16 @@ export function BottomDock() {
   const { data: profile, isLoading: profileLoading } = useProfile()
   const { data: orgsData, isLoading: orgsLoading } = useMyOrganisations()
   const reservedCount = useReservedTicketsCount()
-  const { data: pendingAssignment } = usePendingMarketAssignment()
+  const { data: pendingAssignment } = usePendingMarketOffer()
+  const accountNeedsAttention = useAccountNeedsAttention()
+
+  const keyboardOpen = useKeyboardOpen()
 
   const stillLoading = profileLoading || orgsLoading
   const showOrganiser =
     !stillLoading && (profile?.is_admin === true || (orgsData?.items.length ?? 0) > 0)
+
+  if (keyboardOpen) return null
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/25 bg-black/95 backdrop-blur-md">
@@ -87,7 +94,9 @@ export function BottomDock() {
                 ? reservedCount
                 : tab.to === '/market' && pendingAssignment
                   ? 1
-                  : undefined
+                  : tab.to === '/profile' && accountNeedsAttention
+                    ? 1
+                    : undefined
             }
           />
         ))}

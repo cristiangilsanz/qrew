@@ -13,6 +13,9 @@ redis_url: "redis://localhost:6379/0"
 # ── keys ──────────────────────────────────────────────────────────────────────
 access_jwt_private_key: ""
 access_jwt_previous_public_keys: ""
+# signs the short lived token an account uses while it finishes onboarding
+setup_jwt_private_key: ""
+setup_jwt_previous_public_keys: ""
 scanner_jwt_private_key: ""
 jwt_audience: ""
 jwt_issuer: ""

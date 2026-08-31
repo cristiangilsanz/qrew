@@ -22,7 +22,7 @@ def email_change_verify_email(
     )
     return base_email(
         title="Confirm your new email address",
-        preheader="Confirm your new Qrew email address.",
+        preheader="Confirm your new QREW email address.",
         logo_url=logo_url,
         content_html=content,
     )

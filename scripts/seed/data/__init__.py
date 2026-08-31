@@ -7,10 +7,10 @@ from .entry import SCANNERS, SCANS
 from .identity import DEVICES, PEOPLE
 from .models import CURRENCY, PASSWORD, Dataset
 from .payments import PAYMENTS
-from .sales import ASSIGNMENTS, LISTINGS, QUEUE, RESERVATIONS
+from .sales import ADMISSION_QUEUE, ASSIGNMENTS, LISTINGS, RESERVATIONS, WAITLIST
 from .ticketing import TICKETS
 
-__all__ = ["CURRENCY", "PASSWORD", "SCANNERS", "Dataset", "build"]
+__all__ = ["CURRENCY", "PASSWORD", "SCANNERS", "Dataset", "build", "build_accounts"]
 
 
 # assembles the full seeded dataset from every domain module
@@ -25,7 +25,27 @@ def build() -> Dataset:
         listings=LISTINGS,
         assignments=ASSIGNMENTS,
         payments=PAYMENTS,
-        queue=QUEUE,
+        admission_queue=ADMISSION_QUEUE,
+        waitlist=WAITLIST,
         scans=SCANS,
+        devices=DEVICES,
+    )
+
+
+# assembles a dataset holding only the accounts and their devices
+def build_accounts() -> Dataset:
+    return Dataset(
+        people=PEOPLE,
+        organisations=(),
+        venues=(),
+        events=(),
+        reservations=(),
+        tickets=(),
+        listings=(),
+        assignments=(),
+        payments=(),
+        admission_queue=(),
+        waitlist=(),
+        scans=(),
         devices=DEVICES,
     )

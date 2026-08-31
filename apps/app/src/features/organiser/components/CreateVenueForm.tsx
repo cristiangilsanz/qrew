@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { env } from '@/config/env'
 
 import type { Venue } from '../api'
@@ -137,7 +138,7 @@ export function CreateVenueForm({ onSuccess }: Props) {
         <div className="space-y-1.5">
           <label className="text-sm font-medium">{t('organiser.venues.searchLabel')}</label>
           <div className="relative">
-            <MapPin className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <MapPin className={SEARCH_ICON_CLASS} />
             <input
               ref={searchRef}
               type="search"
@@ -148,7 +149,7 @@ export function CreateVenueForm({ onSuccess }: Props) {
                   : t('organiser.venues.searchUnavailable')
               }
               disabled={!env.GOOGLE_MAPS_API_KEY}
-              className={`${inputClass} pl-9 disabled:cursor-not-allowed disabled:opacity-40`}
+              className={`${SEARCH_INPUT_CLASS} disabled:cursor-not-allowed disabled:opacity-40`}
             />
           </div>
         </div>

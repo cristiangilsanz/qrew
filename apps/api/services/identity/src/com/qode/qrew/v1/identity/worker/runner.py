@@ -11,7 +11,9 @@ import com.qode.qrew.v1.identity.worker.jobs.notification_deliverer  # noqa: F40
 import com.qode.qrew.v1.identity.worker.jobs.outbox_drainer  # noqa: F401  # pyright: ignore[reportUnusedImport]
 import com.qode.qrew.v1.identity.worker.jobs.storage_retainer  # noqa: F401  # pyright: ignore[reportUnusedImport]
 
-WorkerSettings = build_worker_settings(redis_settings_from_url(settings.redis_url))
+WorkerSettings = build_worker_settings(
+    redis_settings_from_url(settings.redis_url), queue_name="qrew:jobs:identity"
+)
 
 
 # runs the arq worker loop

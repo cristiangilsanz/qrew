@@ -49,3 +49,7 @@ ratelimit_enabled: true
 # ── observability ─────────────────────────────────────────────────────────────
 otel_enabled: false
 otel_endpoint: "http://localhost:4317"
+
+# ── pii ──────────────────────────────────────────────────────────────────────
+pii_encryption_key: ""
+pii_encryption_previous_keys: ""

@@ -51,14 +51,12 @@ interface PydanticErrorItem {
   input?: unknown
 }
 
-export type ApiErrorDetail = string | PydanticErrorItem[]
-
-// implements extract error message
-export function extractErrorMessage(detail: ApiErrorDetail | undefined, fallback: string): string {
-  if (!detail) return fallback
-  if (typeof detail === 'string') return detail
-  return detail[0]?.msg ?? fallback
+interface FieldErrorDetail {
+  message: string
+  field?: string | null
 }
+
+export type ApiErrorDetail = string | PydanticErrorItem[] | FieldErrorDetail
 
 export interface RefreshResponse {
   access_token: string
@@ -79,6 +77,12 @@ export const authApi = {
   // implements register
   register: (data: RegisterRequest) =>
     apiClient.post<RegisterResponse>('/v1/auth/registration/', data).then((r) => r.data),
+
+  // implements resend email verification
+  resendEmailVerification: (email: string) =>
+    apiClient
+      .post<{ message: string }>('/v1/auth/registration/resend-email-verification', { email })
+      .then((r) => r.data),
 
   // implements passkey auth begin
   passkeyAuthBegin: (email: string) =>

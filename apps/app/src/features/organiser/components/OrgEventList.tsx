@@ -2,6 +2,7 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { ListError } from '@/components/ui/list-error'
 import { OrgCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { formatDate } from '@/lib/formatDate'
@@ -15,7 +16,7 @@ interface Props {
 // renders the org event list component
 export function OrgEventList({ orgId }: Props) {
   const { t, i18n } = useTranslation()
-  const { data, isLoading } = useOrgEvents(orgId)
+  const { data, isLoading, isError, refetch } = useOrgEvents(orgId)
   const events = data?.items ?? []
 
   if (isLoading) {
@@ -26,6 +27,10 @@ export function OrgEventList({ orgId }: Props) {
         ))}
       </div>
     )
+  }
+
+  if (isError) {
+    return <ListError onRetry={() => void refetch()} />
   }
 
   return (

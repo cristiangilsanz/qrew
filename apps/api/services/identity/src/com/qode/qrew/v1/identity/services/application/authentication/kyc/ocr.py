@@ -28,7 +28,7 @@ class OcrService:
         try:
             pil_image = Image.open(io.BytesIO(content)).convert("RGB")
         except Exception as exc:
-            raise OcrError("Could not decode image") from exc
+            raise OcrError("Image not decoded.") from exc
 
         img = np.array(pil_image)
         gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -45,6 +45,6 @@ class OcrService:
 
         match = ID_PATTERN.search(raw)
         if not match:
-            raise OcrError("Could not extract a national ID number from the document")
+            raise OcrError("Document number not read.")
 
         return str(match.group(0)).upper()

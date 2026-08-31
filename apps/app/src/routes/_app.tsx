@@ -1,18 +1,30 @@
 // implements app
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
 import { BottomDock } from '@/components/layout/BottomDock'
+import { PullToRefresh } from '@/components/layout/PullToRefresh'
+import { PageError } from '@/components/ui/page-error'
 import { RealtimeProvider } from '@/features/realtime/RealtimeProvider'
+import { useKeyboardOpen } from '@/hooks/useKeyboardOpen'
 import { useAuthStore } from '@/store/auth'
 
 // renders the app layout component
 function AppLayout() {
+  const keyboardOpen = useKeyboardOpen()
+
+  useEffect(() => {
+    document.body.classList.toggle('keyboard-open', keyboardOpen)
+  }, [keyboardOpen])
+
   return (
     <RealtimeProvider>
       <div className="relative min-h-screen">
-        <div className="pb-20">
-          <Outlet />
-        </div>
+        <PullToRefresh>
+          <div className="min-h-[calc(100dvh+1.5rem)] pb-20">
+            <Outlet />
+          </div>
+        </PullToRefresh>
       </div>
       <BottomDock />
     </RealtimeProvider>
@@ -21,12 +33,8 @@ function AppLayout() {
 
 // renders the route error component
 function RouteError({ error }: { error: unknown }) {
-  const message = error instanceof Error ? error.message : 'Something went wrong'
-  return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
-      <p className="text-muted-foreground text-sm">{message}</p>
-    </div>
-  )
+  console.error('[route] render failed', error)
+  return <PageError onRetry={() => window.location.reload()} />
 }
 
 export const Route = createFileRoute('/_app')({

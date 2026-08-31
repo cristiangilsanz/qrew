@@ -47,10 +47,10 @@ class AccountDeletionService:
     # verifies the password anonymises the account and revokes every session
     async def delete(self, user: User, current_password: str) -> None:
         if user.deleted_at is not None:
-            raise AccountDeletionError("Account is already deleted")
+            raise AccountDeletionError("Account already deleted.")
 
         if not verify_password(current_password, user.hashed_password):
-            raise AccountDeletionError("Current password is incorrect", field="current_password")
+            raise AccountDeletionError("Current password rejected.", field="current_password")
 
         self._anonymise(user)
         await self._user_repo.save(user)

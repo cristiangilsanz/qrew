@@ -122,7 +122,9 @@ class TestUseTicket:
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(
                 _PATCH_TRANSITION,
-                new=AsyncMock(side_effect=TicketNotFoundError("not found", field="ticket_id")),
+                new=AsyncMock(
+                    side_effect=TicketNotFoundError("Object not found.", field="ticket_id")
+                ),
             ),
             pytest.raises(TicketNotFoundError),
         ):

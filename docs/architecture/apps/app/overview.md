@@ -66,9 +66,10 @@ src/routes/
 │   ├── reservations/$reservationId/index.tsx
 │   ├── market/
 │   │   ├── index.tsx
-│   │   ├── assignments/$assignmentId/index.tsx
-│   │   ├── claims/index.tsx
-│   │   ├── my-listings/index.tsx
+│   │   ├── offers/
+│   │   │   ├── index.tsx
+│   │   │   └── $offerId/index.tsx
+│   │   ├── on-sale/index.tsx
 │   │   └── waitlists/index.tsx
 │   ├── profile/
 │   │   ├── index.tsx
@@ -79,10 +80,10 @@ src/routes/
 │   │   ├── terms.tsx
 │   │   ├── about.tsx
 │   │   └── help.tsx
+│   ├── management.tsx                            Management layout
 │   └── management/
 │       ├── index.tsx
 │       ├── new.tsx
-│       ├── management.tsx                        Management layout
 │       └── $orgId/
 │           ├── index.tsx
 │           ├── events/
@@ -94,7 +95,7 @@ src/routes/
 │           │       ├── tickets.tsx
 │           │       ├── scan.tsx
 │           │       └── stats.tsx
-│           ├── members/
+│           ├── collaborators/
 │           │   ├── index.tsx
 │           │   └── new.tsx
 │           └── venues/new.tsx
@@ -103,12 +104,13 @@ src/routes/
     ├── login.tsx
     ├── register.tsx
     ├── setup.tsx
+    ├── verify-email.tsx
     ├── verify-totp.tsx
     ├── forgot-password.tsx
     └── reset-password.tsx
 ```
 
-On an unauthenticated visit to any `_app/` route the router redirects to `/login`. After login, the access token is stored in Zustand and the refresh token in `@capacitor/preferences`. An Axios interceptor attaches `Authorization: Bearer <token>` to every request and silently refreshes it on 401 before retrying.
+On an unauthenticated visit to any `_app/` route the router redirects to `/login`. The gateway allows an account that has not finished verification to read but not to write, so until then the app keeps it on the setup wizard for anything beyond browsing. After login, the access token is stored in Zustand and the refresh token in `@capacitor/preferences`. An Axios interceptor attaches `Authorization: Bearer <token>` to every request and silently refreshes it on 401 before retrying.
 
 ## Components
 

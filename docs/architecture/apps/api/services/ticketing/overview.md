@@ -21,10 +21,12 @@ Ticketing is the ticket lifecycle authority in the platform. It creates and issu
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `GET` | `/tickets/{id}/qr` | Get a short lived QR token for a ticket | JWT |
-| `POST` | `/tickets/{id}/qr/deny` | Deny a pending QR request | Internal |
-| `POST` | `/tickets/{id}/restore` | Restore a frozen or cancelled ticket | Internal |
-| `POST` | `/tickets/{id}/use` | Mark a ticket as used after a successful entry scan | Internal |
+| `GET` | `/tickets` | List the caller's tickets | JWT |
+| `GET` | `/tickets/{ticket_id}` | Get one ticket with the event it belongs to | JWT |
+| `GET` | `/tickets/{ticket_id}/qr` | Get a short lived QR token for a ticket | JWT |
+| `POST` | `/tickets/{ticket_id}/qr/stream` | Poll for the outcome of a QR that is being scanned | JWT |
+| `POST` | `/tickets/{ticket_id}/restore` | Restore a frozen or cancelled ticket | Internal |
+| `POST` | `/admission/{ticket_id}/use` | Mark a ticket as used after a successful entry scan | Internal |
 
 Full spec: [`packages/contracts/openapi/ticketing/openapi.yaml`](../../../../../../packages/contracts/openapi/ticketing/openapi.yaml)
 
@@ -61,9 +63,13 @@ Schemas: [`packages/contracts/openapi/ticketing/events/`](../../../../../../pack
 
 | Worker | Type | Description |
 |--------|------|-------------|
+| `expired_ticket_purger` | arq job, daily at 04:30 | Deletes tickets that expired without ever being redeemed. |
+| `scanning_reverter` | arq job, every minute | Returns a ticket left in `scanning` to `issued` once the QR it was shown for has expired, so its holder is not stuck on a processing screen. |
 | `catalog.*` | NATS subscriber | Keeps the `EventVenueContext` projection up to date. |
 | `identity.*` | NATS subscriber | Keeps the `DeviceContext` projection up to date and enforces device revocation. |
 | `sales.*` | NATS subscriber | Drives ticket creation and state transitions from reservation events. |
+
+The arq jobs run in the `ticketing-arq-worker` container, which consumes the `qrew:jobs:ticketing` queue. The NATS subscribers run in the separate `ticketing-worker` container.
 
 ## Internal Dependencies
 

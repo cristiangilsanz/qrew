@@ -1,4 +1,5 @@
-# exposes the shared jwt pii and internal key security helpers
+# exposes the shared jwt pii document and internal key security helpers
+from .documents import DocumentType, infer_document_type, validate_document
 from .internal import matches_internal_key
 from .jwt import decode_token, decode_unverified_header
 from .pii import (
@@ -11,6 +12,7 @@ from .pii import (
 )
 
 __all__ = [
+    "DocumentType",
     "decode_token",
     "decode_unverified_header",
     "decrypt",
@@ -18,6 +20,8 @@ __all__ = [
     "encrypt",
     "encrypt_bytes",
     "hash_lookup",
+    "infer_document_type",
     "make_fernet",
     "matches_internal_key",
+    "validate_document",
 ]

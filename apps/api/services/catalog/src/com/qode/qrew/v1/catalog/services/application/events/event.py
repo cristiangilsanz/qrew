@@ -52,11 +52,11 @@ def _validate_windows(
     sale_ends_at: datetime,
 ) -> None:
     if starts_at >= ends_at:
-        raise EventError("Event must start before it ends", field="starts_at")
+        raise EventError("Event must start before it ends.", field="starts_at")
     if sale_starts_at >= sale_ends_at:
-        raise EventError("Sale must start before it ends", field="sale_starts_at")
+        raise EventError("Sale must start before it ends.", field="sale_starts_at")
     if sale_ends_at > starts_at:
-        raise EventError("Sale must close before the event starts", field="sale_ends_at")
+        raise EventError("Sale must close before the event starts.", field="sale_ends_at")
 
 
 # rejects a per user ticket limit outside the allowed range
@@ -140,14 +140,14 @@ class EventService:
     async def _load_organisation(self, organisation_id: uuid.UUID) -> Organisation:
         org = await self._org_repo.get_by_id(organisation_id)
         if org is None:
-            raise EventError("Organisation not found", field="organisation_id")
+            raise EventError("Organisation not found.", field="organisation_id")
         return org
 
     # reads a venue or raises when it does not exist
     async def _load_venue(self, venue_id: uuid.UUID) -> Venue:
         venue = await self._venue_repo.get_by_id(venue_id)
         if venue is None:
-            raise EventError("Venue not found", field="venue_id")
+            raise EventError("Venue not found.", field="venue_id")
         return venue
 
     # refreshes an event's search vector
@@ -222,9 +222,9 @@ class EventService:
     ) -> Event:
         event = await self._repo.get_by_id(event_id)
         if event is None:
-            raise EventError("Event not found", field="event_id")
+            raise EventError("Event not found.", field="event_id")
         if event.status in (EventStatus.cancelled, EventStatus.ongoing):
-            raise EventError("Cancelled or ongoing events cannot be edited", field="status")
+            raise EventError("Event not editable.", field="status")
         unknown = set(changes) - _MUTABLE_FIELDS
         if unknown:
             raise EventError(f"Cannot edit fields: {sorted(unknown)}", field=None)
@@ -266,11 +266,11 @@ class EventService:
         ):
             event = await self._repo.get_by_id(event_id)
             if event is None:
-                raise EventError("Event not found", field="event_id")
+                raise EventError("Event not found.", field="event_id")
             if event.status == EventStatus.published:
                 return event
             if event.status != EventStatus.draft:
-                raise EventError("Only draft events can be published", field="status")
+                raise EventError("Event not publishable.", field="status")
             event.status = EventStatus.published
             event.published_at = datetime.now(UTC)
             await self._repo.flush()
@@ -291,23 +291,18 @@ class EventService:
 
     # moves a published event to ongoing once its start time has passed
     @traced("event.start")
-    async def start_event(self, *, actor_id: uuid.UUID, event_id: uuid.UUID) -> Event:
+    async def start_event(self, *, actor_id: uuid.UUID | None, event_id: uuid.UUID) -> Event:
         async with redlock(
             f"event:{event_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10
         ):
             event = await self._repo.get_by_id(event_id)
             if event is None:
-                raise EventError("Event not found", field="event_id")
+                raise EventError("Event not found.", field="event_id")
             if event.status == EventStatus.ongoing:
                 return event
             if event.status != EventStatus.published:
-                raise EventError("Only published events can be started", field="status")
+                raise EventError("Event not startable.", field="status")
             now = datetime.now(UTC)
-            starts_at = event.starts_at
-            if starts_at.tzinfo is None:
-                starts_at = starts_at.replace(tzinfo=UTC)
-            if now < starts_at:
-                raise EventError("Event has not reached its start time yet", field="starts_at")
             event.status = EventStatus.ongoing
             event.started_at = now
             await self._repo.flush()
@@ -334,7 +329,7 @@ class EventService:
         ):
             event = await self._repo.get_by_id(event_id)
             if event is None:
-                raise EventError("Event not found", field="event_id")
+                raise EventError("Event not found.", field="event_id")
             if event.status == EventStatus.cancelled:
                 return event
             event.status = EventStatus.cancelled
@@ -360,7 +355,7 @@ class EventService:
         self,
         action: str,
         *,
-        actor_id: uuid.UUID,
+        actor_id: uuid.UUID | None,
         event_id: uuid.UUID,
         payload: dict[str, Any],
     ) -> None:

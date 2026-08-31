@@ -2,7 +2,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.models.projections import (
@@ -71,6 +71,27 @@ class TicketTypeInventoryRepository:
     # reads a ticket type's projected inventory
     async def get_by_id(self, ticket_type_id: uuid.UUID) -> TicketTypeInventory | None:
         return await self._session.get(TicketTypeInventory, ticket_type_id)
+
+    # reports whether every tier of an event has drawn its capacity down to nothing
+    async def event_is_sold_out(self, event_id: uuid.UUID) -> bool:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(TicketTypeInventory)
+            .where(
+                TicketTypeInventory.event_id == event_id,
+                TicketTypeInventory.capacity - TicketTypeInventory.reserved_count > 0,
+            )
+        )
+        remaining = result.scalar_one()
+        if remaining:
+            return False
+        total = await self._session.execute(
+            select(func.count())
+            .select_from(TicketTypeInventory)
+            .where(TicketTypeInventory.event_id == event_id)
+        )
+        # an event with no tiers projected yet is not sold out, it is simply unknown
+        return total.scalar_one() > 0
 
     # creates or refreshes a ticket type's projected capacity and price
     async def upsert(

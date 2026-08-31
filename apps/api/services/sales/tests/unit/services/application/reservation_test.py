@@ -13,7 +13,12 @@ from com.qode.qrew.v1.sales.services.application.reservation import (
     ReservationService,
 )
 from com.qode.qrew.v1.sales.services.domain.fraud.engine import FraudDecision, FraudEvaluation
-from conftest import make_event_ctx, make_inventory, make_reservation
+from conftest import (
+    make_event_ctx,
+    make_inventory,
+    make_reservation,
+    make_reservation_item,
+)
 
 _PATCH_REDLOCK = "com.qode.qrew.v1.sales.services.application.reservation.redlock"
 _PATCH_BUILD_ENGINE = (
@@ -63,6 +68,7 @@ def _make_service(
     event_ctx: object = None,
     inventory: object = None,
     held: int = 0,
+    items: list[object] | None = None,
 ) -> tuple[ReservationService, MagicMock]:
     session = MagicMock()
     session.get = AsyncMock(return_value=inventory)
@@ -73,6 +79,7 @@ def _make_service(
     repo.get_by_id = AsyncMock(return_value=reservation)
     repo.insert = AsyncMock(side_effect=lambda r: r)
     repo.active_quantity_for_user = AsyncMock(return_value=held)
+    repo.list_items = AsyncMock(return_value=items if items is not None else [])
 
     event_ctx_repo = MagicMock()
     event_ctx_repo.get_by_event_id = AsyncMock(return_value=event_ctx)
@@ -107,8 +114,7 @@ class TestReservationServiceReserve:
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=0,
+                items=[(ticket_type_id, 0)],
             )
 
     # verifies that raises when fraud blocked
@@ -126,8 +132,7 @@ class TestReservationServiceReserve:
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
             )
 
     # verifies that raises when invalid reservation window token
@@ -147,8 +152,7 @@ class TestReservationServiceReserve:
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
                 reservation_window_token="bad",
             )
 
@@ -169,8 +173,7 @@ class TestReservationServiceReserve:
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
                 reservation_window_token="tok",
             )
 
@@ -185,13 +188,12 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="Event not found"),
+            pytest.raises(ReservationError, match="Event not found."),
         ):
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
             )
 
     # verifies that raises when event not published
@@ -211,8 +213,7 @@ class TestReservationServiceReserve:
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
             )
 
     # verifies that raises when quantity exceeds per user max
@@ -232,8 +233,7 @@ class TestReservationServiceReserve:
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=5,
+                items=[(ticket_type_id, 5)],
             )
 
     # verifies that raises when sale window not configured
@@ -250,13 +250,12 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="Sale window not configured"),
+            pytest.raises(ReservationError, match="Sale window not configured."),
         ):
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
             )
 
     # verifies that raises when sale window closed
@@ -276,13 +275,12 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="Sale window is closed"),
+            pytest.raises(ReservationError, match="Sale window closed."),
         ):
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
             )
 
     # verifies that raises when queue required and no token
@@ -302,8 +300,7 @@ class TestReservationServiceReserve:
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
                 reservation_window_token=None,
             )
 
@@ -325,13 +322,12 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="capacity"),
+            pytest.raises(ReservationError, match="Capacity exhausted"),
         ):
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=2,
+                items=[(ticket_type_id, 2)],
             )
 
     # verifies that raises when user held plus new exceeds limit
@@ -347,13 +343,12 @@ class TestReservationServiceReserve:
             patch(_PATCH_BUILD_ENGINE, new=AsyncMock(return_value=engine)),
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
-            pytest.raises(ReservationError, match="per-user ticket limit"),
+            pytest.raises(ReservationError, match="Ticket limit exceeded"),
         ):
             await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=2,
+                items=[(ticket_type_id, 2)],
             )
 
     # verifies that happy path creates reservation
@@ -372,11 +367,10 @@ class TestReservationServiceReserve:
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
         ):
-            result = await svc.reserve(
+            result, _ = await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=2,
+                items=[(ticket_type_id, 2)],
             )
         assert result.user_id == user_id
         assert result.event_id == event_id
@@ -399,11 +393,10 @@ class TestReservationServiceReserve:
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
         ):
-            result = await svc.reserve(
+            result, _ = await svc.reserve(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=1,
+                items=[(ticket_type_id, 1)],
             )
         assert result.requires_review is True
         assert result.risk_score == 50
@@ -438,7 +431,7 @@ class TestReservationServiceCancel:
             status=ReservationStatus.cancelled,
         )
         svc, session = _make_service(reservation=reservation)
-        result = await svc.cancel(actor_id=user_id, reservation_id=reservation.id)
+        result, _ = await svc.cancel(actor_id=user_id, reservation_id=reservation.id)
         assert result is reservation
         session.commit.assert_not_awaited()
 
@@ -453,7 +446,7 @@ class TestReservationServiceCancel:
             status=ReservationStatus.expired,
         )
         svc, session = _make_service(reservation=reservation)
-        result = await svc.cancel(actor_id=user_id, reservation_id=reservation.id)
+        result, _ = await svc.cancel(actor_id=user_id, reservation_id=reservation.id)
         assert result is reservation
         session.commit.assert_not_awaited()
 
@@ -485,12 +478,16 @@ class TestReservationServiceCancel:
         inventory = make_inventory(
             ticket_type_id=ticket_type_id, event_id=event_id, reserved_count=10
         )
-        svc, session = _make_service(reservation=reservation, inventory=inventory)
+        svc, session = _make_service(
+            reservation=reservation,
+            inventory=inventory,
+            items=[make_reservation_item(ticket_type_id=ticket_type_id, quantity=3)],
+        )
         with (
             patch(_PATCH_REDLOCK, return_value=_make_redlock()),
             patch(_PATCH_SETTINGS, _make_fake_settings()),
         ):
-            result = await svc.cancel(actor_id=user_id, reservation_id=reservation.id)
+            result, _ = await svc.cancel(actor_id=user_id, reservation_id=reservation.id)
         assert result.status == ReservationStatus.cancelled
         assert inventory.reserved_count == 7
         session.commit.assert_awaited()
@@ -522,5 +519,5 @@ class TestReservationServiceGetForUser:
             user_id=user_id, event_id=event_id, ticket_type_id=ticket_type_id
         )
         svc, _ = _make_service(reservation=reservation)
-        result = await svc.get_for_user(actor_id=user_id, reservation_id=reservation.id)
+        result, _ = await svc.get_for_user(actor_id=user_id, reservation_id=reservation.id)
         assert result is reservation

@@ -34,8 +34,8 @@ vi.mock('@/features/tickets/hooks/useReservedTicketsCount', () => ({
   useReservedTicketsCount: vi.fn().mockReturnValue(0),
 }))
 
-vi.mock('@/features/market/hooks/useMarketAssignment', () => ({
-  usePendingMarketAssignment: vi.fn().mockReturnValue({ data: null }),
+vi.mock('@/features/market/hooks/useMarketOffer', () => ({
+  usePendingMarketOffer: vi.fn().mockReturnValue({ data: null }),
 }))
 
 import { useProfile } from '@/features/profile/hooks/useProfile'
@@ -44,7 +44,7 @@ describe('BottomDock', () => {
   it('renders all base nav tabs', () => {
     render(<BottomDock />)
     expect(screen.getByText('nav.home')).toBeInTheDocument()
-    expect(screen.getByText('nav.discover')).toBeInTheDocument()
+    expect(screen.getByText('nav.events')).toBeInTheDocument()
     expect(screen.getByText('nav.tickets')).toBeInTheDocument()
     expect(screen.getByText('nav.market')).toBeInTheDocument()
     expect(screen.getByText('nav.profile')).toBeInTheDocument()
@@ -52,7 +52,7 @@ describe('BottomDock', () => {
 
   it('hides organiser tab for regular users with no orgs', () => {
     render(<BottomDock />)
-    expect(screen.queryByText('nav.organiser')).not.toBeInTheDocument()
+    expect(screen.queryByText('nav.management')).not.toBeInTheDocument()
   })
 
   it('shows organiser tab for admins', () => {
@@ -61,6 +61,6 @@ describe('BottomDock', () => {
       isLoading: false,
     } as ReturnType<typeof useProfile>)
     render(<BottomDock />)
-    expect(screen.getByText('nav.organiser')).toBeInTheDocument()
+    expect(screen.getByText('nav.management')).toBeInTheDocument()
   })
 })

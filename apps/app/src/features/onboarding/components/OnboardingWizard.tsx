@@ -28,23 +28,38 @@ function StepIndicator({ current }: { current: Step | 'pending' }) {
   const currentIndex = STEPS.indexOf(current as Step)
 
   return (
-    <div className="mb-6 flex items-center justify-between gap-2">
+    <div className="mb-6 flex items-start justify-between">
       {STEPS.map((step, i) => {
         const done = currentIndex > i || current === 'pending'
         const active = currentIndex === i
         return (
           <div key={step} className="flex flex-1 flex-col items-center gap-1">
-            <div
-              className={[
-                'flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors',
-                done
-                  ? 'bg-primary text-primary-foreground'
-                  : active
-                    ? 'border-primary text-primary border-2'
-                    : 'border-border text-muted-foreground border-2',
-              ].join(' ')}
-            >
-              {done ? '✓' : i + 1}
+            <div className="flex w-full items-center">
+              {/* the rail on each side joins this bubble to its neighbours */}
+              <span
+                className={[
+                  'h-0.5 flex-1 transition-colors',
+                  i === 0 ? 'bg-transparent' : done || active ? 'bg-primary' : 'bg-border',
+                ].join(' ')}
+              />
+              <div
+                className={[
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors',
+                  done
+                    ? 'bg-primary text-primary-foreground'
+                    : active
+                      ? 'border-primary text-primary border-2'
+                      : 'border-border text-muted-foreground border-2',
+                ].join(' ')}
+              >
+                {done ? '✓' : i + 1}
+              </div>
+              <span
+                className={[
+                  'h-0.5 flex-1 transition-colors',
+                  i === STEPS.length - 1 ? 'bg-transparent' : done ? 'bg-primary' : 'bg-border',
+                ].join(' ')}
+              />
             </div>
             <span
               className={[
@@ -95,8 +110,15 @@ export function OnboardingWizard() {
     <AuthLayout title={t('onboarding.title')} subtitle={t('onboarding.subtitle')}>
       <StepIndicator current={currentStep} />
 
-      {currentStep === 'email' && <EmailVerificationStep onSuccess={handleStepSuccess} />}
-      {currentStep === 'phone' && <PhoneVerificationStep onSuccess={handleStepSuccess} />}
+      {currentStep === 'email' && (
+        <EmailVerificationStep onSuccess={handleStepSuccess} email={status?.email ?? ''} />
+      )}
+      {currentStep === 'phone' && (
+        <PhoneVerificationStep
+          onSuccess={handleStepSuccess}
+          phoneNumber={status?.phone_number ?? ''}
+        />
+      )}
       {currentStep === 'kyc' && <KycUploadStep onSuccess={handleKycSuccess} />}
       {currentStep === 'passkey' && <PasskeyRegistrationStep onSuccess={handleStepSuccess} />}
       {currentStep === 'pending' && (

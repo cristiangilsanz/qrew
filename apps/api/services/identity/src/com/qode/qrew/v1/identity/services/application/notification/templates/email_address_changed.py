@@ -13,7 +13,7 @@ def email_change_alert_email(full_name: str, new_email: str, logo_url: str | Non
     )
     return base_email(
         title="Email change requested",
-        preheader="A request was made to change your Qrew email address.",
+        preheader="A request was made to change your QREW email address.",
         logo_url=logo_url,
         content_html=content,
     )

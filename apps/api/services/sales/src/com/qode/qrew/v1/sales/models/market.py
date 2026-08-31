@@ -3,11 +3,21 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    LargeBinary,
+    String,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from com.qode.qrew.v1.sales.core.database import Base
+from com.qode.qrew.v1.sales.core.utils import pii as pii_crypto
 
 
 class MarketListingState(enum.StrEnum):
@@ -104,7 +114,21 @@ class MarketAssignment(Base):
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     payment_intent_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     holder_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    holder_dni: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    holder_dni_ciphertext: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    holder_document_type: Mapped[str | None] = mapped_column(String(16), nullable=True)
+
+    # decrypts the stored identity document
+    @property
+    def holder_dni(self) -> str | None:
+        if self.holder_dni_ciphertext is None:
+            return None
+        return pii_crypto.decrypt(self.holder_dni_ciphertext)
+
+    # encrypts the identity document for storage
+    @holder_dni.setter
+    def holder_dni(self, value: str | None) -> None:
+        self.holder_dni_ciphertext = None if value is None else pii_crypto.encrypt(value)
+
     state: Mapped[str] = mapped_column(
         String(32), nullable=False, server_default=MarketAssignmentState.pending.value
     )

@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
+from com.qode.qrew.v1.sales.models.reservation_item import ReservationItem
 
 
 class ReservationRepository:
@@ -29,6 +30,15 @@ class ReservationRepository:
     # flushes pending changes to the database
     async def flush(self) -> None:
         await self._session.flush()
+
+    # reads the ticket types and counts a reservation covers
+    async def list_items(self, reservation_id: uuid.UUID) -> list[ReservationItem]:
+        result = await self._session.execute(
+            select(ReservationItem)
+            .where(ReservationItem.reservation_id == reservation_id)
+            .order_by(ReservationItem.ticket_type_id)
+        )
+        return list(result.scalars().all())
 
     # sums a user's tickets still held or paid for an event
     async def active_quantity_for_user(self, user_id: uuid.UUID, event_id: uuid.UUID) -> int:

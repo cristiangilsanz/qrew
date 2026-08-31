@@ -118,3 +118,13 @@ async def write(
                 tier.position,
                 when.days(-49),
             )
+
+    await conn.execute(
+        """
+        UPDATE catalog.events SET search_vector =
+            setweight(to_tsvector('simple', coalesce(name, '')), 'A')
+            || setweight(to_tsvector('simple', coalesce(description, '')), 'B')
+            || setweight(to_tsvector('simple', coalesce(organiser_name, '')), 'C')
+            || setweight(to_tsvector('simple', coalesce(venue_city, '')), 'C')
+        """
+    )

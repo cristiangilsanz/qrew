@@ -105,7 +105,7 @@ async def _evaluate(
         verifiers = jwt_keys.get_verifiers(jwt_keys.TICKET_QR)
         public_pem = verifiers.get(kid) if isinstance(kid, str) else None
         if public_pem is None:
-            raise jwt.InvalidTokenError("Unknown signing key")
+            raise jwt.InvalidTokenError("Signing key unknown.")
         payload = jwt.decode(
             ticket_jwt,
             public_pem,
@@ -194,7 +194,7 @@ async def _evaluate(
 
     try:
         async with redlock(
-            f"ticket:{ticket_id}:entry", redis_url=settings.redis_url, ttl_seconds=10
+            f"entry:scan:{ticket_id}", redis_url=settings.redis_url, ttl_seconds=10
         ):
             await _call_ticketing_use(ticket_id, scanner.id)
     except LockUnavailableError:
@@ -263,15 +263,13 @@ class _TicketingError(Exception):
 
 # tells ticketing to mark the ticket as used
 async def _call_ticketing_use(ticket_id: uuid.UUID, scanner_id: uuid.UUID) -> None:
-    url = f"{settings.ticketing_url}/v1/_internal/tickets/{ticket_id}/use"
+    url = f"{settings.ticketing_url}/v1/admission/{ticket_id}/use"
     async with httpx.AsyncClient(timeout=5.0) as client:
         resp = await client.post(
             url,
             headers={"X-Internal-Key": settings.internal_api_key},
             json={"actor_id": str(scanner_id)},
         )
-    if resp.status_code == 409:  # noqa: PLR2004
-        return
     if resp.status_code not in {200, 204}:
         raise _TicketingError(f"ticketing returned {resp.status_code}")
 

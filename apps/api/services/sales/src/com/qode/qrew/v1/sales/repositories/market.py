@@ -1,7 +1,8 @@
 # reads and writes the market's queue entries listings and assignments
 import uuid
+from datetime import datetime
 
-from sqlalchemy import func, select, text
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.sales.models.market import (
@@ -257,6 +258,24 @@ class MarketRepository:
             )
         )
         return result.scalar_one_or_none()
+
+    # lists the caller's assignments that are pending or ended recently
+    async def list_recent_assignments_for_user(
+        self, buyer_user_id: uuid.UUID, *, since: datetime, limit: int = 20
+    ) -> list[MarketAssignment]:
+        result = await self._session.execute(
+            select(MarketAssignment)
+            .where(
+                MarketAssignment.buyer_user_id == buyer_user_id,
+                or_(
+                    MarketAssignment.state == MarketAssignmentState.pending,
+                    MarketAssignment.assigned_at >= since,
+                ),
+            )
+            .order_by(MarketAssignment.assigned_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
 
     # lists the users a listing has already been assigned to
     async def previously_assigned_user_ids(self, listing_id: uuid.UUID) -> list[uuid.UUID]:

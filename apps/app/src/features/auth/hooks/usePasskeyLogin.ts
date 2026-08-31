@@ -7,9 +7,10 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { toastErrorMessage } from '@/lib/errors'
 import { useAuthStore } from '@/store/auth'
 
-import { type ApiErrorDetail, authApi, extractErrorMessage } from '../api'
+import { type ApiErrorDetail, authApi } from '../api'
 
 // provides use passkey login
 export function usePasskeyLogin() {
@@ -42,10 +43,7 @@ export function usePasskeyLogin() {
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('passkeys.errors.loginFailed'),
-      )
+      const message = toastErrorMessage(error, t('passkeys.errors.loginFailed'))
       toast.error(message)
     },
   })

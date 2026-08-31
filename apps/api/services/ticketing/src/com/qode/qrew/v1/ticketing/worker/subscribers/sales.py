@@ -4,6 +4,7 @@ import uuid
 from typing import Any
 
 import structlog
+from security import infer_document_type
 
 from com.qode.qrew.v1.ticketing.core.config import settings
 from com.qode.qrew.v1.ticketing.core.database import AsyncSessionLocal
@@ -29,11 +30,17 @@ async def handle_reservation_created(raw: bytes) -> None:
         reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
         user_id = uuid.UUID(str(data["data"]["user_id"]))
         event_id = uuid.UUID(str(data["data"]["event_id"]))
-        ticket_type_id = uuid.UUID(str(data["data"]["ticket_type_id"]))
-        quantity = int(data["data"]["quantity"])
-    except (KeyError, ValueError):
+        items = [
+            (uuid.UUID(str(item["ticket_type_id"])), int(item["quantity"]))
+            for item in data["data"]["items"]
+        ]
+    except (KeyError, TypeError, ValueError):
         await logger.awarning("sales_events.reservation_created.bad_payload")
         return
+    if not items:
+        await logger.awarning("sales_events.reservation_created.bad_payload")
+        return
+    quantity = sum(qty for _, qty in items)
 
     async with AsyncSessionLocal() as session:
         async with redlock(
@@ -46,16 +53,17 @@ async def handle_reservation_created(raw: bytes) -> None:
                     reservation_id=str(reservation_id),
                 )
                 return
-            for _ in range(quantity):
-                session.add(
-                    Ticket(
-                        reservation_id=reservation_id,
-                        event_id=event_id,
-                        ticket_type_id=ticket_type_id,
-                        owner_user_id=user_id,
-                        state=TicketState.reserved,
+            for ticket_type_id, item_quantity in items:
+                for _ in range(item_quantity):
+                    session.add(
+                        Ticket(
+                            reservation_id=reservation_id,
+                            event_id=event_id,
+                            ticket_type_id=ticket_type_id,
+                            owner_user_id=user_id,
+                            state=TicketState.reserved,
+                        )
                     )
-                )
             await session.commit()
     await logger.ainfo(
         "sales_events.tickets_created",
@@ -99,6 +107,10 @@ async def handle_reservation_paid(raw: bytes) -> None:
                 if holder:
                     ticket.holder_name = str(holder["holder_name"])
                     ticket.holder_dni = str(holder["holder_dni"])
+                    ticket.holder_document_type = str(
+                        holder.get("holder_document_type")
+                        or infer_document_type(str(holder["holder_dni"]))
+                    )
             await session.commit()
     await logger.ainfo("sales_events.tickets_issued", reservation_id=str(reservation_id))
 
@@ -245,6 +257,9 @@ async def handle_transfer(raw: bytes) -> None:
         new_owner_user_id = uuid.UUID(str(data["data"]["new_owner_user_id"]))
         holder_name: str = str(data["data"]["holder_name"])
         holder_dni: str = str(data["data"]["holder_dni"])
+        holder_document_type: str = str(
+            data["data"].get("holder_document_type") or infer_document_type(holder_dni)
+        )
         actor_id = new_owner_user_id
     except (KeyError, ValueError):
         await logger.awarning("market_events.transfer.bad_payload")
@@ -270,6 +285,7 @@ async def handle_transfer(raw: bytes) -> None:
             ticket.owner_user_id = new_owner_user_id
             ticket.holder_name = holder_name
             ticket.holder_dni = holder_dni
+            ticket.holder_document_type = holder_document_type
             await transition_ticket(
                 session,
                 ticket_id=ticket_id,

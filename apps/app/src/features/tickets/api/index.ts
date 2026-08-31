@@ -1,4 +1,5 @@
 // implements tickets api
+import type { DocumentType } from '@/lib/documents'
 import { paymentsClient } from '@/lib/paymentsApi'
 import { salesClient } from '@/lib/salesApi'
 import { ticketingClient } from '@/lib/ticketingApi'
@@ -18,10 +19,15 @@ export interface QueueRedeemResponse {
 
 export type ReservationStatus = 'reserved' | 'paid' | 'cancelled' | 'expired'
 
+export interface ReservationItem {
+  ticket_type_id: string
+  quantity: number
+}
+
 export interface Reservation {
   id: string
   event_id: string
-  ticket_type_id: string
+  items: ReservationItem[]
   quantity: number
   status: ReservationStatus
   expires_at: string
@@ -53,6 +59,7 @@ export interface Ticket {
   issued_at: string | null
   expired_at: string | null
   holder_name: string | null
+  holder_document_type: DocumentType | null
   holder_dni: string | null
   created_at: string
   qr_eligible: boolean
@@ -62,6 +69,7 @@ export interface Ticket {
 export interface HolderInput {
   position: number
   holder_name: string
+  holder_document_type: DocumentType
   holder_dni: string
 }
 
@@ -96,7 +104,7 @@ export const ticketsApi = {
   // implements create reservation
   createReservation: (
     eventId: string,
-    data: { ticket_type_id: string; quantity: number; reservation_window_token?: string },
+    data: { items: ReservationItem[]; reservation_window_token?: string },
   ) => salesClient.post<Reservation>(`/v1/events/${eventId}/reserve`, data).then((r) => r.data),
 
   // implements get reservation

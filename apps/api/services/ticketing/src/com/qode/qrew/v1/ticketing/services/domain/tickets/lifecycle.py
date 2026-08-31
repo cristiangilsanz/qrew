@@ -79,10 +79,10 @@ async def transition_ticket(
             "Ticket is being updated by another caller", field="ticket_id"
         ) from exc
     if result.first() is None:
-        raise TicketNotFoundError("Ticket not found", field="ticket_id")
+        raise TicketNotFoundError("Ticket not found.", field="ticket_id")
     ticket = await session.get(Ticket, ticket_id)
     if ticket is None:
-        raise TicketNotFoundError("Ticket not found", field="ticket_id")
+        raise TicketNotFoundError("Ticket not found.", field="ticket_id")
     if ticket.state == to_state:
         return ticket
     if ticket.state in _TERMINAL:

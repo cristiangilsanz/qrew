@@ -15,7 +15,7 @@ RESERVATIONS = (
         status="paid",
         created_hours_ago=48,
         expires_in_minutes=-2865,
-        holders=(("Admin", "00000001A"), ("Guest One", "00000010K")),
+        holders=(("Admin", "00000001R"), ("Guest One", "00000010X")),
     ),
     Reservation(
         key="pending-admin",
@@ -24,9 +24,9 @@ RESERVATIONS = (
         ticket_type="vip",
         quantity=1,
         status="reserved",
-        created_hours_ago=0.1,
-        expires_in_minutes=9,
-        holders=(("Admin", "00000001A"),),
+        created_hours_ago=0.0,
+        expires_in_minutes=10,
+        holders=(("Admin", "00000001R"),),
     ),
     Reservation(
         key="expired-admin",
@@ -49,19 +49,6 @@ RESERVATIONS = (
         expires_in_minutes=-705,
     ),
     Reservation(
-        key="review-admin",
-        user="admin",
-        event="event-a",
-        ticket_type="vip",
-        quantity=2,
-        status="reserved",
-        created_hours_ago=0.2,
-        expires_in_minutes=7,
-        holders=(("Admin", "00000001A"), ("Guest Two", "00000011L")),
-        requires_review=True,
-        risk_score=72,
-    ),
-    Reservation(
         key="gate-admin",
         user="admin",
         event="event-c",
@@ -70,7 +57,7 @@ RESERVATIONS = (
         status="paid",
         created_hours_ago=72,
         expires_in_minutes=-4305,
-        holders=(("Admin", "00000001A"), ("Guest Two", "00000011L")),
+        holders=(("Admin", "00000001R"), ("Guest Two", "00000011B")),
     ),
     Reservation(
         key="vip-admin",
@@ -81,7 +68,7 @@ RESERVATIONS = (
         status="paid",
         created_hours_ago=21,
         expires_in_minutes=-1245,
-        holders=(("Admin", "00000001A"),),
+        holders=(("Admin", "00000001R"),),
     ),
     Reservation(
         key="cancelled-event-admin",
@@ -92,7 +79,7 @@ RESERVATIONS = (
         status="paid",
         created_hours_ago=31,
         expires_in_minutes=-1845,
-        holders=(("Admin", "00000001A"),),
+        holders=(("Admin", "00000001R"),),
     ),
     Reservation(
         key="vip-user-a",
@@ -103,7 +90,7 @@ RESERVATIONS = (
         status="paid",
         created_hours_ago=29,
         expires_in_minutes=-1725,
-        holders=(("User A", "00000004D"),),
+        holders=(("User A", "00000004G"),),
     ),
     Reservation(
         key="past-admin",
@@ -124,7 +111,18 @@ RESERVATIONS = (
         status="paid",
         created_hours_ago=30,
         expires_in_minutes=-1785,
-        holders=(("User A", "00000004D"),),
+        holders=(("User A", "00000004G"),),
+    ),
+    Reservation(
+        key="paid-admin-resale",
+        user="admin",
+        event="event-h",
+        ticket_type="general",
+        quantity=1,
+        status="paid",
+        created_hours_ago=72,
+        expires_in_minutes=-4305,
+        holders=(("Admin", "00000001R"),),
     ),
 )
 
@@ -196,9 +194,9 @@ ASSIGNMENTS = (
         buyer="admin",
         state="pending",
         assigned_minutes_ago=3,
-        expires_in_minutes=12,
+        expires_in_minutes=180,
         holder_name="Admin",
-        holder_dni="00000001A",
+        holder_dni="00000001R",
     ),
     Assignment(
         key="pending-user-b",
@@ -207,9 +205,9 @@ ASSIGNMENTS = (
         buyer="user-b",
         state="pending",
         assigned_minutes_ago=4,
-        expires_in_minutes=11,
+        expires_in_minutes=179,
         holder_name="User B",
-        holder_dni="00000005E",
+        holder_dni="00000005M",
     ),
     Assignment(
         key="paid-user-b",
@@ -220,8 +218,19 @@ ASSIGNMENTS = (
         assigned_minutes_ago=24 * 60 * 5,
         expires_in_minutes=-7185,
         holder_name="User B",
-        holder_dni="00000005E",
+        holder_dni="00000005M",
         paid=True,
+    ),
+    Assignment(
+        key="expired-admin",
+        listing="offer-user-a",
+        event="event-a",
+        buyer="admin",
+        state="expired",
+        assigned_minutes_ago=240,
+        expires_in_minutes=-60,
+        holder_name="Admin",
+        holder_dni="00000001R",
     ),
     Assignment(
         key="expired-user-c",
@@ -232,8 +241,20 @@ ASSIGNMENTS = (
         assigned_minutes_ago=120,
         expires_in_minutes=-105,
         holder_name="User C",
-        holder_dni="00000006F",
+        holder_dni="00000006Y",
     ),
 )
 
-QUEUE = (("event-f", "admin", 1), ("event-f", "user-a", 2), ("event-f", "user-b", 3))
+# the admission queue of the event that gates its sale behind one
+ADMISSION_QUEUE = (
+    ("event-f", "admin", 1),
+    ("event-f", "user-a", 2),
+    ("event-f", "user-b", 3),
+)
+
+# the resale waitlist of the event whose sale window already closed
+WAITLIST = (
+    ("event-h", "user-a", 1),
+    ("event-h", "user-b", 2),
+    ("event-h", "user-c", 3),
+)

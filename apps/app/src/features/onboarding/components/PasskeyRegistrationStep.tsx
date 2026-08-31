@@ -22,7 +22,12 @@ export function PasskeyRegistrationStep({ onSuccess }: Props) {
         <h2 className="text-lg font-semibold">{t('passkeys.register.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('passkeys.register.description')}</p>
       </div>
-      <Button className="w-full" isLoading={register.isPending} onClick={() => register.mutate()}>
+      <Button
+        className="w-full rounded-full"
+        isLoading={register.isPending}
+        onClick={() => register.mutate()}
+      >
+        <KeyRound className="mr-2 h-4 w-4" />
         {t('passkeys.register.submit')}
       </Button>
     </div>

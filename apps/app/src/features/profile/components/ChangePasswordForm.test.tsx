@@ -52,7 +52,7 @@ describe('ChangePasswordForm', () => {
     const { toast } = await import('sonner')
     server.use(
       http.post('http://localhost:8000/api/identity/v1/auth/account/change-password', () =>
-        HttpResponse.json({ detail: 'Incorrect current password' }, { status: 400 }),
+        HttpResponse.json({ detail: 'Current password rejected.' }, { status: 400 }),
       ),
     )
 
@@ -63,7 +63,7 @@ describe('ChangePasswordForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /update password/i }))
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Incorrect current password')
+      expect(toast.error).toHaveBeenCalledWith('Current password rejected.')
     })
   })
 })

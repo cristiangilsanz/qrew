@@ -38,7 +38,7 @@ class RegisterRequest(BaseModel):
     @model_validator(mode="after")
     def _v_terms(self) -> "RegisterRequest":
         if not self.terms_accepted:
-            raise ValueError("You must accept the terms and conditions to register")
+            raise ValueError("Terms not accepted.")
         return self
 
 

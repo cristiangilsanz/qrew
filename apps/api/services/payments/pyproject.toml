@@ -37,6 +37,7 @@ dependencies = [
     "idempotency",
     "middleware",
     "observability",
+    "messaging",
     "db",
     "probes",
     "contracts",
@@ -48,6 +49,7 @@ exceptions = { workspace = true }
 idempotency = { workspace = true }
 middleware = { workspace = true }
 observability = { workspace = true }
+messaging = { workspace = true }
 db = { workspace = true }
 probes = { workspace = true }
 contracts = { workspace = true }

@@ -8,8 +8,9 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from com.qode.qrew.v1.gateway.core.config import settings
 from com.qode.qrew.v1.gateway.core.auth import (
-    access_public_keys,
+    user_public_keys,
     scanner_public_keys,
     try_verify,
 )
@@ -24,6 +25,9 @@ _PUBLIC_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"^POST /api/identity/v1/auth/passkeys/"),
     re.compile(r"^POST /api/identity/v1/auth/otp/"),
     re.compile(r"^POST /api/identity/v1/auth/totp/verify$"),
+    re.compile(r"^POST /api/payments/v1/payments/webhook$"),
+    re.compile(r"^PUT /api/identity/v1/uploads/local/"),
+    re.compile(r"^(GET|HEAD) /api/identity/v1/uploads/public/"),
     re.compile(r"^(GET|HEAD) /api/\w+/v?1?/?health"),
     re.compile(r"^(GET|HEAD) /api/\w+/healthz"),
     re.compile(r"^(GET|HEAD) /api/\w+/ready"),
@@ -47,6 +51,22 @@ def _extract_bearer(authorization: str | None) -> str | None:
     if len(parts) == 2 and parts[0].lower() == "bearer" and parts[1]:
         return parts[1]
     return None
+
+
+# an account still under review may read the catalogue and finish its own setup
+_SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+_ALWAYS_ALLOWED_PREFIX = "/api/identity/"
+
+_NOT_VERIFIED = Response(
+    content=json.dumps({"detail": {"message": "Account not verified.", "field": None}}),
+    status_code=403,
+    headers={"Content-Type": "application/json"},
+)
+
+
+# reports whether a caller who has not cleared verification may make this request
+def _allowed_while_unverified(method: str, path: str) -> bool:
+    return method in _SAFE_METHODS or path.startswith(_ALWAYS_ALLOWED_PREFIX)
 
 
 _UNAUTHORIZED = Response(
@@ -84,7 +104,7 @@ class AuthMiddleware:
             await _UNAUTHORIZED(scope, receive, send)
             return
 
-        claims = try_verify(token, access_public_keys())
+        claims = try_verify(token, user_public_keys())
         if claims is not None:
             token_type = str(claims.get("type", ""))
             if token_type not in ("access", "setup"):
@@ -93,6 +113,10 @@ class AuthMiddleware:
             sub = str(claims.get("sub", ""))
             if not sub:
                 await _UNAUTHORIZED(scope, receive, send)
+                return
+            verified = claims.get("kyc") is True or claims.get("adm") is True
+            if not verified and not _allowed_while_unverified(method, path):
+                await _NOT_VERIFIED(scope, receive, send)
                 return
             headers = MutableHeaders(scope=scope)
             headers.append("x-authenticated-user-id", sub)
@@ -104,7 +128,9 @@ class AuthMiddleware:
 
         scanner_keys = scanner_public_keys()
         if scanner_keys:
-            claims = try_verify(token, scanner_keys)
+            claims = try_verify(
+                token, scanner_keys, audience_override=settings.scanner_jwt_audience or None
+            )
             if claims is not None and claims.get("type") == "scanner":
                 scanner_id = str(claims.get("scanner_id", ""))
                 headers = MutableHeaders(scope=scope)

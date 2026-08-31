@@ -76,7 +76,7 @@ class TestValidateRadius:
 class TestValidateTimezone:
     # verifies that raises when unknown
     def test_raises_when_unknown(self) -> None:
-        with pytest.raises(VenueError, match="timezone"):
+        with pytest.raises(VenueError, match="Timezone unknown"):
             _validate_timezone("Moon/Crater")
 
     # verifies that valid timezone passes
@@ -157,7 +157,7 @@ class TestVenueServiceCreate:
     # verifies that raises when timezone invalid
     async def test_raises_when_timezone_invalid(self, actor_id: uuid.UUID) -> None:
         svc, _ = _make_svc()
-        with pytest.raises(VenueError, match="timezone"):
+        with pytest.raises(VenueError, match="Timezone unknown"):
             await svc.create_venue(
                 actor_id=actor_id,
                 name="V",

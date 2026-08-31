@@ -33,7 +33,9 @@ _CONSTRAINTS: dict[str, UploadConstraint] = {
     ),
     "event_image": UploadConstraint(
         max_size_bytes=5 * 1024 * 1024,
-        allowed_content_types=frozenset({"image/jpeg", "image/png", "image/webp"}),
+        allowed_content_types=frozenset(
+            {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
+        ),
     ),
     "scanner_photo": UploadConstraint(
         max_size_bytes=5 * 1024 * 1024,

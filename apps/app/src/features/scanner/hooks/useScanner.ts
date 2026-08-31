@@ -1,4 +1,7 @@
 // provides use scanner
+import type { PluginListenerHandle } from '@capacitor/core'
+import { Capacitor } from '@capacitor/core'
+import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { scannerApi } from '@/features/scanner/api'
@@ -35,6 +38,7 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
   const scannerTokenRef = useRef<string | null>(null)
   const rafRef = useRef<number | null>(null)
   const processingRef = useRef(false)
+  const listenerRef = useRef<PluginListenerHandle | null>(null)
 
   const [phase, setPhase] = useState<ScanPhase>('init')
   const [scanResult, setScanResult] = useState<ScanResult>(null)
@@ -45,6 +49,12 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
   const stopCamera = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
+    if (Capacitor.isNativePlatform()) {
+      void listenerRef.current?.remove()
+      listenerRef.current = null
+      void BarcodeScanner.stopScan().catch(() => undefined)
+      document.body.classList.remove('scanner-active')
+    }
   }, [])
 
   useEffect(() => () => stopCamera(), [stopCamera])
@@ -111,11 +121,39 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
     [],
   )
 
+  // scans with the native detector when the web api is unavailable
+  async function startNativeScanning() {
+    const permission = await BarcodeScanner.requestPermissions()
+    if (permission.camera !== 'granted' && permission.camera !== 'limited') {
+      setErrorMsg(notSupportedMessage)
+      setPhase('error')
+      return
+    }
+
+    const available = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable()
+    if (!available.available) {
+      await BarcodeScanner.installGoogleBarcodeScannerModule()
+    }
+
+    document.body.classList.add('scanner-active')
+    listenerRef.current = await BarcodeScanner.addListener('barcodesScanned', (event) => {
+      const raw = event.barcodes[0]?.rawValue
+      if (raw) void handleScan(raw)
+    })
+    await BarcodeScanner.startScan({ formats: [BarcodeFormat.QrCode] })
+    setPhase('scanning')
+  }
+
   // implements start scanning
   async function startScanning() {
     try {
       const tok = await scannerApi.createForEvent(eventId, `${eventName} scanner`)
       scannerTokenRef.current = tok.token
+
+      if (Capacitor.isNativePlatform()) {
+        await startNativeScanning()
+        return
+      }
 
       if (typeof BarcodeDetector === 'undefined') {
         setErrorMsg(notSupportedMessage)

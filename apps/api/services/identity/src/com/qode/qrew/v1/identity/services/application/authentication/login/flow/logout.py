@@ -43,14 +43,14 @@ class LogoutService:
         except ExpiredSignatureError:
             return
         except InvalidTokenError as exc:
-            raise LogoutError("Invalid refresh token") from exc
+            raise LogoutError("Refresh token rejected.") from exc
 
         if payload.get("type") != "refresh":
-            raise LogoutError("Invalid token type")
+            raise LogoutError("Token type rejected.")
 
         jti = payload.get("jti")
         if not isinstance(jti, str):
-            raise LogoutError("Invalid refresh token")
+            raise LogoutError("Refresh token rejected.")
 
         exp = payload.get("exp")
         ttl = int(exp) - int(datetime.now(UTC).timestamp()) if isinstance(exp, (int, float)) else 0

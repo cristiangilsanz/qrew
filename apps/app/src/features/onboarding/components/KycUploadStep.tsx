@@ -1,9 +1,10 @@
 // renders the kyc upload step component
-import { Upload } from 'lucide-react'
+import { ArrowUpFromLine, ChevronDown, Upload } from 'lucide-react'
 import { type ChangeEvent, type FormEvent, type KeyboardEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
+import { DOCUMENT_TYPES, type DocumentType, isValidDocument } from '@/lib/documents'
 
 import { type KycUploadResponse } from '../api'
 import { useKycUpload } from '../hooks/useKycUpload'
@@ -16,6 +17,8 @@ interface Props {
 export function KycUploadStep({ onSuccess }: Props) {
   const { t } = useTranslation()
   const [file, setFile] = useState<File | null>(null)
+  const [documentType, setDocumentType] = useState<DocumentType>('dni')
+  const [documentNumber, setDocumentNumber] = useState('')
   const [preview, setPreview] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const upload = useKycUpload(onSuccess)
@@ -32,10 +35,12 @@ export function KycUploadStep({ onSuccess }: Props) {
     }
   }
 
+  const documentValid = isValidDocument(documentNumber, documentType)
+
   // handles handle submit
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (file) upload.mutate(file)
+    if (file && documentValid) upload.mutate({ file, documentType, documentNumber })
   }
 
   // handles handle dropzone key down
@@ -49,6 +54,35 @@ export function KycUploadStep({ onSuccess }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-muted-foreground text-sm">{t('onboarding.kyc.description')}</p>
+
+      <div className="flex gap-2">
+        <div className="relative shrink-0">
+          <select
+            value={documentType}
+            onChange={(e) => setDocumentType(e.target.value as DocumentType)}
+            className="border-input bg-background text-foreground w-full appearance-none rounded-xl border py-2.5 pr-9 pl-3 text-sm focus:outline-none"
+          >
+            {DOCUMENT_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {t(`tickets.holders.documentType.${type}`)}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+        </div>
+        <input
+          type="text"
+          value={documentNumber}
+          onChange={(e) => setDocumentNumber(e.target.value)}
+          placeholder={t(`tickets.holders.documentPlaceholder.${documentType}`)}
+          className={`border-input bg-background text-foreground placeholder:text-muted-foreground w-full rounded-xl border px-4 py-2.5 text-sm focus:outline-none ${
+            documentNumber && !documentValid ? 'border-red-500/60' : ''
+          }`}
+        />
+      </div>
+      {documentNumber && !documentValid && (
+        <p className="px-1 text-xs text-red-400">{t(`tickets.holders.invalid.${documentType}`)}</p>
+      )}
 
       <div
         role="button"
@@ -83,7 +117,13 @@ export function KycUploadStep({ onSuccess }: Props) {
 
       {file && !preview && <p className="text-muted-foreground truncate text-sm">{file.name}</p>}
 
-      <Button type="submit" className="w-full" disabled={!file} isLoading={upload.isPending}>
+      <Button
+        type="submit"
+        className="w-full rounded-full"
+        disabled={!file || !documentValid}
+        isLoading={upload.isPending}
+      >
+        <ArrowUpFromLine className="mr-2 h-4 w-4" />
         {t('onboarding.kyc.submit')}
       </Button>
     </form>

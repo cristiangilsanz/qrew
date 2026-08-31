@@ -22,23 +22,30 @@ class ProfileService:
     async def get_onboarding_status(self, user: User) -> OnboardingStatusResponse:
         has_passkey = await self._passkey_repo.has_passkey(user.id)
         kyc_submitted = user.kyc_status != KycStatus.not_submitted
+        # a rejected document no longer counts as a submission that can be waited on
+        kyc_rejected = user.kyc_status == KycStatus.rejected
         email_verified = user.email_verified
         phone_verified = user.phone_number_verified
-        is_complete = email_verified and phone_verified and kyc_submitted and has_passkey
+        is_complete = (
+            email_verified and phone_verified and kyc_submitted and not kyc_rejected and has_passkey
+        )
         if not email_verified:
             current_step = "email"
         elif not phone_verified:
             current_step = "phone"
         elif not kyc_submitted:
             current_step = "kyc"
-        elif not has_passkey:
+        elif not has_passkey and not kyc_rejected:
             current_step = "passkey"
         else:
             current_step = "pending"
         return OnboardingStatusResponse(
+            email=user.email,
+            phone_number=user.phone_number,
             email_verified=email_verified,
             phone_verified=phone_verified,
             kyc_submitted=kyc_submitted,
+            kyc_status=str(user.kyc_status),
             passkey_registered=has_passkey,
             is_complete=is_complete,
             current_step=current_step,

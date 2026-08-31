@@ -1,7 +1,9 @@
 # admits the next batch of queued users into each active event's sale
 import uuid
+from typing import Any
 
 import structlog
+from jobs import job, parse_crontab
 from sqlalchemy import text
 
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
@@ -41,3 +43,10 @@ async def admit_next() -> int:
         admitted_total += len(admitted)
     await logger.ainfo("queue.admit_next", admitted=admitted_total)
     return admitted_total
+
+
+# admits the next users waiting in each event queue on a periodic schedule
+@job("queue.admit_next", cron=parse_crontab("* * * * *"), max_attempts=1)
+async def run_admit_next(ctx: dict[str, Any]) -> None:
+    del ctx
+    await admit_next()

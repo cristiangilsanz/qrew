@@ -36,7 +36,9 @@ def _build_cron(spec: JobSpec, runner: Any) -> CronJob:
 
 
 # builds the worker settings class arq runs from every registered job
-def build_worker_settings(redis_settings: RedisSettings) -> type:
+def build_worker_settings(
+    redis_settings: RedisSettings, *, queue_name: str | None = None
+) -> type:
     functions: list[Any] = []
     cron_jobs: list[CronJob] = []
     for spec in all_specs():
@@ -54,5 +56,7 @@ def build_worker_settings(redis_settings: RedisSettings) -> type:
     WorkerSettings.max_jobs = 10  # type: ignore[attr-defined]
     WorkerSettings.job_timeout = 300  # type: ignore[attr-defined]
     WorkerSettings.keep_result = 60  # type: ignore[attr-defined]
+    if queue_name is not None:
+        WorkerSettings.queue_name = queue_name  # type: ignore[attr-defined]
 
     return WorkerSettings

@@ -91,7 +91,7 @@ class Settings(BaseSettings):
     twilio_from_number: str = ""
 
     rp_id: str = "localhost"
-    rp_name: str = "Qrew"
+    rp_name: str = "QREW"
     rp_expected_origin: str = "http://localhost:3000"
     rp_expected_origins: list[str] = []
 

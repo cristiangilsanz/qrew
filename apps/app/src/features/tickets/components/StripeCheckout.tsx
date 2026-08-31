@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 
 import { env } from '@/config/env'
 
-const stripePromise = loadStripe(env.STRIPE_PUBLISHABLE_KEY)
+const stripePromise = env.STRIPE_PUBLISHABLE_KEY ? loadStripe(env.STRIPE_PUBLISHABLE_KEY) : null
 
 interface FormProps {
   onSuccess: () => void
@@ -36,7 +36,7 @@ function PaymentForm({ onSuccess }: FormProps) {
     })
 
     if (result.error) {
-      setError(result.error.message ?? t('tickets.payment.failed'))
+      setError(t('tickets.payment.failed'))
       setLoading(false)
       return
     }
@@ -55,7 +55,7 @@ function PaymentForm({ onSuccess }: FormProps) {
         <button
           type="submit"
           disabled={loading || !stripe || !elements}
-          className="bg-primary flex h-12 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
+          className="bg-primary hover:bg-primary/90 flex h-14 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-lg transition disabled:opacity-40"
         >
           <CreditCard className="h-4 w-4" />
           {t('tickets.payment.confirmButton')}
@@ -72,6 +72,16 @@ interface Props {
 
 // renders the stripe checkout component
 export function StripeCheckout({ clientSecret, onSuccess }: Props) {
+  const { t } = useTranslation()
+
+  if (!stripePromise) {
+    return (
+      <p className="text-muted-foreground py-6 text-center text-sm">
+        {t('tickets.payment.unavailable')}
+      </p>
+    )
+  }
+
   return (
     <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
       <PaymentForm onSuccess={onSuccess} />

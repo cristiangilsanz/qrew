@@ -40,7 +40,7 @@ _bearer = HTTPBearer(auto_error=True)
 
 _INVALID_TOKEN = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail={"message": "Invalid scanner token", "field": None},
+    detail={"message": "Scanner token rejected.", "field": None},
 )
 
 
@@ -121,17 +121,17 @@ async def create_scanner_for_event(
     if not membership.event_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Event not found", "field": "event_id"},
+            detail={"message": "Event not found.", "field": "event_id"},
         )
     if not current_user.is_admin and not membership.is_member:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Not a member of this organisation", "field": None},
+            detail={"message": "Member access required.", "field": None},
         )
     if membership.venue_id is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Event not found", "field": "event_id"},
+            detail={"message": "Event not found.", "field": "event_id"},
         )
     scan_date = body.date if body.date is not None else today_date.today()
     scanner, token = await service.create(

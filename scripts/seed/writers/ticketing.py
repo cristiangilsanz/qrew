@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncpg
 
-from ..core import SeedConfig, Timeline, ident
+from ..core import SeedConfig, Timeline, encrypt, ident
 from ..data import Dataset
 
 NAME = "ticketing"
@@ -62,9 +62,10 @@ async def write(
             INSERT INTO ticketing.tickets (
                 id, reservation_id, event_id, ticket_type_id, owner_user_id,
                 bound_device_id,
-                state, state_updated_at, issued_at, expired_at, holder_name, holder_dni,
+                state, state_updated_at, issued_at, expired_at, holder_name,
+                holder_dni_ciphertext, holder_document_type,
                 created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $9, $8)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $9, $8)
             """,
             ticket.id,
             reservation,
@@ -77,5 +78,6 @@ async def write(
             when.hours(-ticket.issued_hours_ago),
             when.hours(-ticket.expired_hours_ago) if ticket.expired_hours_ago else None,
             ticket.holder_name,
-            ticket.holder_dni,
+            encrypt(cfg.fernet, ticket.holder_dni) if ticket.holder_dni else None,
+            "dni" if ticket.holder_dni else None,
         )

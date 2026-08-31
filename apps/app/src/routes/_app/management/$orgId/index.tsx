@@ -6,11 +6,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { PageError } from '@/components/ui/page-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDeleteOrganisation } from '@/features/organiser/hooks/useDeleteOrganisation'
 import { useMyOrganisations } from '@/features/organiser/hooks/useMyOrganisations'
+import { useOrgCollaborators } from '@/features/organiser/hooks/useOrgCollaborators'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
-import { useOrgMembers } from '@/features/organiser/hooks/useOrgMembers'
 
 export const Route = createFileRoute('/_app/management/$orgId/')({
   component: OrgDashboardPage,
@@ -27,11 +28,16 @@ function OrgDashboardPage() {
   // implements org
   const org = orgsData?.items.find((o) => o.id === orgId)
 
-  const { data: membersData, isLoading: membersLoading } = useOrgMembers(orgId)
-  const { data: eventsData, isLoading: eventsLoading } = useOrgEvents(orgId)
+  const { data: collaboratorsData, isLoading: collaboratorsLoading } = useOrgCollaborators(orgId)
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    isError: eventsError,
+    refetch: refetchEvents,
+  } = useOrgEvents(orgId)
 
-  const allLoading = orgLoading || eventsLoading || membersLoading
-  const memberCount = membersData?.length ?? 0
+  const allLoading = orgLoading || eventsLoading || collaboratorsLoading
+  const collaboratorCount = collaboratorsData?.length ?? 0
   const eventCount = eventsData?.items.length ?? 0
 
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -66,6 +72,8 @@ function OrgDashboardPage() {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [deleteOpen])
+
+  if (eventsError) return <PageError onRetry={() => void refetchEvents()} />
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
@@ -109,20 +117,20 @@ function OrgDashboardPage() {
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <Link
-          to="/management/$orgId/members"
+          to="/management/$orgId/collaborators"
           params={{ orgId }}
           className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-white/[0.04]"
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
             <Users className="h-4 w-4" />
           </div>
-          <span className="flex-1 text-sm font-medium">{t('organiser.members.title')}</span>
+          <span className="flex-1 text-sm font-medium">{t('organiser.collaborators.title')}</span>
           {allLoading ? (
             <Skeleton className="h-5 w-6 rounded-full" />
           ) : (
-            memberCount > 0 && (
+            collaboratorCount > 0 && (
               <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/60">
-                {memberCount}
+                {collaboratorCount}
               </span>
             )
           )}

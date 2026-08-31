@@ -50,7 +50,7 @@ class TestLogoutService:
         svc, _, _ = _make_svc()
         with (
             patch(_PATCH_DECODE, side_effect=InvalidTokenError("bad")),
-            pytest.raises(LogoutError, match="Invalid refresh token"),
+            pytest.raises(LogoutError, match="Refresh token rejected."),
         ):
             await svc.logout("bad.token")
 
@@ -60,7 +60,7 @@ class TestLogoutService:
         payload = {"type": "access", "jti": "j", "sub": str(uuid.uuid4()), "exp": 9999999999}
         with (
             patch(_PATCH_DECODE, return_value=payload),
-            pytest.raises(LogoutError, match="Invalid token type"),
+            pytest.raises(LogoutError, match="Token type rejected."),
         ):
             await svc.logout("access.token")
 

@@ -53,13 +53,13 @@ class CompleteSetupService:
             await logger.awarning(
                 "setup_incomplete", reason="phone_not_verified", user_id=str(user.id)
             )
-            raise SetupError("Phone number is not verified", field="phone_number")
+            raise SetupError("Phone number not verified.", field="phone_number")
 
         if user.kyc_status == KycStatus.not_submitted:
             await logger.awarning(
                 "setup_incomplete", reason="kyc_not_submitted", user_id=str(user.id)
             )
-            raise SetupError("KYC document has not been submitted", field="kyc")
+            raise SetupError("Document not submitted.", field="kyc")
 
         if not await self._passkey_repo.has_passkey(user.id):
             await logger.awarning(
@@ -67,9 +67,13 @@ class CompleteSetupService:
                 reason="passkey_not_registered",
                 user_id=str(user.id),
             )
-            raise SetupError("Passkey has not been registered", field="passkey")
+            raise SetupError("Passkey not registered.", field="passkey")
 
-        access_token = create_access_token(str(user.id), is_admin=user.is_admin)
+        access_token = create_access_token(
+            str(user.id),
+            is_admin=user.is_admin,
+            kyc_approved=user.kyc_status == KycStatus.approved,
+        )
         refresh_token = create_refresh_token(str(user.id))
 
         await self._persist_session(

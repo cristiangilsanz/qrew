@@ -2,6 +2,7 @@
 import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
+from collections.abc import Sequence
 from typing import Any
 
 import structlog
@@ -16,6 +17,7 @@ from locking import redlock
 from observability import traced
 from com.qode.qrew.v1.sales.models.projections import TicketTypeInventory
 from com.qode.qrew.v1.sales.models.reservation import Reservation, ReservationStatus
+from com.qode.qrew.v1.sales.models.reservation_item import ReservationItem
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
     TicketTypeInventoryRepository,
@@ -78,7 +80,7 @@ class ReservationService:
             )
         except DBAPIError as exc:
             raise TierBusyError(
-                "Ticket type is being purchased by another caller",
+                "Ticket type busy.",
                 field="ticket_type_id",
             ) from exc
 
@@ -89,14 +91,18 @@ class ReservationService:
         *,
         user_id: uuid.UUID,
         event_id: uuid.UUID,
-        ticket_type_id: uuid.UUID,
-        quantity: int,
+        items: Sequence[tuple[uuid.UUID, int]],
         ip_address: str | None = None,
         fingerprint_hash: str | None = None,
         reservation_window_token: str | None = None,
-    ) -> Reservation:
-        if quantity < 1:
-            raise ReservationError("Quantity must be at least 1", field="quantity")
+    ) -> tuple[Reservation, list[ReservationItem]]:
+        if not items:
+            raise ReservationError("Ticket types missing.", field="items")
+        if any(quantity < 1 for _, quantity in items):
+            raise ReservationError("Quantity must be at least 1.", field="quantity")
+        if len({ticket_type_id for ticket_type_id, _ in items}) != len(items):
+            raise ReservationError("Ticket type repeated.", field="items")
+        total_quantity = sum(quantity for _, quantity in items)
 
         engine = await build_engine_for_user(
             self._session, user_id=user_id, fingerprint_hash=fingerprint_hash
@@ -114,7 +120,7 @@ class ReservationService:
             await self._record_blocked(
                 actor_id=user_id, event_id=event_id, payload=evaluation.to_payload()
             )
-            raise FraudBlockedError("Reservation rejected for risk")
+            raise FraudBlockedError("Reservation rejected.")
 
         if reservation_window_token is not None:
             try:
@@ -136,44 +142,59 @@ class ReservationService:
         ):
             event_ctx = await self._event_ctx_repo.get_by_event_id(event_id)
             if event_ctx is None:
-                raise ReservationError("Event not found", field="event_id")
+                raise ReservationError("Event not found.", field="event_id")
             if event_ctx.status != "published":
-                raise ReservationError("Event is not on sale", field="status")
-            if quantity > event_ctx.max_tickets_per_user:
+                raise ReservationError("Event not on sale.", field="status")
+            if total_quantity > event_ctx.max_tickets_per_user:
                 raise ReservationError(
                     "Quantity exceeds the per-user maximum for this event", field="quantity"
                 )
             now = _now()
             if event_ctx.sale_starts_at is None or event_ctx.sale_ends_at is None:
-                raise ReservationError("Sale window not configured", field="sale_window")
+                raise ReservationError("Sale window not configured.", field="sale_window")
             if now < event_ctx.sale_starts_at or now > event_ctx.sale_ends_at:
-                raise ReservationError("Sale window is closed", field="sale_window")
+                raise ReservationError("Sale window closed.", field="sale_window")
             if reservation_window_token is None and event_ctx.queue_required:
                 raise ReservationError(
                     "Reservation window token is required for this event",
                     field="reservation_window_token",
                 )
-            inventory = await self._lock_inventory_nowait(ticket_type_id)
-            if inventory is None or inventory.event_id != event_id:
-                raise ReservationError("Ticket type not found", field="ticket_type_id")
-            if inventory.reserved_count + quantity > inventory.capacity:
-                raise ReservationError("Not enough capacity remaining", field="quantity")
             held = await self._repo.active_quantity_for_user(user_id, event_id)
-            if held + quantity > event_ctx.max_tickets_per_user:
-                raise ReservationError("Would exceed your per-user ticket limit", field="quantity")
+            if held + total_quantity > event_ctx.max_tickets_per_user:
+                raise ReservationError("Ticket limit exceeded.", field="quantity")
+
+            # every tier is locked and checked before any of them is drawn down
+            inventories: list[tuple[TicketTypeInventory, int]] = []
+            for ticket_type_id, quantity in sorted(items):
+                inventory = await self._lock_inventory_nowait(ticket_type_id)
+                if inventory is None or inventory.event_id != event_id:
+                    raise ReservationError("Ticket type not found.", field="ticket_type_id")
+                if inventory.reserved_count + quantity > inventory.capacity:
+                    raise ReservationError("Capacity exhausted.", field="quantity")
+                inventories.append((inventory, quantity))
+
             expires_at = now + timedelta(seconds=settings.reservation_ttl_seconds)
             reservation = Reservation(
                 user_id=user_id,
                 event_id=event_id,
-                ticket_type_id=ticket_type_id,
-                quantity=quantity,
+                quantity=total_quantity,
                 status=ReservationStatus.reserved,
                 expires_at=expires_at,
                 risk_score=evaluation.score,
                 requires_review=evaluation.decision == FraudDecision.review,
             )
             reservation = await self._repo.insert(reservation)
-            inventory.reserved_count = inventory.reserved_count + quantity
+            created_items = [
+                ReservationItem(
+                    reservation_id=reservation.id,
+                    ticket_type_id=ticket_type_id,
+                    quantity=quantity,
+                )
+                for ticket_type_id, quantity in sorted(items)
+            ]
+            self._session.add_all(created_items)
+            for inventory, quantity in inventories:
+                inventory.reserved_count = inventory.reserved_count + quantity
             await self._session.flush()
             await self._record(
                 _RESERVATION_CREATED,
@@ -181,8 +202,11 @@ class ReservationService:
                 reservation_id=reservation.id,
                 payload={
                     "event_id": str(event_id),
-                    "ticket_type_id": str(ticket_type_id),
-                    "quantity": quantity,
+                    "items": [
+                        {"ticket_type_id": str(tier), "quantity": qty}
+                        for tier, qty in sorted(items)
+                    ],
+                    "quantity": total_quantity,
                 },
             )
             await self._session.commit()
@@ -194,17 +218,19 @@ class ReservationService:
                 payload=evaluation.to_payload(),
             )
 
-        await _publish_reservation_created(reservation)
-        return reservation
+        await _publish_reservation_created(reservation, created_items)
+        return reservation, created_items
 
     # cancels an open reservation and releases its inventory
     @traced("reservation.cancel")
-    async def cancel(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Reservation:
+    async def cancel(
+        self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> tuple[Reservation, list[ReservationItem]]:
         reservation = await self._repo.get_by_id(reservation_id)
         if reservation is None or reservation.user_id != actor_id:
-            raise ReservationError("Reservation not found", field="reservation_id")
+            raise ReservationError("Reservation not found.", field="reservation_id")
         if reservation.status in {ReservationStatus.cancelled, ReservationStatus.expired}:
-            return reservation
+            return reservation, await self._repo.list_items(reservation_id)
         if reservation.status == ReservationStatus.paid:
             raise ReservationError(
                 "Paid reservations must be refunded, not cancelled", field="status"
@@ -212,11 +238,13 @@ class ReservationService:
         async with redlock(
             f"reservation:{reservation_id}:lifecycle", redis_url=settings.redis_url, ttl_seconds=10
         ):
-            inventory = await self._lock_inventory_nowait(reservation.ticket_type_id)
-            if inventory is None:
-                raise ReservationError("Ticket type not found", field="ticket_type_id")
+            items = await self._repo.list_items(reservation_id)
+            for item in items:
+                inventory = await self._lock_inventory_nowait(item.ticket_type_id)
+                if inventory is None:
+                    raise ReservationError("Ticket type not found.", field="ticket_type_id")
+                inventory.reserved_count = max(0, inventory.reserved_count - item.quantity)
             reservation.status = ReservationStatus.cancelled
-            inventory.reserved_count = max(0, inventory.reserved_count - reservation.quantity)
             await self._session.flush()
             await self._record(
                 _RESERVATION_CANCELLED,
@@ -225,15 +253,17 @@ class ReservationService:
                 payload={"event_id": str(reservation.event_id)},
             )
             await self._session.commit()
-        await _publish_reservation_cancelled(reservation)
-        return reservation
+        await _publish_reservation_cancelled(reservation, items)
+        return reservation, items
 
     # reads a reservation owned by the caller
-    async def get_for_user(self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID) -> Reservation:
+    async def get_for_user(
+        self, *, actor_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> tuple[Reservation, list[ReservationItem]]:
         reservation = await self._repo.get_by_id(reservation_id)
         if reservation is None or reservation.user_id != actor_id:
-            raise ReservationError("Reservation not found", field="reservation_id")
-        return reservation
+            raise ReservationError("Reservation not found.", field="reservation_id")
+        return reservation, await self._repo.list_items(reservation_id)
 
     # records that a reservation was blocked for fraud risk
     async def _record_blocked(
@@ -290,8 +320,17 @@ class ReservationService:
             await logger.awarning("audit_write_failed", action=action, error=repr(exc))
 
 
+# renders a reservation's tiers for a message payload
+def _items_payload(items: list[ReservationItem]) -> list[dict[str, Any]]:
+    return [
+        {"ticket_type_id": str(item.ticket_type_id), "quantity": item.quantity} for item in items
+    ]
+
+
 # publishes that a reservation was created onto the shared nats connection
-async def _publish_reservation_created(reservation: Reservation) -> None:
+async def _publish_reservation_created(
+    reservation: Reservation, items: list[ReservationItem]
+) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
@@ -305,7 +344,7 @@ async def _publish_reservation_created(reservation: Reservation) -> None:
                 "reservation_id": str(reservation.id),
                 "user_id": str(reservation.user_id),
                 "event_id": str(reservation.event_id),
-                "ticket_type_id": str(reservation.ticket_type_id),
+                "items": _items_payload(items),
                 "quantity": reservation.quantity,
                 "expires_at": reservation.expires_at.isoformat(),
             },
@@ -323,7 +362,9 @@ async def _publish_reservation_created(reservation: Reservation) -> None:
 
 
 # publishes that a reservation was cancelled onto the shared nats connection
-async def _publish_reservation_cancelled(reservation: Reservation) -> None:
+async def _publish_reservation_cancelled(
+    reservation: Reservation, items: list[ReservationItem]
+) -> None:
     try:
         from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
         from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
@@ -337,7 +378,7 @@ async def _publish_reservation_cancelled(reservation: Reservation) -> None:
                 "reservation_id": str(reservation.id),
                 "user_id": str(reservation.user_id),
                 "event_id": str(reservation.event_id),
-                "ticket_type_id": str(reservation.ticket_type_id),
+                "items": _items_payload(items),
                 "quantity": reservation.quantity,
             },
         )

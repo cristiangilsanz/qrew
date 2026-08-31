@@ -77,7 +77,7 @@ class TestHttpExceptionHandler:
 
 
 class TestValidationExceptionHandler:
-    # verifies that picks first error and extracts field
+    # verifies that picks first error and rewrites it in house style
     async def test_picks_first_error_and_extracts_field(self) -> None:
         exc = RequestValidationError(
             errors=[
@@ -93,8 +93,26 @@ class TestValidationExceptionHandler:
         import json
 
         body = json.loads(response.body)
-        assert body["detail"]["message"] == "field required"
+        assert body["detail"]["message"] == "Email missing."
         assert body["detail"]["field"] == "email"
+
+    # verifies that a value error keeps the wording the validator chose
+    async def test_value_error_keeps_the_validator_wording(self) -> None:
+        exc = RequestValidationError(
+            errors=[
+                {
+                    "loc": ("body", "phone_number"),
+                    "msg": "Value error, Phone number is not valid.",
+                    "type": "value_error",
+                }
+            ]
+        )
+        response = await _validation_exception_handler(MagicMock(), exc)
+        import json
+
+        body = json.loads(response.body)
+        assert body["detail"]["message"] == "Phone number is not valid."
+        assert body["detail"]["field"] == "phone_number"
 
     # verifies that empty errors returns generic message
     async def test_empty_errors_returns_generic_message(self) -> None:

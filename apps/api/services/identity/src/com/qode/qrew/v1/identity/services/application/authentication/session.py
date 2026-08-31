@@ -56,7 +56,7 @@ class SessionService:
     async def revoke_session(self, jti: str, user_id: uuid.UUID) -> None:
         session = await self._repo.get_by_jti(jti)
         if session is None or session.user_id != user_id:
-            raise SessionError("Session not found", field="jti")
+            raise SessionError("Session not found.", field="jti")
 
         await self._blacklist_jti(jti)
         await self._repo.delete_by_jti(jti)

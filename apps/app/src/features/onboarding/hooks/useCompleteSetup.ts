@@ -4,7 +4,8 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { type ApiErrorDetail, extractErrorMessage } from '@/features/auth/api'
+import type { ApiErrorDetail } from '@/features/auth/api'
+import { toastErrorMessage } from '@/lib/errors'
 import { useAuthStore } from '@/store/auth'
 
 import { type CompleteSetupResponse, onboardingApi } from '../api'
@@ -25,10 +26,7 @@ export function useCompleteSetup(onSuccess?: (data: CompleteSetupResponse) => vo
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('onboarding.errors.completeFailed'),
-      )
+      const message = toastErrorMessage(error, t('onboarding.errors.completeFailed'))
       toast.error(message)
     },
   })

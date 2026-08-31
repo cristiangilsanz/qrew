@@ -1,5 +1,7 @@
 // renders the phone verification step component
 import { zodResolver } from '@hookform/resolvers/zod'
+import { RotateCw, ShieldCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
@@ -27,15 +29,24 @@ type FormValues = z.infer<typeof schema>
 
 interface Props {
   onSuccess: () => void
+  phoneNumber: string
 }
 
 // renders the phone verification step component
-export function PhoneVerificationStep({ onSuccess }: Props) {
+export function PhoneVerificationStep({ onSuccess, phoneNumber: fromStatus }: Props) {
   const { t } = useTranslation()
-  // implements phone number
-  const phoneNumber = useAuthStore((s) => s.phoneNumber)
+  // the store only knows the number when the account was created in this session
+  const remembered = useAuthStore((s) => s.phoneNumber)
+  const phoneNumber = fromStatus || (remembered ?? '')
   const verify = useVerifyPhone(onSuccess)
   const resend = useResendPhoneOtp()
+  const [cooldown, setCooldown] = useState(0)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = setTimeout(() => setCooldown((v) => v - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [cooldown])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -44,17 +55,20 @@ export function PhoneVerificationStep({ onSuccess }: Props) {
 
   // handles on submit
   const onSubmit = (values: FormValues) => {
-    verify.mutate({ phone_number: phoneNumber ?? '', otp: values.otp })
+    verify.mutate({ phone_number: phoneNumber, otp: values.otp })
   }
 
   // handles handle resend
   const handleResend = () => {
-    if (phoneNumber) resend.mutate({ phone_number: phoneNumber })
+    if (!phoneNumber) return
+    resend.mutate({ phone_number: phoneNumber }, { onSettled: () => setCooldown(60) })
   }
 
   return (
     <div className="space-y-4">
-      <p className="text-muted-foreground text-sm">{t('onboarding.phone.description')}</p>
+      <p className="text-muted-foreground text-sm">
+        {t('onboarding.phone.sentTo', { phone: phoneNumber })}
+      </p>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -77,22 +91,25 @@ export function PhoneVerificationStep({ onSuccess }: Props) {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" isLoading={verify.isPending}>
+          <Button type="submit" className="w-full rounded-full" isLoading={verify.isPending}>
+            <ShieldCheck className="mr-2 h-4 w-4" />
             {t('onboarding.phone.submit')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full rounded-full"
+            isLoading={resend.isPending}
+            disabled={!phoneNumber || cooldown > 0}
+            onClick={handleResend}
+          >
+            <RotateCw className="mr-2 h-4 w-4" />
+            {cooldown > 0
+              ? t('common.waitSeconds', { seconds: cooldown })
+              : t('onboarding.phone.resend')}
           </Button>
         </form>
       </Form>
-
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={resend.isPending || !phoneNumber}
-          className="text-primary text-sm hover:underline disabled:opacity-50"
-        >
-          {t('onboarding.phone.resend')}
-        </button>
-      </div>
     </div>
   )
 }

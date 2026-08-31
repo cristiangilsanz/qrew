@@ -505,7 +505,7 @@ components:
       required:
       - reservation_window_token
       title: QueueRedeemResponse
-    ReservationCreateRequest:
+    ReservationItemInput:
       properties:
         ticket_type_id:
           type: string
@@ -516,6 +516,20 @@ components:
           maximum: 20.0
           minimum: 1.0
           title: Quantity
+      type: object
+      required:
+      - ticket_type_id
+      - quantity
+      title: ReservationItemInput
+    ReservationCreateRequest:
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationItemInput'
+          maxItems: 10
+          minItems: 1
+          title: Items
         reservation_window_token:
           anyOf:
           - type: string
@@ -524,8 +538,7 @@ components:
           title: Reservation Window Token
       type: object
       required:
-      - ticket_type_id
-      - quantity
+      - items
       title: ReservationCreateRequest
     ReservationResponse:
       properties:
@@ -537,10 +550,11 @@ components:
           type: string
           format: uuid
           title: Event Id
-        ticket_type_id:
-          type: string
-          format: uuid
-          title: Ticket Type Id
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationItemResponse'
+          title: Items
         quantity:
           type: integer
           title: Quantity
@@ -558,12 +572,26 @@ components:
       required:
       - id
       - event_id
-      - ticket_type_id
+      - items
       - quantity
       - status
       - expires_at
       - created_at
       title: ReservationResponse
+    ReservationItemResponse:
+      properties:
+        ticket_type_id:
+          type: string
+          format: uuid
+          title: Ticket Type Id
+        quantity:
+          type: integer
+          title: Quantity
+      type: object
+      required:
+      - ticket_type_id
+      - quantity
+      title: ReservationItemResponse
     ReservationStatus:
       type: string
       enum:

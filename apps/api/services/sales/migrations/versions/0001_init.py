@@ -27,7 +27,6 @@ def upgrade() -> None:
             id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id          UUID         NOT NULL,
             event_id         UUID         NOT NULL,
-            ticket_type_id   UUID         NOT NULL,
             quantity         INTEGER      NOT NULL CHECK (quantity >= 1),
             status           VARCHAR(16)  NOT NULL DEFAULT 'reserved',
             expires_at       TIMESTAMPTZ  NOT NULL,
@@ -98,6 +97,21 @@ def upgrade() -> None:
         )
     """)
 
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS sales.reservation_items (
+            id              UUID     PRIMARY KEY DEFAULT gen_random_uuid(),
+            reservation_id  UUID     NOT NULL,
+            ticket_type_id  UUID     NOT NULL,
+            quantity        INTEGER  NOT NULL CHECK (quantity >= 1),
+            CONSTRAINT uq_reservation_items_reservation_tier
+                UNIQUE (reservation_id, ticket_type_id)
+        )
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS ix_reservation_items_reservation_id
+            ON sales.reservation_items (reservation_id)
+    """)
+
     op.create_table(
         "reservation_holders",
         sa.Column(
@@ -109,7 +123,13 @@ def upgrade() -> None:
         sa.Column("reservation_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("position", sa.Integer(), nullable=False),
         sa.Column("holder_name", sa.String(255), nullable=False),
-        sa.Column("holder_dni", sa.String(50), nullable=False),
+        sa.Column("holder_dni_ciphertext", sa.LargeBinary(), nullable=False),
+        sa.Column(
+            "holder_document_type",
+            sa.String(16),
+            nullable=False,
+            server_default="dni",
+        ),
         sa.CheckConstraint("position >= 1", name="ck_reservation_holders_position"),
         sa.UniqueConstraint(
             "reservation_id", "position", name="uq_reservation_holders_reservation_position"
@@ -239,7 +259,8 @@ def upgrade() -> None:
         sa.Column("paid_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("payment_intent_id", sa.String(255), nullable=True),
         sa.Column("holder_name", sa.String(255), nullable=True),
-        sa.Column("holder_dni", sa.String(50), nullable=True),
+        sa.Column("holder_dni_ciphertext", sa.LargeBinary(), nullable=True),
+        sa.Column("holder_document_type", sa.String(16), nullable=True),
         sa.Column("state", sa.String(32), nullable=False, server_default="pending"),
         sa.CheckConstraint(
             "state IN ('pending', 'paid', 'expired', 'declined')",
@@ -302,6 +323,7 @@ def downgrade() -> None:
         "ix_reservation_holders_reservation_id", table_name="reservation_holders", schema="sales"
     )
     op.drop_table("reservation_holders", schema="sales")
+    op.execute("DROP TABLE IF EXISTS sales.reservation_items")
 
     op.execute("DROP TABLE IF EXISTS sales.fingerprint_context")
     op.execute("DROP TABLE IF EXISTS sales.user_age_context")

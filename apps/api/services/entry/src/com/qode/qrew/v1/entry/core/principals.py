@@ -102,7 +102,7 @@ def verify(purpose: str, token: str) -> dict[str, object]:
     kid = header.get("kid")
     public_pem = keys.verifiers.get(kid) if isinstance(kid, str) else None
     if public_pem is None:
-        raise InvalidTokenError("Unknown signing key")
+        raise InvalidTokenError("Signing key unknown.")
     return _sec_jwt.decode_token(token, public_pem, algorithms=[ALGORITHM])  # type: ignore[no-any-return]
 
 
@@ -116,10 +116,10 @@ class AuthenticatedUser:
 def verify_access_token(token: str) -> AuthenticatedUser:
     payload = verify(ACCESS, token)
     if payload.get("type") != "access":
-        raise InvalidTokenError("Token type is not 'access'")
+        raise InvalidTokenError("Token type rejected.")
     subject = payload.get("sub")
     if not isinstance(subject, str):
-        raise InvalidTokenError("Token sub claim is missing or not a string")
+        raise InvalidTokenError("Token subject missing.")
     return AuthenticatedUser(id=uuid.UUID(subject), is_admin=payload.get("adm") is True)
 
 

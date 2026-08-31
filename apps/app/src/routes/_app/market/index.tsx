@@ -3,8 +3,9 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight, Clock, Tag, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { PageError } from '@/components/ui/page-error'
 import { Skeleton } from '@/components/ui/skeleton'
-import { usePendingMarketAssignment } from '@/features/market/hooks/useMarketAssignment'
+import { usePendingMarketOffer } from '@/features/market/hooks/useMarketOffer'
 import { useMyQueues } from '@/features/market/hooks/useMyQueues'
 import { useTickets } from '@/features/tickets/hooks/useTickets'
 
@@ -15,9 +16,14 @@ export const Route = createFileRoute('/_app/market/')({
 // renders the market page component
 function MarketPage() {
   const { t } = useTranslation()
-  const { data: assignment, isLoading: assignmentLoading } = usePendingMarketAssignment()
+  const { data: assignment, isLoading: assignmentLoading } = usePendingMarketOffer()
   const { data: tickets, isLoading: ticketsLoading } = useTickets()
-  const { data: queues, isLoading: queuesLoading } = useMyQueues()
+  const {
+    data: queues,
+    isLoading: queuesLoading,
+    isError: queuesError,
+    refetch: refetchQueues,
+  } = useMyQueues()
 
   const badgesLoading = assignmentLoading || ticketsLoading || queuesLoading
   const listedCount = (tickets ?? []).filter((t) => t.state === 'on_sale').length
@@ -26,15 +32,15 @@ function MarketPage() {
 
   const sections = [
     {
-      to: '/market/my-listings' as const,
+      to: '/market/on-sale' as const,
       icon: Tag,
       label: t('market.myTicketsOnSale'),
       count: listedCount,
     },
     {
-      to: '/market/claims' as const,
+      to: '/market/offers' as const,
       icon: Clock,
-      label: t('market.myTicketsToClaim'),
+      label: t('market.myOffers'),
       count: claimsCount,
     },
     {
@@ -45,8 +51,10 @@ function MarketPage() {
     },
   ]
 
+  if (queuesError) return <PageError onRetry={() => void refetchQueues()} />
+
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] space-y-6 px-4 pt-5 pb-28">
+    <div className="mx-auto max-w-[430px] space-y-6 px-4 pt-5 pb-28">
       <h1 className="text-2xl font-bold">{t('market.title')}</h1>
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">

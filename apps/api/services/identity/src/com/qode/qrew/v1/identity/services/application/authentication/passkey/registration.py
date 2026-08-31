@@ -90,7 +90,7 @@ class PasskeyRegistrationService:
                 reason="challenge_expired",
                 user_id=str(user.id),
             )
-            raise PasskeyError("Registration session expired. Please start again.")
+            raise PasskeyError("Registration session expired.")
         await self._redis.delete(challenge_key(user.id))
         return raw_challenge
 

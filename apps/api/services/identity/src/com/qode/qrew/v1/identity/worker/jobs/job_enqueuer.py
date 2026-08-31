@@ -8,6 +8,14 @@ from jobs import get_pool, get_spec
 from observability import CARRIER_KEY, inject_current_context
 from com.qode.qrew.v1.identity.core.config import settings
 
+QUEUE_NAME = "qrew:jobs:identity"
+
+
+# registers the job specs so a process that only enqueues still knows them
+def _ensure_registered() -> None:
+    import com.qode.qrew.v1.identity.worker.jobs.notification_deliverer  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    import com.qode.qrew.v1.identity.worker.jobs.storage_retainer  # noqa: F401  # pyright: ignore[reportUnusedImport]
+
 
 # enqueues a job with its trace context attached
 async def enqueue(
@@ -16,10 +24,11 @@ async def enqueue(
     *,
     defer_seconds: int | None = None,
 ) -> Job | None:
+    _ensure_registered()
     spec = get_spec(job_name)
     pool = await get_pool(redis_settings_from_url(settings.redis_url))
     body = dict(payload or {})
     carrier = inject_current_context()
     if carrier and CARRIER_KEY not in body:
         body[CARRIER_KEY] = carrier
-    return await pool.enqueue_job(spec.name, body, _defer_by=defer_seconds)
+    return await pool.enqueue_job(spec.name, body, _defer_by=defer_seconds, _queue_name=QUEUE_NAME)

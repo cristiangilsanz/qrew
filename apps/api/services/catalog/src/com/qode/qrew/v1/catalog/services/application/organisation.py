@@ -51,6 +51,10 @@ class OrganisationService:
     def list_for_user_query(self, user_id: uuid.UUID) -> Select[tuple[Organisation]]:
         return self._orgs.list_for_user_query(user_id)
 
+    # builds the query that lists every organisation for a platform admin
+    def list_all_query(self) -> Select[tuple[Organisation]]:
+        return self._orgs.list_all_query()
+
     # reads an organisation by its identifier
     async def get_by_id(self, organisation_id: uuid.UUID) -> Organisation | None:
         return await self._orgs.get_by_id(organisation_id)
@@ -74,10 +78,10 @@ class OrganisationService:
         description: str | None,
     ) -> Organisation:
         if not _SLUG_PATTERN.fullmatch(slug):
-            raise OrganisationError("Invalid slug", field="slug")
+            raise OrganisationError("Slug rejected.", field="slug")
         existing = await self._orgs.get_by_slug(slug)
         if existing is not None:
-            raise OrganisationError("Slug already taken", field="slug")
+            raise OrganisationError("Slug already taken.", field="slug")
         org = Organisation(slug=slug, name=name, description=description)
         org = await self._orgs.insert(org)
         await self._members.insert(
@@ -102,16 +106,16 @@ class OrganisationService:
         role: OrganisationRole,
     ) -> OrganisationMember:
         if role == OrganisationRole.owner:
-            raise OrganisationError("Owners are promoted, not invited", field="role")
+            raise OrganisationError("Owner not invitable.", field="role")
         try:
             invitee_id = await self._resolve_user(invitee_email)
         except IdentityUnavailableError as exc:
-            raise OrganisationError("The directory is unavailable", field=None) from exc
+            raise OrganisationError("Directory unavailable.", field=None) from exc
         if invitee_id is None:
-            raise OrganisationError("No user with this email", field="email")
+            raise OrganisationError("User not found.", field="email")
         existing = await self._members.get(organisation_id, invitee_id)
         if existing is not None:
-            raise OrganisationError("User is already a member of this organisation", field="email")
+            raise OrganisationError("User already a member.", field="email")
         member = await self._members.insert(
             organisation_id=organisation_id, user_id=invitee_id, role=role
         )
@@ -134,12 +138,10 @@ class OrganisationService:
         role: OrganisationRole,
     ) -> OrganisationMember:
         if role == OrganisationRole.owner:
-            raise OrganisationError("Owners are promoted, not added", field="role")
+            raise OrganisationError("Owner not addable.", field="role")
         existing = await self._members.get(organisation_id, user_id)
         if existing is not None:
-            raise OrganisationError(
-                "User is already a member of this organisation", field="user_id"
-            )
+            raise OrganisationError("User already a member.", field="user_id")
         member = await self._members.insert(
             organisation_id=organisation_id, user_id=user_id, role=role
         )
@@ -162,7 +164,7 @@ class OrganisationService:
     ) -> None:
         member = await self._members.get(organisation_id, member_user_id)
         if member is None:
-            raise OrganisationError("User is not a member of this organisation", field="user_id")
+            raise OrganisationError("User not a member.", field="user_id")
         if member.role == OrganisationRole.owner:
             owners = await self._members.count_owners(organisation_id)
             if owners <= 1:
@@ -187,7 +189,7 @@ class OrganisationService:
     ) -> None:
         deleted = await self._orgs.soft_delete(organisation_id)
         if not deleted:
-            raise OrganisationError("Organisation not found")
+            raise OrganisationError("Organisation not found.")
         await self._audit_safe(
             "organisation_deleted",
             actor_id=actor_id,

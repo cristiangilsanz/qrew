@@ -50,6 +50,25 @@ def access_public_keys() -> list[str]:
     return keys
 
 
+# returns the public keys that verify the tokens issued during account setup
+@functools.cache
+def setup_public_keys() -> list[str]:
+    keys: list[str] = []
+    if settings.setup_jwt_private_key:
+        keys.append(_load_public_pem(settings.setup_jwt_private_key))
+    for entry in settings.setup_jwt_previous_public_keys.split(","):
+        pem = entry.strip()
+        if pem:
+            keys.append(pem)
+    return keys
+
+
+# returns every public key that can verify a token belonging to a user
+@functools.cache
+def user_public_keys() -> list[str]:
+    return access_public_keys() + setup_public_keys()
+
+
 # returns the public keys that verify scanner tokens
 @functools.cache
 def scanner_public_keys() -> list[str]:
@@ -72,8 +91,10 @@ def _extract_token(websocket: WebSocket) -> tuple[str, str | None] | None:
 
 
 # verifies a token against whichever of the given keys matches
-def try_verify(token: str, public_keys: list[str]) -> dict[str, object] | None:
-    audience = settings.jwt_audience or None
+def try_verify(
+    token: str, public_keys: list[str], *, audience_override: str | None = None
+) -> dict[str, object] | None:
+    audience = audience_override or settings.jwt_audience or None
     issuer = settings.jwt_issuer or None
     for public_pem in public_keys:
         try:
@@ -104,7 +125,9 @@ def authenticate(websocket: WebSocket) -> WebSocketIdentity:
 
     scanner_keys = scanner_public_keys()
     if scanner_keys:
-        claims = try_verify(token, scanner_keys)
+        claims = try_verify(
+            token, scanner_keys, audience_override=settings.scanner_jwt_audience or None
+        )
         if claims is not None and claims.get("type") == "scanner":
             return WebSocketIdentity(claims=claims, accepted_subprotocol=protocol_value)
 

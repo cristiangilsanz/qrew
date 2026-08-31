@@ -2,7 +2,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, ChevronDown, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
+import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { type EventFilters, eventsApi } from '../api'
@@ -13,6 +15,7 @@ interface Props {
 
 // renders the event filters bar component
 export function EventFiltersBar({ onFiltersChange }: Props) {
+  const { t } = useTranslation()
   const [q, setQ] = useState('')
   const [appliedQ, setAppliedQ] = useState('')
   const [selectedCities, setSelectedCities] = useState<string[]>([])
@@ -72,15 +75,15 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+        <Search className={SEARCH_ICON_CLASS} />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') commitSearch()
           }}
-          placeholder="Search events…"
-          className="border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-primary w-full rounded-xl border py-2.5 pr-9 pl-9 text-sm focus:ring-2 focus:outline-none"
+          placeholder={t('events.searchPlaceholder')}
+          className={SEARCH_INPUT_CLASS}
         />
         {q && (
           <button
@@ -112,7 +115,7 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
             >
               <span className="truncate">
                 {selectedCities.length === 0
-                  ? 'City'
+                  ? t('events.cityPlaceholder')
                   : selectedCities.length === 1
                     ? selectedCities[0]
                     : `${selectedCities.length} cities`}
@@ -181,11 +184,17 @@ export function EventFiltersBar({ onFiltersChange }: Props) {
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            className={`border-input bg-background text-foreground focus:ring-primary rounded-xl border py-2.5 pr-3 pl-9 text-sm focus:ring-2 focus:outline-none ${
-              fromDate ? 'border-primary' : ''
+            aria-label={t('events.datePlaceholder')}
+            className={`border-input bg-background focus:ring-primary rounded-xl border py-2.5 pr-3 pl-9 text-sm focus:ring-2 focus:outline-none ${
+              fromDate ? 'border-primary text-foreground' : 'text-transparent'
             }`}
             style={{ colorScheme: 'dark' }}
           />
+          {!fromDate && (
+            <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-9 -translate-y-1/2 text-sm">
+              {t('events.datePlaceholder')}
+            </span>
+          )}
         </div>
       </div>
 

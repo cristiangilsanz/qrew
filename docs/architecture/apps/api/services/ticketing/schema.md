@@ -14,7 +14,8 @@ erDiagram
         timestamp issued_at
         timestamp expired_at
         string holder_name
-        string holder_dni
+        string holder_document_type
+        bytes holder_dni_ciphertext
         timestamp created_at
         timestamp updated_at
     }
@@ -61,7 +62,8 @@ erDiagram
 | issued_at | TIMESTAMPTZ | NULL | | |
 | expired_at | TIMESTAMPTZ | NULL | | |
 | holder_name | VARCHAR(255) | NULL | | |
-| holder_dni | VARCHAR(50) | NULL | | |
+| holder_dni_ciphertext | BYTEA | NULL | | Fernet ciphertext, read through the `holder_dni` property |
+| holder_document_type | VARCHAR(16) | NULL | | dni / nie / other |
 | created_at | TIMESTAMPTZ | NOT NULL | now() | |
 | updated_at | TIMESTAMPTZ | NOT NULL | now() | |
 

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import { authApi } from '@/features/auth/api'
 import { DeleteAccountDialog } from '@/features/profile/components/DeleteAccountDialog'
+import { useAccountNeedsAttention } from '@/features/profile/hooks/useAccountNeedsAttention'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import i18n from '@/i18n'
 import { cn } from '@/lib/utils'
@@ -24,6 +25,7 @@ const SUPPORTED_LANGS = [
 function ProfilePage() {
   const { t } = useTranslation()
   useProfile()
+  const accountNeedsAttention = useAccountNeedsAttention()
   // implements clear session
   const clearSession = useAuthStore((s) => s.clearSession)
   // implements refresh token
@@ -48,7 +50,7 @@ function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen space-y-6 px-4 pt-5 pb-28">
+    <div className="space-y-6 px-4 pt-5 pb-28">
       <h1 className="text-2xl font-bold">{t('profile.myProfile')}</h1>
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
@@ -60,6 +62,14 @@ function ProfilePage() {
             <User className="text-muted-foreground h-4 w-4" />
           </div>
           <span className="flex-1 text-sm font-medium">{t('profile.myAccount')}</span>
+          {accountNeedsAttention && (
+            <span
+              aria-label={t('profile.needsAttention')}
+              className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-yellow-500 px-1 text-[9px] leading-none font-bold text-black"
+            >
+              1
+            </span>
+          )}
           <ChevronRight className="text-muted-foreground h-4 w-4" />
         </Link>
 

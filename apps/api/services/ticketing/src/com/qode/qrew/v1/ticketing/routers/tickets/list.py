@@ -33,6 +33,7 @@ def _to_response(ticket: object) -> TicketResponse:
         issued_at=t.issued_at,
         expired_at=t.expired_at,
         holder_name=t.holder_name,
+        holder_document_type=t.holder_document_type,
         holder_dni=t.holder_dni,
         created_at=t.created_at,
         qr_eligible=state_val in _QR_ELIGIBLE_STATES,
@@ -76,6 +77,6 @@ async def get_ticket(
     ticket = await TicketRepository(db).get_by_id(ticket_id)
     if ticket is None or ticket.owner_user_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail={"message": "Ticket not found"}
+            status_code=status.HTTP_404_NOT_FOUND, detail={"message": "Ticket not found."}
         )
     return _to_response(ticket)

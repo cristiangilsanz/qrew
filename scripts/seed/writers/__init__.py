@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
-from . import catalog, entry, identity, payments, sales, ticketing
+from . import catalog, entry, identity, payments, queues, sales, ticketing
 
 WRITERS = (identity, catalog, sales, ticketing, payments, entry)
 
-__all__ = ["WRITERS", "catalog", "entry", "identity", "payments", "sales", "ticketing"]
+__all__ = [
+    "WRITERS",
+    "catalog",
+    "entry",
+    "identity",
+    "payments",
+    "queues",
+    "sales",
+    "ticketing",
+]

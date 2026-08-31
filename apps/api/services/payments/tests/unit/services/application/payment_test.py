@@ -355,14 +355,14 @@ class TestPaymentServiceHandleWebhook:
     # verifies that raises when signature missing
     async def test_raises_when_signature_missing(self) -> None:
         svc, _, _ = _make_svc()
-        with pytest.raises(WebhookError, match="Stripe-Signature"):
+        with pytest.raises(WebhookError, match="signature missing"):
             await svc.handle_webhook(b"payload", None)
 
     # verifies that raises when signature invalid
     async def test_raises_when_signature_invalid(self) -> None:
         svc, _, stripe = _make_svc()
         stripe.verify_webhook = AsyncMock(side_effect=ValueError("bad sig"))
-        with pytest.raises(WebhookError, match="Invalid Stripe signature"):
+        with pytest.raises(WebhookError, match="Stripe signature rejected."):
             await svc.handle_webhook(b"payload", "bad_sig")
 
     # verifies that returns duplicate for already seen event
@@ -389,5 +389,5 @@ class TestPaymentServiceHandleWebhook:
     async def test_raises_when_event_id_missing(self) -> None:
         svc, _, stripe = _make_svc()
         stripe.verify_webhook = AsyncMock(return_value={"type": "x"})
-        with pytest.raises(WebhookError, match="missing id"):
+        with pytest.raises(WebhookError, match="payload rejected"):
             await svc.handle_webhook(b"payload", "sig_abc")

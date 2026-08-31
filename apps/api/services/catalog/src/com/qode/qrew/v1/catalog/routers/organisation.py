@@ -113,7 +113,7 @@ async def create_organisation(
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Admin access required", "field": None},
+            detail={"message": "Admin access required.", "field": None},
         )
     try:
         org = await svc.create_organisation(
@@ -127,12 +127,12 @@ async def create_organisation(
     return _to_response(org)
 
 
-# lists the organisations the caller belongs to
+# lists the caller's organisations or every one of them for a platform admin
 @router.get(
     "",
     response_model=Page[OrganisationResponse],
     status_code=status.HTTP_200_OK,
-    summary="List organisations the caller belongs to",
+    summary="List organisations the caller belongs to or all of them for an admin",
 )
 @limiter.limit("60/minute")  # type: ignore[misc]
 async def list_my_organisations(
@@ -145,7 +145,9 @@ async def list_my_organisations(
 ) -> Page[OrganisationResponse]:
     del request
     page_limit = clamp_limit(limit, default=20)
-    stmt = svc.list_for_user_query(current_user.id)
+    stmt = (
+        svc.list_all_query() if current_user.is_admin else svc.list_for_user_query(current_user.id)
+    )
     rows, next_cursor = await cursor_paginate(
         db,
         stmt,
@@ -202,7 +204,7 @@ async def get_public_organisation(
     if org is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Organisation not found", "field": "organisation_id"},
+            detail={"message": "Organisation not found.", "field": "organisation_id"},
         )
     return OrganisationPublicResponse(
         id=org.id, slug=org.slug, name=org.name, description=org.description
@@ -435,6 +437,6 @@ async def get_org_event(
     if event is None or event.organisation_id != organisation_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Event not found", "field": "event_id"},
+            detail={"message": "Event not found.", "field": "event_id"},
         )
     return _event_response(event)

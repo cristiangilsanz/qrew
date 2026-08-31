@@ -4,7 +4,8 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { type ApiErrorDetail, extractErrorMessage } from '@/features/auth/api'
+import type { ApiErrorDetail } from '@/features/auth/api'
+import { toastErrorMessage } from '@/lib/errors'
 
 import { onboardingApi } from '../api'
 
@@ -22,10 +23,7 @@ export function useVerifyPhone(onSuccess?: () => void) {
     },
     // handles on error
     onError: (error: AxiosError<{ detail?: ApiErrorDetail }>) => {
-      const message = extractErrorMessage(
-        error.response?.data?.detail,
-        t('onboarding.errors.verifyPhoneFailed'),
-      )
+      const message = toastErrorMessage(error, t('onboarding.errors.verifyPhoneFailed'))
       toast.error(message)
     },
   })

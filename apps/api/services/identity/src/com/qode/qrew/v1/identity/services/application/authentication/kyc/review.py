@@ -41,7 +41,7 @@ class KycReviewService:
     ) -> User:
         user = await self._repo.get_by_id(user_id)
         if user is None:
-            raise KycReviewError("User not found", field="user_id")
+            raise KycReviewError("User not found.", field="user_id")
 
         if user.kyc_status != KycStatus.pending:
             raise KycReviewError(

@@ -42,7 +42,7 @@ class PhoneChangeService:
         self, user: User, new_phone_number: str, current_password: str
     ) -> None:
         if not verify_password(current_password, user.hashed_password):
-            raise PhoneChangeError("Current password is incorrect", field="current_password")
+            raise PhoneChangeError("Current password rejected.", field="current_password")
 
         if new_phone_number == user.phone_number:
             raise PhoneChangeError(
@@ -51,7 +51,7 @@ class PhoneChangeService:
             )
 
         if await self._user_repo.exists_by_phone(new_phone_number):
-            raise PhoneChangeError("Phone number already in use", field="new_phone_number")
+            raise PhoneChangeError("Phone number already taken.", field="new_phone_number")
 
         otp = generate_otp()
         user.pending_phone_number = new_phone_number
@@ -80,13 +80,13 @@ class PhoneChangeService:
             user.pending_phone_number != new_phone_number
             or user.pending_phone_otp != pii_crypto.hash_lookup(otp)
         ):
-            raise PhoneChangeError("Invalid or expired verification code", field="otp")
+            raise PhoneChangeError("Verification code expired.", field="otp")
 
         if (
             user.pending_phone_otp_expires_at is None
             or user.pending_phone_otp_expires_at < datetime.now(UTC)
         ):
-            raise PhoneChangeError("Invalid or expired verification code", field="otp")
+            raise PhoneChangeError("Verification code expired.", field="otp")
 
         if await self._user_repo.exists_by_phone(new_phone_number):
             raise PhoneChangeError(

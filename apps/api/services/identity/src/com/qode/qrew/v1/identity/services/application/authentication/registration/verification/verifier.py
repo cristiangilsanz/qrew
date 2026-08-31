@@ -28,14 +28,14 @@ class EmailVerificationService:
 
         if user is None:
             await logger.awarning("email_verification_failed", reason="invalid_token")
-            raise VerificationError("Invalid or expired verification link", field="token")
+            raise VerificationError("Verification link expired.", field="token")
         if user.email_verified:
             await logger.awarning(
                 "email_verification_failed",
                 reason="already_verified",
                 user_id=str(user.id),
             )
-            raise VerificationError("This email address is already verified", field="token")
+            raise VerificationError("Email already verified.", field="token")
         if (
             user.email_verification_token_expires_at is None
             or user.email_verification_token_expires_at < datetime.now(UTC)
@@ -80,14 +80,14 @@ class PhoneVerificationService:
 
         if user is None or user.phone_number_otp != pii_crypto.hash_lookup(otp):
             await logger.awarning("phone_number_verification_failed", reason="invalid_otp")
-            raise VerificationError("Invalid or expired verification OTP", field="otp")
+            raise VerificationError("Verification code expired.", field="otp")
         if user.phone_number_verified:
             await logger.awarning(
                 "phone_number_verification_failed",
                 reason="already_verified",
                 user_id=str(user.id),
             )
-            raise VerificationError("This phone number is already verified", field="otp")
+            raise VerificationError("Phone number already verified.", field="otp")
         if (
             user.phone_number_otp_expires_at is None
             or user.phone_number_otp_expires_at < datetime.now(UTC)

@@ -16,6 +16,7 @@ TABLES = (
     "sales.market_listings",
     "sales.market_queue_entries",
     "sales.reservation_holders",
+    "sales.reservation_items",
     "sales.reservations",
     "sales.event_context",
     "sales.ticket_type_inventory",

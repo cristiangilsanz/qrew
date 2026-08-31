@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import homeHero from '@/assets/images/backgrounds/home-hero.webp'
+import { PageError } from '@/components/ui/page-error'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { EventCard } from '@/features/events/components/EventCard'
 import { useEvents } from '@/features/events/hooks/useEvents'
@@ -26,7 +27,12 @@ function HomePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: profile } = useProfile()
-  const { data: eventsData, isLoading: eventsLoading } = useEvents({})
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    isError: eventsError,
+    refetch: refetchEvents,
+  } = useEvents({})
 
   const rawFirst = profile?.full_name?.split(' ')[0] ?? ''
   const firstName = rawFirst ? rawFirst[0].toUpperCase() + rawFirst.slice(1) : ''
@@ -38,6 +44,8 @@ function HomePage() {
       return new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
     })
     .slice(0, 3)
+
+  if (eventsError) return <PageError onRetry={() => void refetchEvents()} />
 
   return (
     <div className="space-y-4 pb-4">
@@ -89,7 +97,7 @@ function HomePage() {
           </div>
         )}
 
-        {!eventsLoading && upcomingEvents.length === 0 && (
+        {!eventsLoading && !eventsError && upcomingEvents.length === 0 && (
           <p className="text-muted-foreground py-4 text-center text-sm">{t('home.noEvents')}</p>
         )}
 

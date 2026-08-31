@@ -1,23 +1,28 @@
 // implements reservation id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import axios from 'axios'
-import { CheckCircle2, Clock, CreditCard, Save } from 'lucide-react'
-import { lazy, Suspense, useState } from 'react'
+import { CheckCircle2, ChevronDown, Clock, CreditCard, Loader2, Save } from 'lucide-react'
+import { Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { NotFound } from '@/components/ui/not-found'
+import { PageError } from '@/components/ui/page-error'
 import { ReservationSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { ticketsApi } from '@/features/tickets/api'
 import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useInitiatePayment } from '@/features/tickets/hooks/useInitiatePayment'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
+import { useTickets } from '@/features/tickets/hooks/useTickets'
+import { DOCUMENT_TYPES, type DocumentType, isValidDocument } from '@/lib/documents'
+import { isNotFound } from '@/lib/errors'
+import { fieldErrorMessage } from '@/lib/errors'
+import { lazyWithReload } from '@/lib/lazyWithReload'
 
 // renders the stripe checkout component
-const StripeCheckout = lazy(() =>
+const StripeCheckout = lazyWithReload(() =>
   import('@/features/tickets/components/StripeCheckout').then((m) => ({
     default: m.StripeCheckout,
   })),
@@ -47,15 +52,21 @@ function ReservationPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [holders, setHolders] = useState<Array<{ holder_name: string; holder_dni: string }>>([])
+  const [holders, setHolders] = useState<
+    Array<{ holder_name: string; holder_document_type: DocumentType; holder_dni: string }>
+  >([])
   const [holdersSaved, setHoldersSaved] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   const {
     data: reservation,
     isLoading: reservationLoading,
     isError,
+    error,
+    refetch,
   } = useReservation(reservationId, !!clientSecret)
   const { data: event, isLoading: eventLoading } = useEvent(reservation?.event_id ?? '')
+  const { data: myTickets } = useTickets(confirming)
 
   // implements initiate payment
   const initiatePayment = useInitiatePayment((payment) => {
@@ -70,6 +81,7 @@ function ReservationPage() {
         holders.map((h, i) => ({
           position: i + 1,
           holder_name: h.holder_name,
+          holder_document_type: h.holder_document_type,
           holder_dni: h.holder_dni,
         })),
       ),
@@ -77,14 +89,7 @@ function ReservationPage() {
     onSuccess: () => setHoldersSaved(true),
     // handles on error
     onError: (err) => {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
-      const message =
-        typeof detail === 'object' && detail?.message
-          ? detail.message
-          : typeof detail === 'string'
-            ? detail
-            : 'Failed to save holder info'
-      toast.error(message)
+      toast.error(fieldErrorMessage(err) ?? t('tickets.reservation.holdersFailed'))
     },
   })
 
@@ -92,16 +97,39 @@ function ReservationPage() {
 
   // handles handle pay success
   const handlePaySuccess = () => {
-    toast.success(t('tickets.payment.success'))
-    void queryClient.invalidateQueries({ queryKey: ['tickets'] })
-    void navigate({ to: '/tickets' })
+    setConfirming(true)
   }
+
+  const ticketsIssued =
+    myTickets?.some((tk) => tk.reservation_id === reservationId && tk.state !== 'reserved') ?? false
+
+  useEffect(() => {
+    if (!confirming) return
+
+    // closes the wait and hands the user their tickets
+    const finish = () => {
+      toast.success(t('tickets.payment.success'))
+      void queryClient.invalidateQueries({ queryKey: ['tickets'] })
+      void navigate({ to: '/tickets' })
+    }
+
+    if (ticketsIssued) {
+      finish()
+      return
+    }
+    const timer = setTimeout(finish, 20_000)
+    return () => clearTimeout(timer)
+  }, [confirming, ticketsIssued, navigate, queryClient, t])
 
   const isLoading = reservationLoading || (!!reservation && eventLoading)
   if (isLoading) return <ReservationSkeleton />
 
+  if (isError && !isNotFound(error)) {
+    return <PageError onRetry={() => void refetch()} />
+  }
+
   if (isError || !reservation) {
-    return <NotFound message={t('tickets.reservation.notFound')} />
+    return <NotFound message={t('common.resourceGone')} />
   }
 
   const quantity = reservation.quantity
@@ -110,42 +138,39 @@ function ReservationPage() {
       ? holders
       : Array.from(
           { length: quantity },
-          (_, i) => holders[i] ?? { holder_name: '', holder_dni: '' },
+          (_, i) => holders[i] ?? { holder_name: '', holder_document_type: 'dni', holder_dni: '' },
         )
 
   // implements update holder
-  const updateHolder = (index: number, field: 'holder_name' | 'holder_dni', value: string) => {
+  const updateHolder = (
+    index: number,
+    field: 'holder_name' | 'holder_document_type' | 'holder_dni',
+    value: string,
+  ) => {
     // implements next
     const next = initializedHolders.map((h, i) => (i === index ? { ...h, [field]: value } : h))
     setHolders(next)
     setHoldersSaved(false)
   }
 
-  // implements validate dni
-  const validateDni = (dni: string): boolean => {
-    const v = dni.trim().toUpperCase()
-    const letters = 'TRWAGMYFPDXBNJZSQVHLCKE'
-    const dniRe = /^\d{8}[A-Z]$/
-    const nieRe = /^[XYZ]\d{7}[A-Z]$/
-    if (dniRe.test(v)) return letters[parseInt(v.slice(0, 8)) % 23] === v[8]
-    if (nieRe.test(v)) {
-      const prefix: Record<string, string> = { X: '0', Y: '1', Z: '2' }
-      const digits = prefix[v[0]] + v.slice(1, 8)
-      return letters[parseInt(digits) % 23] === v[8]
-    }
-    return false
-  }
-
   // implements holders complete
   const holdersComplete = initializedHolders.every(
-    (h) => h.holder_name.trim().length > 0 && validateDni(h.holder_dni),
+    (h) => h.holder_name.trim().length > 0 && isValidDocument(h.holder_dni, h.holder_document_type),
   )
 
-  // implements ticket type
-  const ticketType = event?.ticket_types.find((tt) => tt.id === reservation.ticket_type_id)
-  const unitPrice = ticketType?.price_cents ?? 0
-  const currency = ticketType?.currency ?? 'EUR'
-  const totalPrice = unitPrice * quantity
+  // implements order lines
+  const lines = reservation.items.map((item) => {
+    const tier = event?.ticket_types.find((tt) => tt.id === item.ticket_type_id)
+    return {
+      id: item.ticket_type_id,
+      name: tier?.name ?? '—',
+      quantity: item.quantity,
+      subtotal: (tier?.price_cents ?? 0) * item.quantity,
+      currency: tier?.currency ?? 'EUR',
+    }
+  })
+  const currency = lines[0]?.currency ?? 'EUR'
+  const totalPrice = lines.reduce((sum, line) => sum + line.subtotal, 0)
 
   const isPaid = reservation.status === 'paid'
   const isExpired = reservation.status === 'expired'
@@ -155,8 +180,8 @@ function ReservationPage() {
     !isPaid && !isExpired && !countdownExpired && !isCancelled && !clientSecret && holdersSaved
 
   return (
-    <div className="mx-auto min-h-screen max-w-[430px] px-4 pt-5 pb-28">
-      <BackButton onClick={() => void navigate({ to: '/tickets' })} className="mb-6" />
+    <div className="mx-auto max-w-[430px] px-4 pt-5 pb-28">
+      <BackButton to="/tickets" className="mb-6" />
 
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-bold">Complete your order</h1>
@@ -184,25 +209,24 @@ function ReservationPage() {
           <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
             {event?.name ?? '—'}
           </p>
-          <h2 className="text-lg leading-tight font-bold">{ticketType?.name ?? '—'}</h2>
-          {ticketType?.description && (
-            <p className="text-muted-foreground mt-1 text-sm">{ticketType.description}</p>
-          )}
+          <h2 className="text-lg leading-tight font-bold">{t('tickets.reservation.title')}</h2>
         </div>
 
         <div className="border-t border-white/10" />
 
         <div className="space-y-2.5">
+          {lines.map((line) => (
+            <div key={line.id} className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {line.name} <span className="text-white/40">x{line.quantity}</span>
+              </span>
+              <span className="font-semibold">{formatPrice(line.subtotal, line.currency)}</span>
+            </div>
+          ))}
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Quantity</span>
+            <span className="text-muted-foreground">{t('tickets.checkout.quantity')}</span>
             <span className="font-semibold">{quantity}</span>
           </div>
-          {unitPrice > 0 && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Unit price</span>
-              <span className="font-semibold">{formatPrice(unitPrice, currency)}</span>
-            </div>
-          )}
           <div className="flex items-center justify-between">
             <span className="font-semibold">Total</span>
             <span className="text-primary text-lg font-bold">
@@ -239,20 +263,42 @@ function ReservationPage() {
                 className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
               />
               <div>
-                <input
-                  type="text"
-                  placeholder="DNI / NIE"
-                  value={holder.holder_dni}
-                  onChange={(e) => updateHolder(i, 'holder_dni', e.target.value)}
-                  className={`placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none ${
-                    holder.holder_dni && !validateDni(holder.holder_dni)
-                      ? 'border-red-500/60 focus:border-red-500/80'
-                      : 'border-white/10 focus:border-white/30'
-                  }`}
-                />
-                {holder.holder_dni && !validateDni(holder.holder_dni) && (
-                  <p className="mt-1 px-1 text-xs text-red-400">Invalid DNI / NIE</p>
-                )}
+                <div className="flex gap-2">
+                  <div className="relative shrink-0">
+                    <select
+                      value={holder.holder_document_type}
+                      onChange={(e) => updateHolder(i, 'holder_document_type', e.target.value)}
+                      className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pr-9 pl-3 text-sm text-white focus:border-white/30 focus:outline-none"
+                    >
+                      {DOCUMENT_TYPES.map((type) => (
+                        <option key={type} value={type} className="bg-[hsl(0,0%,10%)]">
+                          {t(`tickets.holders.documentType.${type}`)}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={t(
+                      `tickets.holders.documentPlaceholder.${holder.holder_document_type}`,
+                    )}
+                    value={holder.holder_dni}
+                    onChange={(e) => updateHolder(i, 'holder_dni', e.target.value)}
+                    className={`placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none ${
+                      holder.holder_dni &&
+                      !isValidDocument(holder.holder_dni, holder.holder_document_type)
+                        ? 'border-red-500/60 focus:border-red-500/80'
+                        : 'border-white/10 focus:border-white/30'
+                    }`}
+                  />
+                </div>
+                {holder.holder_dni &&
+                  !isValidDocument(holder.holder_dni, holder.holder_document_type) && (
+                    <p className="mt-1 px-1 text-xs text-red-400">
+                      {t(`tickets.holders.invalid.${holder.holder_document_type}`)}
+                    </p>
+                  )}
               </div>
             </div>
           ))}
@@ -270,11 +316,18 @@ function ReservationPage() {
         </div>
       )}
 
-      {clientSecret && (
+      {clientSecret && !confirming && (
         <div className="mt-6">
           <Suspense fallback={null}>
             <StripeCheckout clientSecret={clientSecret} onSuccess={handlePaySuccess} />
           </Suspense>
+        </div>
+      )}
+
+      {confirming && (
+        <div className="mt-6 flex flex-col items-center gap-3 py-10 text-center">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">{t('tickets.payment.confirming')}</p>
         </div>
       )}
 
@@ -295,8 +348,8 @@ function ReservationPage() {
       )}
 
       {canPay && (
-        <div className="fixed inset-x-0 bottom-24 z-40">
-          <div className="mx-auto flex max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8 pb-5">
+        <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
+          <div className="mx-auto flex w-full max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8">
             <button
               onClick={() => initiatePayment.mutate(reservationId)}
               disabled={initiatePayment.isPending}

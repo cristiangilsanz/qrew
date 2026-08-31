@@ -43,12 +43,21 @@ def verify_internal_key(x_internal_key: str = Header(alias="X-Internal-Key")) ->
 
 _FORBIDDEN = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
-    detail={"message": "Not a member of this organisation", "field": None},
+    detail={"message": "Member access required.", "field": None},
 )
 _NOT_FOUND = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
-    detail={"message": "Organisation not found", "field": "organisation_id"},
+    detail={"message": "Organisation not found.", "field": "organisation_id"},
 )
+
+
+# grants a platform admin the rights of an organisation owner
+def _admin_membership(organisation_id: uuid.UUID, user_id: uuid.UUID) -> OrganisationMember:
+    return OrganisationMember(
+        organisation_id=organisation_id,
+        user_id=user_id,
+        role=OrganisationRole.owner,
+    )
 
 
 # builds a dependency that requires membership of the path's organisation
@@ -64,6 +73,8 @@ def get_org_member(
         org = await OrganisationRepository(db).get_by_id(organisation_id)
         if org is None:
             raise _NOT_FOUND
+        if current_user.is_admin:
+            return _admin_membership(organisation_id, current_user.id)
         member = await OrganisationMemberRepository(db).get(organisation_id, current_user.id)
         if member is None:
             raise _FORBIDDEN
@@ -76,11 +87,11 @@ def get_org_member(
 
 _EVENT_NOT_FOUND = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
-    detail={"message": "Event not found", "field": "event_id"},
+    detail={"message": "Event not found.", "field": "event_id"},
 )
 _NOT_EVENT_MANAGER = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
-    detail={"message": "Not a manager of this organisation", "field": None},
+    detail={"message": "Manager access required.", "field": None},
 )
 
 
@@ -97,6 +108,8 @@ def get_event_member(
         event = await EventRepository(db).get_by_id(event_id)
         if event is None:
             raise _EVENT_NOT_FOUND
+        if current_user.is_admin:
+            return _admin_membership(event.organisation_id, current_user.id)
         member = await OrganisationMemberRepository(db).get(event.organisation_id, current_user.id)
         if member is None or role_rank(member.role) < role_rank(minimum_role):
             raise _NOT_EVENT_MANAGER

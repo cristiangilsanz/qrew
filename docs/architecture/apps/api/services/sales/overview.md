@@ -20,22 +20,26 @@ Sales is the reservation and queue management service in the platform. It create
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| `POST` | `/reservations` | Create a reservation for one or more tickets | JWT |
-| `GET` | `/reservations/{id}` | Get reservation status and details | JWT |
-| `POST` | `/billing/webhook` | Receive a Stripe billing webhook for settlement | Stripe signature |
-| `POST` | `/queue/join` | Join the waitlist queue for a sold-out event | JWT |
-| `GET` | `/queue/{id}` | Get queue position and status | JWT |
-| `POST` | `/queue/{id}/admit` | Admit a queued user and open a reservation window | Internal |
-| `POST` | `/events/{id}/queue/join` | Join the market resale queue for an event | JWT |
-| `DELETE` | `/events/{id}/queue` | Leave the market resale queue | JWT |
-| `GET` | `/events/{id}/queue/status` | Check resale queue position and pending assignment | JWT |
-| `POST` | `/tickets/{id}/listings` | List a ticket for resale | JWT |
-| `GET` | `/tickets/{id}/listings/active` | Get the active listing for a ticket | JWT |
-| `GET` | `/market/queue` | List all active resale queue entries for the caller | JWT |
-| `GET` | `/market/assignment` | Get the caller's pending market assignment | JWT |
-| `GET` | `/market/assignments/{id}` | Get a specific market assignment | JWT |
-| `PUT` | `/market/assignments/{id}/holder` | Set holder name and DNI for the incoming ticket | JWT |
-| `POST` | `/market/assignments/{id}/decline` | Decline a market assignment | JWT |
+| `POST` | `/events/{event_id}/queue/join` | Join the admission queue for an event | JWT |
+| `GET` | `/events/{event_id}/queue/position` | Get the caller's place in the admission queue | JWT |
+| `POST` | `/events/{event_id}/queue/redeem` | Redeem an admitted turn for a reservation window | JWT |
+| `POST` | `/events/{event_id}/reserve` | Create a reservation covering one or more ticket types of the event | JWT |
+| `GET` | `/reservations/{reservation_id}` | Get reservation status and the tiers it covers | JWT |
+| `PUT` | `/reservations/{reservation_id}/holders` | Set the holder of each reserved seat | JWT |
+| `POST` | `/reservations/{reservation_id}/cancel` | Cancel the reservation | JWT |
+| `POST` | `/billing/reservations/{reservation_id}/charge` | Charge the reservation | JWT |
+| `POST` | `/tickets/{ticket_id}/market/list` | List a ticket for resale | JWT |
+| `GET` | `/tickets/{ticket_id}/market/listing` | Get the active listing for a ticket | JWT |
+| `POST` | `/events/{event_id}/market/queue/join` | Join the market resale queue for an event | JWT |
+| `GET` | `/events/{event_id}/market/queue/status` | Check resale queue position and pending assignment | JWT |
+| `DELETE` | `/events/{event_id}/market/queue/leave` | Leave the market resale queue | JWT |
+| `GET` | `/market/queues` | List every resale queue the caller waits in | JWT |
+| `GET` | `/market/assignments` | List the caller's recent market assignments | JWT |
+| `GET` | `/market/assignments/pending` | Get the caller's assignment still awaiting payment | JWT |
+| `GET` | `/market/assignments/{assignment_id}` | Get a specific market assignment | JWT |
+| `PUT` | `/market/assignments/{assignment_id}/holders` | Set holder name and identity document for the incoming ticket | JWT |
+| `POST` | `/market/assignments/{assignment_id}/decline` | Decline a market assignment | JWT |
+| `POST` | `/billing/market-assignments/{assignment_id}/charge` | Charge the market assignment | JWT |
 
 Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../../../packages/contracts/openapi/sales/openapi.yaml)
 
@@ -73,11 +77,15 @@ Schemas: [`packages/contracts/openapi/sales/events/`](../../../../../../packages
 
 | Worker | Type | Description |
 |--------|------|-------------|
-| `reservation_expirer` | arq job | Sweeps expired reservations in batches and publishes `ReservationExpired`. |
-| `queue_admitter` | arq job | Admits queued users when capacity becomes available. |
+| `reservation_expirer` | arq job, every minute | Sweeps expired reservations in batches and publishes `ReservationExpired`. |
+| `queue_admitter` | arq job, every minute | Admits queued users when capacity becomes available. |
+| `market_assigner` | arq job, every minute | Offers each open listing to the next buyer in the resale queue. |
+| `market_expirer` | arq job, every minute | Expires unclaimed resale offers and returns the listing to the queue. |
 | `catalog.*` | NATS subscriber | Keeps the `EventContext` and `TicketTypeInventory` projections up to date. |
 | `identity.*` | NATS subscriber | Keeps the `UserAgeContext` and `FingerprintContext` projections up to date. |
 | `payments.*` | NATS subscriber | Handles payment settlement and reservation cancellation. |
+
+The arq jobs run in the `sales-arq-worker` container, which consumes the `qrew:jobs:sales` queue. The NATS subscribers run in the separate `sales-worker` container.
 
 ## Internal Dependencies
 

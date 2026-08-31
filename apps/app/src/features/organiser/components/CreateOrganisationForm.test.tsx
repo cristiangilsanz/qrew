@@ -58,7 +58,7 @@ describe('CreateOrganisationForm', () => {
     const { toast } = await import('sonner')
     server.use(
       http.post('http://localhost:8000/api/catalog/v1/organisations', () =>
-        HttpResponse.json({ detail: 'Slug already taken' }, { status: 409 }),
+        HttpResponse.json({ detail: 'Slug already taken.' }, { status: 409 }),
       ),
     )
 
@@ -69,7 +69,7 @@ describe('CreateOrganisationForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /create organisation/i }))
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Slug already taken')
+      expect(toast.error).toHaveBeenCalledWith('Slug already taken.')
     })
   })
 })

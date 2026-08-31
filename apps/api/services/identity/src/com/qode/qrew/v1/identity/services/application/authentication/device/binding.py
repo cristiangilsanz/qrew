@@ -65,7 +65,7 @@ class DeviceBindingService:
     ) -> Device:
         raw_challenge: bytes | None = await self._redis.get(_CHALLENGE_PREFIX + str(user.id))
         if raw_challenge is None:
-            raise DeviceBindingError("Binding session expired. Please start again.", field=None)
+            raise DeviceBindingError("Binding session expired.", field=None)
         await self._redis.delete(_CHALLENGE_PREFIX + str(user.id))
 
         challenge_str = raw_challenge.decode()
@@ -73,7 +73,7 @@ class DeviceBindingService:
         try:
             public_key_bytes = base64.urlsafe_b64decode(_pad_b64(public_key_b64))
         except Exception as exc:
-            raise DeviceBindingError("Invalid public key encoding.", field="public_key") from exc
+            raise DeviceBindingError("Device key rejected.", field="public_key") from exc
 
         try:
             pub_key = load_der_public_key(public_key_bytes)
@@ -83,18 +83,18 @@ class DeviceBindingService:
             ) from exc
 
         if not isinstance(pub_key, EllipticCurvePublicKey):
-            raise DeviceBindingError("Only ECDSA P-256 keys are accepted.", field="public_key")
+            raise DeviceBindingError("Device key rejected.", field="public_key")
 
         try:
             sig_bytes = base64.urlsafe_b64decode(_pad_b64(signature_b64))
         except Exception as exc:
-            raise DeviceBindingError("Invalid signature encoding.", field="signature") from exc
+            raise DeviceBindingError("Signature rejected.", field="signature") from exc
 
         verify_ecdsa(pub_key, sig_bytes, challenge_str.encode())
 
         existing = await self._device_repo.get_by_public_key(public_key_bytes)
         if existing is not None:
-            raise DeviceBindingError("This key is already registered.", field="public_key")
+            raise DeviceBindingError("Device key already registered.", field="public_key")
 
         platform = await consume_attestation(self._redis, user.id)
         if settings.attestation_enabled and platform is None:
@@ -186,6 +186,6 @@ def verify_ecdsa(
     try:
         pub_key.verify(der_sig, data, ECDSA(SHA256()))
     except InvalidSignature as exc:
-        raise DeviceBindingError("Signature verification failed.", field="signature") from exc
+        raise DeviceBindingError("Signature rejected.", field="signature") from exc
     except Exception as exc:
-        raise DeviceBindingError("Signature verification failed.", field="signature") from exc
+        raise DeviceBindingError("Signature rejected.", field="signature") from exc

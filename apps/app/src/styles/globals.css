@@ -116,3 +116,18 @@
     display: none;
   }
 }
+
+/* the native scanner renders the camera behind the webview so the page hides itself */
+body.scanner-active {
+  visibility: hidden;
+  background: transparent !important;
+}
+
+body.scanner-active .scanner-overlay {
+  visibility: visible;
+}
+
+/* sticky page actions stay put instead of riding up with the keyboard */
+body.keyboard-open .keyboard-hide {
+  display: none;
+}

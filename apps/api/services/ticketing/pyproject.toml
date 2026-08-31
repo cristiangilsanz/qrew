@@ -32,7 +32,9 @@ dependencies = [
     "locking",
     "worker",
     "db",
+    "jobs",
     "probes",
+    "messaging",
     "contracts",
     "security",
 ]
@@ -45,13 +47,16 @@ observability = { workspace = true }
 locking = { workspace = true }
 worker = { workspace = true }
 db = { workspace = true }
+jobs = { workspace = true }
 probes = { workspace = true }
+messaging = { workspace = true }
 contracts = { workspace = true }
 security = { workspace = true }
 
 [project.scripts]
 ticketing-dev = "com.qode.qrew.v1.ticketing.__main__:main"
 ticketing-worker = "com.qode.qrew.v1.ticketing.worker.__main__:run"
+ticketing-arq-worker = "com.qode.qrew.v1.ticketing.worker.runner:main"
 
 [dependency-groups]
 dev = [
@@ -75,13 +80,13 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
+pythonpath = ["src", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
 markers = ["integration: marks tests as integration tests (require real Postgres)"]

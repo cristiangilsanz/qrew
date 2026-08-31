@@ -14,10 +14,12 @@ from locking import LockUnavailableError
 from com.qode.qrew.v1.sales.models.reservation import Reservation
 from com.qode.qrew.v1.sales.models.reservation import ReservationStatus
 from com.qode.qrew.v1.sales.models.reservation_holder import ReservationHolder
+from com.qode.qrew.v1.sales.models.reservation_item import ReservationItem
 from com.qode.qrew.v1.sales.repositories.reservation_holder import ReservationHolderRepository
 from com.qode.qrew.v1.sales.schemas.reservation import (
     HolderResponse,
     ReservationCreateRequest,
+    ReservationItemResponse,
     ReservationResponse,
     SetHoldersRequest,
 )
@@ -39,11 +41,14 @@ router = APIRouter(prefix="/reservations", tags=["reservations"])
 
 
 # converts a reservation into its response
-def _to_response(reservation: Reservation) -> ReservationResponse:
+def _to_response(reservation: Reservation, items: list[ReservationItem]) -> ReservationResponse:
     return ReservationResponse(
         id=reservation.id,
         event_id=reservation.event_id,
-        ticket_type_id=reservation.ticket_type_id,
+        items=[
+            ReservationItemResponse(ticket_type_id=i.ticket_type_id, quantity=i.quantity)
+            for i in items
+        ],
         quantity=reservation.quantity,
         status=reservation.status,
         expires_at=reservation.expires_at,
@@ -95,11 +100,10 @@ async def create_reservation(
     fingerprint = raw_fp if raw_fp and _FINGERPRINT_RE.match(raw_fp) else None
 
     try:
-        reservation = await service.reserve(
+        reservation, items = await service.reserve(
             user_id=current_user.id,
             event_id=event_id,
-            ticket_type_id=body.ticket_type_id,
-            quantity=body.quantity,
+            items=[(i.ticket_type_id, i.quantity) for i in body.items],
             ip_address=ip_address,
             fingerprint_hash=fingerprint,
             reservation_window_token=body.reservation_window_token,
@@ -107,7 +111,7 @@ async def create_reservation(
     except FraudBlockedError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "Reservation rejected for risk", "field": None},
+            detail={"message": "Reservation rejected.", "field": None},
         ) from exc
     except ReservationError as exc:
         raise _bad_request(exc) from exc
@@ -115,7 +119,7 @@ async def create_reservation(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={
-                "message": "Ticket type is being purchased by another caller",
+                "message": "Ticket type busy.",
                 "field": "ticket_type_id",
             },
         ) from exc
@@ -123,12 +127,12 @@ async def create_reservation(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={
-                "message": "Another reservation by this user is in progress",
+                "message": "Reservation already in progress.",
                 "field": None,
             },
         ) from exc
 
-    return _to_response(reservation)
+    return _to_response(reservation, items)
 
 
 # cancels an open reservation
@@ -149,18 +153,20 @@ async def cancel_reservation(
 ) -> ReservationResponse:
     del request
     try:
-        reservation = await service.cancel(actor_id=current_user.id, reservation_id=reservation_id)
+        reservation, items = await service.cancel(
+            actor_id=current_user.id, reservation_id=reservation_id
+        )
     except ReservationError as exc:
         raise _bad_request(exc) from exc
     except LockUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={
-                "message": "Another lifecycle change is in progress",
+                "message": "Event change already in progress.",
                 "field": None,
             },
         ) from exc
-    return _to_response(reservation)
+    return _to_response(reservation, items)
 
 
 # reads a reservation owned by the caller
@@ -180,12 +186,12 @@ async def get_reservation(
 ) -> ReservationResponse:
     del request
     try:
-        reservation = await service.get_for_user(
+        reservation, items = await service.get_for_user(
             actor_id=current_user.id, reservation_id=reservation_id
         )
     except ReservationError as exc:
         raise _bad_request(exc) from exc
-    return _to_response(reservation)
+    return _to_response(reservation, items)
 
 
 # names each ticket holder of a still open reservation
@@ -208,12 +214,12 @@ async def set_holders(
     if reservation is None or reservation.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"message": "Reservation not found", "field": "reservation_id"},
+            detail={"message": "Reservation not found.", "field": "reservation_id"},
         )
     if reservation.status != ReservationStatus.reserved:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"message": "Reservation is no longer modifiable", "field": "status"},
+            detail={"message": "Reservation already closed.", "field": "status"},
         )
     if len(body.holders) != reservation.quantity:
         raise HTTPException(
@@ -224,13 +230,14 @@ async def set_holders(
     if positions != list(range(1, reservation.quantity + 1)):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail={"message": "Positions must be 1..quantity with no gaps", "field": "holders"},
+            detail={"message": "Positions must be 1..quantity with no gaps.", "field": "holders"},
         )
     holder_models = [
         ReservationHolder(
             reservation_id=reservation_id,
             position=h.position,
             holder_name=h.holder_name,
+            holder_document_type=h.holder_document_type,
             holder_dni=h.holder_dni,
         )
         for h in body.holders
@@ -238,6 +245,11 @@ async def set_holders(
     await ReservationHolderRepository(db).upsert_all(reservation_id, holder_models)
     await db.commit()
     return [
-        HolderResponse(position=h.position, holder_name=h.holder_name, holder_dni=h.holder_dni)
+        HolderResponse(
+            position=h.position,
+            holder_name=h.holder_name,
+            holder_document_type=h.holder_document_type,
+            holder_dni=h.holder_dni,
+        )
         for h in body.holders
     ]
