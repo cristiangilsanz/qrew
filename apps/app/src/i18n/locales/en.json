@@ -32,7 +32,8 @@
     "goBack": "Go Back",
     "waitSeconds": "Wait {{seconds}}s",
     "done": "Done",
-    "copied": "Copied."
+    "copied": "Copied.",
+    "cannotBeUndone": "This cannot be undone."
   },
   "auth": {
     "login": "Sign In",
@@ -166,8 +167,8 @@
         "button": "Resale",
         "closes": "Sale closes 24h before the event",
         "title": "Resale",
-        "description": "Your ticket will be frozen and listed at the original price.",
-        "note": "If unsold, returned automatically in 7 days.",
+        "description": "Your ticket will be frozen and listed at the price you paid for it.",
+        "note": "It comes back to you in seven days if nobody takes it.",
         "confirm": "Resale"
       }
     },
@@ -289,11 +290,10 @@
     },
     "offer": {
       "viewEventDetails": "View Event Details",
-      "total": "Total",
       "decline": "Decline",
       "acceptAndPay": "Accept & Pay",
       "declineTitle": "Decline",
-      "declineDesc": "You will lose this ticket offer and it may be reassigned to someone else.",
+      "declineDesc": "The offer will pass to the next person in the queue.",
       "generalAdmission": "General admission",
       "paymentConfirmed": "Payment confirmed",
       "ticketTransferring": "Your ticket is being transferred.",
@@ -302,13 +302,14 @@
       "holderTitle": "Ticket Holder",
       "holderDescription": "Name the person who will use this ticket. They must carry this document at the door.",
       "holderName": "Full name",
-      "holderSaveFailed": "Ticket holder not saved."
+      "holderSaveFailed": "Ticket holder not saved.",
+      "checkoutTitle": "Complete Your Order"
     },
     "joinWaitlistButton": "Join Waitlist",
     "leaveWaitlistButton": "Leave Waitlist",
     "leaveWaitlist": {
       "title": "Leave Waitlist",
-      "description": "If someone lists a ticket, you won't be considered for it.",
+      "description": "Your place in the queue will be lost.",
       "confirm": "Leave Waitlist"
     }
   },
@@ -368,12 +369,12 @@
       "devicesRevokedAll": "All devices removed.",
       "revokeDeviceTitle": "Remove Device",
       "removeDevice": "Remove",
-      "revokeDeviceDesc": "This will sign you out of all active sessions.",
+      "revokeDeviceDesc": "That device will lose its trust and every session will be signed out.",
       "revokeCurrentDeviceTitle": "Remove Device",
       "revokeCurrentDeviceDesc": "This will remove this device and sign you out immediately.",
       "revokeAndSignOut": "Remove & Sign Out",
       "revokeAllDevicesTitle": "Remove All Devices",
-      "revokeAllDevicesDesc": "All trusted devices will be removed and you will be signed out.",
+      "revokeAllDevicesDesc": "Every trusted device will be removed and every session signed out.",
       "totp": {
         "title": "Two-Factor Authentication",
         "description": "Verify your identity with an authenticator app.",
@@ -462,13 +463,13 @@
       "empty": "No active sessions",
       "current": "Current",
       "revokeTitle": "Sign Out Session",
-      "revokeDesc": "This device will be signed out immediately.",
+      "revokeDesc": "That session will be signed out straight away.",
       "revokeAllTitle": "Revoke All Sessions",
-      "revokeAllDesc": "All other active sessions will be signed out. You will also be signed out of this session."
+      "revokeAllDesc": "Every session will be signed out, including this one."
     },
     "deleteAccount": {
       "title": "Delete Account",
-      "description": "This is permanent and cannot be undone.",
+      "description": "Your account and everything in it will be removed.",
       "irreversible": "This action is irreversible",
       "button": "Delete My Account",
       "currentPassword": "Current password",
@@ -522,7 +523,7 @@
       "descriptionLabel": "Description (optional)",
       "deleteButton": "Delete Organisation",
       "deleteTitle": "Delete Organisation",
-      "deleteDesc": "This will permanently delete the organisation and all its events, ticket types and collaborators.\n\nThis action cannot be undone.",
+      "deleteDesc": "The organisation will be removed with its events, tiers and collaborators.",
       "deleteSuccess": "Organisation deleted."
     },
     "events": {
@@ -531,17 +532,11 @@
       "createSuccess": "Event created.",
       "updateSuccess": "Event updated.",
       "publishSuccess": "Event published.",
-      "startSuccess": "Event marked as ongoing.",
       "cancelSuccess": "Event cancelled.",
       "empty": "No events yet.",
       "edit": "Edit Event Information",
       "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
-      "markStarted": "Start Event",
-      "markStartedTitle": "Start Event",
-      "markStartedDescription": "The event begins and its sale closes for good.",
-      "markStartedNote": "This cannot be undone.",
-      "markStartedConfirm": "Start Event",
       "cancel": "Cancel Event",
       "confirmPublish": "Confirm Publish",
       "confirmCancel": "Cancel Event",
@@ -556,7 +551,7 @@
       "maxTicketsLabel": "Max tickets per user",
       "saleEndBeforeStart": "Sale must end before event starts",
       "searchPlaceholder": "Search events…",
-      "cancelDesc": "Issued tickets will be cancelled and reimbursed in the next 30 days.",
+      "cancelDesc": "Every issued ticket will be cancelled and refunded within thirty days.",
       "updateEvent": "Update",
       "notEditableAfterStart": "This event has already started and can no longer be edited."
     },
@@ -593,7 +588,7 @@
       "addButton": "Add Ticket Type",
       "empty": "No ticket types yet.",
       "deleteTitle": "Delete Ticket Type",
-      "deleteDesc": "This ticket type will be permanently removed. Tickets already issued will not be affected.",
+      "deleteDesc": "That tier will be removed, and tickets already issued for it will stand.",
       "deleteConfirm": "Delete",
       "nameLabel": "Name",
       "capacityLabel": "Capacity",
@@ -635,7 +630,6 @@
       "createEventFailed": "Event not created.",
       "updateEventFailed": "Event not updated.",
       "publishFailed": "Event not published.",
-      "startFailed": "Event not started.",
       "cancelFailed": "Event not cancelled.",
       "createTicketTypeFailed": "Ticket type not created.",
       "updateTicketTypeFailed": "Ticket type not updated.",
@@ -668,7 +662,7 @@
       "noMatches": "No users match that search",
       "searchPlaceholder": "Search collaborators…",
       "removeTitle": "Remove Collaborator",
-      "removeConfirmDesc": "This person will lose access to the organisation and its events.",
+      "removeConfirmDesc": "That person will lose access to the organisation and its events.",
       "removeConfirm": "Remove",
       "roleValidationNote": "Both managers and members can validate tickets at entry"
     }

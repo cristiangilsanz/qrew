@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { Input } from '@/components/ui/input'
 import { ListError } from '@/components/ui/list-error'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -56,9 +57,7 @@ export function PasskeyList() {
 
   return (
     <div className="space-y-3">
-      {passkeys.length === 0 && (
-        <p className="text-muted-foreground py-2 text-center text-sm">{t('passkeys.empty')}</p>
-      )}
+      {passkeys.length === 0 && <EmptyMessage>{t('passkeys.empty')}</EmptyMessage>}
       <ul className="space-y-2">
         {passkeys.map((pk) => (
           <li key={pk.id} className="rounded-xl bg-white/[0.04] px-3 py-3">

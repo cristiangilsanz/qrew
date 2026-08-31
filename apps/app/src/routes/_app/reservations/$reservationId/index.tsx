@@ -216,11 +216,12 @@ function ReservationPage() {
 
         <div className="space-y-2.5">
           {lines.map((line) => (
-            <div key={line.id} className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
-                {line.name} <span className="text-white/40">x{line.quantity}</span>
+            <div key={line.id} className="flex items-center gap-3 text-sm">
+              <span className="text-muted-foreground min-w-0 flex-1 truncate">{line.name}</span>
+              <span className="w-8 shrink-0 text-right text-white/40">x{line.quantity}</span>
+              <span className="w-20 shrink-0 text-right font-semibold">
+                {formatPrice(line.subtotal, line.currency)}
               </span>
-              <span className="font-semibold">{formatPrice(line.subtotal, line.currency)}</span>
             </div>
           ))}
           <div className="flex items-center justify-between text-sm">

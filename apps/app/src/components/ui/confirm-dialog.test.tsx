@@ -46,8 +46,33 @@ describe('ConfirmDialog', () => {
   })
 
   it('renders description when provided', () => {
-    render(<ConfirmDialog {...defaultProps} description="This cannot be undone." />)
-    expect(screen.getByText('This cannot be undone.')).toBeInTheDocument()
+    render(<ConfirmDialog {...defaultProps} description="The item will be removed." />)
+    expect(screen.getByText('The item will be removed.')).toBeInTheDocument()
+  })
+
+  it('warns that the action cannot be undone when it is irreversible', () => {
+    const { container } = render(<ConfirmDialog {...defaultProps} irreversible />)
+    expect(container.textContent).toContain('This cannot be undone.')
+  })
+
+  it('leaves the warning out when the action can be undone', () => {
+    const { container } = render(<ConfirmDialog {...defaultProps} />)
+    expect(container.textContent).not.toContain('This cannot be undone.')
+  })
+
+  it('holds the confirm button until the countdown runs out', () => {
+    const { container } = render(<ConfirmDialog {...defaultProps} countdownSeconds={5} />)
+    expect(container.textContent).toContain('Wait 5s')
+    expect(screen.getByText('Wait 5s').closest('button')).toBeDisabled()
+  })
+
+  it('renders whatever it is given to show alongside the question', () => {
+    render(
+      <ConfirmDialog {...defaultProps}>
+        <p>Type your password</p>
+      </ConfirmDialog>,
+    )
+    expect(screen.getByText('Type your password')).toBeInTheDocument()
   })
 
   it('renders nothing when closed', () => {

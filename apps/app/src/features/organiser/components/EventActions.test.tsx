@@ -25,11 +25,6 @@ vi.mock('../hooks/usePublishEvent', () => ({
   usePublishEvent: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
-vi.mock('../hooks/useStartEvent', () => ({
-  // provides use start event
-  useStartEvent: () => ({ mutate: vi.fn(), isPending: false }),
-}))
-
 // implements make event
 function makeEvent(status: OrgEvent['status']): OrgEvent {
   return {
@@ -59,22 +54,18 @@ describe('EventActions', () => {
   it('shows Publish button for draft events', () => {
     render(<EventActions event={makeEvent('draft')} orgId="org-1" />)
     expect(screen.getByText('organiser.events.publish')).toBeInTheDocument()
-    expect(screen.queryByText('organiser.events.markStarted')).not.toBeInTheDocument()
     expect(screen.queryByText('organiser.scanner.scanTickets')).not.toBeInTheDocument()
   })
 
-  it('shows Mark As Started button for published events', () => {
-    render(<EventActions event={makeEvent('published')} orgId="org-1" />)
-    expect(screen.getByText('organiser.events.markStarted')).toBeInTheDocument()
-    expect(screen.queryByText('organiser.events.publish')).not.toBeInTheDocument()
-    expect(screen.queryByText('organiser.scanner.scanTickets')).not.toBeInTheDocument()
+  it('renders nothing for published events, which start on their own clock', () => {
+    const { container } = render(<EventActions event={makeEvent('published')} orgId="org-1" />)
+    expect(container.firstChild).toBeNull()
   })
 
   it('shows Scan button for ongoing events', () => {
     render(<EventActions event={makeEvent('ongoing')} orgId="org-1" />)
     expect(screen.getByText('organiser.scanner.scanTickets')).toBeInTheDocument()
     expect(screen.queryByText('organiser.events.publish')).not.toBeInTheDocument()
-    expect(screen.queryByText('organiser.events.markStarted')).not.toBeInTheDocument()
   })
 
   it('renders nothing for cancelled events', () => {

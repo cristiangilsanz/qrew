@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import {
   Form,
   FormControl,
@@ -64,7 +65,7 @@ export function CheckoutForm({
   const maxQty = Math.min(maxPerUser, selectedTt?.available ?? 1)
 
   if (available.length === 0) {
-    return <p className="text-muted-foreground py-4 text-center text-sm">{t('events.soldOut')}</p>
+    return <EmptyMessage>{t('events.soldOut')}</EmptyMessage>
   }
 
   return (

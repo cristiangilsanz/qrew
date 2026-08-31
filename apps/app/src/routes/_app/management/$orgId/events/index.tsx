@@ -1,14 +1,19 @@
 // implements events
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Calendar, MapPin, Plus, Search } from 'lucide-react'
+import { Calendar, MapPin, Plus, Search, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { FloatingActions } from '@/components/ui/floating-actions'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { PageError } from '@/components/ui/page-error'
-import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
+import {
+  SEARCH_CLEAR_CLASS,
+  SEARCH_ICON_CLASS,
+  SEARCH_INPUT_CLASS,
+} from '@/components/ui/search-field'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
@@ -49,6 +54,11 @@ function OrgEventsPage() {
             placeholder={t('organiser.events.searchPlaceholder')}
             className={SEARCH_INPUT_CLASS}
           />
+          {query && (
+            <button type="button" onClick={() => setQuery('')} className={SEARCH_CLEAR_CLASS}>
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -61,9 +71,7 @@ function OrgEventsPage() {
       )}
 
       {!isLoading && !isError && events.length === 0 && (
-        <p className="text-muted-foreground py-8 text-center text-sm">
-          {t('organiser.events.empty')}
-        </p>
+        <EmptyMessage>{t('organiser.events.empty')}</EmptyMessage>
       )}
 
       <div className="space-y-4">

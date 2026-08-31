@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { PageError } from '@/components/ui/page-error'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { type EventFilters } from '@/features/events/api'
@@ -28,7 +29,7 @@ function EventsPage() {
       <h1 className="text-2xl font-bold">{t('events.title')}</h1>
       <EventFiltersBar onFiltersChange={setFilters} />
       {!isLoading && !isError && data?.items.length === 0 && (
-        <p className="text-muted-foreground py-12 text-center">{t('events.empty')}</p>
+        <EmptyMessage>{t('events.empty')}</EmptyMessage>
       )}
       <div className="grid gap-4">
         {isLoading

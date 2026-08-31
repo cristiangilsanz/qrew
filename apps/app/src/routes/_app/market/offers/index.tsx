@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { PageError } from '@/components/ui/page-error'
 import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
@@ -167,9 +168,7 @@ function ClaimsPage() {
       {isLoading && <EventCardSkeleton />}
 
       {!isLoading && !isError && rows.length === 0 && (
-        <p className="text-muted-foreground pt-10 text-center text-sm">
-          {term ? t('market.noResults') : t('market.noPendingOffers')}
-        </p>
+        <EmptyMessage>{term ? t('market.noResults') : t('market.noPendingOffers')}</EmptyMessage>
       )}
 
       {!isLoading &&

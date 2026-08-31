@@ -25,6 +25,7 @@ import { toast } from 'sonner'
 import { BackButton } from '@/components/ui/back-button'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { Skeleton } from '@/components/ui/skeleton'
 import { totpApi } from '@/features/auth/api'
 import { PasskeyList } from '@/features/passkeys/components/PasskeyList'
@@ -138,11 +139,7 @@ function DeviceList() {
 
   return (
     <div className="space-y-2">
-      {devices.length === 0 && (
-        <p className="text-muted-foreground py-4 text-center text-sm">
-          {t('profile.security.noDevices')}
-        </p>
-      )}
+      {devices.length === 0 && <EmptyMessage>{t('profile.security.noDevices')}</EmptyMessage>}
       <ul className="space-y-1">
         {devices.map((device) => (
           <li
@@ -249,11 +246,7 @@ function AuditLog() {
   const hasMore = visible < events.length
 
   if (events.length === 0) {
-    return (
-      <p className="text-muted-foreground py-4 text-center text-sm">
-        {t('profile.security.noActivity')}
-      </p>
-    )
+    return <EmptyMessage>{t('profile.security.noActivity')}</EmptyMessage>
   }
 
   return (

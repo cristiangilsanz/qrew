@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import homeHero from '@/assets/images/backgrounds/home-hero.webp'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { PageError } from '@/components/ui/page-error'
 import { EventCardSkeleton } from '@/components/ui/skeleton'
 import { EventCard } from '@/features/events/components/EventCard'
@@ -98,7 +99,7 @@ function HomePage() {
         )}
 
         {!eventsLoading && !eventsError && upcomingEvents.length === 0 && (
-          <p className="text-muted-foreground py-4 text-center text-sm">{t('home.noEvents')}</p>
+          <EmptyMessage>{t('home.noEvents')}</EmptyMessage>
         )}
 
         <div className="space-y-3">

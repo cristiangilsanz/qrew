@@ -1,13 +1,14 @@
 // implements waitlists
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'framer-motion'
 import { Calendar, LogOut, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { PageError } from '@/components/ui/page-error'
 import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
@@ -98,57 +99,18 @@ function WaitlistRow({ eventId }: { eventId: string }) {
         </div>
       </article>
 
-      <AnimatePresence>
-        {leaveOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
-            onClick={(e) => e.target === e.currentTarget && setLeaveOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-              className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-[#111] p-6"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                  <LogOut className="h-5 w-5 text-red-400" />
-                </div>
-                <h3 className="text-base font-semibold text-red-400">
-                  {t('market.leaveWaitlist.title')}
-                </h3>
-              </div>
-              <p className="text-muted-foreground mb-6 text-sm">
-                {t('market.leaveWaitlist.description')}
-              </p>
-              <div className="flex items-center justify-between pt-1">
-                <button
-                  onClick={() => setLeaveOpen(false)}
-                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
-                >
-                  {t('common.goBack')}
-                </button>
-                <button
-                  onClick={() => leaveQueue.mutate()}
-                  disabled={leaveQueue.isPending}
-                  className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full border border-red-500/25 bg-red-500/15 px-5 text-sm font-semibold text-red-400 disabled:opacity-50"
-                >
-                  <>
-                    <LogOut className="h-3.5 w-3.5" />
-                    {t('market.leaveWaitlist.confirm')}
-                  </>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        tone="destructive"
+        icon={LogOut}
+        title={t('market.leaveWaitlist.title')}
+        description={t('market.leaveWaitlist.description')}
+        irreversible
+        confirmLabel={t('market.leaveWaitlist.confirm')}
+        isLoading={leaveQueue.isPending}
+        onConfirm={() => leaveQueue.mutate()}
+      />
     </>
   )
 }
@@ -192,9 +154,7 @@ function WaitlistsPage() {
       )}
 
       {!isLoading && !isError && filtered.length === 0 && (
-        <p className="text-muted-foreground pt-10 text-center text-sm">
-          {query ? t('market.noResults') : t('market.noWaitlists')}
-        </p>
+        <EmptyMessage>{query ? t('market.noResults') : t('market.noWaitlists')}</EmptyMessage>
       )}
 
       <div className="space-y-3">

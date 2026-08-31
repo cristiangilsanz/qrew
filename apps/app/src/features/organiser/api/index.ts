@@ -188,10 +188,6 @@ export const organiserApi = {
   publishEvent: (eventId: string) =>
     catalogClient.post<OrgEvent>(`/v1/events/${eventId}/publish`).then((r) => r.data),
 
-  // implements start event
-  startEvent: (eventId: string) =>
-    catalogClient.post<OrgEvent>(`/v1/events/${eventId}/start`).then((r) => r.data),
-
   // implements cancel event
   cancelEvent: (eventId: string) =>
     catalogClient.post<OrgEvent>(`/v1/events/${eventId}/cancel`).then((r) => r.data),
