@@ -53,6 +53,17 @@
     "or": "o",
     "passkeyLogin": "Iniciar Sesión Con Passkey",
     "emailRequiredForPasskey": "Introduce tu correo para iniciar sesión con passkey",
+    "forgotPassword": "¿Has olvidado la contraseña?",
+    "rememberedPassword": "¿Ya la recuerdas?",
+    "forgotPasswordTitle": "Recuperar contraseña",
+    "forgotPasswordSubtitle": "Introduce tu correo:",
+    "forgotPasswordSubmit": "Cambiar contraseña",
+    "forgotPasswordSuccess": "Si existe una cuenta con ese correo, te hemos enviado un enlace para restablecerla.",
+    "resetPasswordTitle": "Restablecer contraseña",
+    "resetPasswordSubtitle": "Introduce tu nueva contraseña",
+    "newPassword": "Nueva contraseña",
+    "resetPasswordSubmit": "Restablecer contraseña",
+    "resetPasswordSuccess": "Contraseña restablecida.",
     "errors": {
       "loginFailed": "Inicio de sesión fallido.",
       "registerFailed": "Cuenta no creada.",
@@ -65,7 +76,6 @@
       "verify": "Verificar",
       "invalidCode": "Código rechazado."
     },
-    "resetPasswordSuccess": "Contraseña restablecida.",
     "verifyEmail": {
       "title": "Revisa tu correo",
       "sent": "Te hemos enviado un enlace para confirmar tu cuenta.",
