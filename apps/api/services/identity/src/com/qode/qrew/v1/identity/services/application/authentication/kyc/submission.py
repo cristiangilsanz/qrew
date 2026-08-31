@@ -127,7 +127,7 @@ class KycService:
             user.kyc_status = KycStatus.approved
             await self._repo.save(user)
             await self._notifier.send_kyc_status_update(
-                user.email, user.full_name, KycStatus.approved, None
+                user.email, user.full_name, KycStatus.approved
             )
             await logger.ainfo("kyc_auto_approved", user_id=str(user.id))
         else:

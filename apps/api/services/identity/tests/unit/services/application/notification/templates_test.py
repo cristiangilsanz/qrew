@@ -64,8 +64,7 @@ class TestRenderEmail:
             "email_kyc_notify", {"full_name": FULL_NAME, "status": "approved"}
         )
         rejected = templates.render_email(
-            "email_kyc_notify",
-            {"full_name": FULL_NAME, "status": "rejected", "reason": "Blurred photo."},
+            "email_kyc_notify", {"full_name": FULL_NAME, "status": "rejected"}
         )
         assert approved.subject != rejected.subject
         assert approved.body_html != rejected.body_html

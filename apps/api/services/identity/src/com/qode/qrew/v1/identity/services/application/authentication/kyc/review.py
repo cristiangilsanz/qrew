@@ -53,7 +53,7 @@ class KycReviewService:
         user.kyc_status = new_status
         await self._repo.save(user)
 
-        await self._notifier.send_kyc_status_update(user.email, user.full_name, new_status, reason)
+        await self._notifier.send_kyc_status_update(user.email, user.full_name, new_status)
         await logger.ainfo(
             "kyc_reviewed",
             user_id=str(user.id),
