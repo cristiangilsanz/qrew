@@ -68,7 +68,7 @@ function VerifyEmailPage() {
   if (token) {
     return (
       <AuthLayout>
-        <div className="space-y-4 py-2 text-center">
+        <div className="space-y-4 pt-6 pb-4 text-center">
           {confirm.isPending && (
             <>
               <Loader2 className="text-primary mx-auto h-10 w-10 animate-spin" />

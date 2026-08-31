@@ -1,7 +1,7 @@
 // renders the invite member form component
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
-import { Info, Search } from 'lucide-react'
+import { Info, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -16,7 +16,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
+import {
+  SEARCH_CLEAR_CLASS,
+  SEARCH_ICON_CLASS,
+  SEARCH_INPUT_CLASS,
+} from '@/components/ui/search-field'
 import { profileApi } from '@/features/profile/api'
 import { cn } from '@/lib/utils'
 
@@ -124,6 +128,18 @@ export function InviteCollaboratorForm({ orgId, existingCollaboratorIds = [], on
               }}
               onFocus={() => setDropdownOpen(true)}
             />
+            {searchQ && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQ('')
+                  form.setValue('user_id', '', { shouldValidate: false })
+                }}
+                className={SEARCH_CLEAR_CLASS}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
             {dropdownOpen && canSearch && (
               <ul className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-white/15 bg-black/95 shadow-xl backdrop-blur-md">
                 {isFetching && filtered.length === 0 && (

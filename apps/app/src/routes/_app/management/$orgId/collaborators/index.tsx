@@ -1,14 +1,18 @@
 // implements members
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Search, Trash2, UserMinus, UserPlus } from 'lucide-react'
+import { Search, Trash2, UserMinus, UserPlus, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
 import { FloatingActions } from '@/components/ui/floating-actions'
 import { PageError } from '@/components/ui/page-error'
-import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
+import {
+  SEARCH_CLEAR_CLASS,
+  SEARCH_ICON_CLASS,
+  SEARCH_INPUT_CLASS,
+} from '@/components/ui/search-field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
 import { useOrgCollaborators } from '@/features/organiser/hooks/useOrgCollaborators'
@@ -66,6 +70,11 @@ function OrgMembersPage() {
           placeholder={t('organiser.collaborators.searchPlaceholder')}
           className={SEARCH_INPUT_CLASS}
         />
+        {query && (
+          <button type="button" onClick={() => setQuery('')} className={SEARCH_CLEAR_CLASS}>
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {isLoading && (
