@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
 import { useAuthStore } from '@/store/auth'
-import { currentPath, renderRoute } from '@/test/router'
+import { currentPath, declaredPaths, renderRoute } from '@/test/router'
 import { server } from '@/test/server'
 
 // renders the toaster component
@@ -48,21 +48,7 @@ function asAdmin() {
 }
 
 describe('management screens', () => {
-  const PATHS = [
-    '/management',
-    '/management/new',
-    '/management/org-1',
-    '/management/org-1/events',
-    '/management/org-1/events/new',
-    '/management/org-1/events/event-1',
-    '/management/org-1/events/event-1/edit',
-    '/management/org-1/events/event-1/stats',
-    '/management/org-1/events/event-1/tickets',
-    '/management/org-1/events/event-1/scan',
-    '/management/org-1/collaborators',
-    '/management/org-1/collaborators/new',
-    '/management/org-1/venues/new',
-  ]
+  const PATHS = declaredPaths({ under: '/management' })
 
   it.each(PATHS)('renders %s for an administrator', async (path) => {
     signIn()

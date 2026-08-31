@@ -3,32 +3,19 @@ import { waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { useAuthStore } from '@/store/auth'
-import { currentPath, renderRoute } from '@/test/router'
+import { AUTH_ONLY, currentPath, declaredPaths, renderRoute } from '@/test/router'
 
 // renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
-const PATHS = [
-  '/home',
-  '/events',
-  '/events/event-1',
-  '/tickets',
-  '/tickets/ticket-1',
-  '/market',
-  '/market/offers',
-  '/market/on-sale',
-  '/market/waitlists',
-  '/reservations/res-1',
-  '/events/event-1/queue',
-  '/events/event-1/checkout',
-  '/market/offers/assignment-1',
-  '/profile',
-  '/profile/about',
-  '/profile/help',
-  '/profile/passkeys',
-  '/profile/account',
-  '/profile/security',
-]
+const PATHS = declaredPaths({
+  exclude: [
+    '/',
+    ...declaredPaths({ under: '/management' }),
+    ...declaredPaths({ under: '/profile' }),
+    ...AUTH_ONLY,
+  ],
+})
 
 // implements sign in
 function signIn() {

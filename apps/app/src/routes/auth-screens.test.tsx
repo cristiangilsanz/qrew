@@ -3,19 +3,13 @@ import { screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { useAuthStore } from '@/store/auth'
-import { currentPath, renderRoute } from '@/test/router'
+import { AUTH_ONLY, currentPath, renderRoute } from '@/test/router'
 
 // renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
-const PATHS = [
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-  '/verify-totp',
-  '/verify-email',
-]
+// the onboarding screen needs a setup in flight, so it has its own two cases below
+const PATHS = AUTH_ONLY.filter((path) => path !== '/setup')
 
 describe('authentication screens', () => {
   it.each(PATHS)('renders %s for an anonymous visitor', async (path) => {
