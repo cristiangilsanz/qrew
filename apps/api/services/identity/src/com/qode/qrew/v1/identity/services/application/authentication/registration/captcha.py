@@ -14,6 +14,10 @@ class CaptchaError(DomainError):
     pass
 
 
+class CaptchaUnavailableError(DomainError):
+    pass
+
+
 class CaptchaService(Protocol):
     # verifies a captcha token for a given ip address
     async def verify(self, token: str, ip_address: str) -> None: ...
@@ -55,11 +59,14 @@ class CloudflareTurnstileCaptchaService:
         except CaptchaError:
             raise
         except Exception as exc:
+            # letting a registration through while the check is down is how a bot run
+            # gets in, so the caller is asked to come back rather than waved past
             await logger.aerror(
-                "captcha_check_skipped",
-                reason="Turnstile API unavailable",
+                "captcha_check_unavailable",
+                reason="Turnstile API unreachable",
                 exc_info=exc,
             )
+            raise CaptchaUnavailableError("Captcha unavailable.", field="captcha_token") from exc
 
 
 # builds the configured captcha service or a stub when captcha is disabled

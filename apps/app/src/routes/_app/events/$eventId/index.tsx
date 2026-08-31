@@ -86,7 +86,10 @@ function EventDetailPage() {
   const saleNotStarted = event?.availability_status === 'not_started'
   const secondsUntilSale = useCountdown(saleNotStarted && event ? event.sale_starts_at : null)
 
-  const saleEnded = event?.availability_status === 'ended'
+  // the resale queue opens on the same rule the backend applies, which is that the event
+  // can no longer be bought from, by date or because every tier ran out
+  const saleEnded =
+    event?.availability_status === 'ended' || event?.availability_status === 'sold_out'
   const isPublished = event?.status === 'published'
   const showResaleQueue = isPublished && saleEnded
   const saleOpen = isPublished && event?.availability_status === 'open'

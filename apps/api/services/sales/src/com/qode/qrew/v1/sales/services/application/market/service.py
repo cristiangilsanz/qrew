@@ -14,6 +14,7 @@ from com.qode.qrew.v1.sales.models.market import (
     MarketListingState,
     MarketQueueEntry,
 )
+from com.qode.qrew.v1.sales.models.projections import EventContext
 from com.qode.qrew.v1.sales.repositories.market import MarketRepository
 from com.qode.qrew.v1.sales.repositories.projections import (
     EventContextRepository,
@@ -61,7 +62,13 @@ class MarketService:
         self._assignment_ttl = timedelta(hours=assignment_ttl_hours)
         self._listing_ttl = timedelta(days=listing_ttl_days)
 
-    # joins a user into an event's resale queue once the sale has closed
+    # reports whether an event can no longer be bought from, by date or by capacity
+    async def _sale_is_over(self, event_ctx: EventContext, now: datetime) -> bool:
+        if event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at:
+            return True
+        return await self._inventory.event_is_sold_out(event_ctx.event_id)
+
+    # joins a user into an event's resale queue once the sale is over
     @traced("market.service.join_queue")
     async def join_queue(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> MarketQueueEntry:
         event_ctx = await self._event_ctx.get_by_event_id(event_id)
@@ -69,10 +76,9 @@ class MarketService:
             raise MarketError("Event not found.", field="event_id")
 
         now = _now()
-        sale_closed = event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at
-        if not sale_closed:
+        if not await self._sale_is_over(event_ctx, now):
             raise MarketError(
-                "Resale queue is only available once the sale window has closed",
+                "Resale queue opens once the event is sold out or its sale has closed",
                 field="event_id",
             )
 
@@ -142,10 +148,9 @@ class MarketService:
             raise MarketError("Event not found.", field="event_id")
 
         now = _now()
-        sale_closed = event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at
-        if not sale_closed:
+        if not await self._sale_is_over(event_ctx, now):
             raise MarketError(
-                "Tickets can only be listed after the sale window closes",
+                "Tickets can be listed once the event is sold out or its sale has closed",
                 field="event_id",
             )
 

@@ -26,6 +26,7 @@ def _make_service(
     event_ctx: object = None,
     queue_entry: object = None,
     active_tickets: int = 0,
+    sold_out: bool = False,
 ) -> tuple[MarketService, MagicMock]:
     repo = MagicMock()
     repo.get_assignment_by_id = AsyncMock(return_value=assignment)
@@ -43,13 +44,16 @@ def _make_service(
     event_ctx_repo = MagicMock()
     event_ctx_repo.get_by_event_id = AsyncMock(return_value=event_ctx)
 
+    inventory_repo = MagicMock()
+    inventory_repo.event_is_sold_out = AsyncMock(return_value=sold_out)
+
     audit = MagicMock()
     audit.record = AsyncMock()
 
     service = MarketService(
         repo,
         event_ctx_repo,
-        MagicMock(),
+        inventory_repo,
         audit,
         assignment_ttl_hours=3,
         listing_ttl_days=7,
@@ -78,6 +82,7 @@ def _assignment(**kwargs: object) -> SimpleNamespace:
 # builds a stand in event context row
 def _event_ctx(**kwargs: object) -> SimpleNamespace:
     base = {
+        "event_id": uuid.uuid4(),
         "status": "published",
         "sale_ends_at": PAST,
         "max_tickets_per_user": 4,
@@ -93,11 +98,17 @@ class TestJoinQueue:
         with pytest.raises(MarketError, match="Event not found"):
             await service.join_queue(user_id=uuid.uuid4(), event_id=uuid.uuid4())
 
-    # verifies that the queue stays closed while the sale is still running
+    # verifies that the queue stays closed while tickets can still be bought
     async def test_rejects_while_the_sale_is_open(self) -> None:
         service, _ = _make_service(event_ctx=_event_ctx(sale_ends_at=FUTURE))
-        with pytest.raises(MarketError, match="sale window has closed"):
+        with pytest.raises(MarketError, match="sold out or its sale has closed"):
             await service.join_queue(user_id=uuid.uuid4(), event_id=uuid.uuid4())
+
+    # verifies that running out of tickets opens the queue before the window closes
+    async def test_opens_once_the_event_is_sold_out(self) -> None:
+        service, _ = _make_service(event_ctx=_event_ctx(sale_ends_at=FUTURE), sold_out=True)
+        entry = await service.join_queue(user_id=uuid.uuid4(), event_id=uuid.uuid4())
+        assert entry is not None
 
     # verifies that a user already at the ticket limit cannot queue for more
     async def test_rejects_a_user_at_the_ticket_limit(self) -> None:

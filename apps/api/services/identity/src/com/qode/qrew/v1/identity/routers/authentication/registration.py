@@ -9,6 +9,7 @@ from idempotency import idempotent
 from com.qode.qrew.v1.identity.core.dependencies import limiter
 from com.qode.qrew.v1.identity.services.application.authentication.registration.captcha import (
     CaptchaError,
+    CaptchaUnavailableError,
 )
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.schemas.registration import (
@@ -66,6 +67,8 @@ async def register(
     device_fingerprint = request.headers.get("X-Device-Fingerprint")
     try:
         return await service.register(body, ip_address, device_fingerprint)
+    except CaptchaUnavailableError as exc:
+        raise domain_error(exc.message, exc.field, status.HTTP_503_SERVICE_UNAVAILABLE) from exc
     except CaptchaError as exc:
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
     except RegistrationError as exc:

@@ -81,6 +81,8 @@ function TicketDetailPage() {
   const displayState = ticket ? displayTicketState(ticket, reservation) : undefined
   const isExpired = displayState === 'expired'
 
+  // resale opens as soon as the event can no longer be bought from, whether that is
+  // because its window closed or because every tier ran out
   const saleEnded =
     event?.availability_status === 'ended' || event?.availability_status === 'sold_out'
   const eventStartsSoon =

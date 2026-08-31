@@ -300,7 +300,11 @@
       "paymentConfirmed": "Payment confirmed",
       "ticketTransferring": "Your ticket is being transferred.",
       "expired": "Offer Expired",
-      "declined": "Offer Declined"
+      "declined": "Offer Declined",
+      "holderTitle": "Ticket holder",
+      "holderDescription": "Name the person who will use this ticket. They must carry this document at the door.",
+      "holderName": "Full name",
+      "holderSaveFailed": "Ticket holder not saved."
     },
     "joinWaitlistButton": "Join Waitlist",
     "leaveWaitlistButton": "Leave Waitlist",
