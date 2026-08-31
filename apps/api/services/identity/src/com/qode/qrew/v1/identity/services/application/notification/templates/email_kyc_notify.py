@@ -3,9 +3,7 @@ from com.qode.qrew.v1.identity.services.application.notification.templates._base
 
 
 # renders the email body reporting the kyc review outcome
-def kyc_status_email(
-    full_name: str, status: str, reason: str | None, logo_url: str | None = None
-) -> str:
+def kyc_status_email(full_name: str, status: str, logo_url: str | None = None) -> str:
     first = full_name.split(maxsplit=1)[0]
     approved = status == "approved"
     heading = (

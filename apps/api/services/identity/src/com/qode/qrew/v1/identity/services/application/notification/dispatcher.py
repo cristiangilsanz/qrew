@@ -32,11 +32,10 @@ class NotificationDispatcher:
         to_email: str,
         full_name: str,
         status: str,
-        reason: str | None,
     ) -> None:
         await self._service.send(
             template_key="email_kyc_notify",
-            payload={"full_name": full_name, "status": status, "reason": reason},
+            payload={"full_name": full_name, "status": status},
             channels=[NotificationChannel.email],
             destinations={NotificationChannel.email: to_email},
         )

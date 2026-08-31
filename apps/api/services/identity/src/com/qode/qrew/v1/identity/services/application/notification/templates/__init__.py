@@ -72,7 +72,6 @@ def _kyc_status(payload: dict[str, Any]) -> RenderedEmail:
         body_html=kyc_status_email(
             full_name=payload["full_name"],
             status=status,
-            reason=payload.get("reason"),
             logo_url=_logo_url(),
         ),
     )

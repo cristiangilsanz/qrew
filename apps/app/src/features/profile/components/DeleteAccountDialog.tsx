@@ -39,7 +39,10 @@ export function DeleteAccountDialog() {
     defaultValues: { current_password: '' },
   })
 
-  const deleteAccount = useDeleteAccount()
+  const deleteAccount = useDeleteAccount(() => {
+    setOpen(false)
+    if (timerRef.current) clearInterval(timerRef.current)
+  })
 
   // implements open modal
   const openModal = () => {
