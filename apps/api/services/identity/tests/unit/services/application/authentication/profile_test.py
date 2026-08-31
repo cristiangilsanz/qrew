@@ -62,14 +62,14 @@ class TestOnboardingStatus:
         status = await _service(has_passkey=False).get_onboarding_status(_user())  # type: ignore[arg-type]
         assert status.current_step == "passkey"
 
-    # verifies that a submission awaiting review parks the account on the waiting screen
-    async def test_a_submission_under_review_waits(self) -> None:
+    # verifies that a submission awaiting review may still browse while it waits
+    async def test_a_submission_under_review_may_enter(self) -> None:
         status = await _service(has_passkey=True).get_onboarding_status(
             _user(kyc_status=KycStatus.pending)  # type: ignore[arg-type]
         )
         assert status.current_step == "pending"
         assert status.kyc_status == "pending"
-        assert status.is_complete is False
+        assert status.is_complete is True
 
     # verifies that an approved account has finished
     async def test_an_approved_account_is_complete(self) -> None:

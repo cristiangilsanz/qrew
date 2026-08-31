@@ -1,0 +1,40 @@
+name: Coverage
+
+on:
+  workflow_dispatch:
+
+jobs:
+  api:
+    name: API Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages --all-groups
+      - name: Measure every service
+        run: |
+          set -euo pipefail
+          for service in identity catalog sales payments ticketing entry audit; do
+            (cd "apps/api/services/$service" \
+              && uv run pytest tests/unit/ --cov=src --cov-report=json:coverage.json -q)
+          done
+      - name: Summarise
+        run: python3 scripts/coverage_summary.py api >> "$GITHUB_STEP_SUMMARY"
+
+  app:
+    name: App Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Measure the client
+        run: npm run test:coverage -w apps/app -- --coverage.reporter=json-summary --coverage.reporter=text
+      - name: Summarise
+        run: python3 scripts/coverage_summary.py app >> "$GITHUB_STEP_SUMMARY"
