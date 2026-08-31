@@ -32,11 +32,13 @@ import { PasskeyList } from '@/features/passkeys/components/PasskeyList'
 import { ChangePasswordForm } from '@/features/profile/components/ChangePasswordForm'
 import { SessionList } from '@/features/profile/components/SessionList'
 import { useAuditLog } from '@/features/profile/hooks/useAuditLog'
+import { useBindDevice } from '@/features/profile/hooks/useBindDevice'
 import {
   useDevices,
   useRevokeAllDevices,
   useRevokeDevice,
 } from '@/features/profile/hooks/useDevices'
+import { deviceKeysSupported } from '@/lib/deviceKey'
 import { formatDate, formatDateTime } from '@/lib/formatDate'
 import { cn } from '@/lib/utils'
 
@@ -109,11 +111,20 @@ function ExpandRow({
   )
 }
 
+// names this device after the platform the browser reports, which is what the user recognises
+function defaultDeviceName(): string {
+  const agent = navigator.userAgent
+  if (/android/i.test(agent)) return 'Android device'
+  if (/iphone|ipad|ipod/i.test(agent)) return 'iOS device'
+  return 'This browser'
+}
+
 // renders the device list component
 function DeviceList() {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useDevices()
   const revoke = useRevokeDevice()
+  const bindDevice = useBindDevice()
   const revokeAll = useRevokeAllDevices()
   const [confirmDeviceId, setConfirmDeviceId] = useState<string | null>(null)
   const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
@@ -140,6 +151,17 @@ function DeviceList() {
   return (
     <div className="space-y-2">
       {devices.length === 0 && <EmptyMessage>{t('profile.security.noDevices')}</EmptyMessage>}
+
+      {deviceKeysSupported() && (
+        <button
+          onClick={() => bindDevice.mutate(defaultDeviceName())}
+          disabled={bindDevice.isPending}
+          className="border-input text-muted-foreground hover:text-foreground flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-3 text-sm font-medium disabled:opacity-50"
+        >
+          <ShieldCheck className="h-4 w-4 shrink-0" />
+          {t('profile.security.trustThisDevice')}
+        </button>
+      )}
       <ul className="space-y-1">
         {devices.map((device) => (
           <li

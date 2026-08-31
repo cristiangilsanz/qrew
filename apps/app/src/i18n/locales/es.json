@@ -392,7 +392,10 @@
         "disableInstruction": "Introduce tu código de autenticación:",
         "confirmDisable": "Desactivar 2FA",
         "disabledToast": "Verificación en dos pasos desactivada."
-      }
+      },
+      "trustThisDevice": "Confiar en este dispositivo",
+      "deviceTrusted": "Dispositivo de confianza añadido.",
+      "deviceNotTrusted": "Dispositivo no añadido."
     },
     "help": {
       "title": "Ayuda y Soporte",

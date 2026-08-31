@@ -392,7 +392,10 @@
         "disableInstruction": "Enter your authenticator code:",
         "confirmDisable": "Disable 2FA",
         "disabledToast": "Two-factor authentication disabled."
-      }
+      },
+      "trustThisDevice": "Trust This Device",
+      "deviceTrusted": "Device trusted.",
+      "deviceNotTrusted": "Device not trusted."
     },
     "help": {
       "title": "Help & Support",

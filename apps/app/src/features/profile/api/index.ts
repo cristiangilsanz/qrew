@@ -118,6 +118,16 @@ export const profileApi = {
       .get<{ items: Device[]; next_cursor: string | null }>('/v1/auth/devices')
       .then((r) => r.data),
 
+  // asks the server for the challenge this device has to sign
+  beginDeviceBind: () =>
+    apiClient.post<{ challenge: string }>('/v1/auth/devices/bind/begin').then((r) => r.data),
+
+  // hands over the signed challenge so the device becomes trusted
+  completeDeviceBind: (body: { name: string; public_key: string; signature: string }) =>
+    apiClient
+      .post<{ device_id: string; message: string }>('/v1/auth/devices/bind/complete', body)
+      .then((r) => r.data),
+
   // implements revoke device
   revokeDevice: (deviceId: string) =>
     apiClient.post<{ message: string }>(`/v1/auth/devices/${deviceId}/revoke`).then((r) => r.data),

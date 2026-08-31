@@ -2,21 +2,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { useAuthStore } from '@/store/auth'
-import { currentPath, renderRoute } from '@/test/router'
+import { currentPath, declaredPaths, renderRoute } from '@/test/router'
 
 // renders the toaster component
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() }, Toaster: () => null }))
 
-const PATHS = [
-  '/profile',
-  '/profile/about',
-  '/profile/help',
-  '/profile/terms',
-  '/profile/privacy',
-  '/profile/passkeys',
-  '/profile/account',
-  '/profile/security',
-]
+const PATHS = declaredPaths({ under: '/profile' })
 
 describe('profile screens', () => {
   it.each(PATHS)('renders %s for a signed-in visitor', async (path) => {

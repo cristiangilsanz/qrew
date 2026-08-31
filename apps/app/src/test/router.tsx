@@ -39,3 +39,36 @@ export async function renderRoute(path: string): Promise<RenderRouteResult> {
 export function currentPath(router: RenderRouteResult['router']): string {
   return router.state.location.pathname
 }
+
+const SAMPLE_PARAM = 'fixture-id'
+
+// the screens a visitor reaches without a session, which the tree cannot tell apart
+export const AUTH_ONLY = [
+  '/login',
+  '/register',
+  '/setup',
+  '/verify-email',
+  '/verify-totp',
+  '/forgot-password',
+  '/reset-password',
+  '/confirm-email-change',
+]
+
+// lists every path the generated tree declares, so no screen can be added without
+// a smoke test noticing, with each parameter filled by a stand in identifier
+export function declaredPaths(options?: { under?: string; exclude?: string[] }): string[] {
+  const router = createRouter({ routeTree, history: createMemoryHistory() })
+  const exclude = new Set(options?.exclude ?? [])
+  const paths = Object.values(router.routesById)
+    .map((route) => route.fullPath as string)
+    .filter((path) => path && !path.endsWith('/_app') && !path.endsWith('/_auth'))
+    .map((path) => (path.length > 1 ? path.replace(/\/$/, '') : path))
+    .filter((path) => !path.includes('$') || !path.endsWith('$'))
+    .map((path) => path.replace(/\$[A-Za-z]+/g, SAMPLE_PARAM))
+    .filter((path) => !exclude.has(path))
+  const under = options?.under
+  const wanted = under
+    ? paths.filter((path) => path === under || path.startsWith(`${under}/`))
+    : paths
+  return [...new Set(wanted)].sort()
+}
