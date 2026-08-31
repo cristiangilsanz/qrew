@@ -68,7 +68,9 @@ src/routes/
 │   │   ├── index.tsx
 │   │   ├── offers/
 │   │   │   ├── index.tsx
-│   │   │   └── $offerId/index.tsx
+│   │   │   └── $offerId/
+│   │   │       ├── index.tsx
+│   │   │       └── checkout.tsx
 │   │   ├── on-sale/index.tsx
 │   │   └── waitlists/index.tsx
 │   ├── profile/
