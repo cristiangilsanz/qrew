@@ -34,8 +34,8 @@ def fallback_link(url: str) -> str:
 
 # wraps a template's content in the shared email layout
 def base_email(*, title: str, preheader: str, logo_url: str | None, content_html: str) -> str:
-    # the anchor is inline-block so the centred cell can centre it, while the image
-    # inside stays a block, which is what stops mail clients adding a stray baseline gap
+    # the anchor stays inline so the centred cell can centre it, while the image inside
+    # stays a block, which is what stops mail clients adding a stray baseline gap
     masthead = (
         f'<a href="https://qrew.com" style="display:inline-block;">'
         f'<img src="{logo_url}" alt="QREW" width="160" height="160"'
