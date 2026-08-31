@@ -55,14 +55,14 @@
     "emailRequiredForPasskey": "Enter your email to sign in with a passkey",
     "forgotPassword": "Forgot password?",
     "rememberedPassword": "Did you remember it?",
-    "forgotPasswordTitle": "Forgot password",
+    "forgotPasswordTitle": "Forgot Password",
     "forgotPasswordSubtitle": "Enter your email:",
-    "forgotPasswordSubmit": "Change password",
+    "forgotPasswordSubmit": "Change Password",
     "forgotPasswordSuccess": "If an account with that email exists, we've sent a reset link.",
-    "resetPasswordTitle": "Reset password",
+    "resetPasswordTitle": "Reset Password",
     "resetPasswordSubtitle": "Enter your new password",
     "newPassword": "New password",
-    "resetPasswordSubmit": "Reset password",
+    "resetPasswordSubmit": "Reset Password",
     "resetPasswordSuccess": "Password reset.",
     "errors": {
       "loginFailed": "Sign in failed.",
@@ -77,7 +77,7 @@
       "invalidCode": "Code rejected."
     },
     "verifyEmail": {
-      "title": "Check your email",
+      "title": "Check Your Email",
       "sent": "We've sent you a link to confirm your account.",
       "sentTo": "We've sent a link to {{email}} to confirm your account.",
       "spamHint": "If it is not there, check your spam folder.",
@@ -87,9 +87,7 @@
       "backToLogin": "Back to sign in",
       "confirming": "Confirming your email…",
       "confirmed": "Email confirmed",
-      "confirmedHint": "You can sign in and finish setting up your account.",
-      "linkExpired": "Link no longer valid",
-      "linkExpiredHint": "Sign in and request a new one."
+      "linkExpired": "Link expired"
     }
   },
   "events": {
@@ -301,7 +299,7 @@
       "ticketTransferring": "Your ticket is being transferred.",
       "expired": "Offer Expired",
       "declined": "Offer Declined",
-      "holderTitle": "Ticket holder",
+      "holderTitle": "Ticket Holder",
       "holderDescription": "Name the person who will use this ticket. They must carry this document at the door.",
       "holderName": "Full name",
       "holderSaveFailed": "Ticket holder not saved."
@@ -426,14 +424,14 @@
       "dangerZone": "Danger zone"
     },
     "changePassword": {
-      "title": "Change password",
+      "title": "Change Password",
       "currentPassword": "Current password",
       "newPassword": "New password",
       "submit": "Update Password",
       "success": "Password updated."
     },
     "changeEmail": {
-      "title": "Change email address",
+      "title": "Change Email Address",
       "newEmail": "New email",
       "currentPassword": "Password confirmation",
       "submit": "Send Confirmation Link",
@@ -443,7 +441,7 @@
       "confirmError": "This link is invalid or has expired."
     },
     "changePhone": {
-      "title": "Change phone number",
+      "title": "Change Phone Number",
       "newPhone": "New phone number",
       "currentPassword": "Password confirmation",
       "otpSent": "Enter the code sent to your new number",
@@ -469,7 +467,7 @@
       "revokeAllDesc": "All other active sessions will be signed out. You will also be signed out of this session."
     },
     "deleteAccount": {
-      "title": "Delete account",
+      "title": "Delete Account",
       "description": "This is permanent and cannot be undone.",
       "irreversible": "This action is irreversible",
       "button": "Delete My Account",
@@ -496,7 +494,7 @@
     "deleteSuccess": "Passkey removed.",
     "renameSuccess": "Passkey renamed.",
     "register": {
-      "title": "Add a passkey",
+      "title": "Add a Passkey",
       "description": "Use your device's biometric sensor or PIN",
       "submit": "Register Passkey"
     },
@@ -514,7 +512,7 @@
     "backToOrg": "Back to organisation",
     "org": {
       "create": "Create Organisation",
-      "createTitle": "Create organisation",
+      "createTitle": "Create Organisation",
       "createSuccess": "Organisation created.",
       "empty": "No organisations found.",
       "loading": "Loading…",
@@ -523,7 +521,7 @@
       "nameLabel": "Name",
       "descriptionLabel": "Description (optional)",
       "deleteButton": "Delete Organisation",
-      "deleteTitle": "Delete organisation",
+      "deleteTitle": "Delete Organisation",
       "deleteDesc": "This will permanently delete the organisation and all its events, ticket types and collaborators.\n\nThis action cannot be undone.",
       "deleteSuccess": "Organisation deleted."
     },
@@ -536,14 +534,14 @@
       "startSuccess": "Event marked as ongoing.",
       "cancelSuccess": "Event cancelled.",
       "empty": "No events yet.",
-      "edit": "Edit event information",
+      "edit": "Edit Event Information",
       "editDesc": "Manage date, venue, image, description and max tickets per user",
       "publish": "Publish",
-      "markStarted": "Mark As Started",
-      "markStartedTitle": "Mark As Started",
+      "markStarted": "Start Event",
+      "markStartedTitle": "Start Event",
       "markStartedDescription": "The event begins and its sale closes for good.",
       "markStartedNote": "This cannot be undone.",
-      "markStartedConfirm": "Mark As Started",
+      "markStartedConfirm": "Start Event",
       "cancel": "Cancel Event",
       "confirmPublish": "Confirm Publish",
       "confirmCancel": "Cancel Event",
@@ -563,7 +561,7 @@
       "notEditableAfterStart": "This event has already started and can no longer be edited."
     },
     "entryStats": {
-      "title": "Live entry stats",
+      "title": "Live Entry Stats",
       "totalIssued": "Issued",
       "totalEntered": "Entered",
       "totalRemaining": "Remaining",
@@ -587,14 +585,14 @@
       }
     },
     "ticketTypes": {
-      "title": "Edit ticket type details",
+      "title": "Edit Ticket Type Details",
       "managePricing": "Manage pricing and capacity",
       "createSuccess": "Ticket type created.",
       "updateSuccess": "Ticket type updated.",
       "deleteSuccess": "Ticket type deleted.",
       "addButton": "Add Ticket Type",
       "empty": "No ticket types yet.",
-      "deleteTitle": "Delete ticket type",
+      "deleteTitle": "Delete Ticket Type",
       "deleteDesc": "This ticket type will be permanently removed. Tickets already issued will not be affected.",
       "deleteConfirm": "Delete",
       "nameLabel": "Name",
@@ -607,7 +605,7 @@
     },
     "venues": {
       "createSuccess": "Venue created.",
-      "createTitle": "Create venue",
+      "createTitle": "Create Venue",
       "newVenue": "Create Venue",
       "searchLabel": "Search on Google Maps",
       "searchPlaceholder": "Search for a venue, address…",
@@ -661,7 +659,7 @@
       "inviteButton": "Add",
       "joined": "Joined",
       "invite": "Add collaborator",
-      "addMember": "Add collaborator",
+      "addMember": "Add Collaborator",
       "empty": "No collaborators yet.",
       "emailPlaceholder": "Search by name or email…",
       "roleMemberDesc": "Can view events and collaborators",
@@ -669,7 +667,7 @@
       "selectUser": "Please select a user from the list",
       "noMatches": "No users match that search",
       "searchPlaceholder": "Search collaborators…",
-      "removeTitle": "Remove collaborator",
+      "removeTitle": "Remove Collaborator",
       "removeConfirmDesc": "This person will lose access to the organisation and its events.",
       "removeConfirm": "Remove",
       "roleValidationNote": "Both managers and members can validate tickets at entry"
@@ -683,7 +681,7 @@
     "reconnecting": "Connection lost. Reconnecting..."
   },
   "onboarding": {
-    "title": "Set up your account",
+    "title": "Set Up Your Account",
     "subtitle": "Complete these steps to get started",
     "steps": {
       "email": "Verify email",
@@ -692,7 +690,7 @@
       "passkey": "Add passkey"
     },
     "email": {
-      "title": "Verify your email",
+      "title": "Verify Your Email",
       "description": "Check your email for a verification link or code.",
       "label": "Verification code",
       "placeholder": "Paste your verification token",
@@ -700,7 +698,7 @@
       "successToast": "Email verified."
     },
     "phone": {
-      "title": "Verify your phone",
+      "title": "Verify Your Phone",
       "description": "Enter the 6-digit code sent to your registered phone number.",
       "label": "Verification code",
       "placeholder": "123456",
@@ -711,7 +709,7 @@
       "sentTo": "We sent a 6-digit code to {{phone}}."
     },
     "kyc": {
-      "title": "Identity verification",
+      "title": "Identity Verification",
       "description": "Upload a clear photo of the identity document you selected.",
       "label": "Document",
       "dropzone": "Click to select a file",

@@ -67,8 +67,8 @@ function VerifyEmailPage() {
 
   if (token) {
     return (
-      <AuthLayout title={t('auth.verifyEmail.title')}>
-        <div className="space-y-5 text-center">
+      <AuthLayout>
+        <div className="space-y-4 py-2 text-center">
           {confirm.isPending && (
             <>
               <Loader2 className="text-primary mx-auto h-10 w-10 animate-spin" />
@@ -79,19 +79,12 @@ function VerifyEmailPage() {
             <>
               <MailCheck className="mx-auto h-10 w-10 text-green-400" />
               <p className="text-base font-semibold">{t('auth.verifyEmail.confirmed')}</p>
-              <p className="text-muted-foreground text-sm">{t('auth.verifyEmail.confirmedHint')}</p>
             </>
           )}
           {confirm.isError && (
             <>
               <CircleX className="text-destructive mx-auto h-10 w-10" />
               <p className="text-base font-semibold">{t('auth.verifyEmail.linkExpired')}</p>
-              <p className="text-muted-foreground text-sm">
-                {t('auth.verifyEmail.linkExpiredHint')}
-              </p>
-              <Link to="/login" className="text-primary block text-sm underline">
-                {t('auth.verifyEmail.backToLogin')}
-              </Link>
             </>
           )}
         </div>

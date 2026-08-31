@@ -184,7 +184,7 @@ function ReservationPage() {
       <BackButton to="/tickets" className="mb-6" />
 
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold">Complete your order</h1>
+        <h1 className="text-xl font-bold">Complete Your Order</h1>
         {!isPaid && !isCancelled && (
           <div className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 shrink-0 text-yellow-400" />

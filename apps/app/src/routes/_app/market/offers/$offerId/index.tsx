@@ -13,7 +13,7 @@ import {
   CreditCard,
   Loader2,
   TicketX,
-  XCircle,
+  X,
 } from 'lucide-react'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -242,7 +242,12 @@ function AssignmentPage() {
         <BackButton to="/market" className="absolute top-4 left-4" />
       </div>
 
-      <div className="mx-auto w-full max-w-[430px] space-y-5 px-4 py-4">
+      <div
+        className={cn(
+          'mx-auto w-full max-w-[430px] space-y-5 px-4 pt-4',
+          isPending && !clientSecret ? 'pb-56' : 'pb-4',
+        )}
+      >
         <div>
           <div className="mb-1 flex items-center justify-between">
             <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
@@ -315,6 +320,57 @@ function AssignmentPage() {
             </div>
           )
         })()}
+
+        {isPending && !clientSecret && (
+          <div className="space-y-3 rounded-xl border border-white/10 p-4">
+            <div>
+              <p className="text-sm font-semibold">{t('market.offer.holderTitle')}</p>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                {t('market.offer.holderDescription')}
+              </p>
+            </div>
+            <input
+              type="text"
+              placeholder={t('market.offer.holderName')}
+              value={holderName}
+              onChange={(e) => setHolderName(e.target.value)}
+              className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
+            />
+            <div className="flex gap-2">
+              <div className="relative shrink-0">
+                <select
+                  value={holderDocumentType}
+                  onChange={(e) => setHolderDocumentType(e.target.value as DocumentType)}
+                  className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pr-9 pl-3 text-sm text-white focus:border-white/30 focus:outline-none"
+                >
+                  {DOCUMENT_TYPES.map((type) => (
+                    <option key={type} value={type} className="bg-[hsl(0,0%,10%)]">
+                      {t(`tickets.holders.documentType.${type}`)}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+              </div>
+              <input
+                type="text"
+                placeholder={t(`tickets.holders.documentPlaceholder.${holderDocumentType}`)}
+                value={holderDni}
+                onChange={(e) => setHolderDni(e.target.value)}
+                className={cn(
+                  'placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none',
+                  holderDni && !holderDniValid
+                    ? 'border-red-500/60 focus:border-red-500/80'
+                    : 'border-white/10 focus:border-white/30',
+                )}
+              />
+            </div>
+            {holderDni && !holderDniValid && (
+              <p className="px-1 text-xs text-red-400">
+                {t(`tickets.holders.invalid.${holderDocumentType}`)}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {clientSecret && !confirming && (
@@ -363,55 +419,7 @@ function AssignmentPage() {
       {isPending && !clientSecret && (
         <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
           <div className="mx-auto w-full max-w-[430px] space-y-3 bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8">
-            <div className="space-y-2 border-t border-white/10 pt-3">
-              <div>
-                <p className="text-sm font-semibold">{t('market.offer.holderTitle')}</p>
-                <p className="text-muted-foreground text-xs">
-                  {t('market.offer.holderDescription')}
-                </p>
-              </div>
-              <input
-                type="text"
-                placeholder={t('market.offer.holderName')}
-                value={holderName}
-                onChange={(e) => setHolderName(e.target.value)}
-                className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
-              />
-              <div className="flex gap-2">
-                <div className="relative shrink-0">
-                  <select
-                    value={holderDocumentType}
-                    onChange={(e) => setHolderDocumentType(e.target.value as DocumentType)}
-                    className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pr-9 pl-3 text-sm text-white focus:border-white/30 focus:outline-none"
-                  >
-                    {DOCUMENT_TYPES.map((type) => (
-                      <option key={type} value={type} className="bg-[hsl(0,0%,10%)]">
-                        {t(`tickets.holders.documentType.${type}`)}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
-                </div>
-                <input
-                  type="text"
-                  placeholder={t(`tickets.holders.documentPlaceholder.${holderDocumentType}`)}
-                  value={holderDni}
-                  onChange={(e) => setHolderDni(e.target.value)}
-                  className={cn(
-                    'placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none',
-                    holderDni && !holderDniValid
-                      ? 'border-red-500/60 focus:border-red-500/80'
-                      : 'border-white/10 focus:border-white/30',
-                  )}
-                />
-              </div>
-              {holderDni && !holderDniValid && (
-                <p className="px-1 text-xs text-red-400">
-                  {t(`tickets.holders.invalid.${holderDocumentType}`)}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center justify-between pb-1">
+            <div className="flex items-center justify-between border-t border-white/10 pt-3 pb-1">
               <span className="text-muted-foreground text-sm">{t('market.offer.total')}</span>
               <span className="text-lg font-bold">
                 {formatPrice(assignment.price_cents, assignment.currency)}
@@ -422,7 +430,7 @@ function AssignmentPage() {
                 onClick={() => setDeclineOpen(true)}
                 className="flex h-14 items-center gap-2 rounded-full bg-red-500 pr-6 pl-5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-red-600"
               >
-                <XCircle className="h-4 w-4 shrink-0" />
+                <X className="h-4 w-4 shrink-0" />
                 {t('market.offer.decline')}
               </button>
               <button
@@ -458,7 +466,7 @@ function AssignmentPage() {
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                  <XCircle className="h-5 w-5 text-red-400" />
+                  <X className="h-5 w-5 text-red-400" />
                 </div>
                 <h3 className="text-base font-semibold text-red-400">
                   {t('market.offer.declineTitle')}
@@ -484,7 +492,7 @@ function AssignmentPage() {
                     t('common.waitSeconds', { seconds: declineSeconds })
                   ) : (
                     <>
-                      <XCircle className="h-3.5 w-3.5" />
+                      <X className="h-3.5 w-3.5" />
                       {t('market.offer.decline')}
                     </>
                   )}

@@ -165,7 +165,7 @@ export function ReservationRow({ tickets, event }: Props) {
             className="bg-primary hover:bg-primary/90 flex h-8 items-center gap-1.5 rounded-full px-4 text-xs font-semibold text-white"
           >
             <CreditCard className="h-3.5 w-3.5 shrink-0" />
-            Complete payment
+            Complete Payment
           </button>
         </div>
       )}
