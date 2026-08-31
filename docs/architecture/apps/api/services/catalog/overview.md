@@ -48,6 +48,8 @@ Catalog is the source of truth for the public event catalog in the platform. It 
 | `DELETE` | `/events/{id}/ticket-types/{tid}` | Delete a ticket type (draft or published only) | JWT (manager) |
 | `GET` | `/_internal/events/{event_id}/members/{user_id}` | Report whether the event exists and the user belongs to its organisation | Internal |
 
+An event reaches its ongoing state on its own, through the `event_lifecycle` job, so no screen calls `/events/{id}/start`. It stays available for an organiser who needs to force it.
+
 Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../../../packages/contracts/openapi/catalog/openapi.yaml)
 
 ## Events
