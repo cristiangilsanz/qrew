@@ -6,7 +6,7 @@ import logo from '@/assets/images/logos/logo.webp'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface AuthLayoutProps {
-  title: string
+  title?: string
   subtitle?: string
   children: ReactNode
 }
@@ -32,10 +32,12 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
           transition={{ duration: 0.35, delay: 0.05 }}
         >
           <Card>
-            <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-xl">{title}</CardTitle>
-              {subtitle && <CardDescription>{subtitle}</CardDescription>}
-            </CardHeader>
+            {(title || subtitle) && (
+              <CardHeader className="space-y-1 pb-4">
+                {title && <CardTitle className="text-xl">{title}</CardTitle>}
+                {subtitle && <CardDescription>{subtitle}</CardDescription>}
+              </CardHeader>
+            )}
             <CardContent>{children}</CardContent>
           </Card>
         </motion.div>

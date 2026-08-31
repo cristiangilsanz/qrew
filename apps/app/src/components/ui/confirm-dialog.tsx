@@ -21,10 +21,10 @@ const TONES: Record<
     button: 'bg-red-500',
   },
   warning: {
-    border: 'border-primary/30',
-    bubble: 'bg-primary/10',
-    accent: 'text-primary',
-    button: 'bg-primary',
+    border: 'border-green-600/30',
+    bubble: 'bg-green-600/10',
+    accent: 'text-green-400',
+    button: 'bg-green-600',
   },
 }
 

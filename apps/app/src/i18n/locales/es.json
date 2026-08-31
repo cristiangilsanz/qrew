@@ -77,9 +77,7 @@
       "backToLogin": "Volver a iniciar sesión",
       "confirming": "Confirmando tu correo…",
       "confirmed": "Correo confirmado",
-      "confirmedHint": "Ya puedes iniciar sesión y terminar de configurar tu cuenta.",
-      "linkExpired": "El enlace ya no es válido",
-      "linkExpiredHint": "Inicia sesión y solicita uno nuevo."
+      "linkExpired": "Enlace caducado"
     }
   },
   "events": {
@@ -529,11 +527,11 @@
       "edit": "Editar evento",
       "editDesc": "Gestiona fecha, lugar, imagen, descripción y máximo de entradas por usuario",
       "publish": "Publicar",
-      "markStarted": "Marcar como iniciado",
-      "markStartedTitle": "Marcar como iniciado",
+      "markStarted": "Iniciar evento",
+      "markStartedTitle": "Iniciar evento",
       "markStartedDescription": "El evento comienza y su venta se cierra definitivamente.",
       "markStartedNote": "Esto no se puede deshacer.",
-      "markStartedConfirm": "Marcar como iniciado",
+      "markStartedConfirm": "Iniciar evento",
       "cancel": "Cancelar Evento",
       "confirmPublish": "Confirmar Publicación",
       "confirmCancel": "Confirmar Cancelación",
