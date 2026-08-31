@@ -4,6 +4,7 @@ import { Plus, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { FloatingActions } from '@/components/ui/floating-actions'
 import { PageError } from '@/components/ui/page-error'
 import { SEARCH_ICON_CLASS, SEARCH_INPUT_CLASS } from '@/components/ui/search-field'
@@ -79,9 +80,9 @@ function OrganiserPage() {
       )}
 
       {!isLoading && !isError && displayOrgs.length === 0 && (
-        <p className="text-muted-foreground py-8 text-center text-sm">
+        <EmptyMessage>
           {isSearchMode ? t('organiser.search.empty') : t('organiser.org.empty')}
-        </p>
+        </EmptyMessage>
       )}
 
       <div className="space-y-3">

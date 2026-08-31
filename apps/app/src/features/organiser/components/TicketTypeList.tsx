@@ -1,9 +1,10 @@
 // renders the ticket type list component
-import { AnimatePresence, motion } from 'framer-motion'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { ListError } from '@/components/ui/list-error'
 import { TicketTypeListSkeleton } from '@/components/ui/skeleton'
 
@@ -41,11 +42,7 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
 
   return (
     <div className="space-y-4">
-      {ticketTypes.length === 0 && (
-        <p className="text-muted-foreground py-8 text-center text-sm">
-          {t('organiser.ticketTypes.empty')}
-        </p>
-      )}
+      {ticketTypes.length === 0 && <EmptyMessage>{t('organiser.ticketTypes.empty')}</EmptyMessage>}
       {ticketTypes.map((tt) =>
         canEdit && editingId === tt.id ? (
           <EditTicketTypeForm
@@ -133,61 +130,18 @@ export function TicketTypeList({ eventId, eventStatus = 'draft' }: Props) {
         ),
       )}
 
-      <AnimatePresence>
-        {confirmDeleteId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
-            onClick={(e) => e.target === e.currentTarget && setConfirmDeleteId(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-              className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-[#111] p-6"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                  <Trash2 className="h-5 w-5 text-red-400" />
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-red-400">
-                    {t('organiser.ticketTypes.deleteTitle')}
-                  </h3>
-                  <p className="text-muted-foreground text-xs capitalize">
-                    {ticketTypes.find((tt) => tt.id === confirmDeleteId)?.name ?? '—'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
-                  onClick={() => setConfirmDeleteId(null)}
-                >
-                  {t('common.goBack')}
-                </button>
-                <button
-                  onClick={() => {
-                    deleteTt.mutate(confirmDeleteId)
-                    setConfirmDeleteId(null)
-                  }}
-                  disabled={deleteTt.isPending}
-                  className="flex h-10 items-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {t('organiser.ticketTypes.deleteConfirm')}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(next) => !next && setConfirmDeleteId(null)}
+        tone="destructive"
+        icon={Trash2}
+        title={t('organiser.ticketTypes.deleteTitle')}
+        description={t('organiser.ticketTypes.deleteDesc')}
+        irreversible
+        confirmLabel={t('organiser.ticketTypes.deleteConfirm')}
+        isLoading={deleteTt.isPending}
+        onConfirm={() => confirmDeleteId && deleteTt.mutate(confirmDeleteId)}
+      />
 
       {canAdd &&
         (showAdd ? (

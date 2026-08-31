@@ -2,13 +2,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'framer-motion'
 import { Calendar, CheckCircle2, ChevronRight, Clock, CreditCard, TicketX, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { NotFound } from '@/components/ui/not-found'
 import { PageError } from '@/components/ui/page-error'
@@ -59,27 +59,6 @@ function AssignmentPage() {
   const countdown = useCountdown(assignment?.state === 'pending' ? assignment.expires_at : null)
 
   const [declineOpen, setDeclineOpen] = useState(false)
-  const [declineSeconds, setDeclineSeconds] = useState(5)
-  const declineTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    if (!declineOpen) {
-      setDeclineSeconds(5)
-      return
-    }
-    declineTimerRef.current = setInterval(() => {
-      setDeclineSeconds((s) => {
-        if (s <= 1) {
-          clearInterval(declineTimerRef.current!)
-          return 0
-        }
-        return s - 1
-      })
-    }, 1000)
-    return () => {
-      if (declineTimerRef.current) clearInterval(declineTimerRef.current)
-    }
-  }, [declineOpen])
 
   const declineOffer = useMutation({
     // implements mutation fn
@@ -291,62 +270,19 @@ function AssignmentPage() {
         </div>
       )}
 
-      <AnimatePresence>
-        {declineOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
-            onClick={(e) => e.target === e.currentTarget && setDeclineOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-              className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-[#111] p-6"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                  <X className="h-5 w-5 text-red-400" />
-                </div>
-                <h3 className="text-base font-semibold text-red-400">
-                  {t('market.offer.declineTitle')}
-                </h3>
-              </div>
-              <p className="text-muted-foreground mb-6 text-sm">{t('market.offer.declineDesc')}</p>
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setDeclineOpen(false)}
-                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
-                >
-                  {t('common.goBack')}
-                </button>
-                <button
-                  onClick={() => {
-                    setDeclineOpen(false)
-                    declineOffer.mutate()
-                  }}
-                  disabled={declineSeconds > 0 || declineOffer.isPending}
-                  className="flex h-10 min-w-[112px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {declineSeconds > 0 ? (
-                    t('common.waitSeconds', { seconds: declineSeconds })
-                  ) : (
-                    <>
-                      <X className="h-3.5 w-3.5" />
-                      {t('market.offer.decline')}
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog
+        open={declineOpen}
+        onOpenChange={setDeclineOpen}
+        tone="destructive"
+        icon={X}
+        title={t('market.offer.declineTitle')}
+        description={t('market.offer.declineDesc')}
+        irreversible
+        confirmLabel={t('market.offer.decline')}
+        isLoading={declineOffer.isPending}
+        countdownSeconds={5}
+        onConfirm={() => declineOffer.mutate()}
+      />
     </div>
   )
 }

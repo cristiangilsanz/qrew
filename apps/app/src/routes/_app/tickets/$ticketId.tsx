@@ -1,7 +1,6 @@
 // implements ticket id
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeftRight,
   Calendar,
@@ -21,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { NotFound } from '@/components/ui/not-found'
 import { PageError } from '@/components/ui/page-error'
@@ -444,68 +444,17 @@ function TicketDetailPage() {
           )}
         </div>
       </div>
-      <AnimatePresence>
-        {saleConfirmOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
-            onClick={(e) => e.target === e.currentTarget && setSaleConfirmOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-              className="w-full max-w-sm rounded-2xl border border-orange-500/20 bg-[#111] p-6"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
-                  <ArrowLeftRight className="h-5 w-5 text-orange-400" />
-                </div>
-                <h3 className="text-base font-semibold text-orange-400">
-                  {t('tickets.ticket.sale.title')}
-                </h3>
-              </div>
-
-              <p className="text-muted-foreground mb-4 text-sm">
-                {t('tickets.ticket.sale.description')}
-              </p>
-
-              <div className="text-muted-foreground mb-6 flex gap-1.5 text-xs">
-                <Info className="mt-0.5 h-3 w-3 shrink-0" />
-                <p>{t('tickets.ticket.sale.note')}</p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setSaleConfirmOpen(false)}
-                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
-                >
-                  {t('common.cancel')}
-                </button>
-                <button
-                  onClick={() => {
-                    listForResale.mutate()
-                    setSaleConfirmOpen(false)
-                  }}
-                  disabled={saleCountdown > 0 || listForResale.isPending}
-                  className="bg-primary flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold text-white disabled:opacity-40"
-                >
-                  <ArrowLeftRight className="h-3.5 w-3.5" />
-                  {saleCountdown > 0
-                    ? t('common.waitSeconds', { seconds: saleCountdown })
-                    : t('tickets.ticket.sale.confirm')}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog
+        open={saleConfirmOpen}
+        onOpenChange={setSaleConfirmOpen}
+        tone="warning"
+        icon={ArrowLeftRight}
+        title={t('tickets.ticket.sale.title')}
+        description={t('tickets.ticket.sale.description')}
+        confirmLabel={t('tickets.ticket.sale.confirm')}
+        isLoading={listForResale.isPending}
+        onConfirm={() => listForResale.mutate()}
+      />
     </div>
   )
 }

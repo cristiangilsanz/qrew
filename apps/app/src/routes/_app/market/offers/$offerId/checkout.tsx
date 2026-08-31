@@ -1,7 +1,7 @@
 // implements the checkout that names the holder of a resold ticket and takes the payment
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ChevronDown, Clock, CreditCard, Loader2 } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Clock, CreditCard, Loader2, Save } from 'lucide-react'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -17,7 +17,6 @@ import { useTickets } from '@/features/tickets/hooks/useTickets'
 import { DOCUMENT_TYPES, type DocumentType, isValidDocument } from '@/lib/documents'
 import { toastErrorMessage } from '@/lib/errors'
 import { lazyWithReload } from '@/lib/lazyWithReload'
-import { cn } from '@/lib/utils'
 
 const StripeCheckout = lazyWithReload(() =>
   import('@/features/tickets/components/StripeCheckout').then((m) => ({
@@ -55,17 +54,27 @@ function OfferCheckoutPage() {
   const [holderName, setHolderName] = useState('')
   const [documentType, setDocumentType] = useState<DocumentType>('dni')
   const [documentNumber, setDocumentNumber] = useState('')
+  const [holderSaved, setHolderSaved] = useState(false)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
   const ticketsBeforePay = useRef<Set<string>>(new Set())
   const { data: myTickets } = useTickets(confirming)
 
-  const pay = useMutation({
-    // names the holder the ticket transfers to before asking stripe for the money
-    mutationFn: async () => {
-      await marketApi.setHolders(offerId, holderName.trim(), documentNumber, documentType)
-      return marketApi.initiateOfferPayment(offerId)
+  const saveHolder = useMutation({
+    // names the person the ticket will be reissued to
+    mutationFn: () =>
+      marketApi.setHolders(offerId, holderName.trim(), documentNumber, documentType),
+    // handles on success
+    onSuccess: () => setHolderSaved(true),
+    // handles on error
+    onError: (error) => {
+      toast.error(toastErrorMessage(error, t('market.offer.holderSaveFailed')))
     },
+  })
+
+  const pay = useMutation({
+    // asks stripe for the money once the holder is on record
+    mutationFn: () => marketApi.initiateOfferPayment(offerId),
     // handles on success
     onSuccess: (payment) => setClientSecret(payment.client_secret),
     // handles on error
@@ -116,28 +125,31 @@ function OfferCheckoutPage() {
   }
 
   const documentValid = isValidDocument(documentNumber, documentType)
-  const ready = holderName.trim().length > 0 && documentValid
+  const holderComplete = holderName.trim().length > 0 && documentValid
   const expired = offer.state !== 'pending' || countdown === 0
+  const canPay = !expired && holderSaved && !clientSecret
 
   return (
     <div className="mx-auto max-w-[430px] px-4 pt-5 pb-28">
       <BackButton to="/market/offers/$offerId" params={{ offerId }} className="mb-6" />
 
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold">{t('market.offer.checkoutTitle')}</h1>
-        {!expired && (
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 shrink-0 text-yellow-400" />
-            <span
-              className={cn(
-                'font-mono text-sm font-semibold',
-                countdown < 60 ? 'text-destructive' : 'text-yellow-400',
-              )}
-            >
-              {formatSeconds(countdown)}
-            </span>
-          </div>
-        )}
+        <h1 className="text-xl font-bold">Complete Your Order</h1>
+        <div className="flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 shrink-0 text-yellow-400" />
+          {expired ? (
+            <span className="text-destructive text-sm font-semibold">Expired</span>
+          ) : (
+            <>
+              <span
+                className={`font-mono text-sm font-semibold ${countdown < 60 ? 'text-destructive' : 'text-yellow-400'}`}
+              >
+                {formatSeconds(countdown)}
+              </span>
+              <span className="text-muted-foreground text-xs">remaining</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -145,81 +157,107 @@ function OfferCheckoutPage() {
           <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
             {event?.name ?? '—'}
           </p>
-          <h2 className="text-lg leading-tight font-bold">
-            {offer.ticket_type_name ?? t('market.offer.generalAdmission')}
-          </h2>
+          <h2 className="text-lg leading-tight font-bold">{t('tickets.reservation.title')}</h2>
         </div>
 
         <div className="border-t border-white/10" />
 
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">{t('market.offer.price')}</span>
-          <span className="text-primary text-lg font-bold">
-            {formatPrice(offer.price_cents, offer.currency)}
-          </span>
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-muted-foreground min-w-0 flex-1 truncate">
+              {offer.ticket_type_name ?? t('market.offer.generalAdmission')}
+            </span>
+            <span className="w-8 shrink-0 text-right text-white/40">x1</span>
+            <span className="w-20 shrink-0 text-right font-semibold">
+              {formatPrice(offer.price_cents, offer.currency)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('tickets.checkout.quantity')}</span>
+            <span className="font-semibold">1</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-semibold">Total</span>
+            <span className="text-primary text-lg font-bold">
+              {formatPrice(offer.price_cents, offer.currency)}
+            </span>
+          </div>
         </div>
       </div>
 
-      {!clientSecret && !confirming && (
-        <div className="mt-4 space-y-3 rounded-2xl border border-white/10 bg-white/5 p-5">
-          <div>
-            <p className="text-sm font-semibold">{t('market.offer.holderTitle')}</p>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              {t('market.offer.holderDescription')}
-            </p>
+      {!expired && !clientSecret && (
+        <div className="mt-4 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold">Who&apos;s attending?</p>
+            {holderSaved && (
+              <span className="flex items-center gap-1 text-xs text-green-400">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Saved
+              </span>
+            )}
           </div>
 
-          <input
-            type="text"
-            placeholder={t('market.offer.holderName')}
-            value={holderName}
-            onChange={(e) => setHolderName(e.target.value)}
-            className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
-          />
-
-          <div className="flex gap-2">
-            <div className="relative shrink-0">
-              <select
-                value={documentType}
-                onChange={(e) => setDocumentType(e.target.value as DocumentType)}
-                className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pr-9 pl-3 text-sm text-white focus:border-white/30 focus:outline-none"
-              >
-                {DOCUMENT_TYPES.map((type) => (
-                  <option key={type} value={type} className="bg-[hsl(0,0%,10%)]">
-                    {t(`tickets.holders.documentType.${type}`)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
-            </div>
+          <div className="space-y-2">
             <input
               type="text"
-              placeholder={t(`tickets.holders.documentPlaceholder.${documentType}`)}
-              value={documentNumber}
-              onChange={(e) => setDocumentNumber(e.target.value)}
-              className={cn(
-                'placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none',
-                documentNumber && !documentValid
-                  ? 'border-red-500/60 focus:border-red-500/80'
-                  : 'border-white/10 focus:border-white/30',
-              )}
+              placeholder="Full name"
+              value={holderName}
+              onChange={(e) => {
+                setHolderName(e.target.value)
+                setHolderSaved(false)
+              }}
+              className="placeholder:text-muted-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none"
             />
+            <div>
+              <div className="flex gap-2">
+                <div className="relative shrink-0">
+                  <select
+                    value={documentType}
+                    onChange={(e) => {
+                      setDocumentType(e.target.value as DocumentType)
+                      setHolderSaved(false)
+                    }}
+                    className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pr-9 pl-3 text-sm text-white focus:border-white/30 focus:outline-none"
+                  >
+                    {DOCUMENT_TYPES.map((type) => (
+                      <option key={type} value={type} className="bg-[hsl(0,0%,10%)]">
+                        {t(`tickets.holders.documentType.${type}`)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={t(`tickets.holders.documentPlaceholder.${documentType}`)}
+                  value={documentNumber}
+                  onChange={(e) => {
+                    setDocumentNumber(e.target.value)
+                    setHolderSaved(false)
+                  }}
+                  className={`placeholder:text-muted-foreground w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none ${
+                    documentNumber && !documentValid
+                      ? 'border-red-500/60 focus:border-red-500/80'
+                      : 'border-white/10 focus:border-white/30'
+                  }`}
+                />
+              </div>
+              {documentNumber && !documentValid && (
+                <p className="mt-1 px-1 text-xs text-red-400">
+                  {t(`tickets.holders.invalid.${documentType}`)}
+                </p>
+              )}
+            </div>
           </div>
 
-          {documentNumber && !documentValid && (
-            <p className="px-1 text-xs text-red-400">
-              {t(`tickets.holders.invalid.${documentType}`)}
-            </p>
-          )}
-
-          <div className="flex justify-end pt-1">
+          <div className="flex justify-end">
             <button
-              onClick={() => pay.mutate()}
-              disabled={!ready || expired || pay.isPending}
-              className="bg-primary flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-lg transition-opacity disabled:opacity-40"
+              onClick={() => saveHolder.mutate()}
+              disabled={!holderComplete || saveHolder.isPending}
+              className="bg-primary flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white shadow-lg transition-opacity disabled:opacity-40"
             >
-              <CreditCard className="h-4 w-4" />
-              {t('market.offer.acceptAndPay')}
+              <Save className="h-4 w-4" />
+              Save
             </button>
           </div>
         </div>
@@ -237,6 +275,21 @@ function OfferCheckoutPage() {
         <div className="mt-6 flex flex-col items-center gap-3 py-10 text-center">
           <Loader2 className="text-primary h-8 w-8 animate-spin" />
           <p className="text-muted-foreground text-sm">{t('tickets.payment.confirming')}</p>
+        </div>
+      )}
+
+      {canPay && (
+        <div className="keyboard-hide fixed inset-x-0 bottom-24 z-40">
+          <div className="mx-auto flex w-full max-w-[430px] justify-end bg-gradient-to-t from-[hsl(0,0%,10%)] to-transparent px-4 pt-8">
+            <button
+              onClick={() => pay.mutate()}
+              disabled={pay.isPending}
+              className="bg-primary flex h-12 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
+            >
+              <CreditCard className="h-4 w-4" />
+              Pay Now
+            </button>
+          </div>
         </div>
       )}
     </div>

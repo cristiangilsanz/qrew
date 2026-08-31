@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { ListError } from '@/components/ui/list-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/lib/formatDate'
@@ -55,11 +56,7 @@ export function SessionList() {
 
   return (
     <div className="space-y-2">
-      {sessions.length === 0 && (
-        <p className="text-muted-foreground py-4 text-center text-sm">
-          {t('profile.sessions.empty')}
-        </p>
-      )}
+      {sessions.length === 0 && <EmptyMessage>{t('profile.sessions.empty')}</EmptyMessage>}
       <ul className="space-y-1">
         {sessions.map((session) => {
           const parsed = parseUserAgent(session.user_agent)

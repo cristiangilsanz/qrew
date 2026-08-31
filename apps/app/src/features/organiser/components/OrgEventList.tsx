@@ -2,6 +2,7 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { ListError } from '@/components/ui/list-error'
 import { OrgCardSkeleton } from '@/components/ui/skeleton'
 import { StatusChip } from '@/components/ui/status-chip'
@@ -44,11 +45,7 @@ export function OrgEventList({ orgId }: Props) {
           {t('organiser.events.create')}
         </Link>
       </div>
-      {events.length === 0 && (
-        <p className="text-muted-foreground py-4 text-center text-sm">
-          {t('organiser.events.empty')}
-        </p>
-      )}
+      {events.length === 0 && <EmptyMessage>{t('organiser.events.empty')}</EmptyMessage>}
       <div className="space-y-2">
         {events.map((event) => (
           <Link

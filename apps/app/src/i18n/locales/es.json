@@ -32,7 +32,8 @@
     "goBack": "Volver",
     "waitSeconds": "Esperar {{seconds}}s",
     "done": "Listo",
-    "copied": "Copiado."
+    "copied": "Copiado.",
+    "cannotBeUndone": "Esto no se puede deshacer."
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -166,8 +167,8 @@
         "button": "Reventa",
         "closes": "La venta cierra 24h antes del evento",
         "title": "Reventa",
-        "description": "Tu entrada se congelará y se publicará al precio original.",
-        "note": "Si no se vende, se devuelve automáticamente en 7 días.",
+        "description": "Tu entrada se congelará y se publicará al precio que pagaste por ella.",
+        "note": "Volverá a ti en siete días si nadie la toma.",
         "confirm": "Reventa"
       }
     },
@@ -292,7 +293,7 @@
       "decline": "Rechazar",
       "acceptAndPay": "Aceptar Y Pagar",
       "declineTitle": "Rechazar",
-      "declineDesc": "Perderás esta oferta de entrada y podrá ser reasignada a otra persona.",
+      "declineDesc": "La oferta pasará a la siguiente persona de la cola.",
       "generalAdmission": "Acceso general",
       "paymentConfirmed": "Pago confirmado",
       "ticketTransferring": "Tu entrada está siendo transferida.",
@@ -302,14 +303,13 @@
       "holderDescription": "Indica quién usará esta entrada. Deberá llevar este documento en la puerta.",
       "holderName": "Nombre completo",
       "holderSaveFailed": "Titular de la entrada no guardado.",
-      "checkoutTitle": "Completa tu pedido",
-      "price": "Precio"
+      "checkoutTitle": "Completa tu pedido"
     },
     "joinWaitlistButton": "Unirme a la lista",
     "leaveWaitlistButton": "Salir de la lista",
     "leaveWaitlist": {
       "title": "Salir de la lista",
-      "description": "Si alguien publica una entrada, no serás considerado para ella.",
+      "description": "Perderás tu puesto en la cola.",
       "confirm": "Salir de la lista"
     }
   },
@@ -369,12 +369,12 @@
       "devicesRevokedAll": "Todos los dispositivos eliminados.",
       "revokeDeviceTitle": "Eliminar Dispositivo",
       "removeDevice": "Eliminar",
-      "revokeDeviceDesc": "Esto cerrará todas las sesiones activas.",
+      "revokeDeviceDesc": "Ese dispositivo dejará de ser de confianza y se cerrarán todas las sesiones.",
       "revokeCurrentDeviceTitle": "Eliminar Dispositivo",
       "revokeCurrentDeviceDesc": "Esto eliminará este dispositivo y cerrará tu sesión inmediatamente.",
       "revokeAndSignOut": "Eliminar y Cerrar Sesión",
       "revokeAllDevicesTitle": "Eliminar Todos los Dispositivos",
-      "revokeAllDevicesDesc": "Todos los dispositivos de confianza serán eliminados y se cerrará tu sesión.",
+      "revokeAllDevicesDesc": "Se retirarán todos los dispositivos de confianza y se cerrarán todas las sesiones.",
       "totp": {
         "title": "Verificación en Dos Pasos",
         "description": "Verifica tu identidad con una app de autenticación.",
@@ -463,13 +463,13 @@
       "empty": "No hay sesiones activas",
       "current": "Actual",
       "revokeTitle": "Cerrar Sesión",
-      "revokeDesc": "Este dispositivo cerrará sesión inmediatamente.",
+      "revokeDesc": "Esa sesión se cerrará de inmediato.",
       "revokeAllTitle": "Revocar Todas las Sesiones",
-      "revokeAllDesc": "Todas las sesiones activas serán cerradas. También se cerrará esta sesión."
+      "revokeAllDesc": "Se cerrarán todas las sesiones, incluida esta."
     },
     "deleteAccount": {
       "title": "Eliminar cuenta",
-      "description": "Esta acción es permanente y no se puede deshacer.",
+      "description": "Se eliminarán tu cuenta y todo lo que contiene.",
       "irreversible": "Esta acción es irreversible",
       "button": "Eliminar Mi Cuenta",
       "currentPassword": "Contraseña actual",
@@ -523,7 +523,7 @@
       "descriptionLabel": "Descripción (opcional)",
       "deleteButton": "Eliminar Organización",
       "deleteTitle": "Eliminar organización",
-      "deleteDesc": "Esto eliminará permanentemente la organización y todos sus eventos, tipos de entrada y colaboradores.\n\nEsta acción no se puede deshacer.",
+      "deleteDesc": "Se eliminará la organización con sus eventos, tipos de entrada y colaboradores.",
       "deleteSuccess": "Organización eliminada."
     },
     "events": {
@@ -551,7 +551,7 @@
       "maxTicketsLabel": "Máx. entradas por usuario",
       "saleEndBeforeStart": "La venta debe terminar antes de que comience el evento",
       "searchPlaceholder": "Buscar eventos…",
-      "cancelDesc": "Las entradas emitidas serán canceladas y reembolsadas en los próximos 30 días.",
+      "cancelDesc": "Se anularán todas las entradas emitidas y se reembolsarán en treinta días.",
       "updateEvent": "Actualizar",
       "notEditableAfterStart": "Este evento ya ha comenzado y no puede editarse."
     },
@@ -588,7 +588,7 @@
       "addButton": "Añadir Tipo De Entrada",
       "empty": "Aún no hay tipos de entrada.",
       "deleteTitle": "Eliminar tipo de entrada",
-      "deleteDesc": "Este tipo de entrada se eliminará permanentemente. Las entradas ya emitidas no se verán afectadas.",
+      "deleteDesc": "Ese tipo se retirará, y las entradas ya emitidas seguirán siendo válidas.",
       "deleteConfirm": "Eliminar",
       "nameLabel": "Nombre",
       "capacityLabel": "Aforo",
@@ -662,7 +662,7 @@
       "noMatches": "Ningun usuario coincide con la busqueda",
       "searchPlaceholder": "Buscar colaboradores…",
       "removeTitle": "Eliminar colaborador",
-      "removeConfirmDesc": "Esta persona perderá el acceso a la organización y sus eventos.",
+      "removeConfirmDesc": "Esa persona perderá el acceso a la organización y a sus eventos.",
       "removeConfirm": "Eliminar",
       "roleValidationNote": "Tanto gestores como miembros pueden validar entradas en el acceso"
     }

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { EmptyMessage } from '@/components/ui/empty-message'
 import { FloatingActions } from '@/components/ui/floating-actions'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { PageError } from '@/components/ui/page-error'
@@ -70,9 +71,7 @@ function OrgEventsPage() {
       )}
 
       {!isLoading && !isError && events.length === 0 && (
-        <p className="text-muted-foreground py-8 text-center text-sm">
-          {t('organiser.events.empty')}
-        </p>
+        <EmptyMessage>{t('organiser.events.empty')}</EmptyMessage>
       )}
 
       <div className="space-y-4">

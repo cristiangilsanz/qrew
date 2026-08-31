@@ -1,11 +1,11 @@
 // implements org id
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'framer-motion'
 import { CalendarDays, ChevronRight, Trash2, Users } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton } from '@/components/ui/back-button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { PageError } from '@/components/ui/page-error'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDeleteOrganisation } from '@/features/organiser/hooks/useDeleteOrganisation'
@@ -16,8 +16,6 @@ import { useOrgEvents } from '@/features/organiser/hooks/useOrgEvents'
 export const Route = createFileRoute('/_app/management/$orgId/')({
   component: OrgDashboardPage,
 })
-
-const COUNTDOWN = 5
 
 // renders the org dashboard page component
 function OrgDashboardPage() {
@@ -41,37 +39,10 @@ function OrgDashboardPage() {
   const eventCount = eventsData?.items.length ?? 0
 
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [seconds, setSeconds] = useState(COUNTDOWN)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const deleteOrg = useDeleteOrganisation()
 
-  // implements open delete
-  const openDelete = () => {
-    setSeconds(COUNTDOWN)
-    setDeleteOpen(true)
-  }
-
-  // implements close delete
-  const closeDelete = () => {
-    setDeleteOpen(false)
-    if (timerRef.current) clearInterval(timerRef.current)
-  }
-
-  useEffect(() => {
-    if (!deleteOpen) return
-    timerRef.current = setInterval(() => {
-      setSeconds((s) => {
-        if (s <= 1) {
-          clearInterval(timerRef.current!)
-          return 0
-        }
-        return s - 1
-      })
-    }, 1000)
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [deleteOpen])
+  // opens the confirmation that removes the organisation
+  const openDelete = () => setDeleteOpen(true)
 
   if (eventsError) return <PageError onRetry={() => void refetchEvents()} />
 
@@ -152,65 +123,19 @@ function OrgDashboardPage() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {deleteOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
-            onClick={(e) => e.target === e.currentTarget && closeDelete()}
-          >
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-              className="w-full max-w-sm rounded-2xl border border-red-500/20 bg-[#111] p-6"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                  <Trash2 className="h-5 w-5 text-red-400" />
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-red-400">
-                    {t('organiser.org.deleteTitle')}
-                  </h3>
-                  <p className="text-muted-foreground text-xs capitalize">{org?.name ?? ''}</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground mb-6 text-sm whitespace-pre-line">
-                {t('organiser.org.deleteDesc')}
-              </p>
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  className="flex h-10 items-center rounded-full bg-white px-5 text-sm font-semibold text-black"
-                  onClick={closeDelete}
-                >
-                  {t('common.goBack')}
-                </button>
-                <button
-                  onClick={() => deleteOrg.mutate(orgId)}
-                  disabled={seconds > 0 || deleteOrg.isPending}
-                  className="flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-full bg-red-500 px-5 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {seconds > 0 ? (
-                    `Wait ${seconds}s`
-                  ) : (
-                    <>
-                      <Trash2 className="h-3.5 w-3.5" />
-                      {t('common.delete')}
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        tone="destructive"
+        icon={Trash2}
+        title={t('organiser.org.deleteTitle')}
+        description={t('organiser.org.deleteDesc')}
+        irreversible
+        confirmLabel={t('organiser.org.deleteConfirm')}
+        isLoading={deleteOrg.isPending}
+        countdownSeconds={5}
+        onConfirm={() => deleteOrg.mutate()}
+      />
     </div>
   )
 }
