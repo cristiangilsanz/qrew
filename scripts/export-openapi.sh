@@ -75,6 +75,7 @@ for name, cls in inspect.getmembers(mod, inspect.isclass):
         out_path = '$events_dir/' + event_name + '.schema.json'
         with open(out_path, 'w') as f:
             json.dump(schema, f, indent=2)
+            f.write('\n')
         print(f'  -> packages/contracts/openapi/$svc/events/{event_name}.schema.json')
 "
 done

@@ -8,7 +8,6 @@ paths:
       tags:
       - auth
       summary: Register a new user account
-      description: Register a new user account.
       operationId: register_v1_auth_registration__post
       requestBody:
         content:
@@ -76,7 +75,6 @@ paths:
       tags:
       - auth
       summary: Confirm an email address using the verification token
-      description: Confirm an email address.
       operationId: verify_email_v1_auth_registration_verify_email_post
       requestBody:
         content:
@@ -144,7 +142,6 @@ paths:
       tags:
       - auth
       summary: Confirm a phone number using the OTP
-      description: Confirm a phone number.
       operationId: verify_phone_v1_auth_registration_verify_phone_post
       requestBody:
         content:
@@ -214,7 +211,6 @@ paths:
       tags:
       - auth
       summary: Resend the email verification link
-      description: Send a fresh email verification link.
       operationId: resend_email_verification_v1_auth_registration_resend_email_verification_post
       requestBody:
         content:
@@ -282,7 +278,6 @@ paths:
       tags:
       - auth
       summary: Resend the phone verification OTP
-      description: Send a fresh OTP to a phone number.
       operationId: resend_phone_otp_v1_auth_registration_resend_phone_otp_post
       requestBody:
         content:
@@ -350,7 +345,6 @@ paths:
       tags:
       - auth
       summary: Log in as a registered user
-      description: Log in as a registered user.
       operationId: login_v1_auth_login_post
       requestBody:
         content:
@@ -418,7 +412,6 @@ paths:
       tags:
       - auth
       summary: Refresh an access token using a valid refresh token
-      description: Refresh an access token.
       operationId: refresh_v1_auth_refresh_post
       requestBody:
         content:
@@ -486,7 +479,6 @@ paths:
       tags:
       - auth
       summary: Log out and invalidate the refresh token
-      description: Log out and invalidate the refresh token.
       operationId: logout_v1_auth_logout_post
       requestBody:
         content:
@@ -554,7 +546,6 @@ paths:
       tags:
       - auth
       summary: Submit a national ID document for KYC verification
-      description: Submit a national ID document for KYC verification.
       operationId: kyc_upload_v1_auth_setup_kyc_upload_post
       requestBody:
         content:
@@ -624,7 +615,6 @@ paths:
       tags:
       - auth
       summary: Exchange a setup token for a full access token
-      description: Exchange a setup token for a full access token.
       operationId: complete_setup_v1_auth_setup_complete_setup_post
       responses:
         '200':
@@ -688,7 +678,6 @@ paths:
       tags:
       - auth
       summary: Begin passkey registration
-      description: Generate passkey registration options for the current user.
       operationId: passkey_register_begin_v1_auth_passkeys_register_begin_post
       responses:
         '200':
@@ -751,7 +740,6 @@ paths:
       tags:
       - auth
       summary: Complete passkey registration
-      description: Complete passkey registration.
       operationId: passkey_register_complete_v1_auth_passkeys_register_complete_post
       requestBody:
         content:
@@ -821,7 +809,6 @@ paths:
       tags:
       - auth
       summary: Begin passkey authentication
-      description: Generate passkey assertion options for an email address.
       operationId: passkey_authenticate_begin_v1_auth_passkeys_authenticate_begin_post
       requestBody:
         content:
@@ -888,7 +875,6 @@ paths:
       tags:
       - auth
       summary: Complete passkey authentication
-      description: Complete passkey authentication and return access tokens.
       operationId: passkey_authenticate_complete_v1_auth_passkeys_authenticate_complete_post
       requestBody:
         content:
@@ -956,7 +942,6 @@ paths:
       tags:
       - auth
       summary: Begin a passkey re-assertion for the current session
-      description: Begin a passkey re-assertion for the current session.
       operationId: passkey_assert_begin_v1_auth_passkeys_assert_begin_post
       responses:
         '200':
@@ -1020,7 +1005,6 @@ paths:
       tags:
       - auth
       summary: Complete a passkey re-assertion and stamp the session
-      description: Complete a passkey re-assertion and stamp the session.
       operationId: passkey_assert_complete_v1_auth_passkeys_assert_complete_post
       requestBody:
         content:
@@ -1090,7 +1074,6 @@ paths:
       tags:
       - auth
       summary: List all passkeys for the current user
-      description: List all passkeys for the current user.
       operationId: list_passkeys_v1_auth_passkeys__get
       responses:
         '200':
@@ -1154,7 +1137,6 @@ paths:
       tags:
       - auth
       summary: Delete a passkey by id
-      description: Remove a passkey if it is not the user's last one.
       operationId: delete_passkey_v1_auth_passkeys__passkey_id__delete
       security:
       - HTTPBearer: []
@@ -1220,7 +1202,6 @@ paths:
       tags:
       - auth
       summary: Rename a passkey
-      description: Rename a passkey.
       operationId: rename_passkey_v1_auth_passkeys__passkey_id__patch
       security:
       - HTTPBearer: []
@@ -1297,7 +1278,6 @@ paths:
       tags:
       - auth
       summary: List all active sessions for the current user
-      description: List all active sessions for the current user.
       operationId: list_sessions_v1_auth_sessions_get
       responses:
         '200':
@@ -1361,7 +1341,6 @@ paths:
       tags:
       - auth
       summary: Revoke a specific session
-      description: Revoke a specific session.
       operationId: revoke_session_v1_auth_sessions__jti__delete
       security:
       - HTTPBearer: []
@@ -1371,6 +1350,8 @@ paths:
         required: true
         schema:
           type: string
+          minLength: 1
+          maxLength: 256
           title: Jti
       responses:
         '204':
@@ -1428,7 +1409,6 @@ paths:
       tags:
       - auth
       summary: Revoke all sessions for the current user
-      description: Revoke all sessions for the current user.
       operationId: revoke_all_sessions_v1_auth_sessions_revoke_all_post
       responses:
         '200':
@@ -1492,7 +1472,6 @@ paths:
       tags:
       - auth
       summary: Change the current user's password
-      description: Change the current user's password.
       operationId: change_password_v1_auth_account_change_password_post
       requestBody:
         content:
@@ -1562,7 +1541,6 @@ paths:
       tags:
       - auth
       summary: Soft-delete the current user's account
-      description: Soft-delete the current user's account.
       operationId: delete_account_v1_auth_account_delete_post
       requestBody:
         content:
@@ -1632,7 +1610,6 @@ paths:
       tags:
       - auth
       summary: Request an email address change
-      description: Request an email address change.
       operationId: change_email_v1_auth_account_change_email_post
       requestBody:
         content:
@@ -1702,7 +1679,6 @@ paths:
       tags:
       - auth
       summary: Confirm an email address change
-      description: Confirm an email address change.
       operationId: confirm_email_change_v1_auth_account_confirm_email_change_post
       requestBody:
         content:
@@ -1770,7 +1746,6 @@ paths:
       tags:
       - auth
       summary: Request a phone number change
-      description: Request a phone number change.
       operationId: change_phone_v1_auth_account_change_phone_post
       requestBody:
         content:
@@ -1840,7 +1815,6 @@ paths:
       tags:
       - auth
       summary: Confirm a phone number change
-      description: Confirm a phone number change.
       operationId: confirm_phone_change_v1_auth_account_confirm_phone_change_post
       requestBody:
         content:
@@ -1905,12 +1879,145 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       security:
       - HTTPBearer: []
+  /v1/auth/account/forgot-password:
+    post:
+      tags:
+      - auth
+      summary: Request a password reset link
+      operationId: forgot_password_v1_auth_account_forgot_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPasswordResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/account/reset-password:
+    post:
+      tags:
+      - auth
+      summary: Reset password using a token
+      operationId: reset_password_v1_auth_account_reset_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/auth/devices/fingerprint:
     post:
       tags:
       - auth
       summary: Report a device fingerprint for the current user
-      description: Report a device fingerprint for the current user.
       operationId: report_fingerprint_v1_auth_devices_fingerprint_post
       requestBody:
         content:
@@ -1980,7 +2087,6 @@ paths:
       tags:
       - auth
       summary: Begin device binding
-      description: Begin device binding.
       operationId: device_bind_begin_v1_auth_devices_bind_begin_post
       responses:
         '200':
@@ -2044,7 +2150,6 @@ paths:
       tags:
       - auth
       summary: Complete device binding
-      description: Complete device binding.
       operationId: device_bind_complete_v1_auth_devices_bind_complete_post
       requestBody:
         content:
@@ -2114,7 +2219,6 @@ paths:
       tags:
       - auth
       summary: Submit a device integrity attestation
-      description: Submit a device integrity attestation.
       operationId: device_attest_v1_auth_devices_attest_post
       requestBody:
         content:
@@ -2184,7 +2288,6 @@ paths:
       tags:
       - auth
       summary: List the current user's bound devices
-      description: List the current user's bound devices.
       operationId: list_devices_v1_auth_devices_get
       responses:
         '200':
@@ -2248,7 +2351,6 @@ paths:
       tags:
       - auth
       summary: Revoke a specific bound device
-      description: Revoke a specific bound device.
       operationId: revoke_device_v1_auth_devices__device_id__revoke_post
       security:
       - HTTPBearer: []
@@ -2320,7 +2422,6 @@ paths:
       tags:
       - auth
       summary: Revoke every device except the caller
-      description: Revoke every other device and kill all sessions.
       operationId: revoke_all_devices_v1_auth_devices_revoke_all_post
       responses:
         '200':
@@ -2384,7 +2485,6 @@ paths:
       tags:
       - auth
       summary: Begin account recovery with national ID document
-      description: Begin account recovery.
       operationId: recovery_begin_v1_auth_recovery_begin_post
       requestBody:
         content:
@@ -2452,7 +2552,6 @@ paths:
       tags:
       - auth
       summary: Complete account recovery by registering a new passkey
-      description: Complete account recovery.
       operationId: recovery_complete_v1_auth_recovery_complete_post
       requestBody:
         content:
@@ -2522,7 +2621,6 @@ paths:
       tags:
       - auth
       summary: Return the current user's profile
-      description: Return the current user's profile.
       operationId: get_me_v1_auth_profile_me_get
       responses:
         '200':
@@ -2586,7 +2684,6 @@ paths:
       tags:
       - auth
       summary: Return which onboarding steps the user has completed
-      description: Return which onboarding steps the user has completed.
       operationId: get_onboarding_status_v1_auth_profile_onboarding_status_get
       responses:
         '200':
@@ -2650,7 +2747,6 @@ paths:
       tags:
       - auth
       summary: Return the current user's audit history
-      description: Return the current user's audit history.
       operationId: list_user_audit_v1_auth_profile_audit_get
       security:
       - HTTPBearer: []
@@ -2661,6 +2757,7 @@ paths:
         schema:
           anyOf:
           - type: string
+            maxLength: 64
           - type: 'null'
           title: Action
       - name: since
@@ -2742,12 +2839,421 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/profile/users/public:
+    post:
+      tags:
+      - auth
+      summary: Return public profiles (name only) for a list of user IDs
+      operationId: get_public_profiles_v1_auth_profile_users_public_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPublicProfilesRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserPublicProfile'
+                type: array
+                title: Response Get Public Profiles V1 Auth Profile Users Public Post
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/totp/status:
+    get:
+      tags:
+      - auth
+      - totp
+      summary: Check whether 2FA is enabled for the current user
+      operationId: totp_status_v1_auth_totp_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotpStatusResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/totp/setup:
+    post:
+      tags:
+      - auth
+      - totp
+      summary: Generate a new TOTP secret and provisioning URI
+      operationId: totp_setup_v1_auth_totp_setup_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotpSetupResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/totp/confirm:
+    post:
+      tags:
+      - auth
+      - totp
+      summary: Verify first TOTP code and enable 2FA
+      operationId: totp_confirm_v1_auth_totp_confirm_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TotpConfirmRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotpConfirmResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/totp/verify:
+    post:
+      tags:
+      - auth
+      - totp
+      summary: Verify TOTP code after login challenge and issue full session tokens
+      operationId: totp_verify_v1_auth_totp_verify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TotpVerifyRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotpVerifyResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/auth/totp/disable:
+    delete:
+      tags:
+      - auth
+      - totp
+      summary: Disable 2FA after verifying current TOTP code
+      operationId: totp_disable_v1_auth_totp_disable_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TotpDisableRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotpDisableResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
   /v1/admin/kyc/{user_id}/review:
     post:
       tags:
       - admin
       summary: Approve or reject a pending KYC submission
-      description: Approve or reject a pending KYC submission.
       operationId: kyc_review_v1_admin_kyc__user_id__review_post
       security:
       - HTTPBearer: []
@@ -2825,7 +3331,6 @@ paths:
       tags:
       - admin
       summary: List accounts associated with a device fingerprint
-      description: List accounts associated with a device fingerprint.
       operationId: get_fingerprint_v1_admin_fingerprints__fingerprint_hash__get
       security:
       - HTTPBearer: []
@@ -2835,6 +3340,7 @@ paths:
         required: true
         schema:
           type: string
+          pattern: ^[0-9a-fA-F]{32,128}$
           title: Fingerprint Hash
       responses:
         '200':
@@ -2891,12 +3397,86 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/admin/users/search:
+    get:
+      tags:
+      - admin
+      summary: Search users by partial email (admin only)
+      operationId: search_users_v1_admin_users_search_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+          title: Q
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserSearchResult'
+                title: Response Search Users V1 Admin Users Search Get
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/admin/users:
     get:
       tags:
       - admin
       summary: List and search users
-      description: List and search users, newest first.
       operationId: list_users_v1_admin_users_get
       security:
       - HTTPBearer: []
@@ -2922,6 +3502,7 @@ paths:
         schema:
           anyOf:
           - type: string
+            maxLength: 128
           - type: 'null'
           title: Search
       - name: kyc_status
@@ -2992,7 +3573,6 @@ paths:
       tags:
       - admin
       summary: Clear a per-account login lockout
-      description: Clear a per-account login lockout.
       operationId: unlock_user_v1_admin_users__user_id__unlock_post
       security:
       - HTTPBearer: []
@@ -3068,7 +3648,6 @@ paths:
       - admin
       - admin-outbox
       summary: Paginate outbox rows the drainer parked in the DLQ
-      description: Return outbox rows that were parked in the DLQ.
       operationId: list_dlq_v1_admin_outbox_dlq_get
       security:
       - HTTPBearer: []
@@ -3148,7 +3727,6 @@ paths:
       tags:
       - uploads
       summary: Mint a signed upload URL for a new object
-      description: Mint a signed upload URL for a new object.
       operationId: sign_upload_v1_uploads_sign_post
       requestBody:
         content:
@@ -3275,9 +3853,18 @@ components:
           type: string
           contentMediaType: application/octet-stream
           title: Document
+        document_number:
+          type: string
+          maxLength: 50
+          minLength: 1
+          title: Document Number
+        document_type:
+          $ref: '#/components/schemas/DocumentType'
+          default: dni
       type: object
       required:
       - document
+      - document_number
       title: Body_kyc_upload_v1_auth_setup_kyc_upload_post
     Body_recovery_begin_v1_auth_recovery_begin_post:
       properties:
@@ -3488,6 +4075,10 @@ components:
             format: date-time
           - type: 'null'
           title: Last Seen At
+        is_current:
+          type: boolean
+          title: Is Current
+          default: false
       type: object
       required:
       - id
@@ -3516,6 +4107,13 @@ components:
       required:
       - message
       title: DeviceRevokeResponse
+    DocumentType:
+      type: string
+      enum:
+      - dni
+      - nie
+      - other
+      title: DocumentType
     ErrorDetail:
       properties:
         message:
@@ -3594,6 +4192,25 @@ components:
       - message
       - flagged
       title: FingerprintReportResponse
+    ForgotPasswordRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+      type: object
+      required:
+      - email
+      title: ForgotPasswordRequest
+    ForgotPasswordResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: ForgotPasswordResponse
     KycAction:
       type: string
       enum:
@@ -3685,6 +4302,10 @@ components:
           type: boolean
           title: Setup Required
           default: false
+        totp_required:
+          type: boolean
+          title: Totp Required
+          default: false
         password_compromised:
           type: boolean
           title: Password Compromised
@@ -3714,6 +4335,12 @@ components:
       title: LogoutResponse
     OnboardingStatusResponse:
       properties:
+        email:
+          type: string
+          title: Email
+        phone_number:
+          type: string
+          title: Phone Number
         email_verified:
           type: boolean
           title: Email Verified
@@ -3723,19 +4350,35 @@ components:
         kyc_submitted:
           type: boolean
           title: Kyc Submitted
+        kyc_status:
+          type: string
+          title: Kyc Status
         passkey_registered:
           type: boolean
           title: Passkey Registered
         is_complete:
           type: boolean
           title: Is Complete
+        current_step:
+          type: string
+          enum:
+          - email
+          - phone
+          - kyc
+          - passkey
+          - pending
+          title: Current Step
       type: object
       required:
+      - email
+      - phone_number
       - email_verified
       - phone_verified
       - kyc_submitted
+      - kyc_status
       - passkey_registered
       - is_complete
+      - current_step
       title: OnboardingStatusResponse
     OutboxDlqItem:
       properties:
@@ -4148,6 +4791,30 @@ components:
       required:
       - message
       title: ResendResponse
+    ResetPasswordRequest:
+      properties:
+        token:
+          type: string
+          minLength: 1
+          title: Token
+        new_password:
+          type: string
+          minLength: 8
+          title: New Password
+      type: object
+      required:
+      - token
+      - new_password
+      title: ResetPasswordRequest
+    ResetPasswordResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: ResetPasswordResponse
     RevokeAllResponse:
       properties:
         message:
@@ -4188,6 +4855,15 @@ components:
           type: string
           format: date-time
           title: Last Used At
+        is_current:
+          type: boolean
+          title: Is Current
+          default: false
+        location:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Location
       type: object
       required:
       - id
@@ -4239,6 +4915,112 @@ components:
       - expires_at
       - max_size_bytes
       title: SignUploadResponse
+    TotpConfirmRequest:
+      properties:
+        secret:
+          type: string
+          title: Secret
+        code:
+          type: string
+          maxLength: 10
+          minLength: 6
+          title: Code
+        backup_codes:
+          items:
+            type: string
+          type: array
+          title: Backup Codes
+      type: object
+      required:
+      - secret
+      - code
+      - backup_codes
+      title: TotpConfirmRequest
+    TotpConfirmResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: TotpConfirmResponse
+    TotpDisableRequest:
+      properties:
+        code:
+          type: string
+          maxLength: 10
+          minLength: 6
+          title: Code
+      type: object
+      required:
+      - code
+      title: TotpDisableRequest
+    TotpDisableResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: TotpDisableResponse
+    TotpSetupResponse:
+      properties:
+        provisioning_uri:
+          type: string
+          title: Provisioning Uri
+        backup_codes:
+          items:
+            type: string
+          type: array
+          title: Backup Codes
+        secret:
+          type: string
+          title: Secret
+      type: object
+      required:
+      - provisioning_uri
+      - backup_codes
+      - secret
+      title: TotpSetupResponse
+    TotpStatusResponse:
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+      type: object
+      required:
+      - enabled
+      title: TotpStatusResponse
+    TotpVerifyRequest:
+      properties:
+        code:
+          type: string
+          maxLength: 10
+          minLength: 6
+          title: Code
+      type: object
+      required:
+      - code
+      title: TotpVerifyRequest
+    TotpVerifyResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        refresh_token:
+          type: string
+          title: Refresh Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+      type: object
+      required:
+      - access_token
+      - refresh_token
+      title: TotpVerifyResponse
     UserAuditEventResponse:
       properties:
         id:
@@ -4304,6 +5086,9 @@ components:
         phone_verified:
           type: boolean
           title: Phone Verified
+        is_admin:
+          type: boolean
+          title: Is Admin
         created_at:
           type: string
           format: date-time
@@ -4317,8 +5102,57 @@ components:
       - kyc_status
       - email_verified
       - phone_verified
+      - is_admin
       - created_at
       title: UserProfileResponse
+    UserPublicProfile:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        full_name:
+          type: string
+          title: Full Name
+        email:
+          type: string
+          title: Email
+      type: object
+      required:
+      - id
+      - full_name
+      - email
+      title: UserPublicProfile
+    UserPublicProfilesRequest:
+      properties:
+        user_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: User Ids
+      type: object
+      required:
+      - user_ids
+      title: UserPublicProfilesRequest
+    UserSearchResult:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          title: Email
+        full_name:
+          type: string
+          title: Full Name
+      type: object
+      required:
+      - id
+      - email
+      - full_name
+      title: UserSearchResult
     UserSummaryResponse:
       properties:
         id:
@@ -4334,6 +5168,16 @@ components:
         kyc_status:
           type: string
           title: Kyc Status
+        national_id_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: National Id Type
+        kyc_ocr_result:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Kyc Ocr Result
         email_verified:
           type: boolean
           title: Email Verified
