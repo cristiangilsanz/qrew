@@ -54,6 +54,8 @@ This service does not publish domain events.
 | `middleware` | Request ID, correlation, and security headers |
 | `observability` | OpenTelemetry setup |
 | `worker` | arq worker bootstrap |
+| `db` | Database and Redis dependency factories |
+| `probes` | Liveness and readiness health endpoints |
 
 ## External Dependencies
 

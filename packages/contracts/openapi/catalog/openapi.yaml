@@ -4,26 +4,36 @@ info:
   version: 0.1.0
 paths:
   /v1/organisations:
-    post:
+    get:
       tags:
       - organisations
-      summary: Create a new organisation
-      operationId: create_organisation_v1_organisations_post
+      summary: List organisations the caller belongs to or all of them for an admin
+      operationId: list_my_organisations_v1_organisations_get
       security:
       - HTTPBearer: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrganisationCreateRequest'
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
       responses:
-        '201':
+        '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganisationResponse'
+                $ref: '#/components/schemas/Page_OrganisationResponse_'
         '400':
           description: Bad request
           content:
@@ -72,36 +82,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-    get:
+    post:
       tags:
       - organisations
-      summary: List organisations the caller belongs to or all of them for an admin
-      operationId: list_my_organisations_v1_organisations_get
+      summary: Create a new organisation
+      operationId: create_organisation_v1_organisations_post
       security:
       - HTTPBearer: []
-      parameters:
-      - name: cursor
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Cursor
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          default: 20
-          title: Limit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganisationCreateRequest'
       responses:
-        '200':
+        '201':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Page_OrganisationResponse_'
+                $ref: '#/components/schemas/OrganisationResponse'
         '400':
           description: Bad request
           content:
@@ -233,11 +233,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/organisations/{organisation_id}:
-    get:
+    delete:
       tags:
       - organisations
-      summary: Read the public profile of an organisation
-      operationId: get_public_organisation_v1_organisations__organisation_id__get
+      summary: Soft-delete an organisation (owner only)
+      operationId: delete_organisation_v1_organisations__organisation_id__delete
+      security:
+      - HTTPBearer: []
       parameters:
       - name: organisation_id
         in: path
@@ -247,12 +249,8 @@ paths:
           format: uuid
           title: Organisation Id
       responses:
-        '200':
+        '204':
           description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrganisationPublicResponse'
         '400':
           description: Bad request
           content:
@@ -301,13 +299,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-    delete:
+    get:
       tags:
       - organisations
-      summary: Soft-delete an organisation (owner only)
-      operationId: delete_organisation_v1_organisations__organisation_id__delete
-      security:
-      - HTTPBearer: []
+      summary: Read the public profile of an organisation
+      operationId: get_public_organisation_v1_organisations__organisation_id__get
       parameters:
       - name: organisation_id
         in: path
@@ -317,8 +313,12 @@ paths:
           format: uuid
           title: Organisation Id
       responses:
-        '204':
+        '200':
           description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationPublicResponse'
         '400':
           description: Bad request
           content:
@@ -670,11 +670,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/organisations/{organisation_id}/events:
-    post:
+    get:
       tags:
       - organisations
-      summary: Create a draft event under an organisation
-      operationId: create_event_v1_organisations__organisation_id__events_post
+      summary: List events under an organisation
+      operationId: list_org_events_v1_organisations__organisation_id__events_get
       security:
       - HTTPBearer: []
       parameters:
@@ -685,19 +685,28 @@ paths:
           type: string
           format: uuid
           title: Organisation Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventCreateRequest'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
       responses:
-        '201':
+        '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/Page_EventResponse_'
         '400':
           description: Bad request
           content:
@@ -746,11 +755,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-    get:
+    post:
       tags:
       - organisations
-      summary: List events under an organisation
-      operationId: list_org_events_v1_organisations__organisation_id__events_get
+      summary: Create a draft event under an organisation
+      operationId: create_event_v1_organisations__organisation_id__events_post
       security:
       - HTTPBearer: []
       parameters:
@@ -761,28 +770,19 @@ paths:
           type: string
           format: uuid
           title: Organisation Id
-      - name: cursor
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Cursor
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          default: 20
-          title: Limit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCreateRequest'
       responses:
-        '200':
+        '201':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Page_EventResponse_'
+                $ref: '#/components/schemas/EventResponse'
         '400':
           description: Bad request
           content:
@@ -910,26 +910,52 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/venues:
-    post:
+    get:
       tags:
       - venues
-      summary: Create a new venue
-      operationId: create_venue_v1_venues_post
-      security:
-      - HTTPBearer: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VenueCreateRequest'
+      summary: List venues
+      operationId: list_venues_v1_venues_get
+      parameters:
+      - name: city
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: City
+      - name: country
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Country
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
       responses:
-        '201':
+        '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VenueResponse'
+                $ref: '#/components/schemas/Page_VenuePublicResponse_'
         '400':
           description: Bad request
           content:
@@ -978,52 +1004,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-    get:
+    post:
       tags:
       - venues
-      summary: List venues
-      operationId: list_venues_v1_venues_get
-      parameters:
-      - name: city
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            maxLength: 64
-          - type: 'null'
-          title: City
-      - name: country
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            maxLength: 64
-          - type: 'null'
-          title: Country
-      - name: cursor
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Cursor
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          default: 20
-          title: Limit
+      summary: Create a new venue
+      operationId: create_venue_v1_venues_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VenueCreateRequest'
       responses:
-        '200':
+        '201':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Page_VenuePublicResponse_'
+                $ref: '#/components/schemas/VenueResponse'
         '400':
           description: Bad request
           content:
@@ -1142,13 +1142,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/events/{event_id}:
-    patch:
+    get:
       tags:
       - events
-      summary: Edit a draft event
-      operationId: update_event_v1_events__event_id__patch
-      security:
-      - HTTPBearer: []
+      summary: Read a published event with embedded organisation, venue and tiers
+      operationId: get_public_event_v1_events__event_id__get
       parameters:
       - name: event_id
         in: path
@@ -1157,19 +1155,13 @@ paths:
           type: string
           format: uuid
           title: Event Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventUpdateRequest'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/PublicEventDetailResponse'
         '400':
           description: Bad request
           content:
@@ -1218,11 +1210,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-    get:
+    patch:
       tags:
       - events
-      summary: Read a published event with embedded organisation, venue and tiers
-      operationId: get_public_event_v1_events__event_id__get
+      summary: Edit a draft event
+      operationId: update_event_v1_events__event_id__patch
+      security:
+      - HTTPBearer: []
       parameters:
       - name: event_id
         in: path
@@ -1231,13 +1225,19 @@ paths:
           type: string
           format: uuid
           title: Event Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpdateRequest'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublicEventDetailResponse'
+                $ref: '#/components/schemas/EventResponse'
         '400':
           description: Bad request
           content:
@@ -1500,82 +1500,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/events/{event_id}/ticket-types:
-    post:
-      tags:
-      - events
-      summary: Create a ticket type under an event
-      operationId: create_ticket_type_v1_events__event_id__ticket_types_post
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: event_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          title: Event Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TicketTypeCreateRequest'
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TicketTypeResponse'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
-          description: Too many requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     get:
       tags:
       - events
@@ -1659,12 +1583,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /v1/events/{event_id}/ticket-types/{ticket_type_id}:
-    patch:
+    post:
       tags:
       - events
-      summary: Edit a ticket type
-      operationId: update_ticket_type_v1_events__event_id__ticket_types__ticket_type_id__patch
+      summary: Create a ticket type under an event
+      operationId: create_ticket_type_v1_events__event_id__ticket_types_post
       security:
       - HTTPBearer: []
       parameters:
@@ -1675,21 +1598,14 @@ paths:
           type: string
           format: uuid
           title: Event Id
-      - name: ticket_type_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          title: Ticket Type Id
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TicketTypeUpdateRequest'
+              $ref: '#/components/schemas/TicketTypeCreateRequest'
       responses:
-        '200':
+        '201':
           description: Successful Response
           content:
             application/json:
@@ -1743,6 +1659,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/events/{event_id}/ticket-types/{ticket_type_id}:
     delete:
       tags:
       - events
@@ -1768,6 +1685,89 @@ paths:
       responses:
         '204':
           description: Successful Response
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+      - events
+      summary: Edit a ticket type
+      operationId: update_ticket_type_v1_events__event_id__ticket_types__ticket_type_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      - name: ticket_type_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Type Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketTypeUpdateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketTypeResponse'
         '400':
           description: Bad request
           content:

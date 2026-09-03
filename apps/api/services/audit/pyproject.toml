@@ -28,6 +28,8 @@ dependencies = [
     "contracts",
     "worker",
     "security",
+    "db",
+    "probes",
 ]
 
 [tool.uv.sources]
@@ -40,6 +42,8 @@ messaging = { workspace = true }
 contracts = { workspace = true }
 worker = { workspace = true }
 security = { workspace = true }
+db = { workspace = true }
+probes = { workspace = true }
 
 [project.scripts]
 audit-dev = "com.qode.qrew.v1.audit.__main__:main"
