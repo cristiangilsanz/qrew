@@ -47,8 +47,20 @@ class PasskeyRegistrationService:
         self._redis = redis
         self._audit = audit
 
+    # refuses a second passkey, since an account holds exactly one
+    async def _reject_if_already_registered(self, user: User) -> None:
+        existing = await self._passkey_repo.get_all_by_user_id(user.id)
+        if existing:
+            await logger.awarning(
+                "passkey_registration_failed",
+                reason="already_registered",
+                user_id=str(user.id),
+            )
+            raise PasskeyError("Passkey already registered.")
+
     # generates the webauthn options for a new resident key registration
     async def begin(self, user: User) -> str:
+        await self._reject_if_already_registered(user)
         options = webauthn.generate_registration_options(
             rp_id=settings.rp_id,
             rp_name=settings.rp_name,
@@ -66,6 +78,7 @@ class PasskeyRegistrationService:
 
     # verifies the attestation and stores the new passkey credential
     async def complete(self, user: User, request: PasskeyRegistrationCompleteRequest) -> None:
+        await self._reject_if_already_registered(user)
         raw_challenge = await self._consume_challenge(user)
         verification = self._verify_attestation(user, raw_challenge, request)
         await self._passkey_repo.create(

@@ -21,6 +21,7 @@ class DenialReason(StrEnum):
     state = "state"
     reassertion = "reassertion"
     attestation = "attestation"
+    device_binding = "device_binding"
     geofence = "geofence"
     time_window = "time_window"
     not_found = "not_found"
@@ -61,8 +62,8 @@ async def load_inputs(
         return DenialReason.not_found
     device_ctx = await session.get(DeviceContext, device_id)
     if device_ctx is None:
-        if not settings.ticket_qr_skip_attestation:
-            return DenialReason.attestation
+        if settings.ticket_qr_require_device_binding:
+            return DenialReason.device_binding
         now = datetime.now(UTC)
         device_ctx = DeviceContext(
             device_id=device_id,
@@ -85,7 +86,7 @@ def evaluate_gate(
 ) -> DenialReason | None:
     if inputs.ticket.state not in {TicketState.issued, TicketState.scanning}:
         return DenialReason.state
-    if not settings.ticket_qr_skip_attestation:
+    if settings.ticket_qr_require_reassertion:
         if last_asserted_at is None:
             return DenialReason.reassertion
         la = last_asserted_at
@@ -93,9 +94,10 @@ def evaluate_gate(
             la = la.replace(tzinfo=UTC)
         if now - la > timedelta(seconds=settings.ticket_qr_reassert_window_seconds):
             return DenialReason.reassertion
-    if not settings.ticket_qr_skip_attestation:
+    if settings.ticket_qr_require_device_binding:
         if inputs.device_ctx.revoked_at is not None:
-            return DenialReason.attestation
+            return DenialReason.device_binding
+    if settings.ticket_qr_require_attestation:
         if inputs.device_ctx.attested_at is None:
             return DenialReason.attestation
         attested = inputs.device_ctx.attested_at
@@ -104,7 +106,7 @@ def evaluate_gate(
         if now - attested > timedelta(hours=settings.ticket_qr_attestation_max_age_hours):
             return DenialReason.attestation
     event_ctx = inputs.event_ctx
-    if not settings.ticket_qr_skip_geofence:
+    if settings.ticket_qr_require_geofence:
         if (
             event_ctx.latitude is None  # type: ignore[reportUnnecessaryComparison]
             or event_ctx.longitude is None  # type: ignore[reportUnnecessaryComparison]

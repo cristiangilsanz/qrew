@@ -92,17 +92,17 @@ async def _resolve_or_deny(
     if settings.gate_bypass:
         return await _resolve_or_deny_bypass(db, ticket_id=ticket_id, current_user=current_user)
     device_id = current_user.device_id
-    if device_id is None and settings.ticket_qr_skip_attestation:
+    if device_id is None and not settings.ticket_qr_require_device_binding:
         device_id = _BYPASS_DEVICE_ID
     if device_id is None:
         await record_denial(
             audit=audit,
             user_id=current_user.id,
             ticket_id=ticket_id,
-            reason=DenialReason.attestation.value,
+            reason=DenialReason.device_binding.value,
             device_id=None,
         )
-        raise _denied_exception(DenialReason.attestation)
+        raise _denied_exception(DenialReason.device_binding)
     resolved = await load_inputs(
         db, ticket_id=ticket_id, user_id=current_user.id, device_id=device_id
     )

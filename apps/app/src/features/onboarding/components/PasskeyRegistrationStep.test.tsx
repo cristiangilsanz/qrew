@@ -31,16 +31,16 @@ function renderStep(onSuccess = vi.fn()) {
 }
 
 describe('PasskeyRegistrationStep', () => {
-  it('renders the register passkey button', () => {
+  it('renders the create passkey button', () => {
     renderStep()
-    expect(screen.getByRole('button', { name: /register passkey/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /create passkey/i })).toBeInTheDocument()
   })
 
   it('calls onSuccess after successful registration', async () => {
     const onSuccess = vi.fn()
     renderStep(onSuccess)
 
-    await userEvent.click(screen.getByRole('button', { name: /register passkey/i }))
+    await userEvent.click(screen.getByRole('button', { name: /create passkey/i }))
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalled()

@@ -177,12 +177,15 @@
       "description": "Show your QR code at the venue entrance. Your location is required.",
       "showButton": "Show QR Code",
       "locating": "Getting your location…",
+      "asserting": "Confirm it is you to show the code…",
       "expiresAt": "Rotates at {{time}}",
       "retry": "Try Again",
       "denied": "QR unavailable.",
       "deniedLocation": "You must allow access to your location.",
       "deniedGeofence": "You must be at the venue to display your QR code.",
       "deniedAttestation": "QR codes are available on attested devices only.",
+      "deniedReassertion": "You must confirm your identity with your passkey to show the QR code.",
+      "deniedDeviceBinding": "QR codes are available only on the device bound to your account.",
       "deniedState": "This ticket cannot be used for entry in its current state.",
       "windowPending": "Your QR code will be available 5 hours before the event.",
       "deniedTimeWindow": "QR codes are only available from 5 hours before the event until it ends.",
@@ -491,16 +494,16 @@
   },
   "passkeys": {
     "title": "Passkeys",
-    "empty": "No passkeys registered yet.",
+    "empty": "No passkey registered yet.",
     "unnamedPasskey": "Unnamed passkey",
     "lastUsed": "Last used {{date}}",
     "registerSuccess": "Passkey registered.",
     "deleteSuccess": "Passkey removed.",
     "renameSuccess": "Passkey renamed.",
     "register": {
-      "title": "Add a Passkey",
+      "title": "Create your passkey",
       "description": "Use your device's biometric sensor or PIN",
-      "submit": "Register Passkey"
+      "submit": "Create Passkey"
     },
     "errors": {
       "registerFailed": "Passkey not registered.",

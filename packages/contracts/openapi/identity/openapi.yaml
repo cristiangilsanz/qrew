@@ -3904,9 +3904,13 @@ components:
           type: string
           format: date-time
           title: Asserted At
+        access_token:
+          type: string
+          title: Access Token
       type: object
       required:
       - asserted_at
+      - access_token
       title: PasskeyAssertCompleteResponse
     PasskeyAuthenticationBeginRequest:
       properties:

@@ -1,13 +1,14 @@
 // renders the qr display component
 import { Capacitor } from '@capacitor/core'
 import { Geolocation } from '@capacitor/geolocation'
-import { Clock, Loader2, MapPin, QrCode, RefreshCw, ShieldX } from 'lucide-react'
+import { Clock, Fingerprint, Loader2, MapPin, QrCode, RefreshCw, ShieldX } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import QRCode from 'react-qr-code'
 
 import { Button } from '@/components/ui/button'
 import { env } from '@/config/env'
+import { useReassertPasskey } from '@/features/passkeys/hooks/useReassertPasskey'
 import { useAuthStore } from '@/store/auth'
 
 interface Props {
@@ -18,12 +19,24 @@ interface Props {
 
 type QrState =
   | { status: 'idle' }
+  | { status: 'asserting' }
   | { status: 'locating' }
   | { status: 'streaming'; jwt: string; expiresAt: string }
   | { status: 'denied'; reason: string }
   | { status: 'error' }
 
 const _QR_WINDOW_HOURS_BEFORE = 5
+
+// maps each denial the gate can return to the line the holder reads
+const DENIAL_KEYS: Record<string, string> = {
+  geolocation: 'tickets.qr.deniedLocation',
+  geofence: 'tickets.qr.deniedGeofence',
+  attestation: 'tickets.qr.deniedAttestation',
+  reassertion: 'tickets.qr.deniedReassertion',
+  device_binding: 'tickets.qr.deniedDeviceBinding',
+  state: 'tickets.qr.deniedState',
+  time_window: 'tickets.qr.deniedTimeWindow',
+}
 
 // provides use countdown
 function useCountdown(targetIso: string | null): number {
@@ -50,10 +63,11 @@ export function QrDisplay({ ticketId, startsAt, endsAt }: Props) {
   const activeRef = useRef(false)
   const expiresAt = state.status === 'streaming' ? state.expiresAt : null
   const secondsLeft = useCountdown(expiresAt)
+  const reassert = useReassertPasskey()
 
   // implements fetch qr
   const fetchQr = useCallback(
-    async (latitude: number, longitude: number) => {
+    async (latitude: number, longitude: number, retriedAfterAssertion = false) => {
       if (!activeRef.current) return
       const token = useAuthStore.getState().accessToken
       try {
@@ -68,6 +82,14 @@ export function QrDisplay({ ticketId, startsAt, endsAt }: Props) {
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
           const field = (data?.detail as { field?: string } | undefined)?.field ?? 'unknown'
+          // the presence window can lapse mid stream, so ask once more and retry
+          if (field === 'reassertion' && !retriedAfterAssertion) {
+            setState({ status: 'asserting' })
+            await reassert()
+            if (!activeRef.current) return
+            await fetchQr(latitude, longitude, true)
+            return
+          }
           setState({ status: 'denied', reason: field })
           return
         }
@@ -83,13 +105,22 @@ export function QrDisplay({ ticketId, startsAt, endsAt }: Props) {
         if (activeRef.current) setState({ status: 'error' })
       }
     },
-    [ticketId],
+    [ticketId, reassert],
   )
 
   // implements start stream
   const startStream = async () => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
     activeRef.current = true
+    // the code only appears once the holder proves presence with the passkey
+    setState({ status: 'asserting' })
+    try {
+      await reassert()
+    } catch {
+      if (activeRef.current) setState({ status: 'denied', reason: 'reassertion' })
+      return
+    }
+    if (!activeRef.current) return
     setState({ status: 'locating' })
     try {
       if (Capacitor.isNativePlatform()) await Geolocation.requestPermissions()
@@ -144,30 +175,25 @@ export function QrDisplay({ ticketId, startsAt, endsAt }: Props) {
     )
   }
 
-  if (state.status === 'locating') {
+  if (state.status === 'asserting' || state.status === 'locating') {
     return (
       <div className="flex h-[300px] flex-col items-center justify-center gap-3">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-          <Loader2 className="text-primary h-6 w-6 animate-spin" />
+          {state.status === 'asserting' ? (
+            <Fingerprint className="text-primary h-6 w-6" />
+          ) : (
+            <Loader2 className="text-primary h-6 w-6 animate-spin" />
+          )}
         </div>
-        <p className="text-xs text-gray-400">{t('tickets.qr.locating')}</p>
+        <p className="text-xs text-gray-400">
+          {state.status === 'asserting' ? t('tickets.qr.asserting') : t('tickets.qr.locating')}
+        </p>
       </div>
     )
   }
 
   if (state.status === 'denied') {
-    const key =
-      state.reason === 'geolocation'
-        ? 'tickets.qr.deniedLocation'
-        : state.reason === 'geofence'
-          ? 'tickets.qr.deniedGeofence'
-          : state.reason === 'attestation'
-            ? 'tickets.qr.deniedAttestation'
-            : state.reason === 'state'
-              ? 'tickets.qr.deniedState'
-              : state.reason === 'time_window'
-                ? 'tickets.qr.deniedTimeWindow'
-                : 'tickets.qr.denied'
+    const key = DENIAL_KEYS[state.reason] ?? 'tickets.qr.denied'
     const isLocation = state.reason === 'geolocation'
     return (
       <div className="flex h-[300px] flex-col items-center justify-center gap-3 text-center">

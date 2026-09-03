@@ -139,7 +139,7 @@ erDiagram
     users ||--o{ sessions : "has"
     users ||--o{ devices : "has"
     users ||--o{ device_fingerprints : "tracks"
-    users ||--o{ passkey_credentials : "has"
+    users ||--|| passkey_credentials : "holds one"
     users ||--o{ notifications : "receives"
     devices ||--o{ sessions : "linked to"
 ```

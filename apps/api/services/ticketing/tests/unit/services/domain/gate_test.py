@@ -16,11 +16,19 @@ NOW = datetime(2026, 6, 1, 20, 0, tzinfo=UTC)
 _PATCH_SETTINGS = "com.qode.qrew.v1.ticketing.services.domain.gate.settings"
 
 
-# builds settings that leave attestation and geofence switched on
-def _settings(*, skip_attestation: bool = False, skip_geofence: bool = False) -> SimpleNamespace:
+# builds settings with every gate check switched on unless a test relaxes one
+def _settings(
+    *,
+    reassertion: bool = True,
+    device_binding: bool = True,
+    attestation: bool = True,
+    geofence: bool = True,
+) -> SimpleNamespace:
     return SimpleNamespace(
-        ticket_qr_skip_attestation=skip_attestation,
-        ticket_qr_skip_geofence=skip_geofence,
+        ticket_qr_require_reassertion=reassertion,
+        ticket_qr_require_device_binding=device_binding,
+        ticket_qr_require_attestation=attestation,
+        ticket_qr_require_geofence=geofence,
         ticket_qr_reassert_window_seconds=300,
         ticket_qr_attestation_max_age_hours=24,
     )
@@ -87,7 +95,7 @@ class TestEvaluateGate:
             )
         assert reason is DenialReason.reassertion
 
-    # verifies that a revoked device is refused
+    # verifies that a revoked device is refused as a binding failure
     def test_denies_a_revoked_device(self) -> None:
         with patch(_PATCH_SETTINGS, _settings()):
             reason = evaluate_gate(
@@ -97,7 +105,43 @@ class TestEvaluateGate:
                 longitude=-3.0,
                 now=NOW,
             )
-        assert reason is DenialReason.attestation
+        assert reason is DenialReason.device_binding
+
+    # verifies that each switch answers only for its own check
+    def test_allows_a_stale_attestation_when_only_that_check_is_off(self) -> None:
+        with patch(_PATCH_SETTINGS, _settings(attestation=False)):
+            reason = evaluate_gate(
+                _inputs(attested_at=NOW - timedelta(days=3)),
+                last_asserted_at=NOW,
+                latitude=40.0,
+                longitude=-3.0,
+                now=NOW,
+            )
+        assert reason is None
+
+    # verifies that switching attestation off still refuses a revoked device
+    def test_still_denies_a_revoked_device_without_the_attestation_check(self) -> None:
+        with patch(_PATCH_SETTINGS, _settings(attestation=False)):
+            reason = evaluate_gate(
+                _inputs(revoked_at=NOW),
+                last_asserted_at=NOW,
+                latitude=40.0,
+                longitude=-3.0,
+                now=NOW,
+            )
+        assert reason is DenialReason.device_binding
+
+    # verifies that switching attestation off still demands a fresh assertion
+    def test_still_demands_a_reassertion_without_the_attestation_check(self) -> None:
+        with patch(_PATCH_SETTINGS, _settings(attestation=False, device_binding=False)):
+            reason = evaluate_gate(
+                _inputs(),
+                last_asserted_at=None,
+                latitude=40.0,
+                longitude=-3.0,
+                now=NOW,
+            )
+        assert reason is DenialReason.reassertion
 
     # verifies that an attestation older than its window is refused
     def test_denies_an_old_attestation(self) -> None:
@@ -113,7 +157,7 @@ class TestEvaluateGate:
 
     # verifies that standing outside the venue radius is refused
     def test_denies_a_position_outside_the_fence(self) -> None:
-        with patch(_PATCH_SETTINGS, _settings(skip_attestation=True)):
+        with patch(_PATCH_SETTINGS, _settings(attestation=False, device_binding=False)):
             reason = evaluate_gate(
                 _inputs(),
                 last_asserted_at=NOW,
@@ -125,7 +169,7 @@ class TestEvaluateGate:
 
     # verifies that a venue without coordinates cannot be fenced
     def test_denies_when_the_venue_has_no_coordinates(self) -> None:
-        with patch(_PATCH_SETTINGS, _settings(skip_attestation=True)):
+        with patch(_PATCH_SETTINGS, _settings(attestation=False, device_binding=False)):
             reason = evaluate_gate(
                 _inputs(latitude=None, longitude=None, radius=None),  # type: ignore[arg-type]
                 last_asserted_at=NOW,
@@ -137,7 +181,9 @@ class TestEvaluateGate:
 
     # verifies that showing a qr long before the doors open is refused
     def test_denies_outside_the_time_window(self) -> None:
-        with patch(_PATCH_SETTINGS, _settings(skip_attestation=True, skip_geofence=True)):
+        with patch(
+            _PATCH_SETTINGS, _settings(attestation=False, device_binding=False, geofence=False)
+        ):
             reason = evaluate_gate(
                 _inputs(starts_at=NOW + timedelta(days=2), ends_at=NOW + timedelta(days=3)),
                 last_asserted_at=NOW,

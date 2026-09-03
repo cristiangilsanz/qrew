@@ -68,3 +68,4 @@ class PasskeyAssertBeginResponse(BaseModel):
 
 class PasskeyAssertCompleteResponse(BaseModel):
     asserted_at: datetime
+    access_token: str
