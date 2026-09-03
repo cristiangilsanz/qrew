@@ -177,12 +177,15 @@
       "description": "Muestra tu código QR en la entrada del recinto. Se requiere tu ubicación.",
       "showButton": "Mostrar código QR",
       "locating": "Obteniendo tu ubicación…",
+      "asserting": "Confirma que eres tú para mostrar el código…",
       "expiresAt": "Rota a las {{time}}",
       "retry": "Intentar De Nuevo",
       "denied": "QR no disponible.",
       "deniedLocation": "Debes permitir el acceso a tu ubicación.",
       "deniedGeofence": "Debes estar en el recinto para mostrar tu código QR.",
       "deniedAttestation": "Los códigos QR solo están disponibles en dispositivos atestados.",
+      "deniedReassertion": "Debes confirmar tu identidad con tu llave de acceso para mostrar el código QR.",
+      "deniedDeviceBinding": "Los códigos QR solo están disponibles en el dispositivo vinculado a tu cuenta.",
       "deniedState": "Esta entrada no puede usarse para el acceso en su estado actual.",
       "windowPending": "Tu código QR estará disponible 5 horas antes del evento.",
       "deniedTimeWindow": "Los códigos QR solo están disponibles desde 5 horas antes del evento hasta que finaliza.",
@@ -491,16 +494,16 @@
   },
   "passkeys": {
     "title": "Passkeys",
-    "empty": "Aún no hay passkeys registradas.",
+    "empty": "Todavía no hay ninguna passkey registrada.",
     "unnamedPasskey": "Passkey sin nombre",
     "lastUsed": "Último uso {{date}}",
     "registerSuccess": "Passkey registrada.",
     "deleteSuccess": "Passkey eliminada.",
     "renameSuccess": "Passkey renombrada.",
     "register": {
-      "title": "Añadir una passkey",
+      "title": "Crea tu passkey",
       "description": "Usa el sensor biométrico o PIN de tu dispositivo",
-      "submit": "Registrar Passkey"
+      "submit": "Crear Passkey"
     },
     "errors": {
       "registerFailed": "Passkey no registrada.",
