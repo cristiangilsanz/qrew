@@ -181,7 +181,9 @@ class TestEvaluateGate:
 
     # verifies that showing a qr long before the doors open is refused
     def test_denies_outside_the_time_window(self) -> None:
-        with patch(_PATCH_SETTINGS, _settings(attestation=False, device_binding=False, geofence=False)):
+        with patch(
+            _PATCH_SETTINGS, _settings(attestation=False, device_binding=False, geofence=False)
+        ):
             reason = evaluate_gate(
                 _inputs(starts_at=NOW + timedelta(days=2), ends_at=NOW + timedelta(days=3)),
                 last_asserted_at=NOW,
