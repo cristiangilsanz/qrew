@@ -1,18 +1,25 @@
 {
   "properties": {
     "user_id": {
+      "format": "uuid",
       "title": "User Id",
-      "type": "string",
-      "format": "uuid"
+      "type": "string"
     },
     "registered_at": {
       "title": "Registered At",
-      "type": "string",
-      "format": "date-time"
+      "type": "string"
     },
     "phone_e164": {
-      "title": "Phone E164",
-      "type": ["string", "null"]
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Phone E164"
     }
   },
   "required": [

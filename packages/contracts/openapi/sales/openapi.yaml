@@ -222,6 +222,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/reservations/{reservation_id}/holders:
+    put:
+      tags:
+      - reservations
+      summary: Set holder info (name + DNI) for each ticket slot in a reservation
+      operationId: set_holders_v1_reservations__reservation_id__holders_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: reservation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Reservation Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetHoldersRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HolderResponse'
+                title: Response Set Holders V1 Reservations  Reservation Id  Holders
+                  Put
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/events/{event_id}/queue/join:
     post:
       tags:
@@ -441,8 +522,781 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/events/{event_id}/market/queue/join:
+    post:
+      tags:
+      - market
+      summary: Join the resale queue for a sold-out event
+      operationId: join_market_queue_v1_events__event_id__market_queue_join_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketQueueJoinResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/events/{event_id}/market/queue/leave:
+    delete:
+      tags:
+      - market
+      summary: Leave the resale queue for an event
+      operationId: leave_market_queue_v1_events__event_id__market_queue_leave_delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/events/{event_id}/market/queue/status:
+    get:
+      tags:
+      - market
+      summary: Check whether the caller is in the resale queue and if they have a
+        pending assignment
+      operationId: market_queue_status_v1_events__event_id__market_queue_status_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketQueueStatusResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/tickets/{ticket_id}/market/list:
+    post:
+      tags:
+      - market
+      summary: List a ticket for resale on the market
+      operationId: list_ticket_v1_tickets__ticket_id__market_list_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketListingResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/tickets/{ticket_id}/market/listing:
+    get:
+      tags:
+      - market
+      summary: Get the active market listing for a ticket
+      operationId: get_ticket_listing_v1_tickets__ticket_id__market_listing_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketListingResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/market/queues:
+    get:
+      tags:
+      - market
+      summary: Get all active resale queue entries for the caller
+      operationId: get_my_queues_v1_market_queues_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/MarketQueueEntryResponse'
+                type: array
+                title: Response Get My Queues V1 Market Queues Get
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/market/assignments:
+    get:
+      tags:
+      - market
+      summary: List the caller's pending and recently ended market assignments
+      operationId: list_assignments_v1_market_assignments_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/MarketAssignmentResponse'
+                type: array
+                title: Response List Assignments V1 Market Assignments Get
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/market/assignments/pending:
+    get:
+      tags:
+      - market
+      summary: Get the caller's pending market assignment if any
+      operationId: get_pending_assignment_v1_market_assignments_pending_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/MarketAssignmentResponse'
+                - type: 'null'
+                title: Response Get Pending Assignment V1 Market Assignments Pending
+                  Get
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/market/assignments/{assignment_id}:
+    get:
+      tags:
+      - market
+      summary: Get a specific market assignment
+      operationId: get_assignment_v1_market_assignments__assignment_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: assignment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Assignment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketAssignmentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/market/assignments/{assignment_id}/holders:
+    put:
+      tags:
+      - market
+      summary: Set holder name and DNI for the incoming ticket
+      operationId: set_assignment_holders_v1_market_assignments__assignment_id__holders_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: assignment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Assignment Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketSetHoldersRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketAssignmentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/market/assignments/{assignment_id}/decline:
+    post:
+      tags:
+      - market
+      summary: Decline a market assignment — removes you from the queue
+      operationId: decline_assignment_v1_market_assignments__assignment_id__decline_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: assignment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Assignment Id
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    DocumentType:
+      type: string
+      enum:
+      - dni
+      - nie
+      - other
+      title: DocumentType
     ErrorDetail:
       properties:
         message:
@@ -466,6 +1320,256 @@ components:
       required:
       - detail
       title: ErrorResponse
+    HolderInput:
+      properties:
+        position:
+          type: integer
+          minimum: 1.0
+          title: Position
+        holder_name:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Holder Name
+        holder_document_type:
+          $ref: '#/components/schemas/DocumentType'
+          default: dni
+        holder_dni:
+          type: string
+          maxLength: 50
+          minLength: 1
+          title: Holder Dni
+      type: object
+      required:
+      - position
+      - holder_name
+      - holder_dni
+      title: HolderInput
+    HolderResponse:
+      properties:
+        position:
+          type: integer
+          title: Position
+        holder_name:
+          type: string
+          title: Holder Name
+        holder_document_type:
+          $ref: '#/components/schemas/DocumentType'
+        holder_dni:
+          type: string
+          title: Holder Dni
+      type: object
+      required:
+      - position
+      - holder_name
+      - holder_document_type
+      - holder_dni
+      title: HolderResponse
+    MarketAssignmentResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        listing_id:
+          type: string
+          format: uuid
+          title: Listing Id
+        event_id:
+          type: string
+          format: uuid
+          title: Event Id
+        ticket_type_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Ticket Type Id
+        price_cents:
+          type: integer
+          title: Price Cents
+        currency:
+          type: string
+          title: Currency
+        state:
+          type: string
+          title: State
+        assigned_at:
+          type: string
+          format: date-time
+          title: Assigned At
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+        holder_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Holder Name
+        holder_document_type:
+          anyOf:
+          - $ref: '#/components/schemas/DocumentType'
+          - type: 'null'
+        holder_dni:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Holder Dni
+        event_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Name
+        ticket_type_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ticket Type Name
+      type: object
+      required:
+      - id
+      - listing_id
+      - event_id
+      - price_cents
+      - currency
+      - state
+      - assigned_at
+      - expires_at
+      title: MarketAssignmentResponse
+    MarketListingResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        ticket_id:
+          type: string
+          format: uuid
+          title: Ticket Id
+        event_id:
+          type: string
+          format: uuid
+          title: Event Id
+        ticket_type_id:
+          type: string
+          format: uuid
+          title: Ticket Type Id
+        price_cents:
+          type: integer
+          title: Price Cents
+        currency:
+          type: string
+          title: Currency
+        state:
+          type: string
+          title: State
+        listed_at:
+          type: string
+          format: date-time
+          title: Listed At
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+        completed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Completed At
+        cancelled_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Cancelled At
+      type: object
+      required:
+      - id
+      - ticket_id
+      - event_id
+      - ticket_type_id
+      - price_cents
+      - currency
+      - state
+      - listed_at
+      - expires_at
+      title: MarketListingResponse
+    MarketQueueEntryResponse:
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          title: Event Id
+        joined_at:
+          type: string
+          format: date-time
+          title: Joined At
+      type: object
+      required:
+      - event_id
+      - joined_at
+      title: MarketQueueEntryResponse
+    MarketQueueJoinResponse:
+      properties:
+        in_queue:
+          type: boolean
+          title: In Queue
+        joined_at:
+          type: string
+          format: date-time
+          title: Joined At
+      type: object
+      required:
+      - in_queue
+      - joined_at
+      title: MarketQueueJoinResponse
+    MarketQueueStatusResponse:
+      properties:
+        in_queue:
+          type: boolean
+          title: In Queue
+        joined_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Joined At
+        pending_assignment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Pending Assignment Id
+        queue_count:
+          type: integer
+          title: Queue Count
+          default: 0
+      type: object
+      required:
+      - in_queue
+      title: MarketQueueStatusResponse
+    MarketSetHoldersRequest:
+      properties:
+        holder_name:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Holder Name
+        holder_document_type:
+          $ref: '#/components/schemas/DocumentType'
+          default: dni
+        holder_dni:
+          type: string
+          maxLength: 50
+          minLength: 1
+          title: Holder Dni
+      type: object
+      required:
+      - holder_name
+      - holder_dni
+      title: MarketSetHoldersRequest
     QueueJoinResponse:
       properties:
         position:
@@ -482,6 +1586,11 @@ components:
           - type: integer
           - type: 'null'
           title: Position
+        redeem_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Redeem Token
       type: object
       required:
       - position
@@ -505,6 +1614,25 @@ components:
       required:
       - reservation_window_token
       title: QueueRedeemResponse
+    ReservationCreateRequest:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ReservationItemInput'
+          type: array
+          maxItems: 10
+          minItems: 1
+          title: Items
+        reservation_window_token:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+          title: Reservation Window Token
+      type: object
+      required:
+      - items
+      title: ReservationCreateRequest
     ReservationItemInput:
       properties:
         ticket_type_id:
@@ -521,25 +1649,20 @@ components:
       - ticket_type_id
       - quantity
       title: ReservationItemInput
-    ReservationCreateRequest:
+    ReservationItemResponse:
       properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReservationItemInput'
-          maxItems: 10
-          minItems: 1
-          title: Items
-        reservation_window_token:
-          anyOf:
-          - type: string
-            minLength: 1
-          - type: 'null'
-          title: Reservation Window Token
+        ticket_type_id:
+          type: string
+          format: uuid
+          title: Ticket Type Id
+        quantity:
+          type: integer
+          title: Quantity
       type: object
       required:
-      - items
-      title: ReservationCreateRequest
+      - ticket_type_id
+      - quantity
+      title: ReservationItemResponse
     ReservationResponse:
       properties:
         id:
@@ -551,9 +1674,9 @@ components:
           format: uuid
           title: Event Id
         items:
-          type: array
           items:
             $ref: '#/components/schemas/ReservationItemResponse'
+          type: array
           title: Items
         quantity:
           type: integer
@@ -578,20 +1701,6 @@ components:
       - expires_at
       - created_at
       title: ReservationResponse
-    ReservationItemResponse:
-      properties:
-        ticket_type_id:
-          type: string
-          format: uuid
-          title: Ticket Type Id
-        quantity:
-          type: integer
-          title: Quantity
-      type: object
-      required:
-      - ticket_type_id
-      - quantity
-      title: ReservationItemResponse
     ReservationStatus:
       type: string
       enum:
@@ -600,6 +1709,17 @@ components:
       - cancelled
       - expired
       title: ReservationStatus
+    SetHoldersRequest:
+      properties:
+        holders:
+          items:
+            $ref: '#/components/schemas/HolderInput'
+          type: array
+          title: Holders
+      type: object
+      required:
+      - holders
+      title: SetHoldersRequest
   securitySchemes:
     HTTPBearer:
       type: http

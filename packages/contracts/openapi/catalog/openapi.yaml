@@ -75,7 +75,7 @@ paths:
     get:
       tags:
       - organisations
-      summary: List organisations the caller belongs to
+      summary: List organisations the caller belongs to or all of them for an admin
       operationId: list_my_organisations_v1_organisations_get
       security:
       - HTTPBearer: []
@@ -102,6 +102,88 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Page_OrganisationResponse_'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/organisations/search:
+    get:
+      tags:
+      - organisations
+      summary: Search organisations by name or slug
+      operationId: search_organisations_v1_organisations_search_get
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+          title: Q
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 20
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganisationSearchResult'
+                title: Response Search Organisations V1 Organisations Search Get
         '400':
           description: Bad request
           content:
@@ -219,7 +301,147 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - organisations
+      summary: Soft-delete an organisation (owner only)
+      operationId: delete_organisation_v1_organisations__organisation_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: organisation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Organisation Id
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/organisations/{organisation_id}/members:
+    get:
+      tags:
+      - organisations
+      summary: List members of an organisation
+      operationId: list_members_v1_organisations__organisation_id__members_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: organisation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Organisation Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrgMemberListItem'
+                title: Response List Members V1 Organisations  Organisation Id  Members
+                  Get
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       tags:
       - organisations
@@ -241,6 +463,83 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OrganisationMemberInviteRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationMemberResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/organisations/{organisation_id}/members/add:
+    post:
+      tags:
+      - organisations
+      summary: Add an existing user to an organisation by user ID
+      operationId: add_member_v1_organisations__organisation_id__members_add_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: organisation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Organisation Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganisationMemberAddRequest'
       responses:
         '201':
           description: Successful Response
@@ -691,6 +990,7 @@ paths:
         schema:
           anyOf:
           - type: string
+            maxLength: 64
           - type: 'null'
           title: City
       - name: country
@@ -699,6 +999,7 @@ paths:
         schema:
           anyOf:
           - type: string
+            maxLength: 64
           - type: 'null'
           title: Country
       - name: cursor
@@ -991,6 +1292,77 @@ paths:
       - events
       summary: Publish a draft event
       operationId: publish_event_v1_events__event_id__publish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/events/{event_id}/start:
+    post:
+      tags:
+      - events
+      summary: Mark a published event as ongoing
+      operationId: start_event_v1_events__event_id__start_post
       security:
       - HTTPBearer: []
       parameters:
@@ -1469,6 +1841,16 @@ paths:
             maxLength: 128
           - type: 'null'
           title: City
+      - name: cities
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          maxItems: 64
+          default: []
+          title: Cities
       - name: category
         in: query
         required: false
@@ -1715,6 +2097,12 @@ components:
             maxLength: 10000
           - type: 'null'
           title: Description
+        image_url:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Image Url
         starts_at:
           type: string
           format: date-time
@@ -1737,6 +2125,16 @@ components:
           minimum: 1.0
           title: Max Tickets Per User
           default: 4
+        queue_required:
+          type: boolean
+          title: Queue Required
+          default: false
+        queue_admit_rate_per_minute:
+          type: integer
+          maximum: 600.0
+          minimum: 1.0
+          title: Queue Admit Rate Per Minute
+          default: 60
       type: object
       required:
       - venue_id
@@ -1768,6 +2166,11 @@ components:
           - type: string
           - type: 'null'
           title: Description
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
         starts_at:
           type: string
           format: date-time
@@ -1811,6 +2214,12 @@ components:
             format: date-time
           - type: 'null'
           title: Published At
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
         cancelled_at:
           anyOf:
           - type: string
@@ -1824,6 +2233,7 @@ components:
       - venue_id
       - name
       - description
+      - image_url
       - starts_at
       - ends_at
       - sale_starts_at
@@ -1836,6 +2246,7 @@ components:
       - queue_admit_rate_per_minute
       - created_at
       - published_at
+      - started_at
       - cancelled_at
       title: EventResponse
     EventSearchResult:
@@ -1847,6 +2258,16 @@ components:
         name:
           type: string
           title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
         organiser_name:
           anyOf:
           - type: string
@@ -1878,6 +2299,7 @@ components:
       enum:
       - draft
       - published
+      - ongoing
       - cancelled
       title: EventStatus
     EventUpdateRequest:
@@ -1895,6 +2317,12 @@ components:
             maxLength: 10000
           - type: 'null'
           title: Description
+        image_url:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Image Url
         starts_at:
           anyOf:
           - type: string
@@ -1940,6 +2368,24 @@ components:
           title: Queue Admit Rate Per Minute
       type: object
       title: EventUpdateRequest
+    OrgMemberListItem:
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        role:
+          $ref: '#/components/schemas/OrganisationRole'
+        joined_at:
+          type: string
+          format: date-time
+          title: Joined At
+      type: object
+      required:
+      - user_id
+      - role
+      - joined_at
+      title: OrgMemberListItem
     OrganisationCreateRequest:
       properties:
         slug:
@@ -1963,6 +2409,19 @@ components:
       - slug
       - name
       title: OrganisationCreateRequest
+    OrganisationMemberAddRequest:
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        role:
+          $ref: '#/components/schemas/OrganisationRole'
+          default: member
+      type: object
+      required:
+      - user_id
+      title: OrganisationMemberAddRequest
     OrganisationMemberInviteRequest:
       properties:
         email:
@@ -2059,6 +2518,30 @@ components:
       - manager
       - owner
       title: OrganisationRole
+    OrganisationSearchResult:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        slug:
+          type: string
+          title: Slug
+        name:
+          type: string
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+      type: object
+      required:
+      - id
+      - slug
+      - name
+      - description
+      title: OrganisationSearchResult
     Page_EventResponse_:
       properties:
         items:
@@ -2158,6 +2641,11 @@ components:
           - type: string
           - type: 'null'
           title: Description
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
         starts_at:
           type: string
           format: date-time
@@ -2177,12 +2665,26 @@ components:
         max_tickets_per_user:
           type: integer
           title: Max Tickets Per User
+        queue_required:
+          type: boolean
+          title: Queue Required
         published_at:
           anyOf:
           - type: string
             format: date-time
           - type: 'null'
           title: Published At
+        status:
+          type: string
+          title: Status
+        availability_status:
+          type: string
+          enum:
+          - not_started
+          - open
+          - ended
+          - sold_out
+          title: Availability Status
         organisation:
           $ref: '#/components/schemas/OrganisationPublicResponse'
         venue:
@@ -2197,12 +2699,16 @@ components:
       - id
       - name
       - description
+      - image_url
       - starts_at
       - ends_at
       - sale_starts_at
       - sale_ends_at
       - max_tickets_per_user
+      - queue_required
       - published_at
+      - status
+      - availability_status
       - organisation
       - venue
       - ticket_types
@@ -2279,6 +2785,7 @@ components:
           maxLength: 3
           minLength: 3
           title: Currency
+          default: EUR
         position:
           type: integer
           minimum: 0.0
@@ -2289,7 +2796,6 @@ components:
       - name
       - capacity
       - price_cents
-      - currency
       title: TicketTypeCreateRequest
     TicketTypeResponse:
       properties:
