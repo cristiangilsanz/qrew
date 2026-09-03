@@ -1,6 +1,5 @@
 // renders the passkey list component
-import { useQueryClient } from '@tanstack/react-query'
-import { KeyRound, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { KeyRound, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -9,7 +8,6 @@ import { EmptyMessage } from '@/components/ui/empty-message'
 import { Input } from '@/components/ui/input'
 import { ListError } from '@/components/ui/list-error'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useRegisterPasskey } from '@/features/onboarding/hooks/useRegisterPasskey'
 import { formatDate } from '@/lib/formatDate'
 
 import { useDeletePasskey } from '../hooks/useDeletePasskey'
@@ -19,15 +17,9 @@ import { useRenamePasskey } from '../hooks/useRenamePasskey'
 // renders the passkey list component
 export function PasskeyList() {
   const { t, i18n } = useTranslation()
-  const queryClient = useQueryClient()
   const { data, isLoading, isError, refetch } = usePasskeys()
   const deletePasskey = useDeletePasskey()
   const renamePasskey = useRenamePasskey()
-  // implements register passkey
-  const registerPasskey = useRegisterPasskey(() => {
-    void queryClient.invalidateQueries({ queryKey: ['passkeys'] })
-    void queryClient.invalidateQueries({ queryKey: ['onboarding-status'] })
-  })
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
 
@@ -143,19 +135,6 @@ export function PasskeyList() {
           </li>
         ))}
       </ul>
-
-      <div className="flex justify-end pt-1">
-        <button
-          onClick={() => registerPasskey.mutate()}
-          disabled={registerPasskey.isPending}
-          className="bg-primary flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
-        >
-          <>
-            <Plus className="h-3.5 w-3.5" />
-            Add passkey
-          </>
-        </button>
-      </div>
     </div>
   )
 }
