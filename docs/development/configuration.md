@@ -175,6 +175,11 @@ File: `apps/api/services/ticketing/config/local.yaml`
 | `redis_url` | — | yes | Redis connection string |
 | `nats_url` | — | yes | NATS connection string |
 | `ticket_qr_jwt_private_key` | — | yes | ES256 private key for ticket QR tokens |
+| `ticket_qr_require_reassertion` | `true` | no | Demand a recent passkey assertion before minting a code |
+| `ticket_qr_require_device_binding` | `true` | no | Demand a bound, unrevoked device |
+| `ticket_qr_require_attestation` | `false` | no | Demand a fresh platform attestation, off until re-attestation is wired up |
+| `ticket_qr_require_geofence` | `true` | no | Demand a position inside the venue radius |
+| `ticket_qr_reassert_window_seconds` | `180` | no | How long an assertion stays fresh |
 
 
 #### 🚪 Entry Service
