@@ -45,6 +45,16 @@ from ._deps import (
 router = APIRouter(prefix="/passkeys")
 
 
+# an account holds exactly one passkey, so a second attempt is a conflict
+def _registration_error(exc: PasskeyError) -> HTTPException:
+    http_status = (
+        status.HTTP_409_CONFLICT
+        if "already registered" in exc.message
+        else status.HTTP_400_BAD_REQUEST
+    )
+    return domain_error(exc.message, exc.field, http_status)
+
+
 # starts registering a new passkey for the caller
 @router.post(
     "/register/begin",
@@ -57,7 +67,10 @@ async def passkey_register_begin(
     current_user: User = Depends(get_setup_or_full_user),
     service: PasskeyRegistrationService = Depends(get_passkey_registration_service),
 ) -> Response:
-    options_json = await service.begin(current_user)
+    try:
+        options_json = await service.begin(current_user)
+    except PasskeyError as exc:
+        raise _registration_error(exc) from exc
     return Response(content=options_json, media_type="application/json")
 
 
@@ -79,7 +92,7 @@ async def passkey_register_complete(
         await service.complete(current_user, body)
         return PasskeyRegistrationCompleteResponse(message="Passkey registered successfully.")
     except PasskeyError as exc:
-        raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
+        raise _registration_error(exc) from exc
 
 
 # starts signing in with a passkey
@@ -160,8 +173,8 @@ async def passkey_assert_complete(
     service: PasskeyReassertionService = Depends(get_passkey_reassertion_service),
 ) -> PasskeyAssertCompleteResponse:
     try:
-        asserted_at = await service.complete(current_user, current_session, body)
-        return PasskeyAssertCompleteResponse(asserted_at=asserted_at)
+        asserted_at, access_token = await service.complete(current_user, current_session, body)
+        return PasskeyAssertCompleteResponse(asserted_at=asserted_at, access_token=access_token)
     except PasskeyError as exc:
         raise domain_error(exc.message, exc.field, status.HTTP_400_BAD_REQUEST) from exc
 

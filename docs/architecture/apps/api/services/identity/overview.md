@@ -41,12 +41,12 @@ Identity is the authentication and JWT issuance authority in the platform. It ma
 | `POST` | `/auth/devices/{device_id}/revoke` | Revoke one device | JWT |
 | `POST` | `/auth/devices/revoke-all` | Revoke every device | JWT |
 | `GET` | `/auth/passkeys/` | List registered passkeys | JWT |
-| `POST` | `/auth/passkeys/register/begin` | Start registering a passkey | JWT |
-| `POST` | `/auth/passkeys/register/complete` | Finish registering a passkey | JWT |
+| `POST` | `/auth/passkeys/register/begin` | Start registering the account's only passkey | JWT |
+| `POST` | `/auth/passkeys/register/complete` | Finish registering the account's only passkey | JWT |
 | `POST` | `/auth/passkeys/authenticate/begin` | Start signing in with a passkey | Public |
 | `POST` | `/auth/passkeys/authenticate/complete` | Finish signing in with a passkey | Public |
 | `POST` | `/auth/passkeys/assert/begin` | Start reasserting the passkey of a session | JWT |
-| `POST` | `/auth/passkeys/assert/complete` | Finish reasserting the passkey of a session | JWT |
+| `POST` | `/auth/passkeys/assert/complete` | Finish reasserting and return a stamped access token | JWT |
 | `PATCH` | `/auth/passkeys/{passkey_id}` | Rename a passkey | JWT |
 | `DELETE` | `/auth/passkeys/{passkey_id}` | Remove a passkey | JWT |
 | `POST` | `/auth/totp/setup` | Start enrolling a second factor | JWT |

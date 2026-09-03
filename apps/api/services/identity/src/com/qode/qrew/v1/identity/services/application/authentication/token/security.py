@@ -78,6 +78,7 @@ def create_access_token(
     session_jti: str | None = None,
     is_admin: bool = False,
     kyc_approved: bool = False,
+    last_asserted_at: datetime | None = None,
 ) -> str:
     now = datetime.now(UTC)
     payload: dict[str, object] = {
@@ -95,6 +96,12 @@ def create_access_token(
         payload["device_id"] = device_id
     if session_jti is not None:
         payload["jti"] = session_jti
+    # the gate reads this claim to tell how recently the holder proved presence
+    if last_asserted_at is not None:
+        stamped = last_asserted_at
+        if stamped.tzinfo is None:
+            stamped = stamped.replace(tzinfo=UTC)
+        payload["last_asserted_at"] = int(stamped.timestamp())
     return jwt_keys.sign(jwt_keys.ACCESS, payload)
 
 

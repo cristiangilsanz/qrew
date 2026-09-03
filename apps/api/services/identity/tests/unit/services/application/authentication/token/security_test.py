@@ -146,6 +146,25 @@ class TestTokens:
         assert claims["device_id"] == "device-1"
         assert claims["jti"] == "session-1"
 
+    # verifies that the gate can read how recently the holder proved presence
+    def test_an_access_token_stamps_the_moment_of_the_assertion(self) -> None:
+        asserted = datetime(2026, 6, 1, 20, 0, tzinfo=UTC)
+        token = security.create_access_token("user-1", last_asserted_at=asserted)
+        claims = jwt_keys.verify(jwt_keys.ACCESS, token)
+        assert claims["last_asserted_at"] == int(asserted.timestamp())
+
+    # verifies that a token issued without an assertion carries no stamp
+    def test_an_access_token_without_an_assertion_carries_no_stamp(self) -> None:
+        claims = jwt_keys.verify(jwt_keys.ACCESS, security.create_access_token("user-1"))
+        assert "last_asserted_at" not in claims
+
+    # verifies that a naive stamp is read as utc rather than local time
+    def test_a_naive_assertion_is_read_as_utc(self) -> None:
+        naive = datetime(2026, 6, 1, 20, 0)
+        token = security.create_access_token("user-1", last_asserted_at=naive)
+        claims = jwt_keys.verify(jwt_keys.ACCESS, token)
+        assert claims["last_asserted_at"] == int(naive.replace(tzinfo=UTC).timestamp())
+
     # verifies that each flow signs its token with its own key and scope
     @pytest.mark.parametrize(
         ("factory", "purpose", "scope"),

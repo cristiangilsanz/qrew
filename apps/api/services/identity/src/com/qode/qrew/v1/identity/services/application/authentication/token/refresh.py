@@ -132,12 +132,20 @@ class RefreshService:
 
         new_refresh_token = create_refresh_token(str(user.id))
         new_jti = extract_jti(new_refresh_token)
+        # a refresh must carry the assertion forward, or rotating the token would
+        # silently revoke a presence the holder already proved
+        last_asserted_at = None
+        if self._session_repo is not None and isinstance(jti, str):
+            existing = await self._session_repo.get_by_jti(jti)
+            if existing is not None:
+                last_asserted_at = existing.last_asserted_at
         access_token = create_access_token(
             str(user.id),
             device_id=str(bound_device_id) if bound_device_id else None,
             session_jti=new_jti,
             is_admin=user.is_admin,
             kyc_approved=user.kyc_status == KycStatus.approved,
+            last_asserted_at=last_asserted_at,
         )
 
         if self._session_repo is not None and isinstance(jti, str) and new_jti is not None:

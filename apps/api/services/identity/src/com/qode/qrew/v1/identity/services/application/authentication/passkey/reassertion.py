@@ -16,7 +16,11 @@ from com.qode.qrew.v1.identity.repositories.passkey import (
 from com.qode.qrew.v1.identity.schemas.passkey import (
     PasskeyAuthenticationCompleteRequest,
 )
+from com.qode.qrew.v1.identity.models.user import KycStatus
 from com.qode.qrew.v1.identity.services.application.audit import AuditService
+from com.qode.qrew.v1.identity.services.application.authentication.token.security import (
+    create_access_token,
+)
 from com.qode.qrew.v1.identity.services.application.authentication.passkey.assertion import (
     ASSERT_CHALLENGE_TTL_SECONDS,
     PasskeyError,
@@ -64,7 +68,7 @@ class PasskeyReassertionService:
         user: User,
         session: Session,
         request: PasskeyAuthenticationCompleteRequest,
-    ) -> datetime:
+    ) -> tuple[datetime, str]:
         raw_id = base64url_to_bytes(request.raw_id)
         stored = await self._passkey_repo.get_by_credential_id(raw_id)
         if stored is None or stored.user_id != user.id:
@@ -91,9 +95,20 @@ class PasskeyReassertionService:
         if self._session_repo is not None:
             await self._session_repo.update_last_asserted_at(session.jti, asserted_at)
 
+        # the caller needs a token that carries the fresh stamp, since the gate
+        # reads it from the access claim and the one in hand predates the assertion
+        access_token = create_access_token(
+            str(user.id),
+            device_id=str(session.device_id) if session.device_id else None,
+            session_jti=session.jti,
+            is_admin=user.is_admin,
+            kyc_approved=user.kyc_status == KycStatus.approved,
+            last_asserted_at=asserted_at,
+        )
+
         await logger.ainfo("passkey_reasserted", user_id=str(user.id))
         await self._audit_safe(user, session)
-        return asserted_at
+        return asserted_at, access_token
 
     # reads and deletes the pending reassertion challenge
     async def _consume_challenge(self, session_jti: str) -> bytes:
