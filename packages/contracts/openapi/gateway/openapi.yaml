@@ -36,65 +36,9 @@ paths:
                 type: object
                 title: Response Ready Ready Get
   /api/{service}/{path}:
-    head:
-      summary: Proxy
-      operationId: proxy_api__service___path__head
-      parameters:
-      - name: service
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Service
-      - name: path
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
     delete:
       summary: Proxy
-      operationId: proxy_api__service___path__head
-      parameters:
-      - name: service
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Service
-      - name: path
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    put:
-      summary: Proxy
-      operationId: proxy_api__service___path__head
+      operationId: proxy_api__service___path__delete
       parameters:
       - name: service
         in: path
@@ -122,7 +66,7 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
     get:
       summary: Proxy
-      operationId: proxy_api__service___path__head
+      operationId: proxy_api__service___path__get
       parameters:
       - name: service
         in: path
@@ -148,35 +92,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-    post:
-      summary: Proxy
-      operationId: proxy_api__service___path__head
-      parameters:
-      - name: service
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Service
-      - name: path
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    patch:
+    head:
       summary: Proxy
       operationId: proxy_api__service___path__head
       parameters:
@@ -206,7 +122,91 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
     options:
       summary: Proxy
-      operationId: proxy_api__service___path__head
+      operationId: proxy_api__service___path__options
+      parameters:
+      - name: service
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Service
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      summary: Proxy
+      operationId: proxy_api__service___path__patch
+      parameters:
+      - name: service
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Service
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      summary: Proxy
+      operationId: proxy_api__service___path__post
+      parameters:
+      - name: service
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Service
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      summary: Proxy
+      operationId: proxy_api__service___path__put
       parameters:
       - name: service
         in: path

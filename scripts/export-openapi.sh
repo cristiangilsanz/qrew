@@ -46,6 +46,24 @@ import yaml
 from $module import app
 
 spec = app.openapi()
+
+# fastapi keeps a route's methods in a set, so a multi method path comes out in a
+# different order on every run, and every one of its operations inherits the id of
+# whichever method the set happened to yield first. sorting the methods and naming
+# each operation after its own verb keeps the document stable and its ids unique.
+_VERBS = ('get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace')
+for path, item in spec.get('paths', {}).items():
+    ordered = dict(sorted(item.items()))
+    for method, op in ordered.items():
+        if method in _VERBS and isinstance(op, dict):
+            oid = op.get('operationId')
+            if isinstance(oid, str):
+                for verb in _VERBS:
+                    if oid.endswith('_' + verb):
+                        op['operationId'] = oid[: -len(verb)] + method
+                        break
+    spec['paths'][path] = ordered
+
 with open('$svc_dir/openapi.yaml', 'w') as f:
     yaml.dump(spec, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 "

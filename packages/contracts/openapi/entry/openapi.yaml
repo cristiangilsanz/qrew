@@ -424,11 +424,11 @@ paths:
       security:
       - HTTPBearer: []
   /v1/admin/scanners/{scanner_id}:
-    get:
+    delete:
       tags:
       - admin-scanners
-      summary: Read a single scanner
-      operationId: get_scanner_by_id_v1_admin_scanners__scanner_id__get
+      summary: Deactivate a scanner
+      operationId: deactivate_scanner_v1_admin_scanners__scanner_id__delete
       security:
       - HTTPBearer: []
       parameters:
@@ -445,7 +445,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScannerSummaryResponse'
+                $ref: '#/components/schemas/ScannerDeactivateResponse'
         '400':
           description: Bad request
           content:
@@ -494,11 +494,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-    delete:
+    get:
       tags:
       - admin-scanners
-      summary: Deactivate a scanner
-      operationId: deactivate_scanner_v1_admin_scanners__scanner_id__delete
+      summary: Read a single scanner
+      operationId: get_scanner_by_id_v1_admin_scanners__scanner_id__get
       security:
       - HTTPBearer: []
       parameters:
@@ -515,7 +515,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScannerDeactivateResponse'
+                $ref: '#/components/schemas/ScannerSummaryResponse'
         '400':
           description: Bad request
           content:
