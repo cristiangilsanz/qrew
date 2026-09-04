@@ -18,6 +18,7 @@ import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email
 import { Route as AuthSetupRouteImport } from './routes/_auth/setup'
 import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
+import { Route as AuthRecoverAccountRouteImport } from './routes/_auth/recover-account'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
 import { Route as AppManagementRouteImport } from './routes/_app/management'
@@ -99,6 +100,11 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthRecoverAccountRoute = AuthRecoverAccountRouteImport.update({
+  id: '/recover-account',
+  path: '/recover-account',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/management': typeof AppManagementRouteWithChildren
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
+  '/recover-account': typeof AuthRecoverAccountRoute
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/setup': typeof AuthSetupRoute
@@ -365,6 +372,7 @@ export interface FileRoutesByTo {
   '/$': typeof AppSplatRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
+  '/recover-account': typeof AuthRecoverAccountRoute
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/setup': typeof AuthSetupRoute
@@ -416,6 +424,7 @@ export interface FileRoutesById {
   '/_app/management': typeof AppManagementRouteWithChildren
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
+  '/_auth/recover-account': typeof AuthRecoverAccountRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/setup': typeof AuthSetupRoute
@@ -466,6 +475,7 @@ export interface FileRouteTypes {
     | '/management'
     | '/forgot-password'
     | '/login'
+    | '/recover-account'
     | '/register'
     | '/reset-password'
     | '/setup'
@@ -513,6 +523,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/forgot-password'
     | '/login'
+    | '/recover-account'
     | '/register'
     | '/reset-password'
     | '/setup'
@@ -563,6 +574,7 @@ export interface FileRouteTypes {
     | '/_app/management'
     | '/_auth/forgot-password'
     | '/_auth/login'
+    | '/_auth/recover-account'
     | '/_auth/register'
     | '/_auth/reset-password'
     | '/_auth/setup'
@@ -675,6 +687,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/recover-account': {
+      id: '/_auth/recover-account'
+      path: '/recover-account'
+      fullPath: '/recover-account'
+      preLoaderRoute: typeof AuthRecoverAccountRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/login': {
@@ -1056,6 +1075,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 interface AuthRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  AuthRecoverAccountRoute: typeof AuthRecoverAccountRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetupRoute: typeof AuthSetupRoute
@@ -1066,6 +1086,7 @@ interface AuthRouteChildren {
 const AuthRouteChildren: AuthRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
+  AuthRecoverAccountRoute: AuthRecoverAccountRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetupRoute: AuthSetupRoute,

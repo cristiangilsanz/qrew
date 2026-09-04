@@ -50,6 +50,7 @@ export const AUTH_ONLY = [
   '/verify-email',
   '/verify-totp',
   '/forgot-password',
+  '/recover-account',
   '/reset-password',
   '/confirm-email-change',
 ]
