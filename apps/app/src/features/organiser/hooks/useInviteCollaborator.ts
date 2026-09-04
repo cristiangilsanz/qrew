@@ -16,8 +16,8 @@ export function useInviteCollaborator(orgId: string) {
 
   return useMutation({
     // implements mutation fn
-    mutationFn: (data: { user_id: string; role: 'member' | 'manager' }) =>
-      organiserApi.addMember(orgId, data),
+    mutationFn: (data: { email: string; role: 'member' | 'manager' }) =>
+      organiserApi.inviteMember(orgId, data),
     // handles on success
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['org-members', orgId] })
