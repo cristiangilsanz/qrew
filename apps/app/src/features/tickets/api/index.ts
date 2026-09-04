@@ -126,6 +126,10 @@ export const ticketsApi = {
   getTicket: (ticketId: string) =>
     ticketingClient.get<Ticket>(`/v1/tickets/${ticketId}`).then((r) => r.data),
 
+  // implements restore
+  restore: (ticketId: string) =>
+    ticketingClient.post<Ticket>(`/v1/tickets/${ticketId}/restore`).then((r) => r.data),
+
   // implements get qr
   getQr: (ticketId: string, latitude: number, longitude: number) =>
     ticketingClient
