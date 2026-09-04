@@ -82,8 +82,6 @@ Identity is the authentication and JWT issuance authority in the platform. It ma
 | `GET` | `/admin/outbox/dlq` | Inspect the outbox dead letter queue | JWT (admin) |
 | `POST` | `/_internal/users/lookup` | Resolve an email or phone into a user identifier | Internal |
 
-The signing endpoint `POST /issuer/jwt/sign` is served outside the versioned prefix and reachable only from inside the network.
-
 Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../../../packages/contracts/openapi/identity/openapi.yaml)
 
 ## Events

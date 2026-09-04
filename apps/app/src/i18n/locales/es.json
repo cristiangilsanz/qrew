@@ -748,7 +748,7 @@
     "subtitle": "Confirma quién eres con tu documento de identidad.",
     "pickDocument": "Sube tu documento de identidad",
     "changeDocument": "Elegir otro archivo",
-    "note": "Tu passkey se sustituye en este dispositivo y la anterior deja de servir.",
+    "note": "Tu passkey se sustituye en este dispositivo.",
     "submit": "Recuperar en este dispositivo",
     "success": "Dispositivo recuperado. Inicia sesión con tu nueva passkey.",
     "errors": {
