@@ -53,7 +53,9 @@ export function RecoverAccountForm() {
           className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-white/20 px-4 py-6 text-sm transition-colors hover:bg-white/[0.04]"
         >
           <Upload className="text-muted-foreground h-5 w-5" />
-          <span className="text-muted-foreground">{file ? file.name : t('recovery.pickDocument')}</span>
+          <span className="text-muted-foreground">
+            {file ? file.name : t('recovery.pickDocument')}
+          </span>
         </button>
         <input
           ref={inputRef}
