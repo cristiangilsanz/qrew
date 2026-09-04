@@ -55,6 +55,7 @@
     "passkeyLogin": "Sign In With Passkey",
     "emailRequiredForPasskey": "Enter your email to sign in with a passkey",
     "forgotPassword": "Forgot password?",
+    "lostDevice": "Lost my device",
     "rememberedPassword": "Did you remember it?",
     "forgotPasswordTitle": "Forgot Password",
     "forgotPasswordSubtitle": "Enter your email:",
@@ -161,6 +162,7 @@
         "scanning": "Your ticket is being processed.",
         "cancelled": "Your ticket is no longer valid.",
         "onSale": "Your ticket is on the market.",
+        "frozen": "Frozen because the device it was bound to was revoked.",
         "flagged": "Your ticket was quarantined for security reasons."
       },
       "sale": {
@@ -170,7 +172,8 @@
         "description": "Your ticket will be frozen and listed at the price you paid for it.",
         "note": "It comes back to you in seven days if nobody takes it.",
         "confirm": "Resale"
-      }
+      },
+      "restore": "Restore on this device"
     },
     "qr": {
       "title": "Entry QR Code",
@@ -246,7 +249,9 @@
     },
     "toast": {
       "listSuccess": "Ticket listed for resale.",
-      "listFailed": "Ticket not listed."
+      "listFailed": "Ticket not listed.",
+      "restoreSuccess": "Ticket restored on this device.",
+      "restoreFailed": "Ticket not restored."
     },
     "holders": {
       "documentType": {
@@ -718,7 +723,8 @@
     },
     "pending": {
       "title": "In Review",
-      "description": "Your identity documents have been submitted. We'll verify them within 24 hours.",
+      "description": "Your identity documents have been submitted.",
+      "descriptionEta": "We'll verify them within 24 hours.",
       "approved": "Identity verified.",
       "approvedDescription": "Your identity has been verified. You're ready to go.",
       "rejected": "Verification failed",
@@ -731,6 +737,16 @@
       "verifyPhoneFailed": "Phone number not verified.",
       "kycUploadFailed": "Document not uploaded.",
       "completeFailed": "Setup not completed."
+    }
+  },
+  "recovery": {
+    "title": "Recover your account",
+    "subtitle": "Confirm who you are with your ID document and register a new passkey on this device.",
+    "pickDocument": "Upload your ID document",
+    "submit": "Recover account",
+    "success": "Account recovered. Sign in with your new passkey.",
+    "errors": {
+      "failed": "Account not recovered."
     }
   }
 }
