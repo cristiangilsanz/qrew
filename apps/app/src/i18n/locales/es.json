@@ -55,7 +55,6 @@
     "passkeyLogin": "Iniciar Sesión Con Passkey",
     "emailRequiredForPasskey": "Introduce tu correo para iniciar sesión con passkey",
     "forgotPassword": "¿Has olvidado la contraseña?",
-    "lostDevice": "He perdido el dispositivo",
     "rememberedPassword": "¿Ya la recuerdas?",
     "forgotPasswordTitle": "Recuperar contraseña",
     "forgotPasswordSubtitle": "Introduce tu correo:",
@@ -405,7 +404,10 @@
       },
       "trustThisDevice": "Confiar en este dispositivo",
       "deviceTrusted": "Dispositivo de confianza añadido.",
-      "deviceNotTrusted": "Dispositivo no añadido."
+      "deviceNotTrusted": "Dispositivo no añadido.",
+      "lostDevice": "He perdido ese dispositivo",
+      "thisDevice": "Este dispositivo",
+      "lastSeen": "Visto por última vez {{date}}"
     },
     "help": {
       "title": "Ayuda y Soporte",
@@ -742,11 +744,11 @@
     }
   },
   "recovery": {
-    "title": "Recupera tu cuenta",
-    "subtitle": "Confirma quién eres con tu documento de identidad y registra una passkey nueva en este dispositivo.",
+    "title": "Has perdido el dispositivo",
+    "subtitle": "Confirma quién eres con tu documento de identidad. Tu passkey se sustituye en este dispositivo y la anterior deja de servir.",
     "pickDocument": "Sube tu documento de identidad",
-    "submit": "Recuperar cuenta",
-    "success": "Cuenta recuperada. Inicia sesión con tu nueva passkey.",
+    "submit": "Recuperar en este dispositivo",
+    "success": "Dispositivo recuperado. Inicia sesión con tu nueva passkey.",
     "errors": {
       "failed": "Cuenta no recuperada."
     }

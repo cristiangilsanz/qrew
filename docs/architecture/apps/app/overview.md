@@ -78,6 +78,7 @@ src/routes/
 │   │   ├── account.tsx
 │   │   ├── security.tsx
 │   │   ├── passkeys.tsx
+│   │   ├── recover-device.tsx
 │   │   ├── privacy.tsx
 │   │   ├── terms.tsx
 │   │   ├── about.tsx
@@ -109,7 +110,6 @@ src/routes/
     ├── verify-email.tsx
     ├── verify-totp.tsx
     ├── forgot-password.tsx
-    ├── recover-account.tsx
     └── reset-password.tsx
 ```
 

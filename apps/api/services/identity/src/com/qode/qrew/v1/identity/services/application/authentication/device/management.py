@@ -21,7 +21,7 @@ _JTI_TTL_SECONDS = settings.refresh_token_expire_days * 86400
 
 
 # publishes that a device was revoked onto the shared nats connection
-async def _publish_device_revoked(
+async def publish_device_revoked(
     device_id: uuid.UUID, user_id: uuid.UUID, revoked_at: datetime | None
 ) -> None:
     try:
@@ -101,7 +101,7 @@ class DeviceService:
                 "audit_write_failed", action=AuditAction.DEVICE_REVOKE, error=repr(exc)
             )
 
-        await _publish_device_revoked(device_id, user.id, device.revoked_at)
+        await publish_device_revoked(device_id, user.id, device.revoked_at)
 
     # revokes every device of a user except the one calling
     async def revoke_all_devices(
@@ -118,7 +118,7 @@ class DeviceService:
 
         now = datetime.now(UTC)
         for revoked_id in revoked_ids:
-            await _publish_device_revoked(revoked_id, user.id, now)
+            await publish_device_revoked(revoked_id, user.id, now)
 
         await logger.ainfo(
             "devices_revoke_all",

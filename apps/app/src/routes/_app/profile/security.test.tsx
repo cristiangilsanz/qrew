@@ -67,23 +67,37 @@ describe('security screen', () => {
     })
   })
 
-  it('shows the devices the account trusts', async () => {
+  it('shows the device the account trusts', async () => {
     await openSecurity()
     await userEvent.click(screen.getByText(/trusted devices/i))
     await waitFor(() => {
       expect(screen.getByText(/pixel 8/i)).toBeInTheDocument()
     })
-    expect(screen.getByText(/iphone 15/i)).toBeInTheDocument()
+    expect(screen.getByText(/this device/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /remove/i })).not.toBeInTheDocument()
   })
 
-  it('asks before removing every device', async () => {
+  it('offers recovery when the trusted device is another one', async () => {
+    server.use(
+      http.get(`${API}/v1/auth/devices`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'device-1',
+              name: 'Pixel 8',
+              last_seen_at: '2026-08-20T10:00:00Z',
+              created_at: '2026-07-01T10:00:00Z',
+              is_current: false,
+            },
+          ],
+          next_cursor: null,
+        }),
+      ),
+    )
     await openSecurity()
     await userEvent.click(screen.getByText(/trusted devices/i))
-    await waitFor(() => expect(screen.getByText(/pixel 8/i)).toBeInTheDocument())
-    await userEvent.click(screen.getByRole('button', { name: /remove all/i }))
-    await waitFor(() => {
-      expect(screen.getAllByRole('button', { name: /remove/i }).length).toBeGreaterThan(1)
-    })
+    const link = await screen.findByRole('link', { name: /lost that device/i })
+    expect(link).toHaveAttribute('href', '/profile/recover-device')
   })
 
   it('shows the recent activity of the account', async () => {

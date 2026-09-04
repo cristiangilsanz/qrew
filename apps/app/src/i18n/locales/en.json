@@ -55,7 +55,6 @@
     "passkeyLogin": "Sign In With Passkey",
     "emailRequiredForPasskey": "Enter your email to sign in with a passkey",
     "forgotPassword": "Forgot password?",
-    "lostDevice": "Lost my device",
     "rememberedPassword": "Did you remember it?",
     "forgotPasswordTitle": "Forgot Password",
     "forgotPasswordSubtitle": "Enter your email:",
@@ -405,7 +404,10 @@
       },
       "trustThisDevice": "Trust This Device",
       "deviceTrusted": "Device trusted.",
-      "deviceNotTrusted": "Device not trusted."
+      "deviceNotTrusted": "Device not trusted.",
+      "lostDevice": "I lost that device",
+      "thisDevice": "This device",
+      "lastSeen": "Last seen {{date}}"
     },
     "help": {
       "title": "Help & Support",
@@ -742,11 +744,11 @@
     }
   },
   "recovery": {
-    "title": "Recover your account",
-    "subtitle": "Confirm who you are with your ID document and register a new passkey on this device.",
+    "title": "Lost your device",
+    "subtitle": "Confirm who you are with your ID document. Your passkey is replaced on this device and the old one stops working.",
     "pickDocument": "Upload your ID document",
-    "submit": "Recover account",
-    "success": "Account recovered. Sign in with your new passkey.",
+    "submit": "Recover this device",
+    "success": "Device recovered. Sign in with your new passkey.",
     "errors": {
       "failed": "Account not recovered."
     }

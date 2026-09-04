@@ -10,7 +10,7 @@ from com.qode.qrew.v1.identity.services.application.authentication.device.bindin
 )
 from com.qode.qrew.v1.identity.services.application.authentication.device.management import (
     DeviceService,
-    _publish_device_revoked,
+    publish_device_revoked,
 )
 from conftest import make_user
 
@@ -60,7 +60,7 @@ async def test_revocation_announces_the_device() -> None:
     revoked_at = datetime.now(UTC)
     publish = AsyncMock()
     with patch("messaging.publisher.publish", publish):
-        await _publish_device_revoked(device_id, user_id, revoked_at)
+        await publish_device_revoked(device_id, user_id, revoked_at)
 
     subject, envelope = publish.await_args.args
     assert subject == "identity.device.revoked.v1"
@@ -90,7 +90,7 @@ async def test_revoking_every_device_announces_each_one() -> None:
     async def _capturar(device_id, user_id, revoked_at):  # type: ignore[no-untyped-def]
         publicados.append(device_id)
 
-    with patch(f"{_MANAGEMENT}._publish_device_revoked", _capturar):
+    with patch(f"{_MANAGEMENT}.publish_device_revoked", _capturar):
         count = await service.revoke_all_devices(user)
 
     assert count == 3

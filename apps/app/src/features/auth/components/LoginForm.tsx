@@ -125,13 +125,7 @@ export function LoginForm() {
             )}
           />
 
-          <div className="flex justify-between">
-            <Link
-              to="/recover-account"
-              className="text-muted-foreground hover:text-foreground text-xs"
-            >
-              {t('auth.lostDevice')}
-            </Link>
+          <div className="flex justify-end">
             <Link
               to="/forgot-password"
               className="text-muted-foreground hover:text-foreground text-xs"
