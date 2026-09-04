@@ -111,13 +111,6 @@ export const authHandlers = [
           created_at: '2026-07-01T10:00:00Z',
           is_current: true,
         },
-        {
-          id: 'device-2',
-          name: 'iPhone 15',
-          last_seen_at: '2026-08-18T10:00:00Z',
-          created_at: '2026-07-05T10:00:00Z',
-          is_current: false,
-        },
       ],
       next_cursor: null,
     }),

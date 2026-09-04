@@ -527,6 +527,7 @@ def get_recovery_service(
         UserRepository(db),
         PasskeyCredentialRepository(db),
         SessionRepository(db),
+        DeviceRepository(db),
         redis,
         notifier,
         AuditService(),

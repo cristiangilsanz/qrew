@@ -1,7 +1,7 @@
 # recovers an account by verifying a national identity document and a new passkey
 import hashlib
 import uuid
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import redis.asyncio as aioredis
 import structlog
@@ -24,6 +24,7 @@ from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.models.passkey import PasskeyCredential
+from com.qode.qrew.v1.identity.repositories.device import DeviceRepository
 from com.qode.qrew.v1.identity.repositories.session import SessionRepository
 from com.qode.qrew.v1.identity.repositories.user import UserRepository
 from com.qode.qrew.v1.identity.repositories.passkey import (
@@ -33,6 +34,9 @@ from com.qode.qrew.v1.identity.schemas.passkey import (
     PasskeyRegistrationCompleteRequest,
 )
 from com.qode.qrew.v1.identity.services.application.audit import AuditService
+from com.qode.qrew.v1.identity.services.application.authentication.device.management import (
+    publish_device_revoked,
+)
 from com.qode.qrew.v1.identity.services.application.notification.dispatcher import (
     NotificationDispatcher,
 )
@@ -60,6 +64,7 @@ class RecoveryService:
         user_repo: UserRepository,
         passkey_repo: PasskeyCredentialRepository,
         session_repo: SessionRepository,
+        device_repo: DeviceRepository,
         redis: aioredis.Redis,  # type: ignore[type-arg]
         notifier: NotificationDispatcher,
         audit: AuditService,
@@ -68,6 +73,7 @@ class RecoveryService:
         self._user_repo = user_repo
         self._passkey_repo = passkey_repo
         self._session_repo = session_repo
+        self._device_repo = device_repo
         self._redis = redis
         self._notifier = notifier
         self._audit = audit
@@ -101,6 +107,7 @@ class RecoveryService:
         verification = self._verify_attestation(raw_challenge, request)
         await self._kill_sessions(user.id)
         await self._replace_passkey(user.id, verification)
+        await self._revoke_devices(user.id)
         await self._notify_recovery(user)
         await logger.ainfo("recovery_completed", user_id=str(user.id))
         await self._audit_safe(AuditAction.RECOVERY_COMPLETED, user.id)
@@ -179,6 +186,14 @@ class RecoveryService:
         ttl = int(timedelta(days=settings.refresh_token_expire_days).total_seconds())
         for jti in jtis:
             await self._redis.setex(_BLACKLIST_JTI_PREFIX + jti, ttl, "1")
+
+    # revokes every device, since recovery follows the loss of the one that held
+    # the key, and the account binds the next device it signs in from
+    async def _revoke_devices(self, user_id: uuid.UUID) -> None:
+        revoked = await self._device_repo.revoke_all_by_user_id(user_id, exclude_id=None)
+        now = datetime.now(UTC)
+        for device_id in revoked:
+            await publish_device_revoked(device_id, user_id, now)
 
     # replaces every existing passkey with the newly verified one
     async def _replace_passkey(

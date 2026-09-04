@@ -1,6 +1,6 @@
 // implements security
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ChevronDown,
@@ -16,7 +16,6 @@ import {
   ShieldCheck,
   ShieldOff,
   Smartphone,
-  Trash2,
 } from 'lucide-react'
 import { type ReactNode, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +23,6 @@ import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
 import { Button } from '@/components/ui/button'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { EmptyMessage } from '@/components/ui/empty-message'
 import { Skeleton } from '@/components/ui/skeleton'
 import { totpApi } from '@/features/auth/api'
@@ -32,13 +30,7 @@ import { PasskeyList } from '@/features/passkeys/components/PasskeyList'
 import { ChangePasswordForm } from '@/features/profile/components/ChangePasswordForm'
 import { SessionList } from '@/features/profile/components/SessionList'
 import { useAuditLog } from '@/features/profile/hooks/useAuditLog'
-import { useBindDevice } from '@/features/profile/hooks/useBindDevice'
-import {
-  useDevices,
-  useRevokeAllDevices,
-  useRevokeDevice,
-} from '@/features/profile/hooks/useDevices'
-import { deviceKeysSupported } from '@/lib/deviceKey'
+import { useDevices } from '@/features/profile/hooks/useDevices'
 import { formatDate, formatDateTime } from '@/lib/formatDate'
 import { cn } from '@/lib/utils'
 
@@ -111,35 +103,21 @@ function ExpandRow({
   )
 }
 
-// names this device after the platform the browser reports, which is what the user recognises
-function defaultDeviceName(): string {
-  const agent = navigator.userAgent
-  if (/android/i.test(agent)) return 'Android device'
-  if (/iphone|ipad|ipod/i.test(agent)) return 'iOS device'
-  return 'This browser'
-}
-
 // renders the device list component
 function DeviceList() {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useDevices()
-  const revoke = useRevokeDevice()
-  const bindDevice = useBindDevice()
-  const revokeAll = useRevokeAllDevices()
-  const [confirmDeviceId, setConfirmDeviceId] = useState<string | null>(null)
-  const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
 
   if (isLoading) {
     return (
       <div className="space-y-1">
-        {[0, 1, 2].map((i) => (
+        {[0, 1].map((i) => (
           <div key={i} className="flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-3">
             <Skeleton className="h-4 w-4 rounded" />
             <div className="flex-1 space-y-1.5">
               <Skeleton className="h-4 w-36" />
               <Skeleton className="h-3 w-24" />
             </div>
-            <Skeleton className="h-4 w-4 rounded" />
           </div>
         ))}
       </div>
@@ -147,21 +125,14 @@ function DeviceList() {
   }
 
   const devices = data?.items ?? []
+  // an account trusts one device, so anything else on the list means the holder
+  // is looking at this screen from somewhere other than the phone they enrolled
+  const elsewhere = devices.length > 0 && !devices.some((d) => d.is_current)
 
   return (
     <div className="space-y-2">
       {devices.length === 0 && <EmptyMessage>{t('profile.security.noDevices')}</EmptyMessage>}
 
-      {deviceKeysSupported() && (
-        <button
-          onClick={() => bindDevice.mutate(defaultDeviceName())}
-          disabled={bindDevice.isPending}
-          className="border-input text-muted-foreground hover:text-foreground flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-3 text-sm font-medium disabled:opacity-50"
-        >
-          <ShieldCheck className="h-4 w-4 shrink-0" />
-          {t('profile.security.trustThisDevice')}
-        </button>
-      )}
       <ul className="space-y-1">
         {devices.map((device) => (
           <li
@@ -173,67 +144,29 @@ function DeviceList() {
               <p className="truncate text-sm font-medium text-white/80">{device.name}</p>
               {device.last_seen_at && (
                 <p className="text-muted-foreground text-xs">
-                  Last seen {formatDate(device.last_seen_at, i18n.language)}
+                  {t('profile.security.lastSeen', {
+                    date: formatDate(device.last_seen_at, i18n.language),
+                  })}
                 </p>
               )}
             </div>
-            <button
-              onClick={() => setConfirmDeviceId(device.id)}
-              disabled={revoke.isPending}
-              className="text-muted-foreground hover:text-destructive shrink-0 disabled:opacity-40"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-            {confirmDeviceId === device.id && (
-              <ConfirmDialog
-                open
-                onOpenChange={(o) => !o && setConfirmDeviceId(null)}
-                title={
-                  device.is_current
-                    ? t('profile.security.revokeCurrentDeviceTitle')
-                    : t('profile.security.revokeDeviceTitle')
-                }
-                description={
-                  device.is_current
-                    ? t('profile.security.revokeCurrentDeviceDesc')
-                    : t('profile.security.revokeDeviceDesc')
-                }
-                confirmLabel={
-                  device.is_current
-                    ? t('profile.security.revokeAndSignOut')
-                    : t('profile.security.removeDevice')
-                }
-                tone="destructive"
-                isLoading={revoke.isPending}
-                onConfirm={() =>
-                  revoke.mutate({ deviceId: device.id, isCurrent: device.is_current })
-                }
-              />
+            {device.is_current && (
+              <span className="text-muted-foreground shrink-0 text-xs">
+                {t('profile.security.thisDevice')}
+              </span>
             )}
           </li>
         ))}
       </ul>
-      {devices.length > 1 && (
-        <div className="flex justify-end pt-1">
-          <button
-            onClick={() => setConfirmRevokeAll(true)}
-            disabled={revokeAll.isPending}
-            className="bg-destructive flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            {t('profile.security.revokeAll')}
-          </button>
-          <ConfirmDialog
-            open={confirmRevokeAll}
-            onOpenChange={setConfirmRevokeAll}
-            title={t('profile.security.revokeAllDevicesTitle')}
-            description={t('profile.security.revokeAllDevicesDesc')}
-            confirmLabel={t('profile.security.revokeAndSignOut')}
-            tone="destructive"
-            isLoading={revokeAll.isPending}
-            onConfirm={() => revokeAll.mutate()}
-          />
-        </div>
+
+      {elsewhere && (
+        <Link
+          to="/profile/recover-device"
+          className="border-input text-muted-foreground hover:text-foreground flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-3 text-sm font-medium"
+        >
+          <ShieldCheck className="h-4 w-4 shrink-0" />
+          {t('profile.security.lostDevice')}
+        </Link>
       )}
     </div>
   )

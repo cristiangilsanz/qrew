@@ -11,6 +11,7 @@ import { toastErrorMessage } from '@/lib/errors'
 import { useAuthStore } from '@/store/auth'
 
 import { type ApiErrorDetail, authApi } from '../api'
+import { useEnrolDevice } from './useEnrolDevice'
 import { useReportFingerprint } from './useReportFingerprint'
 
 // provides use passkey login
@@ -20,6 +21,8 @@ export function usePasskeyLogin() {
   const setTokens = useAuthStore((s) => s.setTokens)
   // implements report fingerprint
   const reportFingerprint = useReportFingerprint()
+  // implements enrol device
+  const enrolDevice = useEnrolDevice()
   // implements set setup token
   const setSetupToken = useAuthStore((s) => s.setSetupToken)
 
@@ -43,6 +46,7 @@ export function usePasskeyLogin() {
       } else {
         setTokens(data.access_token, data.refresh_token ?? '')
         void reportFingerprint()
+        void enrolDevice()
       }
     },
     // handles on error

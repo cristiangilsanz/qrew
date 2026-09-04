@@ -8,6 +8,7 @@ import { toastErrorMessage } from '@/lib/errors'
 import { useAuthStore } from '@/store/auth'
 
 import { type ApiErrorDetail, authApi, type LoginRequest } from '../api'
+import { useEnrolDevice } from './useEnrolDevice'
 import { useReportFingerprint } from './useReportFingerprint'
 
 // provides use login
@@ -17,6 +18,8 @@ export function useLogin() {
   const setTokens = useAuthStore((s) => s.setTokens)
   // implements report fingerprint
   const reportFingerprint = useReportFingerprint()
+  // implements enrol device
+  const enrolDevice = useEnrolDevice()
   // implements set setup token
   const setSetupToken = useAuthStore((s) => s.setSetupToken)
   // implements set totp token
@@ -34,6 +37,7 @@ export function useLogin() {
       } else {
         setTokens(data.access_token, data.refresh_token ?? '')
         void reportFingerprint()
+        void enrolDevice()
       }
     },
     // handles on error

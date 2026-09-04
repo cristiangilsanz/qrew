@@ -1,24 +1,31 @@
-// renders the account recovery form component
-import { Link, useNavigate } from '@tanstack/react-router'
-import { KeyRound, Mail, Upload } from 'lucide-react'
+// renders the device recovery form component
+import { useNavigate } from '@tanstack/react-router'
+import { KeyRound, Upload } from 'lucide-react'
 import { type ChangeEvent, type FormEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { BackButton } from '@/components/ui/back-button'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { AuthLayout } from '@/features/auth/components/AuthLayout'
+import { useProfile } from '@/features/profile/hooks/useProfile'
+import { useAuthStore } from '@/store/auth'
 
 import { useRecoverAccount } from '../hooks/useRecoverAccount'
 
-// renders the account recovery form component
+// renders the device recovery form component
 export function RecoverAccountForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const { data: profile } = useProfile()
+  const clearSession = useAuthStore((s) => s.clearSession)
   const [file, setFile] = useState<File | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const recover = useRecoverAccount(() => void navigate({ to: '/login' }))
+  // recovery replaces the key and revokes every device, so the session it ran
+  // under is gone by the time it returns and the holder signs in afresh
+  const recover = useRecoverAccount(() => {
+    clearSession()
+    void navigate({ to: '/login' })
+  })
 
   // handles handle file change
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -28,25 +35,19 @@ export function RecoverAccountForm() {
   // handles handle submit
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (!email || !file) return
-    recover.mutate({ email, file })
+    if (!profile?.email || !file) return
+    recover.mutate({ email: profile.email, file })
   }
 
   return (
-    <AuthLayout title={t('recovery.title')} subtitle={t('recovery.subtitle')}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="relative">
-          <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-          <Input
-            type="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            className="pl-9"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+    <div className="mx-auto max-w-2xl space-y-6 p-6 pb-28">
+      <BackButton to="/profile/security" />
+      <div>
+        <h1 className="text-2xl font-semibold">{t('recovery.title')}</h1>
+        <p className="text-muted-foreground mt-2 text-sm">{t('recovery.subtitle')}</p>
+      </div>
 
+      <form onSubmit={handleSubmit} className="space-y-4">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -68,19 +69,13 @@ export function RecoverAccountForm() {
         <Button
           type="submit"
           className="w-full rounded-full"
-          disabled={!email || !file}
+          disabled={!file}
           isLoading={recover.isPending}
         >
           <KeyRound className="mr-2 h-4 w-4" />
           {t('recovery.submit')}
         </Button>
       </form>
-
-      <p className="text-muted-foreground mt-4 text-center text-sm">
-        <Link to="/login" className="text-primary font-medium hover:underline">
-          {t('auth.login')}
-        </Link>
-      </p>
-    </AuthLayout>
+    </div>
   )
 }

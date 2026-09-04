@@ -18,7 +18,6 @@ import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email
 import { Route as AuthSetupRouteImport } from './routes/_auth/setup'
 import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
-import { Route as AuthRecoverAccountRouteImport } from './routes/_auth/recover-account'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
 import { Route as AppManagementRouteImport } from './routes/_app/management'
@@ -32,6 +31,7 @@ import { Route as AppEventsIndexRouteImport } from './routes/_app/events/index'
 import { Route as AppTicketsTicketIdRouteImport } from './routes/_app/tickets/$ticketId'
 import { Route as AppProfileTermsRouteImport } from './routes/_app/profile/terms'
 import { Route as AppProfileSecurityRouteImport } from './routes/_app/profile/security'
+import { Route as AppProfileRecoverDeviceRouteImport } from './routes/_app/profile/recover-device'
 import { Route as AppProfilePrivacyRouteImport } from './routes/_app/profile/privacy'
 import { Route as AppProfilePasskeysRouteImport } from './routes/_app/profile/passkeys'
 import { Route as AppProfileHelpRouteImport } from './routes/_app/profile/help'
@@ -102,11 +102,6 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthRecoverAccountRoute = AuthRecoverAccountRouteImport.update({
-  id: '/recover-account',
-  path: '/recover-account',
-  getParentRoute: () => AuthRoute,
-} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -170,6 +165,11 @@ const AppProfileTermsRoute = AppProfileTermsRouteImport.update({
 const AppProfileSecurityRoute = AppProfileSecurityRouteImport.update({
   id: '/profile/security',
   path: '/profile/security',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileRecoverDeviceRoute = AppProfileRecoverDeviceRouteImport.update({
+  id: '/profile/recover-device',
+  path: '/profile/recover-device',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProfilePrivacyRoute = AppProfilePrivacyRouteImport.update({
@@ -324,7 +324,6 @@ export interface FileRoutesByFullPath {
   '/management': typeof AppManagementRouteWithChildren
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
-  '/recover-account': typeof AuthRecoverAccountRoute
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/setup': typeof AuthSetupRoute
@@ -336,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/profile/help': typeof AppProfileHelpRoute
   '/profile/passkeys': typeof AppProfilePasskeysRoute
   '/profile/privacy': typeof AppProfilePrivacyRoute
+  '/profile/recover-device': typeof AppProfileRecoverDeviceRoute
   '/profile/security': typeof AppProfileSecurityRoute
   '/profile/terms': typeof AppProfileTermsRoute
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
@@ -372,7 +372,6 @@ export interface FileRoutesByTo {
   '/$': typeof AppSplatRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
-  '/recover-account': typeof AuthRecoverAccountRoute
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/setup': typeof AuthSetupRoute
@@ -384,6 +383,7 @@ export interface FileRoutesByTo {
   '/profile/help': typeof AppProfileHelpRoute
   '/profile/passkeys': typeof AppProfilePasskeysRoute
   '/profile/privacy': typeof AppProfilePrivacyRoute
+  '/profile/recover-device': typeof AppProfileRecoverDeviceRoute
   '/profile/security': typeof AppProfileSecurityRoute
   '/profile/terms': typeof AppProfileTermsRoute
   '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
@@ -424,7 +424,6 @@ export interface FileRoutesById {
   '/_app/management': typeof AppManagementRouteWithChildren
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
-  '/_auth/recover-account': typeof AuthRecoverAccountRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/setup': typeof AuthSetupRoute
@@ -436,6 +435,7 @@ export interface FileRoutesById {
   '/_app/profile/help': typeof AppProfileHelpRoute
   '/_app/profile/passkeys': typeof AppProfilePasskeysRoute
   '/_app/profile/privacy': typeof AppProfilePrivacyRoute
+  '/_app/profile/recover-device': typeof AppProfileRecoverDeviceRoute
   '/_app/profile/security': typeof AppProfileSecurityRoute
   '/_app/profile/terms': typeof AppProfileTermsRoute
   '/_app/tickets/$ticketId': typeof AppTicketsTicketIdRoute
@@ -475,7 +475,6 @@ export interface FileRouteTypes {
     | '/management'
     | '/forgot-password'
     | '/login'
-    | '/recover-account'
     | '/register'
     | '/reset-password'
     | '/setup'
@@ -487,6 +486,7 @@ export interface FileRouteTypes {
     | '/profile/help'
     | '/profile/passkeys'
     | '/profile/privacy'
+    | '/profile/recover-device'
     | '/profile/security'
     | '/profile/terms'
     | '/tickets/$ticketId'
@@ -523,7 +523,6 @@ export interface FileRouteTypes {
     | '/$'
     | '/forgot-password'
     | '/login'
-    | '/recover-account'
     | '/register'
     | '/reset-password'
     | '/setup'
@@ -535,6 +534,7 @@ export interface FileRouteTypes {
     | '/profile/help'
     | '/profile/passkeys'
     | '/profile/privacy'
+    | '/profile/recover-device'
     | '/profile/security'
     | '/profile/terms'
     | '/tickets/$ticketId'
@@ -574,7 +574,6 @@ export interface FileRouteTypes {
     | '/_app/management'
     | '/_auth/forgot-password'
     | '/_auth/login'
-    | '/_auth/recover-account'
     | '/_auth/register'
     | '/_auth/reset-password'
     | '/_auth/setup'
@@ -586,6 +585,7 @@ export interface FileRouteTypes {
     | '/_app/profile/help'
     | '/_app/profile/passkeys'
     | '/_app/profile/privacy'
+    | '/_app/profile/recover-device'
     | '/_app/profile/security'
     | '/_app/profile/terms'
     | '/_app/tickets/$ticketId'
@@ -689,13 +689,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/recover-account': {
-      id: '/_auth/recover-account'
-      path: '/recover-account'
-      fullPath: '/recover-account'
-      preLoaderRoute: typeof AuthRecoverAccountRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/_auth/login': {
       id: '/_auth/login'
       path: '/login'
@@ -785,6 +778,13 @@ declare module '@tanstack/react-router' {
       path: '/profile/security'
       fullPath: '/profile/security'
       preLoaderRoute: typeof AppProfileSecurityRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile/recover-device': {
+      id: '/_app/profile/recover-device'
+      path: '/profile/recover-device'
+      fullPath: '/profile/recover-device'
+      preLoaderRoute: typeof AppProfileRecoverDeviceRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/profile/privacy': {
@@ -1023,6 +1023,7 @@ interface AppRouteChildren {
   AppProfileHelpRoute: typeof AppProfileHelpRoute
   AppProfilePasskeysRoute: typeof AppProfilePasskeysRoute
   AppProfilePrivacyRoute: typeof AppProfilePrivacyRoute
+  AppProfileRecoverDeviceRoute: typeof AppProfileRecoverDeviceRoute
   AppProfileSecurityRoute: typeof AppProfileSecurityRoute
   AppProfileTermsRoute: typeof AppProfileTermsRoute
   AppTicketsTicketIdRoute: typeof AppTicketsTicketIdRoute
@@ -1050,6 +1051,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfileHelpRoute: AppProfileHelpRoute,
   AppProfilePasskeysRoute: AppProfilePasskeysRoute,
   AppProfilePrivacyRoute: AppProfilePrivacyRoute,
+  AppProfileRecoverDeviceRoute: AppProfileRecoverDeviceRoute,
   AppProfileSecurityRoute: AppProfileSecurityRoute,
   AppProfileTermsRoute: AppProfileTermsRoute,
   AppTicketsTicketIdRoute: AppTicketsTicketIdRoute,
@@ -1075,7 +1077,6 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 interface AuthRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
-  AuthRecoverAccountRoute: typeof AuthRecoverAccountRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetupRoute: typeof AuthSetupRoute
@@ -1086,7 +1087,6 @@ interface AuthRouteChildren {
 const AuthRouteChildren: AuthRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
-  AuthRecoverAccountRoute: AuthRecoverAccountRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetupRoute: AuthSetupRoute,
