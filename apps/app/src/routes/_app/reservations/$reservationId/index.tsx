@@ -12,6 +12,7 @@ import { PageError } from '@/components/ui/page-error'
 import { ReservationSkeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/features/events/hooks/useEvent'
 import { ticketsApi } from '@/features/tickets/api'
+import { useCancelReservation } from '@/features/tickets/hooks/useCancelReservation'
 import { useCountdown } from '@/features/tickets/hooks/useCountdown'
 import { useInitiatePayment } from '@/features/tickets/hooks/useInitiatePayment'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
@@ -67,6 +68,9 @@ function ReservationPage() {
   } = useReservation(reservationId, !!clientSecret)
   const { data: event, isLoading: eventLoading } = useEvent(reservation?.event_id ?? '')
   const { data: myTickets } = useTickets(confirming)
+
+  // implements cancel
+  const cancel = useCancelReservation(reservationId, () => void navigate({ to: '/tickets' }))
 
   // implements initiate payment
   const initiatePayment = useInitiatePayment((payment) => {
@@ -346,6 +350,16 @@ function ReservationPage() {
         <p className="text-muted-foreground mt-6 text-center text-sm">
           {t('tickets.reservation.cancelled')}
         </p>
+      )}
+
+      {!isPaid && !isCancelled && !isExpired && !countdownExpired && (
+        <button
+          onClick={() => cancel.mutate()}
+          disabled={cancel.isPending}
+          className="text-muted-foreground hover:text-destructive mt-6 w-full text-center text-sm transition-colors disabled:opacity-50"
+        >
+          {t('tickets.reservation.cancelButton')}
+        </button>
       )}
 
       {canPay && (
