@@ -56,6 +56,9 @@ export function KycPendingStep({ onRetry }: Props) {
             ? t('onboarding.pending.approvedDescription')
             : t('onboarding.pending.description')}
         </p>
+        {!approved && (
+          <p className="text-muted-foreground text-sm">{t('onboarding.pending.descriptionEta')}</p>
+        )}
       </div>
       {status?.is_complete && (
         <Button

@@ -55,6 +55,7 @@
     "passkeyLogin": "Iniciar Sesión Con Passkey",
     "emailRequiredForPasskey": "Introduce tu correo para iniciar sesión con passkey",
     "forgotPassword": "¿Has olvidado la contraseña?",
+    "lostDevice": "He perdido el dispositivo",
     "rememberedPassword": "¿Ya la recuerdas?",
     "forgotPasswordTitle": "Recuperar contraseña",
     "forgotPasswordSubtitle": "Introduce tu correo:",
@@ -161,6 +162,7 @@
         "scanning": "Tu entrada está siendo procesada.",
         "cancelled": "Tu entrada ya no es válida.",
         "onSale": "Tu entrada está en el mercado.",
+        "frozen": "Congelada porque se revocó el dispositivo al que estaba vinculada.",
         "flagged": "Tu entrada fue puesta en cuarentena por razones de seguridad."
       },
       "sale": {
@@ -170,7 +172,8 @@
         "description": "Tu entrada se congelará y se publicará al precio que pagaste por ella.",
         "note": "Volverá a ti en siete días si nadie la toma.",
         "confirm": "Reventa"
-      }
+      },
+      "restore": "Restaurar en este dispositivo"
     },
     "qr": {
       "title": "Código QR de acceso",
@@ -246,7 +249,9 @@
     },
     "toast": {
       "listSuccess": "Entrada puesta a la venta.",
-      "listFailed": "Entrada no puesta a la venta."
+      "listFailed": "Entrada no puesta a la venta.",
+      "restoreSuccess": "Entrada restaurada en este dispositivo.",
+      "restoreFailed": "Entrada no restaurada."
     },
     "holders": {
       "documentType": {
@@ -718,7 +723,8 @@
     },
     "pending": {
       "title": "En revisión",
-      "description": "Tus documentos de identidad han sido enviados. Los verificaremos en un plazo de 24 horas.",
+      "description": "Tus documentos de identidad han sido enviados.",
+      "descriptionEta": "Los verificaremos en un plazo de 24 horas.",
       "approved": "Identidad verificada.",
       "approvedDescription": "Tu identidad ha sido verificada. Ya puedes comenzar.",
       "rejected": "Verificación fallida",
@@ -731,6 +737,16 @@
       "verifyPhoneFailed": "Teléfono no verificado.",
       "kycUploadFailed": "Documento no subido.",
       "completeFailed": "Configuración no completada."
+    }
+  },
+  "recovery": {
+    "title": "Recupera tu cuenta",
+    "subtitle": "Confirma quién eres con tu documento de identidad y registra una passkey nueva en este dispositivo.",
+    "pickDocument": "Sube tu documento de identidad",
+    "submit": "Recuperar cuenta",
+    "success": "Cuenta recuperada. Inicia sesión con tu nueva passkey.",
+    "errors": {
+      "failed": "Cuenta no recuperada."
     }
   }
 }

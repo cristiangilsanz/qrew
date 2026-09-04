@@ -7,12 +7,6 @@ export interface UserPublicProfile {
   email: string
 }
 
-export interface UserSearchResult {
-  id: string
-  email: string
-  full_name: string
-}
-
 export interface UserProfile {
   id: string
   email: string
@@ -132,6 +126,15 @@ export const profileApi = {
   revokeDevice: (deviceId: string) =>
     apiClient.post<{ message: string }>(`/v1/auth/devices/${deviceId}/revoke`).then((r) => r.data),
 
+  // implements report fingerprint
+  reportFingerprint: (fingerprintHash: string) =>
+    apiClient
+      .post<{ message: string }>('/v1/auth/devices/fingerprint', {
+        fingerprint_hash: fingerprintHash,
+        user_agent: typeof navigator === 'undefined' ? null : navigator.userAgent,
+      })
+      .then((r) => r.data),
+
   // implements revoke all devices
   revokeAllDevices: () =>
     apiClient.post<{ message: string }>('/v1/auth/devices/revoke-all').then((r) => r.data),
@@ -140,11 +143,5 @@ export const profileApi = {
   getPublicProfiles: (userIds: string[]) =>
     apiClient
       .post<UserPublicProfile[]>('/v1/auth/profile/users/public', { user_ids: userIds })
-      .then((r) => r.data),
-
-  // implements search users
-  searchUsers: (q: string) =>
-    apiClient
-      .get<UserSearchResult[]>('/v1/admin/users/search', { params: { q } })
       .then((r) => r.data),
 }

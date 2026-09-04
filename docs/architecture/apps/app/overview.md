@@ -109,6 +109,7 @@ src/routes/
     ├── verify-email.tsx
     ├── verify-totp.tsx
     ├── forgot-password.tsx
+    ├── recover-account.tsx
     └── reset-password.tsx
 ```
 

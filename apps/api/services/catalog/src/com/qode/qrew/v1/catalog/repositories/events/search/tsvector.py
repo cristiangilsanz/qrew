@@ -10,6 +10,11 @@ def normalise_query(raw: str) -> str:
     return " ".join(raw.split()).strip()
 
 
+# neutralises the wildcards a like pattern would otherwise read as operators
+def escape_like(raw: str) -> str:
+    return raw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 # turns a normalised query into a prefix matching tsquery expression
 def to_prefix_tsquery(raw: str) -> str:
     words = [_re.sub(r"[^\w]", "", w) for w in raw.split()]

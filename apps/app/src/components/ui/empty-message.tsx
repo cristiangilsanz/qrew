@@ -11,8 +11,10 @@ export function EmptyMessage({ children, action }: EmptyMessageProps) {
   if (!action) {
     return <p className="text-muted-foreground py-10 text-center text-sm">{children}</p>
   }
+  // with an action the note carries a call, so it sits in the middle of the page
+  // rather than clinging to the header with an empty stretch below it
   return (
-    <div className="flex flex-col items-center gap-4 py-10 text-center">
+    <div className="flex min-h-[55vh] flex-col items-center justify-center gap-4 text-center">
       <p className="text-muted-foreground text-sm">{children}</p>
       {action}
     </div>

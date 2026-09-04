@@ -1,8 +1,6 @@
 // renders the invite member form component
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQuery } from '@tanstack/react-query'
-import { Info, Search, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Info } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
@@ -16,83 +14,33 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import {
-  SEARCH_CLEAR_CLASS,
-  SEARCH_ICON_CLASS,
-  SEARCH_INPUT_CLASS,
-} from '@/components/ui/search-field'
-import { profileApi } from '@/features/profile/api'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 import { useInviteCollaborator } from '../hooks/useInviteCollaborator'
 
 const schema = z.object({
-  user_id: z.string().uuid(),
+  email: z.string().email(),
   role: z.enum(['member', 'manager']),
 })
 
 type Values = z.infer<typeof schema>
 
-const MIN_QUERY_LENGTH = 2
-
 interface Props {
   orgId: string
-  existingCollaboratorIds?: string[]
   onSuccess?: () => void
 }
 
 // renders the invite member form component
-export function InviteCollaboratorForm({ orgId, existingCollaboratorIds = [], onSuccess }: Props) {
+export function InviteCollaboratorForm({ orgId, onSuccess }: Props) {
   const { t } = useTranslation()
-  const [searchQ, setSearchQ] = useState('')
-  const [debouncedQ, setDebouncedQ] = useState('')
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // implements timer
-    const timer = setTimeout(() => setDebouncedQ(searchQ), 300)
-    return () => clearTimeout(timer)
-  }, [searchQ])
-
-  const term = debouncedQ.trim()
-  const canSearch = term.length >= MIN_QUERY_LENGTH
-
-  const { data: matches = [], isFetching } = useQuery({
-    queryKey: ['user-search', term],
-    // implements query fn
-    queryFn: () => profileApi.searchUsers(term),
-    enabled: canSearch,
-    staleTime: 30_000,
-  })
-
-  // implements filtered
-  const filtered = matches.filter((u) => !existingCollaboratorIds.includes(u.id))
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { user_id: '', role: 'member' },
+    defaultValues: { email: '', role: 'member' },
   })
 
   const invite = useInviteCollaborator(orgId)
-
-  useEffect(() => {
-    // handles on click outside
-    function onClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [])
-
-  // implements select user
-  function selectUser(id: string, email: string) {
-    form.setValue('user_id', id, { shouldValidate: true })
-    setSearchQ(email)
-    setDropdownOpen(false)
-  }
 
   return (
     <Form {...form}>
@@ -102,81 +50,32 @@ export function InviteCollaboratorForm({ orgId, existingCollaboratorIds = [], on
             // handles on success
             onSuccess: () => {
               form.reset()
-              setSearchQ('')
               onSuccess?.()
             },
           })
         })}
         className="w-full space-y-4"
       >
-        <input type="hidden" {...form.register('user_id')} />
-
-        <FormItem>
-          <FormLabel>{t('organiser.collaborators.emailLabel')}</FormLabel>
-          <div ref={containerRef} className="relative">
-            <Search className={SEARCH_ICON_CLASS} />
-            <input
-              type="search"
-              autoComplete="off"
-              className={SEARCH_INPUT_CLASS}
-              placeholder={t('organiser.collaborators.emailPlaceholder')}
-              value={searchQ}
-              onChange={(e) => {
-                setSearchQ(e.target.value)
-                form.setValue('user_id', '', { shouldValidate: false })
-                setDropdownOpen(true)
-              }}
-              onFocus={() => setDropdownOpen(true)}
-            />
-            {searchQ && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQ('')
-                  form.setValue('user_id', '', { shouldValidate: false })
-                }}
-                className={SEARCH_CLEAR_CLASS}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-            {dropdownOpen && canSearch && (
-              <ul className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-white/15 bg-black/95 shadow-xl backdrop-blur-md">
-                {isFetching && filtered.length === 0 && (
-                  <li className="text-muted-foreground px-4 py-3 text-xs">{t('common.loading')}</li>
-                )}
-                {!isFetching && filtered.length === 0 && (
-                  <li className="text-muted-foreground px-4 py-3 text-xs">
-                    {t('organiser.collaborators.noMatches')}
-                  </li>
-                )}
-                {filtered.map((u) => (
-                  <li key={u.id}>
-                    <button
-                      type="button"
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.06]"
-                      onMouseDown={(e) => {
-                        e.preventDefault()
-                        selectUser(u.id, u.email)
-                      }}
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold uppercase">
-                        {u.full_name.slice(0, 2)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{u.full_name}</p>
-                        <p className="text-muted-foreground truncate text-xs">{u.email}</p>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {form.formState.errors.user_id && (
-            <p className="text-destructive text-sm">{t('organiser.collaborators.selectUser')}</p>
+        {/* the invitation travels by address, so the form never reads the directory
+            and an owner or manager needs no platform wide permission to send it */}
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('organiser.collaborators.emailLabel')}</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  autoComplete="off"
+                  placeholder={t('organiser.collaborators.emailPlaceholder')}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </FormItem>
+        />
         <FormField
           control={form.control}
           name="role"

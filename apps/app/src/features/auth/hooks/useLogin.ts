@@ -8,12 +8,15 @@ import { toastErrorMessage } from '@/lib/errors'
 import { useAuthStore } from '@/store/auth'
 
 import { type ApiErrorDetail, authApi, type LoginRequest } from '../api'
+import { useReportFingerprint } from './useReportFingerprint'
 
 // provides use login
 export function useLogin() {
   const { t } = useTranslation()
   // implements set tokens
   const setTokens = useAuthStore((s) => s.setTokens)
+  // implements report fingerprint
+  const reportFingerprint = useReportFingerprint()
   // implements set setup token
   const setSetupToken = useAuthStore((s) => s.setSetupToken)
   // implements set totp token
@@ -30,6 +33,7 @@ export function useLogin() {
         setTotpToken(data.access_token)
       } else {
         setTokens(data.access_token, data.refresh_token ?? '')
+        void reportFingerprint()
       }
     },
     // handles on error

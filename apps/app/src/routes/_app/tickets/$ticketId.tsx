@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { BackButton } from '@/components/ui/back-button'
+import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { NotFound } from '@/components/ui/not-found'
@@ -29,6 +30,7 @@ import { useEvent } from '@/features/events/hooks/useEvent'
 import { marketApi } from '@/features/market/api'
 import { useMarketListing } from '@/features/market/hooks/useMarketListing'
 import { useProfile } from '@/features/profile/hooks/useProfile'
+import { ticketsApi } from '@/features/tickets/api'
 import { QrDisplay } from '@/features/tickets/components/QrDisplay'
 import { useReservation } from '@/features/tickets/hooks/useReservation'
 import { useTicket } from '@/features/tickets/hooks/useTicket'
@@ -91,6 +93,28 @@ function TicketDetailPage() {
   const canListForResale = ticket?.state === 'issued' && saleEnded && !eventStartsSoon
 
   const { data: existingListing } = useMarketListing(ticketId, canListForResale)
+
+  // a ticket sits in on_sale either because its holder listed it or because the
+  // device it was bound to was revoked, and only the second case has no listing
+  const frozenByDevice = ticket?.state === 'on_sale'
+  const { data: frozenListing, isLoading: frozenListingLoading } = useMarketListing(
+    ticketId,
+    frozenByDevice,
+  )
+  const canRestore = frozenByDevice && !frozenListingLoading && !frozenListing
+
+  const restore = useMutation({
+    // implements mutation fn
+    mutationFn: () => ticketsApi.restore(ticketId),
+    // handles on success
+    onSuccess: () => {
+      toast.success(t('tickets.toast.restoreSuccess'))
+      void queryClient.invalidateQueries({ queryKey: ['tickets'] })
+      setTimeout(() => window.location.reload(), 300)
+    },
+    // handles on error
+    onError: () => toast.error(t('tickets.toast.restoreFailed')),
+  })
 
   const listForResale = useMutation({
     // implements mutation fn
@@ -429,7 +453,20 @@ function TicketDetailPage() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <ShoppingBag className="h-6 w-6 text-blue-400" />
                   </div>
-                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.onSale')}</p>
+                  <p className="text-xs text-gray-400">
+                    {canRestore
+                      ? t('tickets.ticket.status.frozen')
+                      : t('tickets.ticket.status.onSale')}
+                  </p>
+                  {canRestore && (
+                    <Button
+                      className="mt-2 rounded-full"
+                      isLoading={restore.isPending}
+                      onClick={() => restore.mutate()}
+                    >
+                      {t('tickets.ticket.restore')}
+                    </Button>
+                  )}
                 </>
               )}
               {displayState === 'flagged' && (
