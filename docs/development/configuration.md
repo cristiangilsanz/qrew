@@ -181,6 +181,8 @@ File: `apps/api/services/ticketing/config/local.yaml`
 | `ticket_qr_require_geofence` | `true` | no | Demand a position inside the venue radius |
 | `ticket_qr_reassert_window_seconds` | `180` | no | How long an assertion stays fresh |
 
+The reassertion, device binding and attestation switches also govern `POST /tickets/{ticket_id}/restore`, which applies the same checks in the same order as the gate.
+
 
 #### 🚪 Entry Service
 

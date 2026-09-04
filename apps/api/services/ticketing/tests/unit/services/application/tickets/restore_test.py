@@ -1,6 +1,7 @@
 # tests restore
 import uuid
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from typing import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -19,20 +20,27 @@ _PATCH_TRANSITION = (
 )
 _PATCH_SETTINGS = "com.qode.qrew.v1.ticketing.services.application.tickets.restore.settings"
 
-_FAKE_SETTINGS = type(
-    "S",
-    (),
-    {
-        "ticket_qr_reassert_window_seconds": 30,
-        "ticket_qr_attestation_max_age_hours": 24,
-    },
-)()
+
+# builds settings with every restore check switched on unless a test relaxes one
+def _settings(
+    *,
+    reassertion: bool = True,
+    device_binding: bool = True,
+    attestation: bool = True,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        ticket_qr_require_reassertion=reassertion,
+        ticket_qr_require_device_binding=device_binding,
+        ticket_qr_require_attestation=attestation,
+        ticket_qr_reassert_window_seconds=30,
+        ticket_qr_attestation_max_age_hours=24,
+    )
 
 
-# provides fake settings
+# provides fake settings with every check switched on
 @pytest.fixture
 def fake_settings() -> Generator[None, None, None]:
-    with patch(_PATCH_SETTINGS, _FAKE_SETTINGS):
+    with patch(_PATCH_SETTINGS, _settings()):
         yield
 
 
@@ -377,3 +385,209 @@ class TestRestoreFrozenTicket:
             )
 
         assert result is ticket
+
+
+class TestRestoreHonoursTheGateFlags:
+    # verifies that a stale attestation passes when only that check is off
+    async def test_allows_a_stale_attestation_when_only_that_check_is_off(
+        self,
+        user_id: uuid.UUID,
+        device_id: uuid.UUID,
+        audit: AuditService,
+        fresh_asserted_at: datetime,
+    ) -> None:
+        stale_attested = datetime.now(UTC) - timedelta(hours=25)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
+        device = make_device(user_id=user_id, device_id=device_id, attested_at=stale_attested)
+        db = _make_db(ticket=ticket, device=device)
+
+        with (
+            patch(_PATCH_SETTINGS, _settings(attestation=False)),
+            patch(_PATCH_TRANSITION, new=AsyncMock(return_value=ticket)),
+        ):
+            result = await restore_on_sale_ticket(
+                db,
+                actor_id=user_id,
+                ticket_id=ticket.id,
+                session_device_id=device_id,
+                last_asserted_at=fresh_asserted_at,
+                audit=audit,
+            )
+
+        assert result is ticket
+        assert ticket.bound_device_id == device_id
+
+    # verifies that a device that never attested passes when only that check is off
+    async def test_allows_a_device_that_never_attested_when_only_that_check_is_off(
+        self,
+        user_id: uuid.UUID,
+        device_id: uuid.UUID,
+        audit: AuditService,
+        fresh_asserted_at: datetime,
+    ) -> None:
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
+        device = make_device(user_id=user_id, device_id=device_id, attested_at=None)
+        db = _make_db(ticket=ticket, device=device)
+
+        with (
+            patch(_PATCH_SETTINGS, _settings(attestation=False)),
+            patch(_PATCH_TRANSITION, new=AsyncMock(return_value=ticket)),
+        ):
+            result = await restore_on_sale_ticket(
+                db,
+                actor_id=user_id,
+                ticket_id=ticket.id,
+                session_device_id=device_id,
+                last_asserted_at=fresh_asserted_at,
+                audit=audit,
+            )
+
+        assert result is ticket
+
+    # verifies that a revoked device is still refused without the attestation check
+    async def test_still_denies_a_revoked_device_without_the_attestation_check(
+        self,
+        user_id: uuid.UUID,
+        device_id: uuid.UUID,
+        audit: AuditService,
+        fresh_asserted_at: datetime,
+    ) -> None:
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
+        device = make_device(user_id=user_id, device_id=device_id, revoked_at=fresh_asserted_at)
+        db = _make_db(ticket=ticket, device=device)
+
+        with patch(_PATCH_SETTINGS, _settings(attestation=False)):
+            with pytest.raises(TicketRestoreError, match="revoked"):
+                await restore_on_sale_ticket(
+                    db,
+                    actor_id=user_id,
+                    ticket_id=ticket.id,
+                    session_device_id=device_id,
+                    last_asserted_at=fresh_asserted_at,
+                    audit=audit,
+                )
+
+    # verifies that a reassertion is still demanded without the attestation check
+    async def test_still_demands_a_reassertion_without_the_attestation_check(
+        self,
+        user_id: uuid.UUID,
+        device_id: uuid.UUID,
+        audit: AuditService,
+    ) -> None:
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
+        device = make_device(user_id=user_id, device_id=device_id)
+        db = _make_db(ticket=ticket, device=device)
+
+        with patch(_PATCH_SETTINGS, _settings(attestation=False, device_binding=False)):
+            with pytest.raises(TicketRestoreError, match="reassertion"):
+                await restore_on_sale_ticket(
+                    db,
+                    actor_id=user_id,
+                    ticket_id=ticket.id,
+                    session_device_id=device_id,
+                    last_asserted_at=None,
+                    audit=audit,
+                )
+
+    # verifies that a stale reassertion passes when only that check is off
+    async def test_allows_a_stale_reassertion_when_only_that_check_is_off(
+        self,
+        user_id: uuid.UUID,
+        device_id: uuid.UUID,
+        audit: AuditService,
+    ) -> None:
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
+        device = make_device(user_id=user_id, device_id=device_id)
+        db = _make_db(ticket=ticket, device=device)
+
+        with (
+            patch(_PATCH_SETTINGS, _settings(reassertion=False)),
+            patch(_PATCH_TRANSITION, new=AsyncMock(return_value=ticket)),
+        ):
+            result = await restore_on_sale_ticket(
+                db,
+                actor_id=user_id,
+                ticket_id=ticket.id,
+                session_device_id=device_id,
+                last_asserted_at=None,
+                audit=audit,
+            )
+
+        assert result is ticket
+
+    # verifies that a revoked device passes when only the binding check is off
+    async def test_allows_a_revoked_device_when_only_the_binding_check_is_off(
+        self,
+        user_id: uuid.UUID,
+        device_id: uuid.UUID,
+        audit: AuditService,
+        fresh_asserted_at: datetime,
+    ) -> None:
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
+        device = make_device(user_id=user_id, device_id=device_id, revoked_at=fresh_asserted_at)
+        db = _make_db(ticket=ticket, device=device)
+
+        with (
+            patch(_PATCH_SETTINGS, _settings(device_binding=False)),
+            patch(_PATCH_TRANSITION, new=AsyncMock(return_value=ticket)),
+        ):
+            result = await restore_on_sale_ticket(
+                db,
+                actor_id=user_id,
+                ticket_id=ticket.id,
+                session_device_id=device_id,
+                last_asserted_at=fresh_asserted_at,
+                audit=audit,
+            )
+
+        assert result is ticket
+
+    # verifies that a device the projection has not seen passes when the binding check is off
+    async def test_allows_an_unknown_device_when_only_the_binding_check_is_off(
+        self,
+        user_id: uuid.UUID,
+        device_id: uuid.UUID,
+        audit: AuditService,
+        fresh_asserted_at: datetime,
+    ) -> None:
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
+        db = _make_db(ticket=ticket, device=None)
+
+        with (
+            patch(_PATCH_SETTINGS, _settings(device_binding=False)),
+            patch(_PATCH_TRANSITION, new=AsyncMock(return_value=ticket)),
+        ):
+            result = await restore_on_sale_ticket(
+                db,
+                actor_id=user_id,
+                ticket_id=ticket.id,
+                session_device_id=device_id,
+                last_asserted_at=fresh_asserted_at,
+                audit=audit,
+            )
+
+        assert result is ticket
+        assert ticket.bound_device_id == device_id
+
+    # verifies that a stale attestation is still refused when only that check is on
+    async def test_still_denies_a_stale_attestation_when_only_that_check_is_on(
+        self,
+        user_id: uuid.UUID,
+        device_id: uuid.UUID,
+        audit: AuditService,
+    ) -> None:
+        stale_attested = datetime.now(UTC) - timedelta(hours=25)
+        ticket = make_ticket(owner_user_id=user_id, state=TicketState.on_sale)
+        device = make_device(user_id=user_id, device_id=device_id, attested_at=stale_attested)
+        db = _make_db(ticket=ticket, device=device)
+
+        with patch(_PATCH_SETTINGS, _settings(reassertion=False, device_binding=False)):
+            with pytest.raises(TicketRestoreError, match="attestation expired"):
+                await restore_on_sale_ticket(
+                    db,
+                    actor_id=user_id,
+                    ticket_id=ticket.id,
+                    session_device_id=device_id,
+                    last_asserted_at=None,
+                    audit=audit,
+                )
