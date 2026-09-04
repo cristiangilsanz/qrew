@@ -19,6 +19,7 @@ class TicketState(enum.StrEnum):
     cancelled = "cancelled"
     expired = "expired"
     on_sale = "on_sale"
+    frozen = "frozen"
     flagged = "flagged"
 
 

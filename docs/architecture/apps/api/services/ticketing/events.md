@@ -14,7 +14,7 @@ Emitted on every ticket state transition. Entry maintains a local `ticket_contex
 | `ticket_type_id` | UUID | Ticket type |
 | `owner_user_id` | UUID | Ticket owner |
 | `bound_device_id` | UUID or null | Device bound to this ticket, if any |
-| `state` | string | New state: `reserved`, `issued`, `scanning`, `redeemed`, `on_sale`, `flagged`, `cancelled`, `expired` |
+| `state` | string | New state: `reserved`, `issued`, `scanning`, `redeemed`, `on_sale`, `frozen`, `flagged`, `cancelled`, `expired` |
 
 
 ## `ticketing.ticket.restored`

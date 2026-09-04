@@ -14,7 +14,7 @@ router = APIRouter(prefix="/tickets", tags=["tickets"])
 
 
 _QR_ELIGIBLE_STATES = {"issued", "scanning"}
-_LIMIT_COUNTING_STATES = {"reserved", "issued", "scanning", "on_sale", "flagged"}
+_LIMIT_COUNTING_STATES = {"reserved", "issued", "scanning", "on_sale", "frozen", "flagged"}
 
 
 # converts a ticket into its response including derived flags

@@ -68,7 +68,7 @@ class MarketRepository:
             SELECT COUNT(*) FROM ticketing.tickets
             WHERE owner_user_id = :user_id
               AND event_id = :event_id
-              AND state IN ('reserved', 'issued', 'on_sale', 'scanning', 'flagged')
+              AND state IN ('reserved', 'issued', 'on_sale', 'frozen', 'scanning', 'flagged')
             """
         )
         result = await self._session.execute(
@@ -177,7 +177,7 @@ class MarketRepository:
                       SELECT COUNT(*) FROM ticketing.tickets t
                       WHERE t.owner_user_id = mq.user_id
                         AND t.event_id = :event_id
-                        AND t.state IN ('reserved','issued','on_sale','scanning','flagged')
+                        AND t.state IN ('reserved','issued','on_sale','frozen','scanning','flagged')
                   ) + (
                       SELECT COUNT(*) FROM sales.market_assignments ma
                       WHERE ma.buyer_user_id = mq.user_id

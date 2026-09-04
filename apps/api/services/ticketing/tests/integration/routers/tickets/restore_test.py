@@ -9,7 +9,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")
 
 
 # handles seed on sale ticket
-async def _seed_on_sale_ticket(
+async def _seed_frozen_ticket(
     session_factory,
     *,
     user_id: uuid.UUID,
@@ -21,7 +21,7 @@ async def _seed_on_sale_ticket(
             text("""
                 INSERT INTO ticketing.tickets
                     (id, reservation_id, event_id, ticket_type_id, owner_user_id, bound_device_id, state)
-                VALUES (:id, :res_id, :ev_id, :tt_id, :owner_id, :bound_device, 'on_sale')
+                VALUES (:id, :res_id, :ev_id, :tt_id, :owner_id, :bound_device, 'frozen')
             """),
             {
                 "id": ticket_id,
@@ -55,7 +55,7 @@ async def test_restore_frozen_ticket_success(client, test_session_factory, make_
     old_device_id = uuid.uuid4()
     new_device_id = uuid.uuid4()
 
-    ticket_id = await _seed_on_sale_ticket(
+    ticket_id = await _seed_frozen_ticket(
         test_session_factory, user_id=user_id, bound_device_id=old_device_id
     )
     await _seed_device(test_session_factory, device_id=new_device_id, user_id=user_id)

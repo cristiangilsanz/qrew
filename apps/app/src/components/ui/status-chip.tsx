@@ -12,6 +12,7 @@ const variants: Record<string, string> = {
   redeemed: 'bg-green-500/15 text-green-400 border border-green-500/20',
   expired: 'bg-white/8 text-white/40 border border-white/10',
   on_sale: 'bg-blue-500/15 text-blue-400 border border-blue-500/20',
+  frozen: 'bg-slate-500/15 text-slate-300 border border-slate-500/20',
   flagged: 'bg-amber-900/20 text-amber-900 border border-amber-900/30',
   approved: 'bg-primary/15 text-primary border border-primary/30',
   pending: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',

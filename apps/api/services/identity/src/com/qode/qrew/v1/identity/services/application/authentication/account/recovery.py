@@ -193,6 +193,7 @@ class RecoveryService:
                 public_key=verification.credential_public_key,
                 sign_count=verification.sign_count,
                 aaguid=str(verification.aaguid),
+                name="Default",
             )
         )
 

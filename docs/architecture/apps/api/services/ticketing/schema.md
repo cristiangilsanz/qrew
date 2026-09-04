@@ -57,7 +57,7 @@ erDiagram
 | ticket_type_id | UUID | NOT NULL | | |
 | owner_user_id | UUID | NOT NULL | | |
 | bound_device_id | UUID | NULL | | |
-| state | VARCHAR(20) | NOT NULL | 'reserved' | e.g. reserved, on_sale, scanning, redeemed, expired |
+| state | VARCHAR(20) | NOT NULL | 'reserved' | e.g. reserved, on_sale, frozen, scanning, redeemed, expired |
 | state_updated_at | TIMESTAMPTZ | NULL | | |
 | issued_at | TIMESTAMPTZ | NULL | | |
 | expired_at | TIMESTAMPTZ | NULL | | |

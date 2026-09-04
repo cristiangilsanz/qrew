@@ -75,7 +75,7 @@ async def handle_device_revoked(raw: bytes) -> None:
             await transition_ticket(
                 session,
                 ticket_id=ticket.id,
-                to_state=TicketState.on_sale,
+                to_state=TicketState.frozen,
                 reason="device_revoked",
                 actor_id=user_id,
                 audit=audit,

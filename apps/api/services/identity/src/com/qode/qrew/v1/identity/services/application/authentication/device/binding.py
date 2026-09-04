@@ -93,7 +93,9 @@ class DeviceBindingService:
         verify_ecdsa(pub_key, sig_bytes, challenge_str.encode())
 
         existing = await self._device_repo.get_by_public_key(public_key_bytes)
-        if existing is not None:
+        if existing is not None and existing.user_id != user.id:
+            raise DeviceBindingError("Device key already registered.", field="public_key")
+        if existing is not None and existing.revoked_at is None:
             raise DeviceBindingError("Device key already registered.", field="public_key")
 
         platform = await consume_attestation(self._redis, user.id)
@@ -104,6 +106,22 @@ class DeviceBindingService:
             )
 
         now = datetime.now(UTC)
+        # a device key lives in the browser and never changes, so revoking one and
+        # binding it again arrives with the same key. refusing that would lock the
+        # holder out of their own device for good, and the holder is authenticated
+        # and has just signed the challenge, so the binding is revived instead.
+        if existing is not None:
+            existing.revoked_at = None
+            existing.name = name
+            existing.last_seen_at = now
+            existing.attested_at = now if platform and platform != "skipped" else None
+            existing.attestation_platform = platform if platform and platform != "skipped" else None
+            device = await self._device_repo.save(existing)
+            await logger.ainfo("device_bind_revived", user_id=str(user.id))
+            await self._audit_safe(user.id, device.id, name)
+            await _publish_device_attested(device, platform=platform, attested_at=now)
+            return device
+
         device = await self._device_repo.create(
             Device(
                 id=uuid.uuid4(),
@@ -117,22 +135,25 @@ class DeviceBindingService:
         )
 
         await logger.ainfo("device_bind_complete", user_id=str(user.id))
+        await self._audit_safe(user.id, device.id, name)
+        await _publish_device_attested(device, platform=platform, attested_at=now)
+
+        return device
+
+    # records the binding without letting an audit failure undo it
+    async def _audit_safe(self, user_id: uuid.UUID, device_id: uuid.UUID, name: str) -> None:
         try:
             await self._audit.record(
                 action=AuditAction.DEVICE_BIND,
-                actor_id=user.id,
+                actor_id=user_id,
                 entity_type="device",
-                entity_id=str(device.id),
+                entity_id=str(device_id),
                 payload={"device_name": name},
             )
         except Exception as exc:
             await logger.awarning(
                 "audit_write_failed", action=AuditAction.DEVICE_BIND, error=repr(exc)
             )
-
-        await _publish_device_attested(device, platform=platform, attested_at=now)
-
-        return device
 
 
 # publishes that a device was bound onto the shared nats connection

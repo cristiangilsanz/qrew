@@ -143,6 +143,7 @@
         "cancelled": "Cancelled",
         "expired": "Expired",
         "on_sale": "On sale",
+        "frozen": "Frozen",
         "flagged": "Flagged"
       },
       "timeline": {
@@ -153,7 +154,8 @@
         "scanned": "Scanned",
         "redeemed": "Redeemed",
         "onSale": "On sale",
-        "flagged": "Flagged"
+        "flagged": "Flagged",
+        "frozen": "Frozen"
       },
       "status": {
         "paymentPending": "Your ticket is waiting for payment.",
