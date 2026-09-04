@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pagination import decode_cursor, encode_cursor
 from com.qode.qrew.v1.catalog.repositories.events.search.config import SearchConfig
 from com.qode.qrew.v1.catalog.repositories.events.search.tsvector import (
+    escape_like,
     normalise_query,
     to_prefix_tsquery,
 )
@@ -32,24 +33,31 @@ def build_search_clause(
 
     if q is not None and normalise_query(q):
         cleaned = normalise_query(q)
+        # the query has to appear as a contiguous run of characters, since a prefix
+        # tsquery matches its words apart from one another and drops the ones the
+        # language treats as stopwords, which let a two word query return the whole
+        # catalogue. this filter stands on its own, so a query made only of
+        # punctuation narrows the results instead of widening them.
+        parameters["ilike_q"] = f"%{escape_like(cleaned)}%"
+        name_col = next(
+            (f.column_name for f in config.fields if f.weight == "A"),
+            config.fields[0].column_name if config.fields else "name",
+        )
+        desc_col = next(
+            (f.column_name for f in config.fields if f.weight == "B"),
+            None,
+        )
+        ilike_clauses = [f"{name_col} ILIKE :ilike_q ESCAPE '\\'"]
+        if desc_col:
+            ilike_clauses.append(f"coalesce({desc_col}, '') ILIKE :ilike_q ESCAPE '\\'")
+        where.append(f"({' OR '.join(ilike_clauses)})")
+
+        # the vector only orders what the filter returned, so a query it cannot
+        # express leaves the ranking out rather than the results
         prefix_q = to_prefix_tsquery(cleaned)
         if prefix_q:
             parameters["search_q"] = prefix_q
             tsquery = f"to_tsquery('{config.language}', :search_q)"
-            parameters["ilike_q"] = f"%{cleaned}%"
-            name_col = next(
-                (f.column_name for f in config.fields if f.weight == "A"),
-                config.fields[0].column_name if config.fields else "name",
-            )
-            desc_col = next(
-                (f.column_name for f in config.fields if f.weight == "B"),
-                None,
-            )
-            ilike_clauses = [f"{name_col} ILIKE :ilike_q"]
-            if desc_col:
-                ilike_clauses.append(f"coalesce({desc_col}, '') ILIKE :ilike_q")
-            ilike_expr = " OR ".join(ilike_clauses)
-            where.append(f"({config.vector_column} @@ {tsquery} OR {ilike_expr})")
             rank_expression = f"ts_rank_cd({config.vector_column}, {tsquery})"
             order_by = f"{config.rank_column_alias} DESC, {config.primary_key} DESC"
 

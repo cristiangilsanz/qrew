@@ -12,7 +12,7 @@ Catalog is the source of truth for the public event catalog in the platform. It 
 2. Creates venues and associates them with organisations.
 3. Handles event creation, editing, and publication.
 4. Defines ticket types with name, price, capacity, and currency.
-5. Provides event search and discovery including upcoming events and full-text search.
+5. Provides event search and discovery, matching a query as a contiguous run of characters in the title or description and ranking the results by full-text relevance.
 6. Does not manage reservations, ticket issuance, or payment.
 
 ## HTTP API
@@ -76,7 +76,7 @@ This service does not consume events from other services.
 
 | Worker | Type | Description |
 |--------|------|-------------|
-| `search_reindexer` | arq job, daily at 05:00 | Rebuilds the full-text search index for events. |
+| `search_reindexer` | arq job, daily at 05:00 | Rebuilds the full-text index that ranks the events a search returns. |
 | `event_lifecycle` | arq job, every minute | Marks a published event as ongoing once its start time has passed, so nobody has to do it by hand. |
 
 ## Internal Dependencies
