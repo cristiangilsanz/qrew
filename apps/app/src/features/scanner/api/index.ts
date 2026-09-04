@@ -48,6 +48,16 @@ export const scannerApi = {
       .post<ScannerToken>(`/v1/scanners/for-event/${eventId}`, { name, date })
       .then((r) => r.data),
 
+  // implements refresh
+  refresh: (scannerToken: string) =>
+    axios
+      .post<ScannerToken>(
+        `${env.API_URL}/api/entry/v1/scanners/refresh`,
+        {},
+        { headers: { Authorization: `Bearer ${scannerToken}` } },
+      )
+      .then((r) => r.data),
+
   // implements validate entry
   validateEntry: (scannerToken: string, ticketJwt: string) =>
     axios

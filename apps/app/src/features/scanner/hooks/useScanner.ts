@@ -91,7 +91,19 @@ export function useScanner({ eventId, eventName, notSupportedMessage }: UseScann
       processingRef.current = true
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       try {
-        const result = await scannerApi.validateEntry(scannerTokenRef.current, raw)
+        // the scanner credential lasts twelve hours, so a long shift outlives it.
+        // a rejected credential is renewed once and the scan retried, rather than
+        // dropping the door with a queue in front of it.
+        let result
+        try {
+          result = await scannerApi.validateEntry(scannerTokenRef.current, raw)
+        } catch (error) {
+          const status = (error as { response?: { status?: number } }).response?.status
+          if (status !== 401 || !scannerTokenRef.current) throw error
+          const renewed = await scannerApi.refresh(scannerTokenRef.current)
+          scannerTokenRef.current = renewed.token
+          result = await scannerApi.validateEntry(renewed.token, raw)
+        }
         setScanResult({
           allowed: result.allowed,
           reason: result.reason,
