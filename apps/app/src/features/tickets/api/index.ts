@@ -47,7 +47,15 @@ export interface Payment {
 }
 
 export type TicketState =
-  'reserved' | 'issued' | 'scanning' | 'redeemed' | 'cancelled' | 'expired' | 'on_sale' | 'flagged'
+  | 'reserved'
+  | 'issued'
+  | 'scanning'
+  | 'redeemed'
+  | 'cancelled'
+  | 'expired'
+  | 'on_sale'
+  | 'frozen'
+  | 'flagged'
 
 export interface Ticket {
   id: string

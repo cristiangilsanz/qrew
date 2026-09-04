@@ -307,7 +307,7 @@ paths:
     post:
       tags:
       - ticket-restore
-      summary: Restore an on_sale ticket onto a re-enrolled device
+      summary: Restore a frozen ticket onto a re-enrolled device
       operationId: restore_ticket_v1_tickets__ticket_id__restore_post
       security:
       - HTTPBearer: []

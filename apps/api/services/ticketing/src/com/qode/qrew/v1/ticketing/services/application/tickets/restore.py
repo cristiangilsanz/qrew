@@ -1,4 +1,4 @@
-# restores a frozen on sale ticket onto a reenrolled device
+# restores a frozen ticket onto a reenrolled device
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -22,7 +22,7 @@ class TicketRestoreError(DomainError):
 
 
 # validates the new device and moves the ticket back to issued
-async def restore_on_sale_ticket(
+async def restore_frozen_ticket(
     db: AsyncSession,
     *,
     actor_id: uuid.UUID,
@@ -34,8 +34,8 @@ async def restore_on_sale_ticket(
     ticket = await db.get(Ticket, ticket_id)
     if ticket is None or ticket.owner_user_id != actor_id:
         raise TicketRestoreError("Ticket not found.", field="ticket_id")
-    if ticket.state != TicketState.on_sale:
-        raise TicketRestoreError("Ticket not on sale.", field="state")
+    if ticket.state != TicketState.frozen:
+        raise TicketRestoreError("Ticket not frozen.", field="state")
     if session_device_id is None:
         raise TicketRestoreError(
             "Restore requires an authenticated device session", field="device_id"

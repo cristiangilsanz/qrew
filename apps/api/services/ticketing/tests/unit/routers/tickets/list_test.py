@@ -55,6 +55,7 @@ def test_reports_which_states_may_show_a_qr(state: TicketState, eligible: bool) 
         (TicketState.issued, True),
         (TicketState.scanning, True),
         (TicketState.on_sale, True),
+        (TicketState.frozen, True),
         (TicketState.flagged, True),
         (TicketState.redeemed, False),
         (TicketState.cancelled, False),

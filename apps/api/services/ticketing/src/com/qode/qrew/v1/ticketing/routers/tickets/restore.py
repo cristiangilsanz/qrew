@@ -10,7 +10,7 @@ from com.qode.qrew.v1.ticketing.core.database import get_db
 from com.qode.qrew.v1.ticketing.core.dependencies import get_audit_service, limiter
 from com.qode.qrew.v1.ticketing.services.application.tickets.restore import (
     TicketRestoreError,
-    restore_on_sale_ticket,
+    restore_frozen_ticket,
 )
 
 router = APIRouter(prefix="/tickets", tags=["ticket-restore"])
@@ -35,7 +35,7 @@ def _domain_to_http(error: TicketRestoreError) -> HTTPException:
 @router.post(
     "/{ticket_id}/restore",
     status_code=status.HTTP_200_OK,
-    summary="Restore an on_sale ticket onto a re-enrolled device",
+    summary="Restore a frozen ticket onto a re-enrolled device",
 )
 @limiter.limit("5/600seconds")  # type: ignore[misc]
 async def restore_ticket(
@@ -47,7 +47,7 @@ async def restore_ticket(
 ) -> dict[str, str]:
     del request
     try:
-        ticket = await restore_on_sale_ticket(
+        ticket = await restore_frozen_ticket(
             db,
             actor_id=current_user.id,
             ticket_id=ticket_id,

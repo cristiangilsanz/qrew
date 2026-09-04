@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   ShieldX,
   ShoppingBag,
+  Snowflake,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -93,15 +94,6 @@ function TicketDetailPage() {
   const canListForResale = ticket?.state === 'issued' && saleEnded && !eventStartsSoon
 
   const { data: existingListing } = useMarketListing(ticketId, canListForResale)
-
-  // a ticket sits in on_sale either because its holder listed it or because the
-  // device it was bound to was revoked, and only the second case has no listing
-  const frozenByDevice = ticket?.state === 'on_sale'
-  const { data: frozenListing, isLoading: frozenListingLoading } = useMarketListing(
-    ticketId,
-    frozenByDevice,
-  )
-  const canRestore = frozenByDevice && !frozenListingLoading && !frozenListing
 
   const restore = useMutation({
     // implements mutation fn
@@ -203,6 +195,12 @@ function TicketDetailPage() {
         label: t('tickets.ticket.timeline.redeemed'),
         date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
         status: 'done',
+      })
+    } else if (displayState === 'frozen') {
+      timeline.push({
+        label: t('tickets.ticket.timeline.frozen'),
+        date: ticket.state_updated_at ? fmt(ticket.state_updated_at) : null,
+        status: 'error',
       })
     } else if (displayState === 'on_sale') {
       timeline.push({
@@ -453,20 +451,22 @@ function TicketDetailPage() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                     <ShoppingBag className="h-6 w-6 text-blue-400" />
                   </div>
-                  <p className="text-xs text-gray-400">
-                    {canRestore
-                      ? t('tickets.ticket.status.frozen')
-                      : t('tickets.ticket.status.onSale')}
-                  </p>
-                  {canRestore && (
-                    <Button
-                      className="mt-2 rounded-full"
-                      isLoading={restore.isPending}
-                      onClick={() => restore.mutate()}
-                    >
-                      {t('tickets.ticket.restore')}
-                    </Button>
-                  )}
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.onSale')}</p>
+                </>
+              )}
+              {displayState === 'frozen' && (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <Snowflake className="h-6 w-6 text-slate-400" />
+                  </div>
+                  <p className="text-xs text-gray-400">{t('tickets.ticket.status.frozen')}</p>
+                  <Button
+                    className="mt-2 rounded-full"
+                    isLoading={restore.isPending}
+                    onClick={() => restore.mutate()}
+                  >
+                    {t('tickets.ticket.restore')}
+                  </Button>
                 </>
               )}
               {displayState === 'flagged' && (

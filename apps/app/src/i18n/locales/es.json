@@ -143,6 +143,7 @@
         "cancelled": "Cancelada",
         "expired": "Expirada",
         "on_sale": "En venta",
+        "frozen": "Congelada",
         "flagged": "Marcada"
       },
       "timeline": {
@@ -153,7 +154,8 @@
         "scanned": "Escaneada",
         "redeemed": "Canjeada",
         "onSale": "En venta",
-        "flagged": "Marcada"
+        "flagged": "Marcada",
+        "frozen": "Congelada"
       },
       "status": {
         "paymentPending": "Tu entrada está esperando el pago.",
