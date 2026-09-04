@@ -90,8 +90,8 @@ export function RecoverAccountForm() {
         />
 
         <p className="text-muted-foreground flex items-start gap-1.5 text-xs">
-          <span>{t('recovery.note')}</span>
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60" />
+          <span>{t('recovery.note')}</span>
         </p>
 
         <Button
