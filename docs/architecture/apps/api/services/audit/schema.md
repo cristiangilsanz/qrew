@@ -28,7 +28,7 @@ Append-only tamper-evident log of all auditable actions in the system. Each row 
 |---|---|---|---|---|
 | `id` | `UUID` | NOT NULL | `gen_random_uuid()` | Primary key |
 | `actor_id` | `UUID` | NULL | — | ID of the user or service principal that performed the action |
-| `action` | `VARCHAR(64)` | NOT NULL | — | Machine-readable action name (e.g. `user.created`) |
+| `action` | `VARCHAR(64)` | NOT NULL | — | Machine-readable action name, lowercase with underscores (e.g. `register`, `login_failed`, `entry_validated`) |
 | `entity_type` | `VARCHAR(64)` | NULL | — | Type of the affected entity (e.g. `user`, `event`) |
 | `entity_id` | `VARCHAR(255)` | NULL | — | ID of the affected entity |
 | `ip_address` | `VARCHAR(45)` | NULL | — | IPv4 or IPv6 address of the request origin |

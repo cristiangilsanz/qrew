@@ -31,10 +31,11 @@ uv run dev
 
 ## Worker
 
-Start the background worker in a separate terminal. The worker consumes payment and identity events to update reservation state and local projections.
+Start the background workers in separate terminals. `sales-worker` consumes catalog, identity and payment events to update reservation state and the local projections. `sales-arq-worker` is an arq runner on the `qrew:jobs:sales` queue that expires unpaid reservations, admits the waiting queue, assigns and expires marketplace listings, and every minute drains `sales.event_outbox`.
 
 ```bash
-uv run worker
+uv run sales-worker
+uv run sales-arq-worker
 ```
 
 ## Tests

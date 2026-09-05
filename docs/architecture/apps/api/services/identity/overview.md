@@ -90,16 +90,16 @@ Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../../.
 
 | Event | NATS Subject | Description |
 |-------|-------------|-------------|
-| `UserRegistered` | `identity.user.registered.v1` | Emitted when a new user completed registration. |
-| `UserVerified` | `identity.user.verified.v1` | Emitted when a user passed KYC verification. |
+| `UserRegistered` | `identity.user.registered.v1` | Emitted when a new user completed registration. Carries `phone_e164` for the Sales VoIP fraud signal. |
+| `FingerprintSeen` | `identity.fingerprint.seen.v1` | Emitted when a device fingerprint was observed at login, used by Sales for device reuse scoring. |
 | `DeviceBound` | `identity.device.attested.v1` | Emitted when a device was attested and bound to a user. |
 | `DeviceRevoked` | `identity.device.revoked.v1` | Emitted when a device was revoked due to loss, theft, or policy. |
-| `SessionEvicted` | `identity.session.evicted.v1` | Emitted when a session was forcibly terminated. |
-| `PasskeyReasserted` | `identity.passkey.reasserted.v1` | Emitted when a passkey was re-verified on a device. |
+| `WsFanout` | `ws.fanout.v1` | Notification the Gateway forwards to the user's open WebSocket. |
+| `AuditEvent` | `audit.events.v1` | Security and account audit record. |
 
 Schemas: [`packages/contracts/openapi/identity/events/`](../../../../../../packages/contracts/openapi/identity/events/)
 
-Every event is recorded in the `identity.event_outbox` table inside the same transaction as the change that caused it, and the `event_outbox_drainer` job publishes it afterwards. The request never talks to the broker. This table is separate from `identity.outbox`, which carries deferred arq jobs rather than domain events.
+Every `identity.*` event is recorded in the `identity.event_outbox` table inside the same transaction as the change that caused it, and the `event_outbox_drainer` job publishes it afterwards. The request never talks to the broker. This table is separate from `identity.outbox`, which carries deferred arq jobs rather than domain events. `ws.fanout.v1` and `audit.events.v1` bypass the outbox and are published straight to NATS.
 
 ### Consumed
 
@@ -110,6 +110,7 @@ Every event is recorded in the `identity.event_outbox` table inside the same tra
 | `PaymentFailed` | `payments.payment.failed.v1` | Sends a payment failure notification. |
 | `PaymentRefunded` | `payments.payment.refunded.v1` | Sends a refund notification. |
 | `ChargebackOpened` | `payments.chargeback.opened.v1` | Sends a chargeback alert notification. |
+| `ChargebackClosed` | `payments.chargeback.closed.v1` | Sends a notification when the dispute is resolved. |
 
 ## Background Workers
 

@@ -147,8 +147,10 @@ async def _publish_state_changed(
         actor_id=str(actor_id) if actor_id else None,
         data={
             "ticket_id": str(ticket.id),
-            "from": previous_state.value,
-            "to": to_state.value,
+            "event_id": str(ticket.event_id),
+            "state": to_state.value,
+            "previous_state": previous_state.value,
             "owner_user_id": str(ticket.owner_user_id),
+            "bound_device_id": (str(ticket.bound_device_id) if ticket.bound_device_id else None),
         },
     )

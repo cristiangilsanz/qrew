@@ -30,11 +30,14 @@ Full spec: [`packages/contracts/openapi/payments/openapi.yaml`](../../../../../.
 
 | Event | NATS Subject | Description |
 |-------|-------------|-------------|
-| `PaymentInitiated` | `payments.payment.initiated.v1` | Emitted when a PaymentIntent was created with Stripe. |
+| `PaymentInitiated` | `payments.payment.initiated.v1` | Emitted when a PaymentIntent was created with Stripe. No service subscribes to it yet. |
 | `PaymentSucceeded` | `payments.payment.succeeded.v1` | Emitted when Stripe confirmed the payment was captured. |
 | `PaymentFailed` | `payments.payment.failed.v1` | Emitted when Stripe reported the payment as failed. |
 | `PaymentRefunded` | `payments.payment.refunded.v1` | Emitted when a full or partial refund was processed. |
 | `ChargebackOpened` | `payments.chargeback.opened.v1` | Emitted when a chargeback dispute was opened by the card issuer. |
+| `ChargebackClosed` | `payments.chargeback.closed.v1` | Emitted when the card issuer resolved the dispute. |
+
+Payments is the one service that publishes no audit records to `audit.events.v1`.
 
 Schemas: [`packages/contracts/openapi/payments/events/`](../../../../../../packages/contracts/openapi/payments/events/)
 

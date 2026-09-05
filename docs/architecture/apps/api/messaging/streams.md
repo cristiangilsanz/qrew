@@ -2,18 +2,22 @@
 
 ## Streams
 
-| Stream | Wildcard subjects | Retention | Description |
-|---|---|---|---|
-| `IDENTITY` | `identity.>` | Limits (default) | Identity domain events |
-| `CATALOG` | `catalog.>` | Limits (default) | Catalog domain events |
-| `SALES` | `sales.>` | Limits (default) | Sales and reservation events |
-| `PAYMENTS` | `payments.>` | Limits (default) | Payment lifecycle events |
-| `AUDIT` | `audit.>` | Limits (default) | Cross-service audit records |
-| `GATEWAY` | `ws.fanout.v1` | Limits (default) | WebSocket fanout notifications |
+| Stream | Wildcard subjects | Retention | Created by | Description |
+|---|---|---|---|---|
+| `IDENTITY` | `identity.>` | Limits (default) | Sales, Ticketing | Identity domain events |
+| `CATALOG` | `catalog.>` | Limits (default) | Identity, Sales, Ticketing, Entry | Catalog domain events |
+| `SALES` | `sales.>` | Limits (default) | Ticketing | Sales and reservation events |
+| `MARKET` | `market.>` | Limits (default) | Ticketing | Resale marketplace events |
+| `PAYMENTS` | `payments.>` | Limits (default) | Identity, Sales | Payment lifecycle events |
+| `ticketing` | `ticketing.>` | Limits (default) | Entry | Ticket state transitions |
+| `AUDIT` | `audit.>` | Limits (default) | Audit | Cross-service audit records |
+| `GATEWAY` | `ws.>` | Limits (default) | Gateway | WebSocket fanout notifications |
 
-Streams are provisioned in infrastructure.
+Nothing provisions the streams ahead of time. Each subscriber calls `find_stream_name_by_subject` on startup and creates the stream itself when the lookup fails, so whichever consumer starts first is the one that creates it.
 
-Each service verifies its required stream exists at startup and logs a warning or raises a runtime error if not found.
+That makes the stream **name** a shared constant across every service that touches the same wildcard, and getting it wrong is a silent failure rather than an error: the subject lookup succeeds against the stream a different service already created, and the subsequent `subscribe` then fails with `stream not found` because the name does not match. Every consumer of `catalog.>` must therefore agree on `CATALOG`, and so on.
+
+The `ticketing` stream is lowercase, unlike all the others, because the single subscriber that creates it spells it that way.
 
 ## Consumers
 
@@ -25,14 +29,15 @@ Each worker subscribes with:
 
 ```python
 ConsumerConfig(
-    durable_name=DURABLE,
+    durable_name=durable,
     deliver_policy=DeliverPolicy.ALL,
-    ack_wait=30,
     filter_subject=subject,
 )
 ```
 
-`DeliverPolicy.ALL` means consumers replay from the start of the stream on first connection, which supports projection bootstrapping after a service is deployed fresh.
+`DeliverPolicy.ALL` means consumers replay from the start of the stream on first connection, which supports projection bootstrapping after a service is deployed fresh. No consumer overrides `ack_wait`, so the server default applies.
+
+The entry subscribers are the exception: they call `js.subscribe` with a callback and a durable name but no `ConsumerConfig`, so they take the client defaults.
 
 ### Consumer registry
 
@@ -41,10 +46,11 @@ ConsumerConfig(
 | `sales-identity-handler-*` | `IDENTITY` | `identity.user.registered.v1`, `identity.fingerprint.seen.v1` | Sales |
 | `ticketing-identity-handler-*` | `IDENTITY` | `identity.device.attested.v1`, `identity.device.revoked.v1` | Ticketing |
 | `identity-catalog-handler-*` | `CATALOG` | `catalog.event.cancelled.v1` | Identity |
-| `sales-catalog-handler-*` | `CATALOG` | `catalog.event.*.v1`, `catalog.ticket_type.*.v1` | Sales |
-| `ticketing-catalog-handler-*` | `CATALOG` | `catalog.event.*.v1`, `catalog.venue.created.v1` | Ticketing |
-| `ticketing-sales-handler-*` | `SALES` | `sales.reservation.*.v1` | Ticketing |
-| `identity-payment-handler-*` | `PAYMENTS` | `payments.payment.*.v1`, `payments.chargeback.*.v1` | Identity |
+| `sales-catalog-handler-*` | `CATALOG` | `catalog.event.published.v1`, `catalog.event.updated.v1`, `catalog.event.cancelled.v1`, `catalog.event.draft.v1`, `catalog.ticket_type.created.v1`, `catalog.ticket_type.updated.v1` | Sales |
+| `ticketing-catalog-handler-*` | `CATALOG` | `catalog.event.published.v1`, `catalog.event.ongoing.v1`, `catalog.event.cancelled.v1`, `catalog.event.draft.v1` | Ticketing |
+| `ticketing-sales-handler-*` | `SALES` | `sales.reservation.created.v1`, `sales.reservation.paid.v1`, `sales.reservation.cancelled.v1`, `sales.reservation.expired.v1` | Ticketing |
+| `ticketing-market-handler-*` | `MARKET` | `market.ticket.freeze.v1`, `market.transfer.v1`, `market.listing.expired.v1` | Ticketing |
+| `identity-payment-handler-*` | `PAYMENTS` | `payments.payment.succeeded.v1`, `payments.payment.failed.v1`, `payments.payment.refunded.v1`, `payments.chargeback.opened.v1`, `payments.chargeback.closed.v1` | Identity |
 | `sales-payment-handler-*` | `PAYMENTS` | `payments.payment.succeeded.v1`, `payments.payment.refunded.v1`, `payments.chargeback.opened.v1` | Sales |
 | `audit-events-handler` | `AUDIT` | `audit.events.v1` | Audit |
 | `gateway-fanout-handler` | `GATEWAY` | `ws.fanout.v1` | Gateway |

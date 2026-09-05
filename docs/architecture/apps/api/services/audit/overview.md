@@ -34,7 +34,9 @@ This service does not publish domain events.
 |-------|-------------|--------|
 | All audit events | `audit.events.v1` | Persists the event to the append only audit log. |
 
-> All services publish audit events directly to `audit.events.v1` using the `publish_audit_event()` helper co-located in the Audit service worker. Audit does not need to know which service emitted each event.
+> Identity, Catalog, Sales, Ticketing and Entry publish audit records straight to `audit.events.v1`, each through its own `services/application/audit.py`, outside the outbox. Payments and the Gateway emit none. Audit does not need to know which service emitted a record.
+>
+> The `publish_audit_event()` helper in `audit/worker/publisher.py` is the reference implementation, but no service imports it. Each one carries its own copy.
 
 ## Background Workers
 
