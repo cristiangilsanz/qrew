@@ -6,6 +6,7 @@ from typing import Any
 
 import structlog
 from nats.js.api import ConsumerConfig, DeliverPolicy
+from observability import consume_traced
 
 from .client import get_nats
 
@@ -39,7 +40,7 @@ async def subscribe(
     async def _consume() -> None:
         async for msg in psub.messages:  # type: ignore[attr-defined]
             try:
-                await handler(msg.data)  # type: ignore[attr-defined]
+                await consume_traced(handler, msg.data, subject=msg.subject)  # type: ignore[attr-defined]
                 await msg.ack()  # type: ignore[attr-defined]
             except Exception as exc:
                 await logger.awarning(

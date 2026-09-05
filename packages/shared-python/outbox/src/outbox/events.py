@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 
 import structlog
+from observability import CARRIER_KEY, inject_current_context
 from sqlalchemy import DateTime, Integer, String, Text, func, select
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -63,15 +64,26 @@ async def record(
     data: dict[str, Any],
     actor_id: str | None = None,
 ) -> None:
+    carrier = inject_current_context()
     session.add(
         model(
             subject=subject,
             aggregate_type=aggregate_type,
             aggregate_id=aggregate_id,
             actor_id=actor_id,
-            payload=data,
+            payload={**data, CARRIER_KEY: carrier} if carrier else data,
         )
     )
+
+
+# separates the trace carrier the recorder stored from the event's own data
+def split_carrier(payload: dict[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
+    rest = dict(payload)
+    found = rest.pop(CARRIER_KEY, None)
+    if not isinstance(found, dict):
+        return rest, {}
+    pairs: dict[str, Any] = found
+    return rest, {str(k): str(v) for k, v in pairs.items()}
 
 
 # looks up the wait before the next attempt of a row that keeps failing

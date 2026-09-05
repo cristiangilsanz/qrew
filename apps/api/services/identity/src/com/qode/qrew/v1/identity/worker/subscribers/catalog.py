@@ -6,6 +6,8 @@ from typing import Any
 
 import structlog
 
+from observability import consume_traced
+
 from com.qode.qrew.v1.identity.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.identity.services.application.outbox import publish_via_outbox
 
@@ -79,11 +81,11 @@ async def run_catalog_event_subscriber(nats_url: str) -> None:
         await logger.ainfo("catalog_events.subscribed", subject=subject)
 
         # acknowledges each message once its handler has run
-        async def _consume(psub: Any = psub, h: Any = handler) -> None:
+        async def _consume(psub: Any = psub, h: Any = handler, subject: str = subject) -> None:
             try:
                 async for msg in psub.messages:  # type: ignore[attr-defined]
                     try:
-                        await h(msg.data)  # type: ignore[attr-defined]
+                        await consume_traced(h, msg.data, subject=subject)  # type: ignore[attr-defined]
                         await msg.ack()  # type: ignore[attr-defined]
                     except Exception as exc:
                         await logger.awarning("catalog_events.handler_error", error=repr(exc))

@@ -7,6 +7,7 @@ from typing import Any
 
 import structlog
 from messaging.client import get_nats
+from observability import traced_message
 
 from com.qode.qrew.v1.entry.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.entry.repositories.projections import TicketContextRepository
@@ -14,10 +15,11 @@ from com.qode.qrew.v1.entry.repositories.projections import TicketContextReposit
 logger = structlog.get_logger(__name__)
 
 SUBJECT = "ticketing.ticket.state_changed"
-STREAM = "ticketing"
+STREAM = "TICKETING"
 
 
 # updates the local ticket context from a ticket state change message
+@traced_message(SUBJECT)
 async def handle_ticket_state_changed(msg: Any) -> None:
     try:
         body = json.loads(msg.data.decode())

@@ -71,7 +71,14 @@ def setup_tracing(
             provider.add_span_processor(processor)
 
     if app is not None:
-        FastAPIInstrumentor.instrument_app(app)
+        instrument_app(app)
+
+
+# instruments the web framework, which has to happen before the app serves a request
+def instrument_app(app: FastAPI) -> None:
+    if getattr(app, "_is_instrumented_by_opentelemetry", False):
+        return
+    FastAPIInstrumentor.instrument_app(app)
 
 
 # shuts down the tracer provider

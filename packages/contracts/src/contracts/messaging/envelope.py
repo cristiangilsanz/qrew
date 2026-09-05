@@ -5,12 +5,23 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from opentelemetry import propagate, trace
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 class OtelCarrier(BaseModel):
     traceparent: str | None = None
     tracestate: str | None = None
+
+
+# captures the trace context of whoever builds the envelope, so a consumer continues it
+def _carrier_now() -> OtelCarrier:
+    span = trace.get_current_span()
+    if not span.get_span_context().is_valid:
+        return OtelCarrier()
+    carrier: dict[str, str] = {}
+    propagate.inject(carrier)
+    return OtelCarrier(**carrier)
 
 
 class EventEnvelope(BaseModel):
@@ -20,6 +31,10 @@ class EventEnvelope(BaseModel):
     aggregate_id: str
     actor_id: str | None = None
     data: dict[str, Any]
-    otel: OtelCarrier = Field(default_factory=OtelCarrier, alias="_otel")
+    otel: OtelCarrier = Field(
+        default_factory=_carrier_now,
+        validation_alias=AliasChoices("_otel", "otel"),
+        serialization_alias="_otel",
+    )
 
-    model_config = {"populate_by_name": True}
+    model_config = ConfigDict(populate_by_name=True)

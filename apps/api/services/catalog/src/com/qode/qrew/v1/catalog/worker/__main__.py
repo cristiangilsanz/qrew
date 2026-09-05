@@ -6,6 +6,7 @@ import structlog
 from db.redis import redis_settings_from_url
 from jobs import build_worker_settings
 from messaging.client import close_nats, init_nats
+from observability import setup_worker_observability, shutdown_tracing
 from com.qode.qrew.v1.catalog.core.config import settings
 
 import com.qode.qrew.v1.catalog.worker.jobs.event_lifecycle  # noqa: F401  # pyright: ignore[reportUnusedImport]
@@ -20,19 +21,27 @@ WorkerSettings = build_worker_settings(
 )
 
 
-# opens the nats connection the jobs publish their events through
+# starts tracing and logging and opens the nats connection the jobs use
 async def _on_startup(ctx: dict[str, Any]) -> None:
     del ctx
+    setup_worker_observability(
+        service_name=f"{settings.app_name}-worker",
+        version=settings.version,
+        debug=settings.debug,
+        otel_enabled=settings.otel_enabled,
+        otel_endpoint=settings.otel_endpoint,
+    )
     if not settings.nats_url:
         await logger.awarning("catalog_worker.no_nats_url")
         return
     await init_nats(settings.nats_url)
 
 
-# closes the nats connection when the worker stops
+# closes the nats connection and flushes the pending spans when the worker stops
 async def _on_shutdown(ctx: dict[str, Any]) -> None:
     del ctx
     await close_nats()
+    shutdown_tracing()
 
 
 WorkerSettings.on_startup = _on_startup  # type: ignore[attr-defined]

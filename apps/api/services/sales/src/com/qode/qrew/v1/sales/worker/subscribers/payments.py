@@ -5,6 +5,8 @@ from typing import Any
 
 import structlog
 
+from observability import consume_traced
+
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.sales.repositories.market import MarketRepository
 from com.qode.qrew.v1.sales.services.application.market.service import MarketService
@@ -156,10 +158,10 @@ async def run_payment_event_subscriber(nats_url: str) -> None:
         await logger.ainfo("payment_events.subscribed", subject=subject)
 
         # acknowledges each message once its handler has run
-        async def _consume(psub: Any = psub, h: Any = handler) -> None:
+        async def _consume(psub: Any = psub, h: Any = handler, subject: str = subject) -> None:
             async for msg in psub.messages:  # type: ignore[attr-defined]
                 try:
-                    await h(msg.data)  # type: ignore[attr-defined]
+                    await consume_traced(h, msg.data, subject=subject)  # type: ignore[attr-defined]
                     await msg.ack()  # type: ignore[attr-defined]
                 except Exception as exc:
                     await logger.awarning("payment_events.handler_error", error=repr(exc))
