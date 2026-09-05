@@ -36,7 +36,7 @@ The stack is not on a single flat network. `docker-compose.yml` declares three b
 
 | Network | Members |
 |---|---|
-| `borde` | `frontend`, `gateway` |
+| `publica` | `frontend`, `gateway` |
 | `interna` | `gateway`, the seven domain services, the ten background containers, `nats`, `jaeger` |
 | `datos` | The seven domain services, the ten background containers, `postgres`, `redis` |
 

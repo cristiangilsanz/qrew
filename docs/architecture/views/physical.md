@@ -65,7 +65,7 @@ The stack does not run on a single flat network. `docker-compose.yml` declares t
 
 | Network | Members | Purpose |
 |---|---|---|
-| `borde` | `frontend`, `gateway` | The only surface that faces the outside. The web interface talks to the gateway and to nothing else. |
+| `publica` | `frontend`, `gateway` | The only surface that faces the outside. The web interface talks to the gateway and to nothing else. |
 | `interna` | `gateway`, the seven domain services, the ten background containers, `nats`, `jaeger` | Service to service HTTP, the message broker, and trace export. The gateway reaches the services here, but never the databases. |
 | `datos` | The seven domain services, the ten background containers, `postgres`, `redis` | Persistence and cache. Neither the gateway nor the frontend joins it. |
 
@@ -73,7 +73,7 @@ The stack does not run on a single flat network. `docker-compose.yml` declares t
 
 ```mermaid
 flowchart LR
-    subgraph borde["borde"]
+    subgraph publica["publica"]
         web["Web interface"]:::edge
         gwA["API Gateway"]:::edge
     end
