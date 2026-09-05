@@ -13,6 +13,11 @@ class UserRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # hands the session out, so a caller can leave an event in the same transaction
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
+
     # reads a user by their identifier
     async def get_by_id(self, user_id: uuid.UUID) -> User | None:
         result = await self._session.execute(select(User).where(User.id == user_id).limit(1))

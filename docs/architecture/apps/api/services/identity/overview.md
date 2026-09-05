@@ -99,6 +99,8 @@ Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../../.
 
 Schemas: [`packages/contracts/openapi/identity/events/`](../../../../../../packages/contracts/openapi/identity/events/)
 
+Every event is recorded in the `identity.event_outbox` table inside the same transaction as the change that caused it, and the `event_outbox_drainer` job publishes it afterwards. The request never talks to the broker. This table is separate from `identity.outbox`, which carries deferred arq jobs rather than domain events.
+
 ### Consumed
 
 | Event | NATS Subject | Action |
@@ -116,7 +118,8 @@ Schemas: [`packages/contracts/openapi/identity/events/`](../../../../../../packa
 | `auth_cleaner` | arq job, every 15 minutes | Purges expired sessions, tokens, and OTPs. |
 | `lifecycle_notifier` | arq job, on demand | Sends the mails a payment, a cancellation or a device revocation calls for. |
 | `notification_deliverer` | arq job, on demand | Drains the notification queue for email and SMS delivery. |
-| `outbox_drainer` | arq job, every minute | Publishes pending domain events from the transactional outbox to NATS. |
+| `outbox_drainer` | arq job, every minute | Enqueues the arq jobs waiting in the `identity.outbox` table, so a job is never lost when the transaction that asked for it commits. |
+| `event_outbox_drainer` | arq job, every minute | Publishes to NATS every domain event waiting in `identity.event_outbox`, retrying with backoff and parking a row after eight attempts. |
 | `storage_retainer` | arq job, daily at 04:00 | Enforces the KYC document retention policy and deletes documents after the configured period. |
 | `catalog.event.cancelled.*` | NATS subscriber | Handles catalog event cancellation notifications. |
 | `payments.*` | NATS subscriber | Handles payment outcome notifications. |
@@ -136,6 +139,7 @@ The arq jobs run in the `identity-arq-worker` container, which consumes the `qre
 | `messaging` | NATS JetStream publisher and subscriber |
 | `middleware` | Request ID, correlation, and security headers |
 | `observability` | OpenTelemetry setup |
+| `outbox` | Transactional outbox mixin, recorder, and drainer for domain events |
 | `pagination` | Cursor based pagination |
 | `probes` | Liveness and readiness health endpoints |
 | `ratelimit` | slowapi rate limiting |

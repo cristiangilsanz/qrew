@@ -5,6 +5,11 @@ from datetime import UTC, datetime
 import redis.asyncio as aioredis
 import structlog
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from outbox import record as record_event
+
+from com.qode.qrew.v1.identity.models.event_outbox import EventOutbox
 from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.models.user import User
@@ -22,28 +27,21 @@ _JTI_TTL_SECONDS = settings.refresh_token_expire_days * 86400
 
 # publishes that a device was revoked onto the shared nats connection
 async def publish_device_revoked(
-    device_id: uuid.UUID, user_id: uuid.UUID, revoked_at: datetime | None
+    session: AsyncSession, device_id: uuid.UUID, user_id: uuid.UUID, revoked_at: datetime
 ) -> None:
-    try:
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-not-found]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="device",
-            aggregate_id=str(device_id),
-            actor_id=str(user_id),
-            data={
-                "device_id": str(device_id),
-                "user_id": str(user_id),
-                "revoked_at": (revoked_at or datetime.now(UTC)).isoformat(),
-            },
-        )
-        await nats_publish("identity.device.revoked.v1", envelope)
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed", subject="identity.device.revoked.v1", error=repr(exc)
-        )
+    await record_event(
+        session,
+        EventOutbox,
+        subject="identity.device.revoked.v1",
+        aggregate_type="device",
+        aggregate_id=str(device_id),
+        actor_id=str(user_id),
+        data={
+            "device_id": str(device_id),
+            "user_id": str(user_id),
+            "revoked_at": revoked_at.isoformat(),
+        },
+    )
 
 
 class DeviceError(DomainError):
@@ -101,7 +99,12 @@ class DeviceService:
                 "audit_write_failed", action=AuditAction.DEVICE_REVOKE, error=repr(exc)
             )
 
-        await publish_device_revoked(device_id, user.id, device.revoked_at)
+        await publish_device_revoked(
+            self._device_repo.session,
+            device_id,
+            user.id,
+            device.revoked_at or datetime.now(UTC),
+        )
 
     # revokes every device of a user except the one calling
     async def revoke_all_devices(
@@ -118,7 +121,7 @@ class DeviceService:
 
         now = datetime.now(UTC)
         for revoked_id in revoked_ids:
-            await publish_device_revoked(revoked_id, user.id, now)
+            await publish_device_revoked(self._device_repo.session, revoked_id, user.id, now)
 
         await logger.ainfo(
             "devices_revoke_all",

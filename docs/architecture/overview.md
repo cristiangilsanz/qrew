@@ -103,21 +103,33 @@ flowchart TB
     sales     -->|"Locks, Counters"| redis
     entry     -->|"Locks"| redis
     id_worker    -->|"Job Queue"| redis
+    cat_worker   -->|"Job Queue"| redis
     sales_worker -->|"Job Queue"| redis
     tick_worker  -->|"Job Queue"| redis
+    pay_worker   -->|"Job Queue"| redis
 
-    identity  -->|"Publish"| nats
-    catalog   -->|"Publish"| nats
-    sales     -->|"Publish"| nats
-    ticketing -->|"Publish"| nats
-    payments  -->|"Publish"| nats
+    identity  -->|"Record · Outbox"| pg
+    catalog   -->|"Record · Outbox"| pg
+    sales     -->|"Record · Outbox"| pg
+    ticketing -->|"Record · Outbox"| pg
+    payments  -->|"Record · Outbox"| pg
+
+    identity  -->|"Publish · Audit"| nats
+    catalog   -->|"Publish · Audit"| nats
+    sales     -->|"Publish · Audit"| nats
+    ticketing -->|"Publish · Audit"| nats
+    payments  -->|"Publish · Audit"| nats
     entry     -->|"Publish"| nats
 
+    id_worker    -->|"Publish · Outbox drain"| nats
+    cat_worker   -->|"Publish · Outbox drain"| nats
+    sales_worker -->|"Publish · Outbox drain"| nats
+    tick_worker  -->|"Publish · Outbox drain"| nats
+    pay_worker   -->|"Publish · Outbox drain"| nats
+
     nats -->|"Subscribe"| id_worker
-    nats -->|"Subscribe"| cat_worker
     nats -->|"Subscribe"| sales_worker
     nats -->|"Subscribe"| tick_worker
-    nats -->|"Subscribe"| pay_worker
     nats -->|"Subscribe"| entry_worker
     nats -->|"Subscribe"| audit_worker
 
@@ -157,7 +169,16 @@ auxiliary memory that supplies the distributed lock and the relational store tha
 state alongside the outbox.
 
 The processing layer gathers the workers, which consume those notices, run whatever needs no
-immediate answer and refresh the local projections.
+immediate answer and refresh the local projections. Catalog and Payments are the exception:
+their worker subscribes to nothing and only runs scheduled jobs, so the arrow it draws to the
+broker is one of publication, not of consumption.
+
+Identity, Catalog, Sales, Payments and Ticketing no longer publish a domain event while the
+request is being served. They record it in their own `event_outbox` table, inside the same
+transaction as the change that caused it, and a drainer job running every minute hands it to
+the broker afterwards. The request therefore commits or fails as a whole, and an unreachable
+broker delays the event rather than losing it. Only the audit record still leaves the request
+path directly.
 
 The third block is the third-party services, which take on payment, message delivery and the
 checks the platform does not perform itself. The server calls almost all of them, and whatever

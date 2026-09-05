@@ -6,6 +6,9 @@ from collections.abc import Awaitable, Callable
 import structlog
 from sqlalchemy import Select
 
+from outbox import record as record_event
+
+from com.qode.qrew.v1.catalog.models.outbox import EventOutbox
 from com.qode.qrew.v1.catalog.services.application.audit import AuditService
 from com.qode.qrew.v1.catalog.core.errors import DomainError
 from observability import traced
@@ -47,6 +50,24 @@ class OrganisationService:
         self._audit = audit
         self._resolve_user = user_resolver
 
+    # leaves in the outbox that an organisation's roster changed
+    async def _publish_membership(
+        self, *, organisation_id: uuid.UUID, user_id: uuid.UUID, role: str | None
+    ) -> None:
+        await record_event(
+            self._members.session,
+            EventOutbox,
+            subject="catalog.membership.changed.v1",
+            aggregate_type="organisation",
+            aggregate_id=str(organisation_id),
+            actor_id=str(user_id),
+            data={
+                "organisation_id": str(organisation_id),
+                "user_id": str(user_id),
+                "role": role,
+            },
+        )
+
     # builds the query that lists a user's organisations
     def list_for_user_query(self, user_id: uuid.UUID) -> Select[tuple[Organisation]]:
         return self._orgs.list_for_user_query(user_id)
@@ -87,6 +108,9 @@ class OrganisationService:
         await self._members.insert(
             organisation_id=org.id, user_id=owner_id, role=OrganisationRole.owner
         )
+        await self._publish_membership(
+            organisation_id=org.id, user_id=owner_id, role=str(OrganisationRole.owner)
+        )
         await self._audit_safe(
             "organisation_created",
             actor_id=owner_id,
@@ -125,6 +149,9 @@ class OrganisationService:
             organisation_id=organisation_id,
             payload={"member_user_id": str(invitee_id), "role": str(role)},
         )
+        await self._publish_membership(
+            organisation_id=organisation_id, user_id=invitee_id, role=str(role)
+        )
         return member
 
     # adds an already known user to an organisation
@@ -150,6 +177,9 @@ class OrganisationService:
             actor_id=actor_id,
             organisation_id=organisation_id,
             payload={"member_user_id": str(user_id), "role": str(role)},
+        )
+        await self._publish_membership(
+            organisation_id=organisation_id, user_id=user_id, role=str(role)
         )
         return member
 
@@ -177,6 +207,9 @@ class OrganisationService:
             actor_id=actor_id,
             organisation_id=organisation_id,
             payload={"member_user_id": str(member_user_id)},
+        )
+        await self._publish_membership(
+            organisation_id=organisation_id, user_id=member_user_id, role=None
         )
 
     # soft deletes an organisation

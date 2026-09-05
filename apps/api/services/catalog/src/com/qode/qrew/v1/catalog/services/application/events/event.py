@@ -13,7 +13,10 @@ from locking import redlock
 from com.qode.qrew.v1.catalog.core.config import settings
 from observability import traced
 from com.qode.qrew.v1.catalog.repositories.events.search.tsvector import update_one_sql
+from outbox import record as record_event
+
 from com.qode.qrew.v1.catalog.models.event import Event, EventStatus
+from com.qode.qrew.v1.catalog.models.outbox import EventOutbox
 from com.qode.qrew.v1.catalog.models.organisation import Organisation
 from com.qode.qrew.v1.catalog.models.venue import Venue
 from com.qode.qrew.v1.catalog.repositories.events.event import EventRepository
@@ -93,23 +96,22 @@ def _event_data(event: Any, venue: Any | None = None) -> dict[str, Any]:
     }
 
 
-# publishes an event onto the shared nats connection
+# leaves the event in the outbox, so it travels with the change that caused it
 async def _publish_nats(
-    subject: str, aggregate_type: str, aggregate_id: str, data: dict[str, Any]
+    session: AsyncSession,
+    subject: str,
+    aggregate_type: str,
+    aggregate_id: str,
+    data: dict[str, Any],
 ) -> None:
-    try:
-        from messaging.publisher import publish  # type: ignore[import-not-found]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type=aggregate_type,
-            aggregate_id=aggregate_id,
-            data=data,
-        )
-        await publish(subject, envelope)
-    except Exception as exc:
-        await logger.awarning("nats_publish_failed", subject=subject, error=repr(exc))
+    await record_event(
+        session,
+        EventOutbox,
+        subject=subject,
+        aggregate_type=aggregate_type,
+        aggregate_id=aggregate_id,
+        data=data,
+    )
 
 
 class EventService:
@@ -245,6 +247,7 @@ class EventService:
             payload={"fields": sorted(changes.keys())},
         )
         await _publish_nats(
+            self._session,
             "catalog.event.updated.v1",
             aggregate_type="event",
             aggregate_id=str(event.id),
@@ -282,6 +285,7 @@ class EventService:
                 payload={"organisation_id": str(event.organisation_id)},
             )
             await _publish_nats(
+                self._session,
                 "catalog.event.published.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),
@@ -314,6 +318,7 @@ class EventService:
                 payload={"organisation_id": str(event.organisation_id)},
             )
             await _publish_nats(
+                self._session,
                 "catalog.event.ongoing.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),
@@ -343,6 +348,7 @@ class EventService:
                 payload={"organisation_id": str(event.organisation_id)},
             )
             await _publish_nats(
+                self._session,
                 "catalog.event.cancelled.v1",
                 aggregate_type="event",
                 aggregate_id=str(event.id),

@@ -9,6 +9,7 @@ from messaging.client import close_nats, init_nats
 from com.qode.qrew.v1.catalog.core.config import settings
 
 import com.qode.qrew.v1.catalog.worker.jobs.event_lifecycle  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import com.qode.qrew.v1.catalog.worker.jobs.outbox_drainer  # noqa: F401  # pyright: ignore[reportUnusedImport]
 import com.qode.qrew.v1.catalog.worker.jobs.search_reindexer  # noqa: F401  # pyright: ignore[reportUnusedImport]
 
 logger = structlog.get_logger(__name__)

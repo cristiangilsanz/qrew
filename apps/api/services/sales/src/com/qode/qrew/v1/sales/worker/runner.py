@@ -9,6 +9,7 @@ from messaging.client import close_nats, init_nats
 from com.qode.qrew.v1.sales.core.config import settings
 
 import com.qode.qrew.v1.sales.worker.jobs.market_assigner  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import com.qode.qrew.v1.sales.worker.jobs.outbox_drainer  # noqa: F401  # pyright: ignore[reportUnusedImport]
 import com.qode.qrew.v1.sales.worker.jobs.market_expirer  # noqa: F401  # pyright: ignore[reportUnusedImport]
 import com.qode.qrew.v1.sales.worker.jobs.queue_admitter  # noqa: F401  # pyright: ignore[reportUnusedImport]
 import com.qode.qrew.v1.sales.worker.jobs.reservation_expirer  # noqa: F401  # pyright: ignore[reportUnusedImport]

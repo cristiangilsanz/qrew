@@ -6,6 +6,11 @@ from typing import Any
 
 import structlog
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from outbox import record as record_event
+
+from com.qode.qrew.v1.sales.models.outbox import EventOutbox
 from com.qode.qrew.v1.sales.core.errors import DomainError
 from com.qode.qrew.v1.sales.models.market import (
     MarketAssignment,
@@ -180,7 +185,7 @@ class MarketService:
         )
         listing = await self._repo.insert_listing(listing)
 
-        await _freeze_ticket(ticket_id, actor_id=user_id)
+        await _freeze_ticket(self._repo.session, ticket_id, actor_id=user_id)
         await self._record(_TICKET_LISTED, actor_id=user_id, entity_id=str(ticket_id))
         return listing
 
@@ -341,6 +346,7 @@ class MarketService:
         await self._repo.flush()
 
         await _publish_transfer(
+            self._repo.session,
             ticket_id=listing.ticket_id,
             new_owner_user_id=assignment.buyer_user_id,
             holder_name=assignment.holder_name or "",
@@ -379,28 +385,24 @@ class MarketService:
             await logger.awarning("audit_write_failed", action=action, error=repr(exc))
 
 
-# publishes that a listed ticket should be frozen onto the shared nats connection
-async def _freeze_ticket(ticket_id: uuid.UUID, *, actor_id: uuid.UUID) -> None:
-    try:
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="ticket",
-            aggregate_id=str(ticket_id),
-            actor_id=str(actor_id),
-            data={"ticket_id": str(ticket_id), "actor_id": str(actor_id)},
-        )
-        await nats_publish("market.ticket.freeze.v1", envelope)
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed", subject="market.ticket.freeze.v1", error=repr(exc)
-        )
+# leaves in the outbox that a listed ticket should be frozen
+async def _freeze_ticket(
+    session: AsyncSession, ticket_id: uuid.UUID, *, actor_id: uuid.UUID
+) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject="market.ticket.freeze.v1",
+        aggregate_type="ticket",
+        aggregate_id=str(ticket_id),
+        actor_id=str(actor_id),
+        data={"ticket_id": str(ticket_id), "actor_id": str(actor_id)},
+    )
 
 
 # publishes that a ticket was transferred onto the shared nats connection
 async def _publish_transfer(
+    session: AsyncSession,
     *,
     ticket_id: uuid.UUID,
     new_owner_user_id: uuid.UUID,
@@ -409,23 +411,18 @@ async def _publish_transfer(
     holder_dni: str,
     actor_id: uuid.UUID,
 ) -> None:
-    try:
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="ticket",
-            aggregate_id=str(ticket_id),
-            actor_id=str(actor_id),
-            data={
-                "ticket_id": str(ticket_id),
-                "new_owner_user_id": str(new_owner_user_id),
-                "holder_name": holder_name,
-                "holder_document_type": holder_document_type,
-                "holder_dni": holder_dni,
-            },
-        )
-        await nats_publish("market.transfer.v1", envelope)
-    except Exception as exc:
-        await logger.awarning("nats_publish_failed", subject="market.transfer.v1", error=repr(exc))
+    await record_event(
+        session,
+        EventOutbox,
+        subject="market.transfer.v1",
+        aggregate_type="ticket",
+        aggregate_id=str(ticket_id),
+        actor_id=str(actor_id),
+        data={
+            "ticket_id": str(ticket_id),
+            "new_owner_user_id": str(new_owner_user_id),
+            "holder_name": holder_name,
+            "holder_document_type": holder_document_type,
+            "holder_dni": holder_dni,
+        },
+    )

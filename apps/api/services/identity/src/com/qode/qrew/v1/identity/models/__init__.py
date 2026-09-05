@@ -6,8 +6,12 @@ from com.qode.qrew.v1.identity.models.device import Device
 from com.qode.qrew.v1.identity.models.fingerprint import DeviceFingerprint
 from com.qode.qrew.v1.identity.models.notification import Notification
 from com.qode.qrew.v1.identity.models.passkey import PasskeyCredential
+from com.qode.qrew.v1.identity.models.event_outbox import EventOutbox
+from com.qode.qrew.v1.identity.models.outbox import OutboxEvent
 
 __all__ = [
+    "EventOutbox",
+    "OutboxEvent",
     "Base",
     "Device",
     "DeviceFingerprint",

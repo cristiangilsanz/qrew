@@ -20,6 +20,28 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS catalog")
 
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS catalog.event_outbox (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            subject VARCHAR(128) NOT NULL,
+            aggregate_type VARCHAR(64) NOT NULL,
+            aggregate_id VARCHAR(64) NOT NULL,
+            actor_id VARCHAR(64),
+            payload JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dispatched_at TIMESTAMPTZ,
+            attempt_count INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT,
+            next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dlq_reason VARCHAR(64)
+        )
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS ix_catalog_event_outbox_pending
+            ON catalog.event_outbox (next_attempt_at)
+            WHERE dispatched_at IS NULL AND dlq_reason IS NULL
+    """)
+
     op.execute("CREATE TYPE organisation_role AS ENUM ('member', 'manager', 'owner')")
 
     op.execute("""
@@ -137,6 +159,7 @@ def upgrade() -> None:
 
 # drops the catalog schema and its tables
 def downgrade() -> None:
+    op.execute("DROP TABLE IF EXISTS catalog.event_outbox")
     op.execute("DROP TABLE IF EXISTS catalog.ticket_types")
     op.execute("DROP TABLE IF EXISTS catalog.events")
     op.execute("DROP TABLE IF EXISTS catalog.venues")

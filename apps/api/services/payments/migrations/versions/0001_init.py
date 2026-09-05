@@ -22,6 +22,28 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS payments")
 
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS payments.event_outbox (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            subject VARCHAR(128) NOT NULL,
+            aggregate_type VARCHAR(64) NOT NULL,
+            aggregate_id VARCHAR(64) NOT NULL,
+            actor_id VARCHAR(64),
+            payload JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dispatched_at TIMESTAMPTZ,
+            attempt_count INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT,
+            next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dlq_reason VARCHAR(64)
+        )
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS ix_payments_event_outbox_pending
+            ON payments.event_outbox (next_attempt_at)
+            WHERE dispatched_at IS NULL AND dlq_reason IS NULL
+    """)
+
     op.create_table(
         "payments",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
@@ -79,6 +101,7 @@ def upgrade() -> None:
 
 # drops the payments schema and its tables
 def downgrade() -> None:
+    op.execute("DROP TABLE IF EXISTS payments.event_outbox")
     op.drop_index("ix_payments_market_assignment_id", table_name="payments", schema="payments")
     op.drop_index(
         "ix_payments_provider_payment_intent_id", table_name="payments", schema="payments"

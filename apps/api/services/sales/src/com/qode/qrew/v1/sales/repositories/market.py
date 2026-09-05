@@ -19,6 +19,11 @@ class MarketRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # hands the session out, so a caller can leave an event in the same transaction
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
+
     # reads a user's active queue entry for an event
     async def get_queue_entry(
         self, *, event_id: uuid.UUID, user_id: uuid.UUID

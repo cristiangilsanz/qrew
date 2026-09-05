@@ -29,6 +29,14 @@ Start the HTTP API.
 uv run dev
 ```
 
+## Worker
+
+Start the background worker in a separate terminal. The worker is an arq runner on the `qrew:jobs:payments` queue. It subscribes to no NATS subject; every minute it drains `payments.event_outbox` and publishes the domain events waiting there.
+
+```bash
+uv run payments-worker
+```
+
 ## Tests
 
 Run the full test suite.

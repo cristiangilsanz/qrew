@@ -4,6 +4,9 @@ from datetime import UTC, datetime
 
 import structlog
 
+from outbox import record as record_event
+
+from com.qode.qrew.v1.identity.models.event_outbox import EventOutbox
 from com.qode.qrew.v1.identity.services.application.authentication.token.security import (
     email_verification_token_expiry,
     generate_otp,
@@ -127,34 +130,25 @@ class RegistrationService:
             message="Registration successful. Check your email to verify your account.",
         )
 
-    # publishes that a user registered onto the shared nats connection
+    # leaves in the outbox that a user registered
     async def _publish_registered(self, user: User) -> None:
-        try:
-            from datetime import UTC, datetime
+        from datetime import UTC, datetime
 
-            from messaging.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
-
-            envelope = EventEnvelope(
-                occurred_at=datetime.now(UTC),
-                aggregate_type="user",
-                aggregate_id=str(user.id),
-                actor_id=str(user.id),
-                data={
-                    "user_id": str(user.id),
-                    "registered_at": user.created_at.isoformat()
-                    if hasattr(user, "created_at") and user.created_at
-                    else datetime.now(UTC).isoformat(),
-                    "phone_e164": user.phone_number,
-                },
-            )
-            await nats_publish("identity.user.registered.v1", envelope)
-        except Exception as exc:
-            await logger.awarning(
-                "nats_publish_failed",
-                subject="identity.user.registered.v1",
-                error=repr(exc),
-            )
+        await record_event(
+            self._repo.session,
+            EventOutbox,
+            subject="identity.user.registered.v1",
+            aggregate_type="user",
+            aggregate_id=str(user.id),
+            actor_id=str(user.id),
+            data={
+                "user_id": str(user.id),
+                "registered_at": user.created_at.isoformat()
+                if getattr(user, "created_at", None)
+                else datetime.now(UTC).isoformat(),
+                "phone_e164": user.phone_number,
+            },
+        )
 
     # rejects the request unless the captcha passes
     async def _assert_captcha_valid(self, token: str, ip_address: str) -> None:

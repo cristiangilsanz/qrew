@@ -11,6 +11,11 @@ from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from outbox import record as record_event
+
+from com.qode.qrew.v1.identity.models.event_outbox import EventOutbox
 from com.qode.qrew.v1.identity.core.errors import DomainError
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.models.user import User
@@ -119,7 +124,9 @@ class DeviceBindingService:
             device = await self._device_repo.save(existing)
             await logger.ainfo("device_bind_revived", user_id=str(user.id))
             await self._audit_safe(user.id, device.id, name)
-            await _publish_device_attested(device, platform=platform, attested_at=now)
+            await _publish_device_attested(
+                self._device_repo.session, device, platform=platform, attested_at=now
+            )
             return device
 
         device = await self._device_repo.create(
@@ -136,7 +143,9 @@ class DeviceBindingService:
 
         await logger.ainfo("device_bind_complete", user_id=str(user.id))
         await self._audit_safe(user.id, device.id, name)
-        await _publish_device_attested(device, platform=platform, attested_at=now)
+        await _publish_device_attested(
+            self._device_repo.session, device, platform=platform, attested_at=now
+        )
 
         return device
 
@@ -156,31 +165,24 @@ class DeviceBindingService:
             )
 
 
-# publishes that a device was bound onto the shared nats connection
+# leaves in the outbox that a device was bound
 async def _publish_device_attested(
-    device: Device, *, platform: str | None, attested_at: datetime
+    session: AsyncSession, device: Device, *, platform: str | None, attested_at: datetime
 ) -> None:
-    try:
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-not-found]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="device",
-            aggregate_id=str(device.id),
-            actor_id=str(device.user_id),
-            data={
-                "device_id": str(device.id),
-                "user_id": str(device.user_id),
-                "attested_at": attested_at.isoformat(),
-                "platform": platform,
-            },
-        )
-        await nats_publish("identity.device.attested.v1", envelope)
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed", subject="identity.device.attested.v1", error=repr(exc)
-        )
+    await record_event(
+        session,
+        EventOutbox,
+        subject="identity.device.attested.v1",
+        aggregate_type="device",
+        aggregate_id=str(device.id),
+        actor_id=str(device.user_id),
+        data={
+            "device_id": str(device.id),
+            "user_id": str(device.user_id),
+            "attested_at": attested_at.isoformat(),
+            "platform": platform,
+        },
+    )
 
 
 # adds the padding a base64url string needs to decode

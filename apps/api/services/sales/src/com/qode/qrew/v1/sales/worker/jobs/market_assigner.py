@@ -6,6 +6,11 @@ import structlog
 from jobs import job, parse_crontab
 from sqlalchemy import text
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from outbox import record as record_event
+
+from com.qode.qrew.v1.sales.models.outbox import EventOutbox
 from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.sales.models.market import (
@@ -79,11 +84,11 @@ async def assign_pending() -> int:
                     )
                     await repo.insert_assignment(assignment)
                     fresh.state = MarketListingState.assigned
+                    await _publish_assigned(
+                        session, assignment_id=assignment.id, buyer_user_id=member.user_id
+                    )
                     await session.commit()
 
-                    await _publish_assigned(
-                        assignment_id=assignment.id, buyer_user_id=member.user_id
-                    )
                     assigned += 1
                     await logger.ainfo(
                         "market.assigner.assigned",
@@ -100,28 +105,18 @@ async def assign_pending() -> int:
 
 
 # publishes that a market assignment was created onto the shared nats connection
-async def _publish_assigned(*, assignment_id: object, buyer_user_id: object) -> None:
-    try:
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="market_assignment",
-            aggregate_id=str(assignment_id),
-            actor_id=str(buyer_user_id),
-            data={
-                "assignment_id": str(assignment_id),
-                "buyer_user_id": str(buyer_user_id),
-            },
-        )
-        await nats_publish("market.assignment.created.v1", envelope)
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed",
-            subject="market.assignment.created.v1",
-            error=repr(exc),
-        )
+async def _publish_assigned(
+    session: AsyncSession, *, assignment_id: object, buyer_user_id: object
+) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject="market.assignment.created.v1",
+        aggregate_type="market_assignment",
+        aggregate_id=str(assignment_id),
+        actor_id=str(buyer_user_id),
+        data={"assignment_id": str(assignment_id), "buyer_user_id": str(buyer_user_id)},
+    )
 
 
 # offers available listings to the users waiting for them on a periodic schedule

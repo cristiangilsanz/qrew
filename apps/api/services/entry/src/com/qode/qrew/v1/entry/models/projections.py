@@ -1,4 +1,4 @@
-# defines the ticket state enum and the ticket context projection
+# defines the ticket state enum and the projections the entry service keeps
 import enum
 import uuid
 from datetime import datetime
@@ -38,6 +38,38 @@ class TicketContext(Base):
         UUID(as_uuid=True), nullable=True
     )
     state: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class EventContext(Base):
+    # remembers which organisation and venue an event belongs to
+    __tablename__ = "event_contexts"
+    __table_args__ = {"schema": "entry"}
+
+    event_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    organisation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False
+    )
+    venue_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class OrganisationMemberContext(Base):
+    # remembers who belongs to each organisation, so no call is needed to ask
+    __tablename__ = "organisation_member_contexts"
+    __table_args__ = {"schema": "entry"}
+
+    organisation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    role: Mapped[str] = mapped_column(String(32), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

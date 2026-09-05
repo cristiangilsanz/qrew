@@ -8,6 +8,9 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from outbox import record as record_event
+
+from com.qode.qrew.v1.ticketing.models.outbox import EventOutbox
 from com.qode.qrew.v1.ticketing.services.application.audit import AuditService
 from com.qode.qrew.v1.ticketing.core.errors import DomainError
 from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
@@ -123,39 +126,29 @@ async def transition_ticket(
         )
     except Exception as exc:
         await logger.awarning("audit_write_failed", action=_TICKET_STATE_CHANGED, error=repr(exc))
-    await _publish_state_changed(ticket, previous_state, to_state, actor_id)
+    await _publish_state_changed(session, ticket, previous_state, to_state, actor_id)
     return ticket
 
 
-# publishes the ticket's state change onto the shared nats connection
+# leaves the ticket's state change in the outbox
 async def _publish_state_changed(
+    session: AsyncSession,
     ticket: Ticket,
     previous_state: TicketState,
     to_state: TicketState,
-    actor_id: uuid.UUID,
+    actor_id: uuid.UUID | None,
 ) -> None:
-    try:
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="ticket",
-            aggregate_id=str(ticket.id),
-            actor_id=str(actor_id),
-            data={
-                "ticket_id": str(ticket.id),
-                "event_id": str(ticket.event_id),
-                "state": to_state.value,
-                "previous_state": previous_state.value,
-                "owner_user_id": str(ticket.owner_user_id),
-                "bound_device_id": str(ticket.bound_device_id) if ticket.bound_device_id else None,
-            },
-        )
-        await nats_publish("ticketing.ticket.state_changed", envelope)
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed",
-            subject="ticketing.ticket.state_changed",
-            error=repr(exc),
-        )
+    await record_event(
+        session,
+        EventOutbox,
+        subject="ticketing.ticket.state_changed",
+        aggregate_type="ticket",
+        aggregate_id=str(ticket.id),
+        actor_id=str(actor_id) if actor_id else None,
+        data={
+            "ticket_id": str(ticket.id),
+            "from": previous_state.value,
+            "to": to_state.value,
+            "owner_user_id": str(ticket.owner_user_id),
+        },
+    )

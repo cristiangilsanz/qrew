@@ -121,6 +121,21 @@ erDiagram
         string dlq_reason
     }
 
+    event_outbox["event_outbox (domain events)"] {
+        UUID id PK
+        string subject
+        string aggregate_type
+        string aggregate_id
+        string actor_id
+        jsonb payload
+        timestamp created_at
+        timestamp dispatched_at
+        int attempt_count
+        text last_error
+        timestamp next_attempt_at
+        string dlq_reason
+    }
+
     audit_events {
         UUID id PK
         UUID actor_id
@@ -143,3 +158,5 @@ erDiagram
     users ||--o{ notifications : "receives"
     devices ||--o{ sessions : "linked to"
 ```
+
+`outbox` and `event_outbox` are two different tables. `outbox` defers arq jobs, so a job asked for inside a transaction is only enqueued once that transaction commits, and the `outbox_drainer` job drains it. `event_outbox` holds domain events for other services, comes from the shared `outbox` package, and is drained to NATS by the `event_outbox_drainer` job. Both retry with a growing backoff and park a row with `dlq_reason` rather than retrying for ever.

@@ -25,6 +25,11 @@ class OrganisationRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # hands the session out, so a caller can leave an event in the same transaction
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
+
     # reads an organisation by its identifier
     async def get_by_id(self, organisation_id: uuid.UUID) -> Organisation | None:
         result = await self._session.execute(
@@ -103,6 +108,11 @@ class OrganisationMemberRepository:
     # stores the session the repository queries through
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    # hands the session out, so a caller can leave an event in the same transaction
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
 
     # reads a single membership row
     async def get(

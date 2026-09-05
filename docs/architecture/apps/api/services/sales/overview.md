@@ -59,6 +59,8 @@ Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../../../p
 
 Schemas: [`packages/contracts/openapi/sales/events/`](../../../../../../packages/contracts/openapi/sales/events/)
 
+Every event is recorded in the `sales.event_outbox` table inside the same transaction as the change that caused it, and the `outbox_drainer` job publishes it afterwards. The request never talks to the broker.
+
 ### Consumed
 
 | Event | NATS Subject | Action |
@@ -81,6 +83,7 @@ Schemas: [`packages/contracts/openapi/sales/events/`](../../../../../../packages
 | `queue_admitter` | arq job, every minute | Admits queued users when capacity becomes available. |
 | `market_assigner` | arq job, every minute | Offers each open listing to the next buyer in the resale queue. |
 | `market_expirer` | arq job, every minute | Expires unclaimed resale offers and returns the listing to the queue. |
+| `outbox_drainer` | arq job, every minute | Publishes to NATS every domain event waiting in `sales.event_outbox`, retrying with backoff and parking a row after eight attempts. |
 | `catalog.*` | NATS subscriber | Keeps the `EventContext` and `TicketTypeInventory` projections up to date. |
 | `identity.*` | NATS subscriber | Keeps the `UserAgeContext` and `FingerprintContext` projections up to date. |
 | `payments.*` | NATS subscriber | Handles payment settlement and reservation cancellation. |
@@ -98,6 +101,7 @@ The arq jobs run in the `sales-arq-worker` container, which consumes the `qrew:j
 | `messaging` | NATS JetStream publisher and subscriber |
 | `middleware` | Request ID, correlation, and security headers |
 | `observability` | OpenTelemetry setup |
+| `outbox` | Transactional outbox mixin, recorder, and drainer |
 | `worker` | arq worker bootstrap |
 
 ## External Dependencies

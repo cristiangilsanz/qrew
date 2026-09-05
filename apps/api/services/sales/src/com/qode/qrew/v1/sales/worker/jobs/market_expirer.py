@@ -6,6 +6,11 @@ import structlog
 from jobs import job, parse_crontab
 from sqlalchemy import text
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from outbox import record as record_event
+
+from com.qode.qrew.v1.sales.models.outbox import EventOutbox
 from com.qode.qrew.v1.sales.core.config import settings
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.sales.models.market import (
@@ -97,11 +102,12 @@ async def _expire_assignments() -> int:
                         )
                         await repo.insert_assignment(new_assignment)
                         listing.state = MarketListingState.assigned
-                        await session.commit()
                         await _publish_assigned(
+                            session,
                             assignment_id=new_assignment.id,
                             buyer_user_id=member.user_id,
                         )
+                        await session.commit()
                         await logger.ainfo(
                             "market.expirer.reassigned",
                             old_assignment_id=str(assignment.id),
@@ -152,12 +158,12 @@ async def _cancel_expired_listings() -> int:
 
                     fresh.state = MarketListingState.cancelled
                     fresh.cancelled_at = datetime.now(UTC)
-                    await session.commit()
-
                     await _publish_listing_expired(
+                        session,
                         ticket_id=fresh.ticket_id,
                         seller_user_id=fresh.seller_user_id,
                     )
+                    await session.commit()
                     cancelled += 1
                     await logger.ainfo(
                         "market.expirer.listing_cancelled",
@@ -169,47 +175,34 @@ async def _cancel_expired_listings() -> int:
     return cancelled
 
 
-# publishes that a market assignment was created onto the shared nats connection
-async def _publish_assigned(*, assignment_id: object, buyer_user_id: object) -> None:
-    try:
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="market_assignment",
-            aggregate_id=str(assignment_id),
-            actor_id=str(buyer_user_id),
-            data={"assignment_id": str(assignment_id), "buyer_user_id": str(buyer_user_id)},
-        )
-        await nats_publish("market.assignment.created.v1", envelope)
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed", subject="market.assignment.created.v1", error=repr(exc)
-        )
+# leaves in the outbox that a market assignment was created
+async def _publish_assigned(
+    session: AsyncSession, *, assignment_id: object, buyer_user_id: object
+) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject="market.assignment.created.v1",
+        aggregate_type="market_assignment",
+        aggregate_id=str(assignment_id),
+        actor_id=str(buyer_user_id),
+        data={"assignment_id": str(assignment_id), "buyer_user_id": str(buyer_user_id)},
+    )
 
 
-# publishes that a market listing expired onto the shared nats connection
-async def _publish_listing_expired(*, ticket_id: object, seller_user_id: object) -> None:
-    try:
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="market_listing",
-            aggregate_id=str(ticket_id),
-            actor_id=str(seller_user_id),
-            data={
-                "ticket_id": str(ticket_id),
-                "seller_user_id": str(seller_user_id),
-            },
-        )
-        await nats_publish("market.listing.expired.v1", envelope)
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed", subject="market.listing.expired.v1", error=repr(exc)
-        )
+# leaves in the outbox that a market listing expired
+async def _publish_listing_expired(
+    session: AsyncSession, *, ticket_id: object, seller_user_id: object
+) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject="market.listing.expired.v1",
+        aggregate_type="market_listing",
+        aggregate_id=str(ticket_id),
+        actor_id=str(seller_user_id),
+        data={"ticket_id": str(ticket_id), "seller_user_id": str(seller_user_id)},
+    )
 
 
 # expires overdue market assignments and cancels overdue listings on a periodic schedule

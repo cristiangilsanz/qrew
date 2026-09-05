@@ -46,6 +46,8 @@ Full spec: [`packages/contracts/openapi/ticketing/openapi.yaml`](../../../../../
 
 Schemas: [`packages/contracts/openapi/ticketing/events/`](../../../../../../packages/contracts/openapi/ticketing/events/)
 
+Every event is recorded in the `ticketing.event_outbox` table inside the same transaction as the change that caused it, and the `outbox_drainer` job publishes it afterwards. The request never talks to the broker.
+
 ### Consumed
 
 | Event | NATS Subject | Action |
@@ -65,6 +67,7 @@ Schemas: [`packages/contracts/openapi/ticketing/events/`](../../../../../../pack
 |--------|------|-------------|
 | `expired_ticket_purger` | arq job, daily at 04:30 | Deletes tickets that expired without ever being redeemed. |
 | `scanning_reverter` | arq job, every minute | Returns a ticket left in `scanning` to `issued` once the QR it was shown for has expired, so its holder is not stuck on a processing screen. |
+| `outbox_drainer` | arq job, every minute | Publishes to NATS every domain event waiting in `ticketing.event_outbox`, retrying with backoff and parking a row after eight attempts. |
 | `catalog.*` | NATS subscriber | Keeps the `EventVenueContext` projection up to date. |
 | `identity.*` | NATS subscriber | Keeps the `DeviceContext` projection up to date and enforces device revocation. |
 | `sales.*` | NATS subscriber | Drives ticket creation and state transitions from reservation events. |
@@ -82,6 +85,7 @@ The arq jobs run in the `ticketing-arq-worker` container, which consumes the `qr
 | `locking` | Redis distributed locks for ticket state transitions |
 | `middleware` | Request ID, correlation, and security headers |
 | `observability` | OpenTelemetry setup |
+| `outbox` | Transactional outbox mixin, recorder, and drainer |
 | `probes` | Liveness and readiness health endpoints |
 | `worker` | arq worker bootstrap |
 

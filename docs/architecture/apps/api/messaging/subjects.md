@@ -19,12 +19,15 @@ Wildcard: `catalog.>`
 
 | Subject | Published by | Consumed by | Description |
 |---|---|---|---|
-| `catalog.event.published.v1` | Catalog | Sales, Ticketing | Event moved to published state |
+| `catalog.event.published.v1` | Catalog | Sales, Ticketing, Entry | Event moved to published state |
+| `catalog.event.updated.v1` | Catalog | Entry | Event details changed |
+| `catalog.event.ongoing.v1` | Catalog | Entry | Event started, whether by the lifecycle job or by an organiser |
 | `catalog.event.cancelled.v1` | Catalog | Identity, Sales, Ticketing | Event cancelled |
 | `catalog.event.draft.v1` | Catalog | Sales, Ticketing | Event moved back to draft |
 | `catalog.venue.created.v1` | Catalog | Ticketing | New venue created |
 | `catalog.ticket_type.created.v1` | Catalog | Sales | New ticket type added to an event |
 | `catalog.ticket_type.updated.v1` | Catalog | Sales | Ticket type capacity or price changed |
+| `catalog.membership.changed.v1` | Catalog | Entry | Organisation roster changed. A null `role` means the member left |
 
 ## SALES stream
 

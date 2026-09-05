@@ -289,6 +289,10 @@ entry-type-check:
 payments-dev:
     cd {{PAYMENTS}} && uv run alembic upgrade head && uv run payments-dev
 
+# Run payments Arq worker
+payments-worker:
+    cd {{PAYMENTS}} && uv run payments-worker
+
 # Apply payments migrations
 payments-db-upgrade:
     cd {{PAYMENTS}} && uv run alembic upgrade head

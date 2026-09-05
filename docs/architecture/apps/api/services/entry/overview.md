@@ -12,7 +12,8 @@ Entry is the gate control service in the platform. It registers scanner devices,
 2. Validates QR tokens against the local ticket state projection.
 3. Enforces geofence and venue constraints at scan time.
 4. Forwards successful validations to ticketing via HTTP.
-5. Does not issue tickets or manage ticket state.
+5. Keeps local projections of the events and organisation rosters catalog owns, so no synchronous call is needed to authorise a scanner request.
+6. Does not issue tickets or manage ticket state.
 
 ## HTTP API
 
@@ -46,12 +47,19 @@ Schemas: [`packages/contracts/openapi/entry/events/`](../../../../../../packages
 | Event | NATS Subject | Action |
 |-------|-------------|--------|
 | `TicketStateChanged` | `ticketing.ticket.state_changed` | Updates the local `TicketContext` projection used for scan validation. |
+| `EventPublished` | `catalog.event.published.v1` | Upserts the `EventContext` projection with the organisation and venue the event belongs to. |
+| `EventUpdated` | `catalog.event.updated.v1` | Upserts the `EventContext` projection. |
+| `EventOngoing` | `catalog.event.ongoing.v1` | Upserts the `EventContext` projection. |
+| `MembershipChanged` | `catalog.membership.changed.v1` | Upserts the `OrganisationMemberContext` projection, or deletes the row when the role is null. |
 
 ## Background Workers
 
 | Worker | Type | Description |
 |--------|------|-------------|
 | `ticketing.ticket.state_changed` | NATS subscriber | Keeps the local ticket state projection up to date. |
+| `catalog.*` | NATS subscriber | Keeps the `EventContext` and `OrganisationMemberContext` projections up to date. |
+
+Both subscribers run in the `entry-worker` container.
 
 ## Internal Dependencies
 
@@ -70,7 +78,7 @@ Schemas: [`packages/contracts/openapi/entry/events/`](../../../../../../packages
 |---------|---------|
 | PostgreSQL | Ticket state projection store |
 | Redis | Idempotency keys and rate limiting |
-| NATS JetStream | Consuming ticketing state change events |
+| NATS JetStream | Consuming ticketing state change and catalog event and membership events |
 | Ticketing service | HTTP call to mark a ticket as used after a valid scan |
 
 ## Key Configuration

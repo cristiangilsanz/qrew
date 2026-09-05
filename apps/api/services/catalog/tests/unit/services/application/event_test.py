@@ -27,12 +27,19 @@ _PATCH_REINDEX = f"{_MOD}.EventService._reindex"
 
 
 # handles make svc
+# reads back the outbox row the service left inside the transaction
+def _recorded(session: MagicMock) -> object:
+    rows = [c.args[0] for c in session.add.call_args_list if hasattr(c.args[0], "subject")]
+    assert rows, "no outbox row was recorded"
+    return rows[-1]
+
+
 def _make_svc(
     *,
     event: object = None,
     org: object = None,
     venue: object = None,
-) -> tuple[EventService, MagicMock]:
+) -> tuple[EventService, MagicMock, MagicMock]:
     session = MagicMock()
     session.execute = AsyncMock()
 
@@ -53,7 +60,7 @@ def _make_svc(
     svc = EventService(
         session=session, repo=repo, org_repo=org_repo, venue_repo=venue_repo, audit=audit
     )
-    return svc, repo
+    return svc, repo, session
 
 
 class TestValidateWindows:
@@ -124,7 +131,7 @@ class TestEventServiceCreate:
     async def test_raises_when_windows_invalid(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
-        svc, _ = _make_svc()
+        svc, _, _session = _make_svc()
         now = datetime.now(UTC)
         with pytest.raises(EventError):
             await svc.create_event(
@@ -145,7 +152,7 @@ class TestEventServiceCreate:
     async def test_raises_when_max_tickets_out_of_range(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
-        svc, _ = _make_svc()
+        svc, _, _session = _make_svc()
         now = datetime.now(UTC)
         with pytest.raises(EventError, match="between 1 and 20"):
             await svc.create_event(
@@ -166,7 +173,7 @@ class TestEventServiceCreate:
     async def test_raises_when_org_not_found(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
-        svc, _ = _make_svc(org=None)
+        svc, _, _session = _make_svc(org=None)
         now = datetime.now(UTC)
         with pytest.raises(EventError, match="Organisation not found."):
             await svc.create_event(
@@ -187,7 +194,7 @@ class TestEventServiceCreate:
     async def test_raises_when_venue_not_found(
         self, actor_id: uuid.UUID, org_id: uuid.UUID, venue_id: uuid.UUID
     ) -> None:
-        svc, _ = _make_svc(org=make_org(org_id=org_id), venue=None)
+        svc, _, _session = _make_svc(org=make_org(org_id=org_id), venue=None)
         now = datetime.now(UTC)
         with pytest.raises(EventError, match="Venue not found."):
             await svc.create_event(
@@ -210,7 +217,7 @@ class TestEventServiceCreate:
     ) -> None:
         org = make_org(org_id=org_id)
         venue = make_venue(venue_id=venue_id)
-        svc, repo = _make_svc(org=org, venue=venue)
+        svc, repo, _session = _make_svc(org=org, venue=venue)
         now = datetime.now(UTC)
         result = await svc.create_event(
             actor_id=actor_id,
@@ -233,14 +240,14 @@ class TestEventServiceCreate:
 class TestEventServiceUpdate:
     # verifies that raises when not found
     async def test_raises_when_not_found(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
-        svc, _ = _make_svc(event=None)
+        svc, _, _session = _make_svc(event=None)
         with pytest.raises(EventError, match="not found"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
     # verifies that raises when cancelled
     async def test_raises_when_cancelled(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.cancelled)
-        svc, _ = _make_svc(event=event)
+        svc, _, _session = _make_svc(event=event)
         with pytest.raises(EventError, match="not editable"):
             await svc.update_event(actor_id=actor_id, event_id=event_id, changes={"name": "X"})
 
@@ -249,7 +256,7 @@ class TestEventServiceUpdate:
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
-        svc, _ = _make_svc(event=event)
+        svc, _, _session = _make_svc(event=event)
         with pytest.raises(EventError, match="Cannot edit fields"):
             await svc.update_event(
                 actor_id=actor_id,
@@ -262,7 +269,7 @@ class TestEventServiceUpdate:
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
-        svc, _ = _make_svc(event=event)
+        svc, _, _session = _make_svc(event=event)
         with pytest.raises(EventError):
             await svc.update_event(
                 actor_id=actor_id,
@@ -273,7 +280,7 @@ class TestEventServiceUpdate:
     # verifies that updates name and flushes
     async def test_updates_name_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
-        svc, repo = _make_svc(event=event)
+        svc, repo, _session = _make_svc(event=event)
         result = await svc.update_event(
             actor_id=actor_id, event_id=event_id, changes={"name": "New Name"}
         )
@@ -284,7 +291,7 @@ class TestEventServiceUpdate:
 class TestEventServicePublish:
     # verifies that raises when not found
     async def test_raises_when_not_found(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
-        svc, _ = _make_svc(event=None)
+        svc, _, _session = _make_svc(event=None)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -298,7 +305,7 @@ class TestEventServicePublish:
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
         event = make_event(event_id=event_id, status=EventStatus.published)
-        svc, repo = _make_svc(event=event)
+        svc, repo, _session = _make_svc(event=event)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -311,7 +318,7 @@ class TestEventServicePublish:
     # verifies that raises when not draft
     async def test_raises_when_not_draft(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.cancelled)
-        svc, _ = _make_svc(event=event)
+        svc, _, _session = _make_svc(event=event)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -323,7 +330,7 @@ class TestEventServicePublish:
     # verifies that publishes and flushes
     async def test_publishes_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.draft)
-        svc, repo = _make_svc(event=event)
+        svc, repo, _session = _make_svc(event=event)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -338,7 +345,7 @@ class TestEventServicePublish:
 class TestEventServiceCancel:
     # verifies that raises when not found
     async def test_raises_when_not_found(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
-        svc, _ = _make_svc(event=None)
+        svc, _, _session = _make_svc(event=None)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -352,7 +359,7 @@ class TestEventServiceCancel:
         self, actor_id: uuid.UUID, event_id: uuid.UUID
     ) -> None:
         event = make_event(event_id=event_id, status=EventStatus.cancelled)
-        svc, repo = _make_svc(event=event)
+        svc, repo, _session = _make_svc(event=event)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -365,7 +372,7 @@ class TestEventServiceCancel:
     # verifies that cancels and flushes
     async def test_cancels_and_flushes(self, actor_id: uuid.UUID, event_id: uuid.UUID) -> None:
         event = make_event(event_id=event_id, status=EventStatus.published)
-        svc, repo = _make_svc(event=event)
+        svc, repo, _session = _make_svc(event=event)
         with (
             patch(_PATCH_REDLOCK, return_value=make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
@@ -383,38 +390,34 @@ class TestGeofenceTravelsWithTheAnnouncement:
     async def test_the_published_event_carries_the_venue_geofence(self) -> None:
         venue = make_venue()
         event = make_event(status=EventStatus.draft, venue_id=venue.id)
-        svc, _ = _make_svc(event=event, venue=venue)
-        publish = AsyncMock()
+        svc, _, session = _make_svc(event=event, venue=venue)
 
         with (
             patch(_PATCH_REDLOCK, make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
             patch(_PATCH_REINDEX, AsyncMock()),
-            patch("messaging.publisher.publish", publish),
         ):
             await svc.publish_event(actor_id=uuid.uuid4(), event_id=event.id)
 
-        subject, envelope = publish.await_args.args
-        assert subject == "catalog.event.published.v1"
-        assert envelope.data["latitude"] == str(venue.latitude)
-        assert envelope.data["longitude"] == str(venue.longitude)
-        assert envelope.data["geofence_radius_m"] == venue.geofence_radius_m
-        assert envelope.data["timezone"] == venue.timezone
+        row = _recorded(session)
+        assert row.subject == "catalog.event.published.v1"
+        assert row.payload["latitude"] == str(venue.latitude)
+        assert row.payload["longitude"] == str(venue.longitude)
+        assert row.payload["geofence_radius_m"] == venue.geofence_radius_m
+        assert row.payload["timezone"] == venue.timezone
 
     # verifies that an event without a venue travels without geofence
     @pytest.mark.asyncio
     async def test_an_event_without_a_venue_travels_without_geofence(self) -> None:
         event = make_event(status=EventStatus.draft, venue_id=None)
-        svc, _ = _make_svc(event=event, venue=None)
-        publish = AsyncMock()
+        svc, _, session = _make_svc(event=event, venue=None)
 
         with (
             patch(_PATCH_REDLOCK, make_redlock_cm()),
             patch(_PATCH_SETTINGS, make_fake_settings()),
             patch(_PATCH_REINDEX, AsyncMock()),
-            patch("messaging.publisher.publish", publish),
         ):
             await svc.publish_event(actor_id=uuid.uuid4(), event_id=event.id)
 
-        _, envelope = publish.await_args.args
-        assert "latitude" not in envelope.data
+        row = _recorded(session)
+        assert "latitude" not in row.payload

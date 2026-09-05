@@ -106,6 +106,21 @@ erDiagram
         string state
     }
 
+    event_outbox["event_outbox (transactional outbox)"] {
+        UUID id PK
+        string subject
+        string aggregate_type
+        string aggregate_id
+        string actor_id
+        jsonb payload
+        timestamp created_at
+        timestamp dispatched_at
+        int attempt_count
+        text last_error
+        timestamp next_attempt_at
+        string dlq_reason
+    }
+
     reservations }o--|| event_context : "validates against"
     reservations ||--o{ reservation_items : "covers"
     reservation_items }o--|| ticket_type_inventory : "checks inventory"
@@ -308,3 +323,26 @@ A buyer's pending or completed purchase of a resale listing.
 - `ix_market_assignments_listing_id`
 - `ix_market_assignments_buyer_user_id`
 - `ix_market_assignments_pending_expires` — partial on `(expires_at)` WHERE `state = 'pending'`
+
+---
+
+### event_outbox  _(transactional outbox)_
+
+Holds every domain event the service records inside the transaction that caused it. The `outbox_drainer` job publishes each pending row to NATS and stamps `dispatched_at`, so no event is lost when the request path cannot reach the broker. The table and the drainer come from the shared `outbox` package.
+
+| Column | Type | Nullable | Default | Notes |
+|---|---|---|---|---|
+| id | UUID | NO | gen_random_uuid() | PK |
+| subject | VARCHAR(128) | NO | | NATS subject the row is published to |
+| aggregate_type | VARCHAR(64) | NO | | |
+| aggregate_id | VARCHAR(64) | NO | | |
+| actor_id | VARCHAR(64) | YES | | User the change is attributed to |
+| payload | JSONB | NO | | Event body, becomes `data` in the envelope |
+| created_at | TIMESTAMPTZ | NO | now() | Becomes `occurred_at` in the envelope |
+| dispatched_at | TIMESTAMPTZ | YES | | NULL while the row is still pending |
+| attempt_count | INTEGER | NO | 0 | Parked at 8 attempts |
+| last_error | TEXT | YES | | Repr of the last publish failure |
+| next_attempt_at | TIMESTAMPTZ | NO | now() | Backoff of 5, 15, 60, 300, 900, 1800, 3600 seconds |
+| dlq_reason | VARCHAR(64) | YES | | `attempts_exhausted` once the row is parked |
+
+**Indexes:** `ix_sales_event_outbox_pending` — partial on `(next_attempt_at)` WHERE `dispatched_at IS NULL AND dlq_reason IS NULL`

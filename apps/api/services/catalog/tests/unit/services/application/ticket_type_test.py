@@ -39,7 +39,10 @@ def _make_svc(
     audit = AsyncMock()
     audit.record = AsyncMock()
 
-    svc = TicketTypeService(event_repo=event_repo, repo=repo, audit=audit)
+    session = MagicMock()
+    session.add = MagicMock()
+
+    svc = TicketTypeService(session=session, event_repo=event_repo, repo=repo, audit=audit)
     return svc, repo
 
 

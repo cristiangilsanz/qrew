@@ -747,7 +747,6 @@
     "title": "Lost Your Device",
     "subtitle": "Confirm who you are with your ID document.",
     "pickDocument": "Upload your ID document",
-    "changeDocument": "Choose another file",
     "note": "Your passkey is replaced on this device.",
     "submit": "Recover this device",
     "success": "Device recovered. Sign in with your new passkey.",

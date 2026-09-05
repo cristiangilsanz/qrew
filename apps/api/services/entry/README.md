@@ -31,7 +31,7 @@ uv run dev
 
 ## Worker
 
-Start the background worker in a separate terminal. The worker consumes ticketing events to maintain local ticket state projections used during validation.
+Start the background worker in a separate terminal. The worker consumes ticketing events to maintain local ticket state projections used during validation, and catalog events to maintain the event and organisation membership projections it authorises scanner requests with, so no HTTP call to catalog is needed.
 
 ```bash
 uv run worker

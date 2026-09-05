@@ -1,7 +1,6 @@
 # creates payment intents from reservations and market assignments and applies stripe outcomes
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -12,6 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from com.qode.qrew.v1.payments.core.config import settings
 from com.qode.qrew.v1.payments.core.errors import DomainError
 from com.qode.qrew.v1.payments.core.utils import crypto as pii_crypto
+from outbox import record as record_event
+
+from com.qode.qrew.v1.payments.models.outbox import EventOutbox
 from com.qode.qrew.v1.payments.models.payment import Payment, PaymentStatus
 from com.qode.qrew.v1.payments.repositories.payment import PaymentRepository
 from com.qode.qrew.v1.payments.services.application.stripe_client import StripeClient
@@ -105,22 +107,21 @@ async def _get_reservation_context(
 
 # publishes a payment event onto the shared nats connection
 async def _publish_event(
-    subject: str, data: dict[str, Any], *, actor_id: uuid.UUID | None = None
+    session: AsyncSession,
+    subject: str,
+    data: dict[str, Any],
+    *,
+    actor_id: uuid.UUID | None = None,
 ) -> None:
-    try:
-        from contracts.messaging.envelope import EventEnvelope
-        from messaging.publisher import publish as nats_publish
-
-        event = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="payment",
-            aggregate_id=data.get("payment_id", ""),
-            actor_id=str(actor_id) if actor_id else None,
-            data=data,
-        )
-        await nats_publish(subject, event)
-    except Exception as exc:
-        await logger.awarning("nats_publish_failed", subject=subject, error=repr(exc))
+    await record_event(
+        session,
+        EventOutbox,
+        subject=subject,
+        aggregate_type="payment",
+        aggregate_id=str(data.get("payment_id", "")),
+        data=data,
+        actor_id=str(actor_id) if actor_id else None,
+    )
 
 
 class PaymentService:
@@ -175,6 +176,7 @@ class PaymentService:
             await self._repo.flush()
 
         await _publish_event(
+            self._session,
             "payments.payment.initiated.v1",
             {
                 "payment_id": str(payment.id),
@@ -224,6 +226,7 @@ class PaymentService:
             await self._repo.flush()
 
         await _publish_event(
+            self._session,
             "payments.payment.initiated.v1",
             {
                 "payment_id": str(payment.id),
@@ -254,6 +257,7 @@ class PaymentService:
 
         if payment.market_assignment_id is not None:
             await _publish_event(
+                self._session,
                 "payments.payment.succeeded.v1",
                 {
                     "payment_id": str(payment.id),
@@ -264,6 +268,7 @@ class PaymentService:
             )
         else:
             await _publish_event(
+                self._session,
                 "payments.payment.succeeded.v1",
                 {
                     "payment_id": str(payment.id),
@@ -289,6 +294,7 @@ class PaymentService:
         payment.failure_message = failure_message
         await self._repo.flush()
         await _publish_event(
+            self._session,
             "payments.payment.failed.v1",
             {
                 "payment_id": str(payment.id),
@@ -312,6 +318,7 @@ class PaymentService:
             payment.status = PaymentStatus.refunded
             await self._repo.flush()
         await _publish_event(
+            self._session,
             "payments.payment.refunded.v1",
             {
                 "payment_id": str(payment.id),
@@ -332,6 +339,7 @@ class PaymentService:
         payment.status = PaymentStatus.refunded
         await self._repo.flush()
         await _publish_event(
+            self._session,
             "payments.chargeback.opened.v1",
             {
                 "payment_id": str(payment.id),
@@ -347,6 +355,7 @@ class PaymentService:
         if payment is None:
             return
         await _publish_event(
+            self._session,
             "payments.chargeback.closed.v1",
             {
                 "payment_id": str(payment.id),
