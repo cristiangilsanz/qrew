@@ -92,7 +92,7 @@ Full spec: [`packages/contracts/openapi/identity/openapi.yaml`](../../../../../.
 |-------|-------------|-------------|
 | `UserRegistered` | `identity.user.registered.v1` | Emitted when a new user completed registration. Carries `phone_e164` for the Sales VoIP fraud signal. |
 | `FingerprintSeen` | `identity.fingerprint.seen.v1` | Emitted when a device fingerprint was observed at login, used by Sales for device reuse scoring. |
-| `DeviceBound` | `identity.device.attested.v1` | Emitted when a device was attested and bound to a user. |
+| `DeviceAttested` | `identity.device.attested.v1` | Emitted when a device was attested and bound to a user. |
 | `DeviceRevoked` | `identity.device.revoked.v1` | Emitted when a device was revoked due to loss, theft, or policy. |
 | `WsFanout` | `ws.fanout.v1` | Notification the Gateway forwards to the user's open WebSocket. |
 | `AuditEvent` | `audit.events.v1` | Security and account audit record. |

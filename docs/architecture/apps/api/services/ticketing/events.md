@@ -1,6 +1,6 @@
 # Ticketing Event Contracts
 
-Published to stream `ticketing`, whose name is lowercase because the entry subscriber that creates it spells it that way. These are the only two subjects Ticketing publishes, and neither carries a `.v1` suffix. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
+Published to stream `ticketing`, whose name is lowercase because the entry subscriber that creates it spells it that way. These are the only two subjects Ticketing publishes, and neither carries a `.v1` suffix. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope). Schemas live in [`packages/contracts/openapi/ticketing/events/`](../../../../../../packages/contracts/openapi/ticketing/events/).
 
 Ticketing also publishes audit records to `audit.events.v1`.
 

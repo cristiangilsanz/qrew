@@ -55,15 +55,15 @@ Every event is recorded in the `ticketing.event_outbox` table inside the same tr
 | `EventOngoing` | `catalog.event.ongoing.v1` | Upserts the projection with the event marked as ongoing. |
 | `EventCancelled` | `catalog.event.cancelled.v1` | Marks event context as cancelled and cancels issued tickets. |
 | `EventDraft` | `catalog.event.draft.v1` | Upserts the projection with the event marked as draft. No service publishes this subject, so the handler never fires. |
-| `DeviceBound` | `identity.device.attested.v1` | Upserts the `DeviceContext` projection for QR binding. |
+| `DeviceAttested` | `identity.device.attested.v1` | Upserts the `DeviceContext` projection for QR binding. |
 | `DeviceRevoked` | `identity.device.revoked.v1` | Upserts the device context and freezes all tickets bound to that device. |
 | `ReservationCreated` | `sales.reservation.created.v1` | Creates tickets in `reserved` state. |
 | `ReservationPaid` | `sales.reservation.paid.v1` | Transitions reserved tickets to `issued`. |
 | `ReservationCancelled` | `sales.reservation.cancelled.v1` | Cancels reserved or issued tickets. |
 | `ReservationExpired` | `sales.reservation.expired.v1` | Releases whatever the expired reservation was holding. |
-| `TicketFreeze` | `market.ticket.freeze.v1` | Freezes a listed ticket so it stops being usable at the door. |
-| `TicketTransfer` | `market.transfer.v1` | Moves ticket ownership and holder details to the resale buyer. |
-| `ListingExpired` | `market.listing.expired.v1` | Returns an unsold listed ticket to its holder. |
+| `MarketTicketFreeze` | `market.ticket.freeze.v1` | Freezes a listed ticket so it stops being usable at the door. |
+| `MarketTransfer` | `market.transfer.v1` | Moves ticket ownership and holder details to the resale buyer. |
+| `MarketListingExpired` | `market.listing.expired.v1` | Returns an unsold listed ticket to its holder. |
 
 ## Background Workers
 

@@ -53,10 +53,10 @@ Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../../../p
 | `ReservationExpired` | `sales.reservation.expired.v1` | Emitted when a reservation TTL elapsed without payment. |
 | `ReservationCancelled` | `sales.reservation.cancelled.v1` | Emitted when a reservation was explicitly cancelled. |
 | `ReservationPaid` | `sales.reservation.paid.v1` | Emitted when a reservation was settled after successful payment. |
-| `TicketFreeze` | `market.ticket.freeze.v1` | Emitted when a ticket was listed for resale, so Ticketing stops it being usable at the door. |
-| `TicketTransfer` | `market.transfer.v1` | Emitted when a listed ticket changed owner, carrying the new holder's name and identity document. |
-| `ListingExpired` | `market.listing.expired.v1` | Emitted when a listing expired without a buyer and the ticket returns to its holder. |
-| `AssignmentCreated` | `market.assignment.created.v1` | Emitted when a listing was offered to the next buyer in the resale queue. No service subscribes to it yet. |
+| `MarketTicketFreeze` | `market.ticket.freeze.v1` | Emitted when a ticket was listed for resale, so Ticketing stops it being usable at the door. |
+| `MarketTransfer` | `market.transfer.v1` | Emitted when a listed ticket changed owner, carrying the new holder's name and identity document. |
+| `MarketListingExpired` | `market.listing.expired.v1` | Emitted when a listing expired without a buyer and the ticket returns to its holder. |
+| `MarketAssignmentCreated` | `market.assignment.created.v1` | Emitted when a listing was offered to the next buyer in the resale queue. No service subscribes to it yet. |
 
 The four `market.*` subjects belong to the resale marketplace, which lives in this service but publishes under its own prefix and therefore its own stream. Sales also publishes audit records to `audit.events.v1`.
 

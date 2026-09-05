@@ -10,15 +10,16 @@
       "title": "User Id",
       "type": "string"
     },
-    "reason": {
-      "title": "Reason",
+    "revoked_at": {
+      "format": "date-time",
+      "title": "Revoked At",
       "type": "string"
     }
   },
   "required": [
     "device_id",
     "user_id",
-    "reason"
+    "revoked_at"
   ],
   "title": "DeviceRevoked",
   "type": "object",

@@ -5,16 +5,17 @@
       "title": "Ticket Id",
       "type": "string"
     },
-    "reason": {
-      "title": "Reason",
+    "actor_id": {
+      "format": "uuid",
+      "title": "Actor Id",
       "type": "string"
     }
   },
   "required": [
     "ticket_id",
-    "reason"
+    "actor_id"
   ],
-  "title": "QrDenied",
+  "title": "MarketTicketFreeze",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

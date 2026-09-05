@@ -9,13 +9,28 @@
       "format": "uuid",
       "title": "Event Id",
       "type": "string"
+    },
+    "capacity": {
+      "title": "Capacity",
+      "type": "integer"
+    },
+    "price_cents": {
+      "title": "Price Cents",
+      "type": "integer"
+    },
+    "currency": {
+      "title": "Currency",
+      "type": "string"
     }
   },
   "required": [
     "ticket_type_id",
-    "event_id"
+    "event_id",
+    "capacity",
+    "price_cents",
+    "currency"
   ],
-  "title": "TicketTypeDeleted",
+  "title": "TicketTypeUpdated",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

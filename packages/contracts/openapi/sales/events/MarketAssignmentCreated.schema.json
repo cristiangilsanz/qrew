@@ -1,21 +1,21 @@
 {
   "properties": {
-    "user_id": {
+    "assignment_id": {
       "format": "uuid",
-      "title": "User Id",
+      "title": "Assignment Id",
       "type": "string"
     },
-    "device_id": {
+    "buyer_user_id": {
       "format": "uuid",
-      "title": "Device Id",
+      "title": "Buyer User Id",
       "type": "string"
     }
   },
   "required": [
-    "user_id",
-    "device_id"
+    "assignment_id",
+    "buyer_user_id"
   ],
-  "title": "PasskeyReasserted",
+  "title": "MarketAssignmentCreated",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

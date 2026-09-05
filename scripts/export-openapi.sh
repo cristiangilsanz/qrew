@@ -21,7 +21,6 @@ declare -A SERVICES=(
 declare -A SERVICE_EVENTS=(
   [identity]="identity"
   [catalog]="catalog"
-  [entry]="entry"
   [payments]="payments"
   [sales]="sales"
   [ticketing]="ticketing"

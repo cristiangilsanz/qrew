@@ -5,20 +5,51 @@
       "title": "Payment Id",
       "type": "string"
     },
-    "reservation_id": {
-      "format": "uuid",
-      "title": "Reservation Id",
+    "user_id": {
+      "title": "User Id",
       "type": "string"
     },
-    "reason": {
-      "title": "Reason",
-      "type": "string"
+    "reservation_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reservation Id"
+    },
+    "failure_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Code"
+    },
+    "failure_message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Message"
     }
   },
   "required": [
     "payment_id",
-    "reservation_id",
-    "reason"
+    "user_id"
   ],
   "title": "PaymentFailed",
   "type": "object",

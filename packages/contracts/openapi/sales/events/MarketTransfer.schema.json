@@ -5,35 +5,32 @@
       "title": "Ticket Id",
       "type": "string"
     },
-    "reservation_id": {
+    "new_owner_user_id": {
       "format": "uuid",
-      "title": "Reservation Id",
+      "title": "New Owner User Id",
       "type": "string"
     },
-    "user_id": {
-      "format": "uuid",
-      "title": "User Id",
+    "holder_name": {
+      "title": "Holder Name",
       "type": "string"
     },
-    "event_id": {
-      "format": "uuid",
-      "title": "Event Id",
+    "holder_document_type": {
+      "title": "Holder Document Type",
       "type": "string"
     },
-    "ticket_type_id": {
-      "format": "uuid",
-      "title": "Ticket Type Id",
+    "holder_dni": {
+      "title": "Holder Dni",
       "type": "string"
     }
   },
   "required": [
     "ticket_id",
-    "reservation_id",
-    "user_id",
-    "event_id",
-    "ticket_type_id"
+    "new_owner_user_id",
+    "holder_name",
+    "holder_document_type",
+    "holder_dni"
   ],
-  "title": "TicketIssued",
+  "title": "MarketTransfer",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

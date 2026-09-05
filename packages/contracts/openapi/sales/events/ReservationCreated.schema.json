@@ -1,4 +1,25 @@
 {
+  "$defs": {
+    "ReservationItem": {
+      "properties": {
+        "ticket_type_id": {
+          "format": "uuid",
+          "title": "Ticket Type Id",
+          "type": "string"
+        },
+        "quantity": {
+          "title": "Quantity",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ticket_type_id",
+        "quantity"
+      ],
+      "title": "ReservationItem",
+      "type": "object"
+    }
+  },
   "properties": {
     "reservation_id": {
       "format": "uuid",
@@ -10,21 +31,24 @@
       "title": "User Id",
       "type": "string"
     },
-    "ticket_type_id": {
-      "format": "uuid",
-      "title": "Ticket Type Id",
-      "type": "string"
-    },
     "event_id": {
       "format": "uuid",
       "title": "Event Id",
       "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ReservationItem"
+      },
+      "title": "Items",
+      "type": "array"
     },
     "quantity": {
       "title": "Quantity",
       "type": "integer"
     },
     "expires_at": {
+      "format": "date-time",
       "title": "Expires At",
       "type": "string"
     }
@@ -32,8 +56,8 @@
   "required": [
     "reservation_id",
     "user_id",
-    "ticket_type_id",
     "event_id",
+    "items",
     "quantity",
     "expires_at"
   ],

@@ -94,26 +94,18 @@ Wildcard: `ws.>`
 |---|---|---|---|
 | `ws.fanout.v1` | Identity, Entry | Gateway | Real-time notification to be forwarded over WebSocket |
 
-## Contract schemas without a subject
+## Contract schemas
 
-`packages/contracts/openapi/*/events/` is generated from `packages/contracts/src/contracts/events/`, and both still carry event shapes from an earlier design that no service ever publishes. The registry above lists what actually travels on the wire, so treat the following schemas as declared but dormant.
+`packages/contracts/openapi/<service>/events/` is generated from `packages/contracts/src/contracts/events/` by `scripts/export-openapi.sh`, and it now holds exactly one schema per domain subject listed above, named after the class that declares it. Each class carries the subject it belongs to in a `SUBJECT` class constant.
 
-| Service | Schemas with no publisher |
+The `market.*` shapes are declared in `contracts.events.sales`, because Sales is the service that publishes them, so they are exported to `packages/contracts/openapi/sales/events/`.
+
+Three subjects above deliberately have no schema:
+
+| Subject | Why |
 |---|---|
-| Catalog | `OrganisationCreated`, `TicketTypeDeleted` |
-| Entry | `EntryValidated`, `EntryRejected` |
-| Identity | `UserVerified`, `SessionEvicted`, `PasskeyReasserted` |
-| Sales | `QueueJoined`, `QueueAdmitted`, `ReservationFlagged` |
-| Ticketing | `TicketIssued`, `TicketFrozen`, `TicketCancelled`, `TicketUsed`, `QrMinted`, `QrDenied` |
+| `audit.events.v1` | Audit record rather than a domain event, and its payload is the writing service's own audit row |
+| `ws.fanout.v1` | Real-time notification envelope for the Gateway, not a domain event |
+| `catalog.event.draft.v1` | Subscribers exist but no code publishes it, so there is no payload to describe |
 
-The gap runs the other way too. These subjects travel but have no declared schema.
-
-| Service | Subjects with no schema |
-|---|---|
-| Catalog | `catalog.event.updated.v1`, `catalog.event.ongoing.v1`, `catalog.ticket_type.updated.v1`, `catalog.membership.changed.v1` |
-| Identity | `identity.fingerprint.seen.v1` |
-| Payments | `payments.chargeback.closed.v1` |
-| Sales | `market.ticket.freeze.v1`, `market.transfer.v1`, `market.listing.expired.v1`, `market.assignment.created.v1` |
-| Ticketing | `ticketing.ticket.state_changed` |
-
-No code outside the contracts package imports any of the dormant shapes, so nothing breaks by leaving them there. They are worth either implementing or removing before the contract package is taken as a description of the system.
+Entry publishes no domain events, so it has no events module and no `events/` directory.

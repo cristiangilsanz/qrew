@@ -143,7 +143,7 @@
     "queue_required",
     "queue_admit_rate_per_minute"
   ],
-  "title": "EventCancelled",
+  "title": "EventUpdated",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

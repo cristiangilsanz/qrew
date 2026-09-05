@@ -5,16 +5,17 @@
       "title": "Ticket Id",
       "type": "string"
     },
-    "jti": {
-      "title": "Jti",
+    "seller_user_id": {
+      "format": "uuid",
+      "title": "Seller User Id",
       "type": "string"
     }
   },
   "required": [
     "ticket_id",
-    "jti"
+    "seller_user_id"
   ],
-  "title": "QrMinted",
+  "title": "MarketListingExpired",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }
