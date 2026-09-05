@@ -1,15 +1,14 @@
 {
   "properties": {
-    "user_id": {
-      "format": "uuid",
-      "title": "User Id",
+    "fingerprint_hash": {
+      "title": "Fingerprint Hash",
       "type": "string"
     }
   },
   "required": [
-    "user_id"
+    "fingerprint_hash"
   ],
-  "title": "UserVerified",
+  "title": "FingerprintSeen",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

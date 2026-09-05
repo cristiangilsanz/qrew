@@ -10,9 +10,9 @@
       "title": "Event Id",
       "type": "string"
     },
-    "name": {
-      "title": "Name",
-      "type": "string"
+    "capacity": {
+      "title": "Capacity",
+      "type": "integer"
     },
     "price_cents": {
       "title": "Price Cents",
@@ -21,19 +21,14 @@
     "currency": {
       "title": "Currency",
       "type": "string"
-    },
-    "capacity": {
-      "title": "Capacity",
-      "type": "integer"
     }
   },
   "required": [
     "ticket_type_id",
     "event_id",
-    "name",
+    "capacity",
     "price_cents",
-    "currency",
-    "capacity"
+    "currency"
   ],
   "title": "TicketTypeCreated",
   "type": "object",

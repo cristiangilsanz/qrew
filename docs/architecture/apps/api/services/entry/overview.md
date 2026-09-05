@@ -42,7 +42,7 @@ Full spec: [`packages/contracts/openapi/entry/openapi.yaml`](../../../../../../p
 
 Entry publishes no domain events of its own. Scan outcomes are written to the local `scans` table and dispatched as audit records, and they trigger no state change in another service. See [events.md](events.md).
 
-Schemas: [`packages/contracts/openapi/entry/events/`](../../../../../../packages/contracts/openapi/entry/events/)
+Neither subject carries a declared schema, so Entry has no `events/` directory under [`packages/contracts/openapi/`](../../../../../../packages/contracts/openapi/).
 
 ### Consumed
 

@@ -11,30 +11,137 @@
       "type": "string"
     },
     "venue_id": {
-      "format": "uuid",
-      "title": "Venue Id",
-      "type": "string"
-    },
-    "name": {
-      "title": "Name",
-      "type": "string"
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Venue Id"
     },
     "starts_at": {
-      "title": "Starts At",
-      "type": "string"
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Starts At"
     },
     "ends_at": {
-      "title": "Ends At",
-      "type": "string"
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ends At"
+    },
+    "sale_starts_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sale Starts At"
+    },
+    "sale_ends_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sale Ends At"
+    },
+    "max_tickets_per_user": {
+      "title": "Max Tickets Per User",
+      "type": "integer"
+    },
+    "queue_required": {
+      "title": "Queue Required",
+      "type": "boolean"
+    },
+    "queue_admit_rate_per_minute": {
+      "title": "Queue Admit Rate Per Minute",
+      "type": "integer"
+    },
+    "latitude": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Latitude"
+    },
+    "longitude": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Longitude"
+    },
+    "geofence_radius_m": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Geofence Radius M"
+    },
+    "timezone": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Timezone"
     }
   },
   "required": [
     "event_id",
     "organisation_id",
-    "venue_id",
-    "name",
-    "starts_at",
-    "ends_at"
+    "max_tickets_per_user",
+    "queue_required",
+    "queue_admit_rate_per_minute"
   ],
   "title": "EventPublished",
   "type": "object",

@@ -1,15 +1,15 @@
 {
   "properties": {
-    "ticket_id": {
+    "payment_id": {
       "format": "uuid",
-      "title": "Ticket Id",
+      "title": "Payment Id",
       "type": "string"
     },
-    "reason": {
-      "title": "Reason",
+    "user_id": {
+      "title": "User Id",
       "type": "string"
     },
-    "device_id": {
+    "reservation_id": {
       "anyOf": [
         {
           "format": "uuid",
@@ -20,14 +20,14 @@
         }
       ],
       "default": null,
-      "title": "Device Id"
+      "title": "Reservation Id"
     }
   },
   "required": [
-    "ticket_id",
-    "reason"
+    "payment_id",
+    "user_id"
   ],
-  "title": "TicketFrozen",
+  "title": "ChargebackClosed",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

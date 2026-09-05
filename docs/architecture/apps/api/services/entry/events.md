@@ -17,4 +17,4 @@ A message missing `event_id` or `organisation_id`, or missing `organisation_id` 
 
 Scan outcomes are written to the local `scans` table and dispatched as audit records. They do not trigger downstream state changes in other services.
 
-The contracts package declares `EntryValidatedData` and `EntryRejectedData`, but nothing imports them. They are left over from a design in which the door published its own domain events.
+Because Entry publishes no domain events, the contracts package declares no event schemas for it: there is no `contracts.events.entry` module and no `packages/contracts/openapi/entry/events/` directory.

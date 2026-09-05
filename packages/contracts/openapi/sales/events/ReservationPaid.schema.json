@@ -1,19 +1,95 @@
 {
+  "$defs": {
+    "ReservationHolder": {
+      "properties": {
+        "position": {
+          "title": "Position",
+          "type": "integer"
+        },
+        "holder_name": {
+          "title": "Holder Name",
+          "type": "string"
+        },
+        "holder_document_type": {
+          "title": "Holder Document Type",
+          "type": "string"
+        },
+        "holder_dni": {
+          "title": "Holder Dni",
+          "type": "string"
+        }
+      },
+      "required": [
+        "position",
+        "holder_name",
+        "holder_document_type",
+        "holder_dni"
+      ],
+      "title": "ReservationHolder",
+      "type": "object"
+    },
+    "ReservationItem": {
+      "properties": {
+        "ticket_type_id": {
+          "format": "uuid",
+          "title": "Ticket Type Id",
+          "type": "string"
+        },
+        "quantity": {
+          "title": "Quantity",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ticket_type_id",
+        "quantity"
+      ],
+      "title": "ReservationItem",
+      "type": "object"
+    }
+  },
   "properties": {
     "reservation_id": {
       "format": "uuid",
       "title": "Reservation Id",
       "type": "string"
     },
-    "payment_id": {
+    "user_id": {
       "format": "uuid",
-      "title": "Payment Id",
+      "title": "User Id",
       "type": "string"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ReservationItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "quantity": {
+      "title": "Quantity",
+      "type": "integer"
+    },
+    "holders": {
+      "items": {
+        "$ref": "#/$defs/ReservationHolder"
+      },
+      "title": "Holders",
+      "type": "array"
     }
   },
   "required": [
     "reservation_id",
-    "payment_id"
+    "user_id",
+    "event_id",
+    "items",
+    "quantity",
+    "holders"
   ],
   "title": "ReservationPaid",
   "type": "object",

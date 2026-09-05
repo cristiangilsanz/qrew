@@ -1,6 +1,6 @@
 # Sales Event Contracts
 
-The `sales.*` subjects below are published to stream `SALES`. The resale marketplace lives in the same service but publishes under the `market.*` prefix, so those subjects land in stream `MARKET`. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
+The `sales.*` subjects below are published to stream `SALES`. The resale marketplace lives in the same service but publishes under the `market.*` prefix, so those subjects land in stream `MARKET`. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope). Both prefixes are declared in `contracts.events.sales`, so their schemas live together in [`packages/contracts/openapi/sales/events/`](../../../../../../packages/contracts/openapi/sales/events/).
 
 
 ## `sales.reservation.created.v1`
@@ -11,30 +11,37 @@ Emitted when a reservation is successfully placed. Ticketing pre-creates a ticke
 |---|---|---|
 | `reservation_id` | UUID | New reservation |
 | `user_id` | UUID | Purchasing user |
-| `ticket_type_id` | UUID | Ticket type reserved |
 | `event_id` | UUID | Target event |
-| `quantity` | int | Number of tickets |
+| `items` | array | One `{ticket_type_id, quantity}` entry per reserved tier |
+| `quantity` | int | Total number of seats across the tiers |
 | `expires_at` | ISO 8601 | Reservation expiry time |
 
 
 ## `sales.reservation.paid.v1`
 
-Emitted after Sales confirms a payment and marks the reservation as paid. Ticketing issues the ticket.
+Emitted after Sales confirms a payment and marks the reservation as paid. Ticketing issues the tickets and stamps each holder onto one of them.
 
 | Field | Type | Description |
 |---|---|---|
 | `reservation_id` | UUID | Paid reservation |
-| `payment_id` | UUID | Associated payment |
+| `user_id` | UUID | Purchasing user |
+| `event_id` | UUID | Target event |
+| `items` | array | One `{ticket_type_id, quantity}` entry per paid tier |
+| `quantity` | int | Total number of seats across the tiers |
+| `holders` | array | One `{position, holder_name, holder_document_type, holder_dni}` entry per seat |
 
 
 ## `sales.reservation.cancelled.v1`
 
-Emitted when a reservation is cancelled or expires. Ticketing cancels the associated ticket.
+Emitted when a reservation is cancelled by the buyer or by an organiser. Ticketing cancels the associated tickets. The cancellation reason stays in the audit record and does not travel in the payload.
 
 | Field | Type | Description |
 |---|---|---|
 | `reservation_id` | UUID | Cancelled reservation |
-| `reason` | string | Cancellation reason |
+| `user_id` | UUID | Owner of the reservation |
+| `event_id` | UUID | Event the reservation belonged to |
+| `items` | array | One `{ticket_type_id, quantity}` entry per released tier |
+| `quantity` | int | Total number of seats released |
 
 
 ## `sales.reservation.expired.v1`
@@ -46,8 +53,8 @@ Emitted by the reservation sweeper when a reservation times out before payment. 
 | `reservation_id` | UUID | Expired reservation |
 | `user_id` | UUID | Owner of the reservation |
 | `event_id` | UUID | Event the reservation belonged to |
-| `ticket_type_id` | UUID | Ticket type released |
-| `quantity` | integer | Seats returned to the inventory |
+| `items` | array | One `{ticket_type_id, quantity}` entry per released tier |
+| `quantity` | int or null | Total seats returned to the inventory, null when the swept row carried none |
 
 
 ## `market.ticket.freeze.v1`

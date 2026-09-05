@@ -5,9 +5,9 @@
       "title": "Payment Id",
       "type": "string"
     },
-    "reservation_id": {
+    "user_id": {
       "format": "uuid",
-      "title": "Reservation Id",
+      "title": "User Id",
       "type": "string"
     },
     "amount_cents": {
@@ -18,17 +18,38 @@
       "title": "Currency",
       "type": "string"
     },
-    "stripe_intent_id": {
-      "title": "Stripe Intent Id",
-      "type": "string"
+    "reservation_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reservation Id"
+    },
+    "market_assignment_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Assignment Id"
     }
   },
   "required": [
     "payment_id",
-    "reservation_id",
+    "user_id",
     "amount_cents",
-    "currency",
-    "stripe_intent_id"
+    "currency"
   ],
   "title": "PaymentInitiated",
   "type": "object",

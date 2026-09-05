@@ -10,17 +10,30 @@
       "title": "User Id",
       "type": "string"
     },
-    "platform": {
-      "title": "Platform",
+    "attested_at": {
+      "format": "date-time",
+      "title": "Attested At",
       "type": "string"
+    },
+    "platform": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Platform"
     }
   },
   "required": [
     "device_id",
     "user_id",
-    "platform"
+    "attested_at"
   ],
-  "title": "DeviceBound",
+  "title": "DeviceAttested",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

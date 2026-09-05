@@ -1,18 +1,59 @@
 {
+  "$defs": {
+    "ReservationItem": {
+      "properties": {
+        "ticket_type_id": {
+          "format": "uuid",
+          "title": "Ticket Type Id",
+          "type": "string"
+        },
+        "quantity": {
+          "title": "Quantity",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ticket_type_id",
+        "quantity"
+      ],
+      "title": "ReservationItem",
+      "type": "object"
+    }
+  },
   "properties": {
     "reservation_id": {
       "format": "uuid",
       "title": "Reservation Id",
       "type": "string"
     },
-    "reason": {
-      "title": "Reason",
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
       "type": "string"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ReservationItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "quantity": {
+      "title": "Quantity",
+      "type": "integer"
     }
   },
   "required": [
     "reservation_id",
-    "reason"
+    "user_id",
+    "event_id",
+    "items",
+    "quantity"
   ],
   "title": "ReservationCancelled",
   "type": "object",

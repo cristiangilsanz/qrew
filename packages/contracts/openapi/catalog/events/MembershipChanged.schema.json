@@ -1,18 +1,18 @@
 {
   "properties": {
-    "payment_id": {
+    "organisation_id": {
       "format": "uuid",
-      "title": "Payment Id",
+      "title": "Organisation Id",
       "type": "string"
     },
     "user_id": {
+      "format": "uuid",
       "title": "User Id",
       "type": "string"
     },
-    "reservation_id": {
+    "role": {
       "anyOf": [
         {
-          "format": "uuid",
           "type": "string"
         },
         {
@@ -20,14 +20,14 @@
         }
       ],
       "default": null,
-      "title": "Reservation Id"
+      "title": "Role"
     }
   },
   "required": [
-    "payment_id",
+    "organisation_id",
     "user_id"
   ],
-  "title": "ChargebackOpened",
+  "title": "MembershipChanged",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

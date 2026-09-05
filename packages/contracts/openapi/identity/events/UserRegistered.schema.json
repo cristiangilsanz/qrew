@@ -6,6 +6,7 @@
       "type": "string"
     },
     "registered_at": {
+      "format": "date-time",
       "title": "Registered At",
       "type": "string"
     },

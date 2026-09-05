@@ -5,20 +5,42 @@
       "title": "Payment Id",
       "type": "string"
     },
-    "reservation_id": {
-      "format": "uuid",
-      "title": "Reservation Id",
+    "user_id": {
+      "title": "User Id",
       "type": "string"
     },
-    "refund_cents": {
-      "title": "Refund Cents",
+    "reservation_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reservation Id"
+    },
+    "amount_refunded_cents": {
+      "title": "Amount Refunded Cents",
       "type": "integer"
+    },
+    "amount_total_cents": {
+      "title": "Amount Total Cents",
+      "type": "integer"
+    },
+    "is_full_refund": {
+      "title": "Is Full Refund",
+      "type": "boolean"
     }
   },
   "required": [
     "payment_id",
-    "reservation_id",
-    "refund_cents"
+    "user_id",
+    "amount_refunded_cents",
+    "amount_total_cents",
+    "is_full_refund"
   ],
   "title": "PaymentRefunded",
   "type": "object",
