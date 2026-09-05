@@ -6,8 +6,17 @@
       "type": "string"
     },
     "user_id": {
-      "title": "User Id",
-      "type": "string"
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "User Id"
     },
     "reservation_id": {
       "anyOf": [
@@ -21,6 +30,19 @@
       ],
       "default": null,
       "title": "Reservation Id"
+    },
+    "market_assignment_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Assignment Id"
     },
     "amount_refunded_cents": {
       "title": "Amount Refunded Cents",
@@ -37,7 +59,6 @@
   },
   "required": [
     "payment_id",
-    "user_id",
     "amount_refunded_cents",
     "amount_total_cents",
     "is_full_refund"

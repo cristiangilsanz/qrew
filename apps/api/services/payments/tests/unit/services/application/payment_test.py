@@ -17,6 +17,7 @@ from conftest import make_payment
 
 _PATCH_GET_CTX = "com.qode.qrew.v1.payments.services.application.payment._get_reservation_context"
 _PATCH_CRYPTO = "com.qode.qrew.v1.payments.services.application.payment.pii_crypto"
+_PATCH_RECORD = "com.qode.qrew.v1.payments.services.application.payment.record_event"
 _PATCH_CLAIM = "com.qode.qrew.v1.payments.services.application.webhooks.idempotency.claim_event"
 _PATCH_DISPATCH = (
     "com.qode.qrew.v1.payments.services.application.webhooks.dispatch.dispatch_webhook_event"
@@ -391,3 +392,98 @@ class TestPaymentServiceHandleWebhook:
         stripe.verify_webhook = AsyncMock(return_value={"type": "x"})
         with pytest.raises(WebhookError, match="payload rejected"):
             await svc.handle_webhook(b"payload", "sig_abc")
+
+
+class TestPaymentEventPayloads:
+    # collects the payload of every event a call recorded, keyed by subject
+    @staticmethod
+    def _events(mock: AsyncMock) -> dict[str, dict[str, object]]:
+        return {call.kwargs["subject"]: call.kwargs["data"] for call in mock.await_args_list}
+
+    # runs an outcome against a payment and returns the events it published
+    @classmethod
+    async def _publish(cls, payment: SimpleNamespace, outcome: str) -> dict[str, dict[str, object]]:
+        svc, _, _ = _make_svc(by_intent=payment)
+        with patch(_PATCH_RECORD, new=AsyncMock()) as mock_record:
+            if outcome == "succeeded":
+                await svc.apply_succeeded(intent_id="pi_test")
+            elif outcome == "failed":
+                await svc.apply_failed(
+                    intent_id="pi_test", failure_code="card_declined", failure_message="No"
+                )
+            elif outcome == "refunded":
+                await svc.apply_refund(intent_id="pi_test", amount_refunded=2000, amount_total=2000)
+            elif outcome == "chargeback_opened":
+                await svc.apply_chargeback(intent_id="pi_test")
+            else:
+                await svc.record_chargeback_closed(intent_id="pi_test")
+        return cls._events(mock_record)
+
+    # verifies that a market payment never emits a reservation id
+    @pytest.mark.parametrize(
+        ("outcome", "subject"),
+        [
+            ("succeeded", "payments.payment.succeeded.v1"),
+            ("failed", "payments.payment.failed.v1"),
+            ("refunded", "payments.payment.refunded.v1"),
+            ("chargeback_opened", "payments.chargeback.opened.v1"),
+            ("chargeback_closed", "payments.chargeback.closed.v1"),
+        ],
+    )
+    async def test_market_payment_carries_assignment_and_omits_reservation(
+        self, outcome: str, subject: str, user_id: uuid.UUID
+    ) -> None:
+        assignment_id = uuid.uuid4()
+        payment = make_payment(
+            reservation_id=None,
+            market_assignment_id=assignment_id,
+            user_id=user_id,
+            status=PaymentStatus.succeeded,
+        )
+        data = (await self._publish(payment, outcome))[subject]
+        assert "reservation_id" not in data
+        assert data["market_assignment_id"] == str(assignment_id)
+        assert data["user_id"] == str(user_id)
+        assert str(assignment_id) not in ("None", "")
+
+    # verifies that a reservation payment never emits a market assignment id
+    @pytest.mark.parametrize(
+        ("outcome", "subject"),
+        [
+            ("succeeded", "payments.payment.succeeded.v1"),
+            ("failed", "payments.payment.failed.v1"),
+            ("refunded", "payments.payment.refunded.v1"),
+            ("chargeback_opened", "payments.chargeback.opened.v1"),
+            ("chargeback_closed", "payments.chargeback.closed.v1"),
+        ],
+    )
+    async def test_reservation_payment_carries_reservation_and_omits_assignment(
+        self, outcome: str, subject: str, reservation_id: uuid.UUID
+    ) -> None:
+        payment = make_payment(
+            reservation_id=reservation_id,
+            market_assignment_id=None,
+            status=PaymentStatus.succeeded,
+        )
+        data = (await self._publish(payment, outcome))[subject]
+        assert data["reservation_id"] == str(reservation_id)
+        assert "market_assignment_id" not in data
+
+    # verifies that a payment without a user omits the payer instead of sending an empty string
+    async def test_payment_without_user_omits_user_id(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
+        payment.user_id = None
+        data = (await self._publish(payment, "failed"))["payments.payment.failed.v1"]
+        assert "user_id" not in data
+
+    # verifies that the succeeded event keeps the intent id only on the market variant
+    async def test_payment_intent_id_only_on_market_variant(
+        self, reservation_id: uuid.UUID
+    ) -> None:
+        market = make_payment(
+            reservation_id=None, market_assignment_id=uuid.uuid4(), status=PaymentStatus.succeeded
+        )
+        reservation = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
+        subject = "payments.payment.succeeded.v1"
+        assert (await self._publish(market, "succeeded"))[subject]["payment_intent_id"] == "pi_test"
+        assert "payment_intent_id" not in (await self._publish(reservation, "succeeded"))[subject]

@@ -105,6 +105,18 @@ async def _get_reservation_context(
     return _ReservationContext(amount_cents=0, currency="", is_valid=False, error_code="unknown")
 
 
+# collects the identifiers a payment actually carries, omitting the ones it has none of
+def _payment_scope(payment: Payment) -> dict[str, Any]:
+    scope: dict[str, Any] = {"payment_id": str(payment.id)}
+    if payment.reservation_id is not None:
+        scope["reservation_id"] = str(payment.reservation_id)
+    if payment.market_assignment_id is not None:
+        scope["market_assignment_id"] = str(payment.market_assignment_id)
+    if payment.user_id is not None:
+        scope["user_id"] = str(payment.user_id)
+    return scope
+
+
 # publishes a payment event onto the shared nats connection
 async def _publish_event(
     session: AsyncSession,
@@ -255,27 +267,10 @@ class PaymentService:
         payment.status = PaymentStatus.succeeded
         await self._repo.flush()
 
+        data = _payment_scope(payment)
         if payment.market_assignment_id is not None:
-            await _publish_event(
-                self._session,
-                "payments.payment.succeeded.v1",
-                {
-                    "payment_id": str(payment.id),
-                    "market_assignment_id": str(payment.market_assignment_id),
-                    "payment_intent_id": intent_id,
-                    "user_id": str(payment.user_id) if payment.user_id else "",
-                },
-            )
-        else:
-            await _publish_event(
-                self._session,
-                "payments.payment.succeeded.v1",
-                {
-                    "payment_id": str(payment.id),
-                    "reservation_id": str(payment.reservation_id),
-                    "user_id": str(payment.user_id) if payment.user_id else "",
-                },
-            )
+            data["payment_intent_id"] = intent_id
+        await _publish_event(self._session, "payments.payment.succeeded.v1", data)
 
     # marks a payment as failed and publishes the outcome
     @traced("payment.apply_failed")
@@ -297,9 +292,7 @@ class PaymentService:
             self._session,
             "payments.payment.failed.v1",
             {
-                "payment_id": str(payment.id),
-                "reservation_id": str(payment.reservation_id),
-                "user_id": str(payment.user_id) if payment.user_id else "",
+                **_payment_scope(payment),
                 "failure_code": failure_code,
                 "failure_message": failure_message,
             },
@@ -321,9 +314,7 @@ class PaymentService:
             self._session,
             "payments.payment.refunded.v1",
             {
-                "payment_id": str(payment.id),
-                "reservation_id": str(payment.reservation_id),
-                "user_id": str(payment.user_id) if payment.user_id else "",
+                **_payment_scope(payment),
                 "amount_refunded_cents": amount_refunded,
                 "amount_total_cents": amount_total,
                 "is_full_refund": is_full_refund,
@@ -341,11 +332,7 @@ class PaymentService:
         await _publish_event(
             self._session,
             "payments.chargeback.opened.v1",
-            {
-                "payment_id": str(payment.id),
-                "reservation_id": str(payment.reservation_id),
-                "user_id": str(payment.user_id) if payment.user_id else "",
-            },
+            _payment_scope(payment),
         )
 
     # publishes that a chargeback has closed
@@ -357,11 +344,7 @@ class PaymentService:
         await _publish_event(
             self._session,
             "payments.chargeback.closed.v1",
-            {
-                "payment_id": str(payment.id),
-                "reservation_id": str(payment.reservation_id),
-                "user_id": str(payment.user_id) if payment.user_id else "",
-            },
+            _payment_scope(payment),
         )
 
     # updates a payment to a non final stripe status
