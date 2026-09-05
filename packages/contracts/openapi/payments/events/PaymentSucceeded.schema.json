@@ -6,8 +6,17 @@
       "type": "string"
     },
     "user_id": {
-      "title": "User Id",
-      "type": "string"
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "User Id"
     },
     "reservation_id": {
       "anyOf": [
@@ -49,8 +58,7 @@
     }
   },
   "required": [
-    "payment_id",
-    "user_id"
+    "payment_id"
   ],
   "title": "PaymentSucceeded",
   "type": "object",

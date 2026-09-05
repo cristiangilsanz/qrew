@@ -546,7 +546,7 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - borde
+      - publica
       - interna
 
 
@@ -565,7 +565,7 @@ services:
       gateway:
         condition: service_healthy
     networks:
-      - borde
+      - publica
 
 
   jaeger:
@@ -582,7 +582,7 @@ services:
       - interna
 
 networks:
-  borde:
+  publica:
     driver: bridge
   interna:
     driver: bridge
