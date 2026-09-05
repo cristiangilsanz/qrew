@@ -2,7 +2,7 @@
 
 Entry does not publish domain events to other services.
 
-It consumes `ticketing.ticket.state_changed` to maintain its local ticket projection, and publishes audit records to `audit.events.v1` like every other service.
+It consumes `ticketing.ticket.state_changed` to maintain its local ticket projection, and publishes audit records to `audit.events.v1`. It also publishes `ws.fanout.v1` on every scan outcome, admitted or rejected, so the Gateway can push it to the organiser's open WebSocket. Those two subjects are the whole of what Entry emits.
 
 It also consumes four catalog subjects to maintain the projections that let it authorise a request without calling catalog over HTTP:
 
@@ -15,6 +15,6 @@ It also consumes four catalog subjects to maintain the projections that let it a
 
 A message missing `event_id` or `organisation_id`, or missing `organisation_id` or `user_id` for the membership subject, is logged and dropped rather than retried.
 
-Scan outcomes such as `EntryValidatedData` and `EntryRejectedData` are written to the local `scans` table and dispatched as audit events.
+Scan outcomes are written to the local `scans` table and dispatched as audit records. They do not trigger downstream state changes in other services.
 
-They do not trigger downstream state changes in other services.
+The contracts package declares `EntryValidatedData` and `EntryRejectedData`, but nothing imports them. They are left over from a design in which the door published its own domain events.

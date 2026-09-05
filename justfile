@@ -337,6 +337,10 @@ ticketing-dev:
 ticketing-worker:
     cd {{TICKETING}} && uv run ticketing-worker
 
+# Run ticketing Arq worker
+ticketing-job-worker:
+    cd {{TICKETING}} && uv run ticketing-arq-worker
+
 # Apply ticketing migrations
 ticketing-db-upgrade:
     cd {{TICKETING}} && uv run alembic upgrade head
@@ -358,6 +362,10 @@ sales-dev:
 # Run sales NATS worker
 sales-worker:
     cd {{SALES}} && uv run sales-worker
+
+# Run sales Arq worker
+sales-job-worker:
+    cd {{SALES}} && uv run sales-arq-worker
 
 # Apply sales migrations
 sales-db-upgrade:

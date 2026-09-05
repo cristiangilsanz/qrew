@@ -37,8 +37,10 @@ Full spec: [`packages/contracts/openapi/entry/openapi.yaml`](../../../../../../p
 
 | Event | NATS Subject | Description |
 |-------|-------------|-------------|
-| `EntryValidated` | `entry.entry.validated.v1` | Emitted when a ticket was successfully scanned and admitted. |
-| `EntryRejected` | `entry.entry.rejected.v1` | Emitted when a scan attempt was rejected due to an invalid token, wrong venue, or already used ticket. |
+| `WsFanout` | `ws.fanout.v1` | Published on every scan outcome, admitted or rejected, so the Gateway forwards it to the organiser's open WebSocket. Sent straight to NATS, not through an outbox. |
+| `AuditEvent` | `audit.events.v1` | Scan outcomes and scanner actions recorded for audit. |
+
+Entry publishes no domain events of its own. Scan outcomes are written to the local `scans` table and dispatched as audit records, and they trigger no state change in another service. See [events.md](events.md).
 
 Schemas: [`packages/contracts/openapi/entry/events/`](../../../../../../packages/contracts/openapi/entry/events/)
 

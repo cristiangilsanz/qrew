@@ -118,8 +118,7 @@ flowchart TB
     catalog   -->|"Publish · Audit"| nats
     sales     -->|"Publish · Audit"| nats
     ticketing -->|"Publish · Audit"| nats
-    payments  -->|"Publish · Audit"| nats
-    entry     -->|"Publish"| nats
+    entry     -->|"Publish · Audit, fanout"| nats
 
     id_worker    -->|"Publish · Outbox drain"| nats
     cat_worker   -->|"Publish · Outbox drain"| nats
@@ -177,12 +176,15 @@ Identity, Catalog, Sales, Payments and Ticketing no longer publish a domain even
 request is being served. They record it in their own `event_outbox` table, inside the same
 transaction as the change that caused it, and a drainer job running every minute hands it to
 the broker afterwards. The request therefore commits or fails as a whole, and an unreachable
-broker delays the event rather than losing it. Only the audit record still leaves the request
-path directly.
+broker delays the event rather than losing it. Two things still leave the request path
+directly, the audit record and the WebSocket fanout, because losing either costs nothing and
+neither carries state another service depends on.
 
 The third block is the third-party services, which take on payment, message delivery and the
-checks the platform does not perform itself. The server calls almost all of them, and whatever
-comes back enters through the API Gateway, so no call escapes authentication.
+checks the platform does not perform itself. The server calls most of them, and whatever comes
+back enters through the API Gateway. The Stripe webhook is the one that arrives unprompted, on
+a route declared public, and what admits it is the signature Stripe computes over the body
+rather than a session.
 
 ### Style
 

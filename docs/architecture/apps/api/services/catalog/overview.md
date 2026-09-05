@@ -58,7 +58,6 @@ Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../../..
 
 | Event | NATS Subject | Description |
 |-------|-------------|-------------|
-| `OrganisationCreated` | `catalog.organisation.created.v1` | Emitted when a new organisation was registered. |
 | `EventPublished` | `catalog.event.published.v1` | Emitted when an event was published and made visible. |
 | `EventUpdated` | `catalog.event.updated.v1` | Emitted when event details are changed. |
 | `EventOngoing` | `catalog.event.ongoing.v1` | Emitted when an event is marked as started. |
@@ -66,6 +65,8 @@ Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../../..
 | `TicketTypeCreated` | `catalog.ticket_type.created.v1` | Emitted when a ticket type was added to an event. |
 | `TicketTypeUpdated` | `catalog.ticket_type.updated.v1` | Emitted when a ticket type capacity or price changes. |
 | `MembershipChanged` | `catalog.membership.changed.v1` | Emitted when an organisation roster changes, on creation, invitation, addition, or removal. A null `role` means the member left. |
+
+Catalog also publishes audit records to `audit.events.v1`.
 
 Schemas: [`packages/contracts/openapi/catalog/events/`](../../../../../../packages/contracts/openapi/catalog/events/)
 

@@ -20,8 +20,12 @@ STREAM = "ticketing"
 # updates the local ticket context from a ticket state change message
 async def handle_ticket_state_changed(msg: Any) -> None:
     try:
-        data = json.loads(msg.data.decode())
-    except (json.JSONDecodeError, UnicodeDecodeError):
+        body = json.loads(msg.data.decode())
+        assert isinstance(body, dict)
+        raw: Any = body["data"]  # pyright: ignore[reportUnknownVariableType]
+        assert isinstance(raw, dict)
+        data: dict[str, Any] = raw  # type: ignore[assignment]
+    except (json.JSONDecodeError, UnicodeDecodeError, KeyError, AssertionError):
         await logger.awarning("ticket_projector.invalid_message")
         return
 

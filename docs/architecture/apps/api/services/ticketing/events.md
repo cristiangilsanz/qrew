@@ -1,6 +1,8 @@
 # Ticketing Event Contracts
 
-Ticketing publishes to subjects not covered by a dedicated named stream. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
+Published to stream `ticketing`, whose name is lowercase because the entry subscriber that creates it spells it that way. These are the only two subjects Ticketing publishes, and neither carries a `.v1` suffix. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
+
+Ticketing also publishes audit records to `audit.events.v1`.
 
 
 ## `ticketing.ticket.state_changed`
@@ -11,15 +13,15 @@ Emitted on every ticket state transition. Entry maintains a local `ticket_contex
 |---|---|---|
 | `ticket_id` | UUID | Affected ticket |
 | `event_id` | UUID | Event the ticket belongs to |
-| `ticket_type_id` | UUID | Ticket type |
+| `state` | string | New state: `reserved`, `issued`, `scanning`, `redeemed`, `on_sale`, `frozen`, `flagged`, `cancelled`, `expired` |
+| `previous_state` | string | State the ticket held before the transition |
 | `owner_user_id` | UUID | Ticket owner |
 | `bound_device_id` | UUID or null | Device bound to this ticket, if any |
-| `state` | string | New state: `reserved`, `issued`, `scanning`, `redeemed`, `on_sale`, `frozen`, `flagged`, `cancelled`, `expired` |
 
 
 ## `ticketing.ticket.restored`
 
-Emitted when a previously frozen ticket is restored after a device re-enrolment.
+Emitted when a previously frozen ticket is restored after a device re-enrolment. No service subscribes to it.
 
 | Field | Type | Description |
 |---|---|---|

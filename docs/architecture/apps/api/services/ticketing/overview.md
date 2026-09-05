@@ -36,13 +36,12 @@ Full spec: [`packages/contracts/openapi/ticketing/openapi.yaml`](../../../../../
 
 | Event | NATS Subject | Description |
 |-------|-------------|-------------|
-| `TicketIssued` | `ticketing.ticket.issued.v1` | Emitted when a ticket was transitioned from reserved to issued. |
-| `TicketFrozen` | `ticketing.ticket.frozen.v1` | Emitted when a ticket was frozen due to device revocation or policy. |
-| `TicketCancelled` | `ticketing.ticket.cancelled.v1` | Emitted when a ticket was cancelled. |
-| `TicketRestored` | `ticketing.ticket.restored.v1` | Emitted when a frozen or cancelled ticket was restored. |
-| `TicketUsed` | `ticketing.ticket.used.v1` | Emitted when a ticket was marked as used at entry. |
-| `QrMinted` | `ticketing.qr.minted.v1` | Emitted when a QR token was successfully minted. |
-| `QrDenied` | `ticketing.qr.denied.v1` | Emitted when a QR token request was denied. |
+| `TicketStateChanged` | `ticketing.ticket.state_changed` | Emitted on every ticket state transition. Entry keeps its `TicketContext` projection from it. |
+| `TicketRestored` | `ticketing.ticket.restored` | Emitted when a frozen ticket was restored onto a re-enrolled device. No service subscribes to it yet. |
+
+Neither subject carries a `.v1` suffix, unlike every other domain subject on the platform. See [subjects.md](../../messaging/subjects.md) for the full registry.
+
+Ticketing also publishes audit records to `audit.events.v1`.
 
 Schemas: [`packages/contracts/openapi/ticketing/events/`](../../../../../../packages/contracts/openapi/ticketing/events/)
 
@@ -53,13 +52,18 @@ Every event is recorded in the `ticketing.event_outbox` table inside the same tr
 | Event | NATS Subject | Action |
 |-------|-------------|--------|
 | `EventPublished` | `catalog.event.published.v1` | Upserts the `EventVenueContext` projection. |
+| `EventOngoing` | `catalog.event.ongoing.v1` | Upserts the projection with the event marked as ongoing. |
 | `EventCancelled` | `catalog.event.cancelled.v1` | Marks event context as cancelled and cancels issued tickets. |
-| `VenueCreated` | `catalog.venue.created.v1` | Upserts venue geofence and timezone into the projection. |
+| `EventDraft` | `catalog.event.draft.v1` | Upserts the projection with the event marked as draft. No service publishes this subject, so the handler never fires. |
 | `DeviceBound` | `identity.device.attested.v1` | Upserts the `DeviceContext` projection for QR binding. |
 | `DeviceRevoked` | `identity.device.revoked.v1` | Upserts the device context and freezes all tickets bound to that device. |
 | `ReservationCreated` | `sales.reservation.created.v1` | Creates tickets in `reserved` state. |
 | `ReservationPaid` | `sales.reservation.paid.v1` | Transitions reserved tickets to `issued`. |
 | `ReservationCancelled` | `sales.reservation.cancelled.v1` | Cancels reserved or issued tickets. |
+| `ReservationExpired` | `sales.reservation.expired.v1` | Releases whatever the expired reservation was holding. |
+| `TicketFreeze` | `market.ticket.freeze.v1` | Freezes a listed ticket so it stops being usable at the door. |
+| `TicketTransfer` | `market.transfer.v1` | Moves ticket ownership and holder details to the resale buyer. |
+| `ListingExpired` | `market.listing.expired.v1` | Returns an unsold listed ticket to its holder. |
 
 ## Background Workers
 
@@ -71,6 +75,7 @@ Every event is recorded in the `ticketing.event_outbox` table inside the same tr
 | `catalog.*` | NATS subscriber | Keeps the `EventVenueContext` projection up to date. |
 | `identity.*` | NATS subscriber | Keeps the `DeviceContext` projection up to date and enforces device revocation. |
 | `sales.*` | NATS subscriber | Drives ticket creation and state transitions from reservation events. |
+| `market.*` | NATS subscriber | Freezes listed tickets, applies resale transfers, and restores tickets whose listing expired. |
 
 The arq jobs run in the `ticketing-arq-worker` container, which consumes the `qrew:jobs:ticketing` queue. The NATS subscribers run in the separate `ticketing-worker` container.
 

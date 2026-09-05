@@ -31,10 +31,10 @@ uv run dev
 
 ## Worker
 
-Start the background worker in a separate terminal. The worker subscribes to `audit.events.v1` and appends received records to the tamper evident audit log.
+Start the background worker in a separate terminal. The worker subscribes to `audit.events.v1` and appends received records to the tamper evident audit log. It also verifies the hash chain on a nightly schedule.
 
 ```bash
-uv run worker
+uv run audit-worker
 ```
 
 ## Tests

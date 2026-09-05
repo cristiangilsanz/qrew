@@ -5,7 +5,7 @@ Published to stream `PAYMENTS`. All events wrap the [EventEnvelope](../../messag
 
 ## `payments.payment.initiated.v1`
 
-Emitted when a Stripe PaymentIntent is created and the client secret is returned to the frontend.
+Emitted when a Stripe PaymentIntent is created and the client secret is returned to the frontend. No service subscribes to it.
 
 | Field | Type | Description |
 |---|---|---|

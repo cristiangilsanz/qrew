@@ -1,6 +1,8 @@
 # Identity Event Contracts
 
-Published to stream `IDENTITY`. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
+Published to stream `IDENTITY`. These four are the only `identity.*` subjects Identity emits. All events wrap the [EventEnvelope](../../messaging/messaging.md#eventenvelope).
+
+Outside its own prefix, Identity also publishes `audit.events.v1` and `ws.fanout.v1`, both straight to NATS rather than through the outbox.
 
 
 ## `identity.user.registered.v1`

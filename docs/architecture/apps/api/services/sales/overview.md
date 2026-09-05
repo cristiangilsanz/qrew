@@ -53,9 +53,12 @@ Full spec: [`packages/contracts/openapi/sales/openapi.yaml`](../../../../../../p
 | `ReservationExpired` | `sales.reservation.expired.v1` | Emitted when a reservation TTL elapsed without payment. |
 | `ReservationCancelled` | `sales.reservation.cancelled.v1` | Emitted when a reservation was explicitly cancelled. |
 | `ReservationPaid` | `sales.reservation.paid.v1` | Emitted when a reservation was settled after successful payment. |
-| `ReservationFlagged` | `sales.reservation.flagged.v1` | Emitted when a reservation was flagged for fraud review. |
-| `QueueJoined` | `sales.queue.joined.v1` | Emitted when a user joined the waitlist queue. |
-| `QueueAdmitted` | `sales.queue.admitted.v1` | Emitted when a queued user was admitted and a reservation window opened. |
+| `TicketFreeze` | `market.ticket.freeze.v1` | Emitted when a ticket was listed for resale, so Ticketing stops it being usable at the door. |
+| `TicketTransfer` | `market.transfer.v1` | Emitted when a listed ticket changed owner, carrying the new holder's name and identity document. |
+| `ListingExpired` | `market.listing.expired.v1` | Emitted when a listing expired without a buyer and the ticket returns to its holder. |
+| `AssignmentCreated` | `market.assignment.created.v1` | Emitted when a listing was offered to the next buyer in the resale queue. No service subscribes to it yet. |
+
+The four `market.*` subjects belong to the resale marketplace, which lives in this service but publishes under its own prefix and therefore its own stream. Sales also publishes audit records to `audit.events.v1`.
 
 Schemas: [`packages/contracts/openapi/sales/events/`](../../../../../../packages/contracts/openapi/sales/events/)
 
@@ -66,7 +69,9 @@ Every event is recorded in the `sales.event_outbox` table inside the same transa
 | Event | NATS Subject | Action |
 |-------|-------------|--------|
 | `EventPublished` | `catalog.event.published.v1` | Upserts the `EventContext` projection with capacity and dates. |
+| `EventUpdated` | `catalog.event.updated.v1` | Refreshes the `EventContext` projection. |
 | `EventCancelled` | `catalog.event.cancelled.v1` | Marks event context as cancelled and cancels open reservations. |
+| `EventDraft` | `catalog.event.draft.v1` | Marks the event context as draft. No service publishes this subject, so the handler never fires. |
 | `TicketTypeCreated` | `catalog.ticket_type.created.v1` | Upserts the `TicketTypeInventory` projection. |
 | `TicketTypeUpdated` | `catalog.ticket_type.updated.v1` | Updates the inventory projection. |
 | `UserRegistered` | `identity.user.registered.v1` | Upserts the `UserAgeContext` projection for fraud scoring, including `phone_e164` for VoIP carrier lookup. |

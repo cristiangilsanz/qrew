@@ -31,10 +31,11 @@ uv run dev
 
 ## Worker
 
-Start the background worker in a separate terminal. The worker consumes sales and identity events to mint tickets and update local projections.
+Start the background workers in separate terminals. `ticketing-worker` consumes catalog, identity, sales and marketplace events to mint tickets and update the local projections. `ticketing-arq-worker` is an arq runner on the `qrew:jobs:ticketing` queue that purges expired tickets, returns abandoned scans to their previous state, and every minute drains `ticketing.event_outbox`.
 
 ```bash
-uv run worker
+uv run ticketing-worker
+uv run ticketing-arq-worker
 ```
 
 ## Tests
