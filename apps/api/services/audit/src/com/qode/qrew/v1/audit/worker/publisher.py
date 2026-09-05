@@ -30,7 +30,7 @@ async def publish_audit_event(
             data=data,
         )
         nc = get_nats()
-        await nc.js.publish(subject, envelope.model_dump_json().encode())
+        await nc.js.publish(subject, envelope.model_dump_json(by_alias=True).encode())
     except Exception as exc:
         await logger.awarning(
             "auditor.publish_failed",

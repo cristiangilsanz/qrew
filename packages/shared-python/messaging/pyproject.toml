@@ -7,6 +7,7 @@ dependencies = [
     "nats-py>=2.7",
     "structlog>=24.1",
     "contracts",
+    "observability",
 ]
 
 [tool.uv]
@@ -15,6 +16,7 @@ venv = ".venv"
 
 [tool.uv.sources]
 contracts = { workspace = true }
+observability = { workspace = true }
 
 [tool.pyright]
 pythonVersion = "3.12"

@@ -5,7 +5,7 @@ import structlog
 from fastapi import FastAPI
 
 from exceptions import register_exception_handlers
-from observability import add_trace_context
+from observability import add_trace_context, instrument_app
 
 from com.qode.qrew.v1.gateway.channels import entry as _entry_channel  # noqa: F401  # type: ignore[reportUnusedImport]
 from com.qode.qrew.v1.gateway.channels import me as _me_channel  # noqa: F401  # type: ignore[reportUnusedImport]
@@ -37,6 +37,8 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs" if settings.debug else None,
 )
+
+instrument_app(app)
 
 register_exception_handlers(app)
 register_middleware(app)

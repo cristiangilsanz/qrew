@@ -8,6 +8,7 @@ from typing import Any
 
 import structlog
 from messaging.client import get_nats
+from observability import traced_message
 from sqlalchemy import delete
 from sqlalchemy.dialects.postgresql import insert
 
@@ -42,6 +43,7 @@ async def _parse(msg: Any) -> dict[str, Any] | None:
 
 
 # remembers which organisation and venue an event belongs to
+@traced_message()
 async def handle_event(msg: Any) -> None:
     data = await _parse(msg)
     if data is None:
@@ -76,6 +78,7 @@ async def handle_event(msg: Any) -> None:
 
 
 # remembers who belongs to an organisation, and forgets whoever leaves it
+@traced_message(MEMBERSHIP_SUBJECT)
 async def handle_membership(msg: Any) -> None:
     data = await _parse(msg)
     if data is None:

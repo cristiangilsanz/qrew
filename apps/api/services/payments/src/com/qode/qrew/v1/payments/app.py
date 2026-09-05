@@ -17,6 +17,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from com.qode.qrew.v1.payments.core.config import settings
 from com.qode.qrew.v1.payments.core.dependencies import limiter
+from observability import add_trace_context, instrument_app
 from com.qode.qrew.v1.payments.core.lifespan import lifespan
 from com.qode.qrew.v1.payments.routers import router as v1_router
 from com.qode.qrew.v1.payments.routers.health import router as probes_router
@@ -24,6 +25,7 @@ from com.qode.qrew.v1.payments.routers.health import router as probes_router
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
+        add_trace_context,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.dev.ConsoleRenderer() if settings.debug else structlog.processors.JSONRenderer(),
@@ -41,6 +43,8 @@ app = FastAPI(
     docs_url="/docs" if settings.debug else None,
     responses=default_responses,
 )
+
+instrument_app(app)
 
 register_exception_handlers(app)
 

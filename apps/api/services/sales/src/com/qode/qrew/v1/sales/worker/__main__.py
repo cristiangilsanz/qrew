@@ -3,11 +3,19 @@ import asyncio
 
 from messaging.client import init_nats
 from worker import run_nats_subscribers
+from observability import setup_worker_observability, shutdown_tracing
 from com.qode.qrew.v1.sales.core.config import settings
 
 
 # connects to nats and starts every sales subscriber
 async def main() -> None:
+    setup_worker_observability(
+        service_name=f"{settings.app_name}-worker",
+        version=settings.version,
+        debug=settings.debug,
+        otel_enabled=settings.otel_enabled,
+        otel_endpoint=settings.otel_endpoint,
+    )
     if not settings.nats_url:
         import structlog
 
@@ -26,6 +34,7 @@ async def main() -> None:
         run_catalog_event_subscriber(settings.nats_url),
         run_identity_event_subscriber(settings.nats_url),
     )
+    shutdown_tracing()
 
 
 # runs the worker main coroutine until it stops

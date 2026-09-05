@@ -23,7 +23,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         environment="production" if not settings.debug else "development",
         otel_enabled=settings.otel_enabled,
         otel_endpoint=settings.otel_endpoint,
-        app=app,
     )
 
     await logger.ainfo("gateway.startup")

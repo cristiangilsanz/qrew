@@ -6,6 +6,8 @@ from typing import Any
 
 import structlog
 
+from observability import consume_traced
+
 from com.qode.qrew.v1.audit.worker.publisher import AUDIT_EVENTS_SUBJECT as SUBJECT
 from com.qode.qrew.v1.audit.services.writer import AuditService
 
@@ -91,7 +93,7 @@ async def run_audit_event_subscriber(nats_url: str) -> None:
     async def _consume() -> None:
         async for msg in psub.messages:  # type: ignore[attr-defined]
             try:
-                await handle_audit_event(msg.data)  # type: ignore[attr-defined]
+                await consume_traced(handle_audit_event, msg.data, subject=SUBJECT)  # type: ignore[attr-defined]
                 await msg.ack()  # type: ignore[attr-defined]
             except Exception as exc:
                 await logger.awarning("audit_events.handler_error", error=repr(exc))

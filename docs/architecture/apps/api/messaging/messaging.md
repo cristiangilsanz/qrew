@@ -32,6 +32,7 @@ Every message published to a JetStream stream uses this envelope:
 * `aggregate_type` and `aggregate_id`: identify the domain object the event belongs to
 * `actor_id`: the user or system that triggered the action, if applicable
 * `data`: event-specific payload, typed per contract
+* `_otel`: the trace context captured when the outbox row was written, so a consumer continues the trace that produced the event instead of starting its own
 
 ## Delivery guarantees
 

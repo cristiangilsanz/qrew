@@ -11,6 +11,7 @@ from middleware import (
     RequestIDMiddleware,
     SecurityHeadersMiddleware,
 )
+from observability import add_trace_context, instrument_app
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -24,6 +25,7 @@ from com.qode.qrew.v1.entry.routers.health import router as probes_router
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
+        add_trace_context,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.dev.ConsoleRenderer()
@@ -43,6 +45,8 @@ app = FastAPI(
     docs_url="/docs" if settings.debug else None,
     responses=default_responses,
 )
+
+instrument_app(app)
 
 register_exception_handlers(app)
 
