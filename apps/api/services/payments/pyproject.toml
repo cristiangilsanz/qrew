@@ -12,6 +12,8 @@ version = "0.1.0"
 description = "Qrew payments service."
 requires-python = ">=3.12"
 dependencies = [
+    "outbox",
+    "jobs",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic-settings[yaml]>=2.4",
@@ -45,6 +47,8 @@ dependencies = [
 ]
 
 [tool.uv.sources]
+outbox = { workspace = true }
+jobs = { workspace = true }
 exceptions = { workspace = true }
 idempotency = { workspace = true }
 middleware = { workspace = true }
@@ -57,6 +61,7 @@ security = { workspace = true }
 
 [project.scripts]
 payments-dev = "com.qode.qrew.v1.payments.__main__:main"
+payments-worker = "com.qode.qrew.v1.payments.worker.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -81,7 +86,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src", "../../packages/shared-python/security/src", "../../packages/shared-python/outbox/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/messaging/src"]
 venvPath = "../.."
 venv = ".venv"
 
@@ -91,7 +96,7 @@ venv = ".venv"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 testpaths = ["tests"]
-pythonpath = ["src", "tests", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
+pythonpath = ["src", "tests", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/probes/src", "../../packages/contracts/src", "../../packages/shared-python/security/src", "../../packages/shared-python/outbox/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/messaging/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
 markers = [

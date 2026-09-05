@@ -22,6 +22,24 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS entry")
 
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS entry.event_contexts (
+            event_id UUID PRIMARY KEY,
+            organisation_id UUID NOT NULL,
+            venue_id UUID,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+    """)
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS entry.organisation_member_contexts (
+            organisation_id UUID NOT NULL,
+            user_id UUID NOT NULL,
+            role VARCHAR(32) NOT NULL,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            PRIMARY KEY (organisation_id, user_id)
+        )
+    """)
+
     op.create_table(
         "scanners",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
@@ -102,6 +120,8 @@ def upgrade() -> None:
 
 # drops the entry schema and its tables
 def downgrade() -> None:
+    op.execute("DROP TABLE IF EXISTS entry.organisation_member_contexts")
+    op.execute("DROP TABLE IF EXISTS entry.event_contexts")
     op.drop_index("ix_entry_scans_event_scanned_at", table_name="scans", schema="entry")
     op.drop_index("ix_entry_scans_event_id", table_name="scans", schema="entry")
     op.drop_table("scans", schema="entry")

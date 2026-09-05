@@ -5,7 +5,9 @@ from datetime import UTC, datetime
 from typing import Any
 
 import structlog
+from outbox import record as record_event
 from sqlalchemy import Select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from com.qode.qrew.v1.catalog.services.application.audit import AuditService
 from com.qode.qrew.v1.catalog.core.errors import DomainError
@@ -13,6 +15,7 @@ from locking import redlock
 from observability import traced
 from com.qode.qrew.v1.catalog.core.config import settings
 from com.qode.qrew.v1.catalog.models.event import EventStatus
+from com.qode.qrew.v1.catalog.models.outbox import EventOutbox
 from com.qode.qrew.v1.catalog.models.ticket_type import TicketType
 from com.qode.qrew.v1.catalog.repositories.events.event import EventRepository
 from com.qode.qrew.v1.catalog.repositories.ticket_type import TicketTypeRepository
@@ -20,27 +23,22 @@ from com.qode.qrew.v1.catalog.repositories.ticket_type import TicketTypeReposito
 logger = structlog.get_logger(__name__)
 
 
-# publishes a ticket type event onto the shared nats connection
-async def _publish_nats(subject: str, ticket_type: TicketType) -> None:
-    try:
-        from messaging.publisher import publish  # type: ignore[import-not-found]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="ticket_type",
-            aggregate_id=str(ticket_type.id),
-            data={
-                "ticket_type_id": str(ticket_type.id),
-                "event_id": str(ticket_type.event_id),
-                "capacity": ticket_type.capacity,
-                "price_cents": ticket_type.price_cents,
-                "currency": ticket_type.currency,
-            },
-        )
-        await publish(subject, envelope)
-    except Exception as exc:
-        await logger.awarning("nats_publish_failed", subject=subject, error=repr(exc))
+# leaves the ticket type event in the outbox, so it travels with the change that caused it
+async def _publish_nats(session: AsyncSession, subject: str, ticket_type: TicketType) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject=subject,
+        aggregate_type="ticket_type",
+        aggregate_id=str(ticket_type.id),
+        data={
+            "ticket_type_id": str(ticket_type.id),
+            "event_id": str(ticket_type.event_id),
+            "capacity": ticket_type.capacity,
+            "price_cents": ticket_type.price_cents,
+            "currency": ticket_type.currency,
+        },
+    )
 
 
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
@@ -86,10 +84,12 @@ class TicketTypeService:
     # stores the repositories and audit service the ticket type service uses
     def __init__(
         self,
+        session: AsyncSession,
         event_repo: EventRepository,
         repo: TicketTypeRepository,
         audit: AuditService,
     ) -> None:
+        self._session = session
         self._event_repo = event_repo
         self._repo = repo
         self._audit = audit
@@ -146,7 +146,7 @@ class TicketTypeService:
                 ticket_type_id=ticket_type.id,
                 payload={"event_id": str(event_id), "name": name},
             )
-            await _publish_nats("catalog.ticket_type.created.v1", ticket_type)
+            await _publish_nats(self._session, "catalog.ticket_type.created.v1", ticket_type)
             return ticket_type
 
     # updates the mutable fields of a ticket type
@@ -200,7 +200,7 @@ class TicketTypeService:
                 ticket_type_id=ticket_type.id,
                 payload={"fields": sorted(changes.keys())},
             )
-            await _publish_nats("catalog.ticket_type.updated.v1", ticket_type)
+            await _publish_nats(self._session, "catalog.ticket_type.updated.v1", ticket_type)
             return ticket_type
 
     # soft deletes a ticket type that has no live reservations

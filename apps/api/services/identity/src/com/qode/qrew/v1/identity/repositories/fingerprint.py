@@ -14,6 +14,11 @@ class DeviceFingerprintRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # hands the session out, so a caller can leave an event in the same transaction
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
+
     # records a fingerprint sighting and returns how many accounts share it
     async def upsert(self, record: DeviceFingerprint) -> int:
         stmt = (

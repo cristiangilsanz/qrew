@@ -76,10 +76,7 @@ export function RecoverAccountForm() {
           ) : (
             <Upload className="text-muted-foreground h-5 w-5" />
           )}
-          <span className="text-muted-foreground max-w-full truncate">
-            {file ? file.name : t('recovery.pickDocument')}
-          </span>
-          {file && <span className="text-xs text-white/40">{t('recovery.changeDocument')}</span>}
+          {!file && <span className="text-muted-foreground">{t('recovery.pickDocument')}</span>}
         </button>
         <input
           ref={inputRef}

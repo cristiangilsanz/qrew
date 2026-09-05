@@ -1,5 +1,4 @@
 # reserves tickets against the fraud check the queue and the ticket type inventory
-import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
 from collections.abc import Sequence
@@ -10,6 +9,9 @@ from jwt import InvalidTokenError
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from outbox import record as record_event
+
+from com.qode.qrew.v1.sales.models.outbox import EventOutbox
 from com.qode.qrew.v1.sales.services.application.audit import AuditService
 from com.qode.qrew.v1.sales.services.application.queue.storage import consume_reservation_token
 from com.qode.qrew.v1.sales.core.errors import DomainError
@@ -209,6 +211,7 @@ class ReservationService:
                     "quantity": total_quantity,
                 },
             )
+            await _publish_reservation_created(self._session, reservation, created_items)
             await self._session.commit()
 
         if evaluation.decision == FraudDecision.review:
@@ -218,7 +221,6 @@ class ReservationService:
                 payload=evaluation.to_payload(),
             )
 
-        await _publish_reservation_created(reservation, created_items)
         return reservation, created_items
 
     # cancels an open reservation and releases its inventory
@@ -252,8 +254,8 @@ class ReservationService:
                 reservation_id=reservation.id,
                 payload={"event_id": str(reservation.event_id)},
             )
+            await _publish_reservation_cancelled(self._session, reservation, items)
             await self._session.commit()
-        await _publish_reservation_cancelled(reservation, items)
         return reservation, items
 
     # reads a reservation owned by the caller
@@ -329,66 +331,42 @@ def _items_payload(items: list[ReservationItem]) -> list[dict[str, Any]]:
 
 # publishes that a reservation was created onto the shared nats connection
 async def _publish_reservation_created(
-    reservation: Reservation, items: list[ReservationItem]
+    session: AsyncSession, reservation: Reservation, items: list[ReservationItem]
 ) -> None:
-    try:
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="reservation",
-            aggregate_id=str(reservation.id),
-            actor_id=str(reservation.user_id),
-            data={
-                "reservation_id": str(reservation.id),
-                "user_id": str(reservation.user_id),
-                "event_id": str(reservation.event_id),
-                "items": _items_payload(items),
-                "quantity": reservation.quantity,
-                "expires_at": reservation.expires_at.isoformat(),
-            },
-        )
-        await asyncio.wait_for(
-            nats_publish("sales.reservation.created.v1", envelope),
-            timeout=_NATS_PUBLISH_TIMEOUT,
-        )
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed",
-            subject="sales.reservation.created.v1",
-            error=repr(exc),
-        )
+    await record_event(
+        session,
+        EventOutbox,
+        subject="sales.reservation.created.v1",
+        aggregate_type="reservation",
+        aggregate_id=str(reservation.id),
+        actor_id=str(reservation.user_id),
+        data={
+            "reservation_id": str(reservation.id),
+            "user_id": str(reservation.user_id),
+            "event_id": str(reservation.event_id),
+            "items": _items_payload(items),
+            "quantity": reservation.quantity,
+            "expires_at": reservation.expires_at.isoformat(),
+        },
+    )
 
 
-# publishes that a reservation was cancelled onto the shared nats connection
+# leaves in the outbox that a reservation was cancelled
 async def _publish_reservation_cancelled(
-    reservation: Reservation, items: list[ReservationItem]
+    session: AsyncSession, reservation: Reservation, items: list[ReservationItem]
 ) -> None:
-    try:
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="reservation",
-            aggregate_id=str(reservation.id),
-            actor_id=str(reservation.user_id),
-            data={
-                "reservation_id": str(reservation.id),
-                "user_id": str(reservation.user_id),
-                "event_id": str(reservation.event_id),
-                "items": _items_payload(items),
-                "quantity": reservation.quantity,
-            },
-        )
-        await asyncio.wait_for(
-            nats_publish("sales.reservation.cancelled.v1", envelope),
-            timeout=_NATS_PUBLISH_TIMEOUT,
-        )
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed",
-            subject="sales.reservation.cancelled.v1",
-            error=repr(exc),
-        )
+    await record_event(
+        session,
+        EventOutbox,
+        subject="sales.reservation.cancelled.v1",
+        aggregate_type="reservation",
+        aggregate_id=str(reservation.id),
+        actor_id=str(reservation.user_id),
+        data={
+            "reservation_id": str(reservation.id),
+            "user_id": str(reservation.user_id),
+            "event_id": str(reservation.event_id),
+            "items": _items_payload(items),
+            "quantity": reservation.quantity,
+        },
+    )

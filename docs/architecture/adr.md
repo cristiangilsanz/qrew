@@ -104,6 +104,7 @@ it, which belongs to the document covering that area.
 | ***Constant-Time Comparison*** | Compares secrets in a time that does not depend on their content |
 | ***Account Lockout*** | Delays or closes access after a run of failed attempts |
 | ***Content Security Policy*** | Declares in the response what the browser is allowed to do with it |
+| ***Network Segmentation*** | Splits the deployment into separate networks so a piece only reaches what its job requires |
 | ***Zero Trust*** | Verifies every request without granting trust because of where it comes from |
 
 </div>

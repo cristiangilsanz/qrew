@@ -70,6 +70,11 @@ class _Session:
         self._locked = locked
         self._missing = missing
         self.flushed = False
+        self.recorded: list[object] = []
+
+    # collects whatever the transition leaves in the outbox
+    def add(self, row: object) -> None:
+        self.recorded.append(row)
 
     # stands in for the row lock query
     async def execute(self, *args: object, **kwargs: object) -> _Result:

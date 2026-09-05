@@ -38,13 +38,19 @@ Full spec: [`packages/contracts/openapi/payments/openapi.yaml`](../../../../../.
 
 Schemas: [`packages/contracts/openapi/payments/events/`](../../../../../../packages/contracts/openapi/payments/events/)
 
+Every event is recorded in the `payments.event_outbox` table inside the same transaction as the change that caused it, and the `outbox_drainer` job publishes it afterwards. The request never talks to the broker.
+
 ### Consumed
 
 This service does not consume events from other services.
 
 ## Background Workers
 
-This service has no background workers. All processing is driven by incoming HTTP requests.
+| Worker | Type | Description |
+|--------|------|-------------|
+| `outbox_drainer` | arq job, every minute | Publishes to NATS every domain event waiting in `payments.event_outbox`, retrying with backoff and parking a row after eight attempts. |
+
+This job runs in the `payments-worker` container, an arq runner on the `qrew:jobs:payments` queue. It does not subscribe to NATS; it only publishes what the drainer takes from the outbox. Everything else is driven by incoming HTTP requests.
 
 ## Internal Dependencies
 
@@ -55,6 +61,7 @@ This service has no background workers. All processing is driven by incoming HTT
 | `messaging` | NATS JetStream publisher |
 | `middleware` | Request ID, correlation, and security headers |
 | `observability` | OpenTelemetry setup |
+| `outbox` | Transactional outbox mixin, recorder, and drainer |
 
 ## External Dependencies
 

@@ -13,6 +13,11 @@ class DeviceRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    # hands the session out, so a caller can leave an event in the same transaction
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
+
     # writes a new device to the database
     async def create(self, device: Device) -> Device:
         self._session.add(device)

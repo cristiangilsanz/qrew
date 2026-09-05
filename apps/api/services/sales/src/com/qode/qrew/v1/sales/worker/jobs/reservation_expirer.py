@@ -1,12 +1,15 @@
 # expires overdue reservations and releases the inventory they held
-import asyncio
-from datetime import UTC, datetime
 from typing import Any
 
 import structlog
 from jobs import job, parse_crontab
 from sqlalchemy import text
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from outbox import record as record_event
+
+from com.qode.qrew.v1.sales.models.outbox import EventOutbox
 from com.qode.qrew.v1.sales.core.database import AsyncSessionLocal
 from com.qode.qrew.v1.sales.core.config import settings
 
@@ -65,49 +68,33 @@ async def sweep_expired() -> int:
             expired_rows.append({**dict(row), "items": [dict(item) for item in items]})
             swept += 1
 
-    for row in expired_rows:
-        await _publish_expired(row)
+        for row in expired_rows:
+            await _publish_expired(session, row)
 
     await logger.ainfo("reservations.sweep_expired", swept=swept)
     return swept
 
 
 # publishes that a reservation expired onto the shared nats connection
-async def _publish_expired(row: dict[str, Any]) -> None:
-    try:
-        from messaging.publisher import publish as nats_publish  # type: ignore[import-untyped]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="reservation",
-            aggregate_id=str(row["id"]),
-            actor_id=str(row["user_id"]),
-            data={
-                "reservation_id": str(row["id"]),
-                "user_id": str(row["user_id"]),
-                "event_id": str(row["event_id"]),
-                "items": [
-                    {
-                        "ticket_type_id": str(item["ticket_type_id"]),
-                        "quantity": item["quantity"],
-                    }
-                    for item in row["items"]
-                ],
-                "quantity": row["quantity"],
-            },
-        )
-        await asyncio.wait_for(
-            nats_publish("sales.reservation.expired.v1", envelope),
-            timeout=_NATS_PUBLISH_TIMEOUT,
-        )
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed",
-            subject="sales.reservation.expired.v1",
-            reservation_id=str(row["id"]),
-            error=repr(exc),
-        )
+async def _publish_expired(session: AsyncSession, row: dict[str, Any]) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject="sales.reservation.expired.v1",
+        aggregate_type="reservation",
+        aggregate_id=str(row["id"]),
+        actor_id=str(row["user_id"]),
+        data={
+            "reservation_id": str(row["id"]),
+            "user_id": str(row["user_id"]),
+            "event_id": str(row["event_id"]),
+            "items": [
+                {"ticket_type_id": str(i["ticket_type_id"]), "quantity": i["quantity"]}
+                for i in row.get("items", [])
+            ],
+            "quantity": row.get("quantity"),
+        },
+    )
 
 
 # expires overdue reservations and releases the inventory they held on a periodic schedule

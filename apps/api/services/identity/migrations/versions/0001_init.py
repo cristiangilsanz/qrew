@@ -23,6 +23,28 @@ depends_on: str | Sequence[str] | None = None
 # creates the identity schema and its tables
 def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS identity")
+
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS identity.event_outbox (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            subject VARCHAR(128) NOT NULL,
+            aggregate_type VARCHAR(64) NOT NULL,
+            aggregate_id VARCHAR(64) NOT NULL,
+            actor_id VARCHAR(64),
+            payload JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dispatched_at TIMESTAMPTZ,
+            attempt_count INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT,
+            next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dlq_reason VARCHAR(64)
+        )
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS ix_identity_event_outbox_pending
+            ON identity.event_outbox (next_attempt_at)
+            WHERE dispatched_at IS NULL AND dlq_reason IS NULL
+    """)
     op.create_table(
         "notifications",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -394,6 +416,7 @@ def upgrade() -> None:
 
 # drops the identity schema and its tables
 def downgrade() -> None:
+    op.execute("DROP TABLE IF EXISTS identity.event_outbox")
     op.drop_index(op.f("ix_identity_sessions_user_id"), table_name="sessions", schema="identity")
     op.drop_index(op.f("ix_identity_sessions_jti"), table_name="sessions", schema="identity")
     op.drop_index(op.f("ix_identity_sessions_device_id"), table_name="sessions", schema="identity")

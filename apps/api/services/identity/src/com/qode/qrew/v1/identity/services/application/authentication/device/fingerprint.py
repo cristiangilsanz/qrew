@@ -3,6 +3,9 @@ import uuid
 
 import structlog
 
+from outbox import record as record_event
+
+from com.qode.qrew.v1.identity.models.event_outbox import EventOutbox
 from com.qode.qrew.v1.identity.models.audit import AuditAction
 from com.qode.qrew.v1.identity.models.user import User
 from com.qode.qrew.v1.identity.models.fingerprint import DeviceFingerprint
@@ -128,30 +131,14 @@ class FingerprintService:
 
     # publishes that a fingerprint was seen onto the shared nats connection
     async def _publish_fingerprint_seen(self, fingerprint_hash: str) -> None:
-        try:
-            from datetime import UTC, datetime
-
-            from messaging.publisher import publish as nats_publish  # type: ignore[import-not-found]
-            from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-not-found]
-
-            now = datetime.now(UTC)
-            envelope = EventEnvelope(
-                occurred_at=now,
-                aggregate_type="fingerprint",
-                aggregate_id=fingerprint_hash,
-                actor_id="system",
-                data={
-                    "fingerprint_hash": fingerprint_hash,
-                    "occurred_at": now.isoformat(),
-                },
-            )
-            await nats_publish("identity.fingerprint.seen.v1", envelope)
-        except Exception as exc:
-            await logger.awarning(
-                "nats_publish_failed",
-                subject="identity.fingerprint.seen.v1",
-                error=repr(exc),
-            )
+        await record_event(
+            self._repo.session,
+            EventOutbox,
+            subject="identity.fingerprint.seen.v1",
+            aggregate_type="fingerprint",
+            aggregate_id=fingerprint_hash,
+            data={"fingerprint_hash": fingerprint_hash},
+        )
 
     # lists the accounts a fingerprint has been seen on
     async def get_by_hash(self, fingerprint_hash: str) -> list[uuid.UUID]:

@@ -48,7 +48,11 @@ ConsumerConfig(
 | `sales-payment-handler-*` | `PAYMENTS` | `payments.payment.succeeded.v1`, `payments.payment.refunded.v1`, `payments.chargeback.opened.v1` | Sales |
 | `audit-events-handler` | `AUDIT` | `audit.events.v1` | Audit |
 | `gateway-fanout-handler` | `GATEWAY` | `ws.fanout.v1` | Gateway |
-| `entry-projector` | none | `ticketing.ticket.state_changed` | Entry |
+| `entry-projector` | `ticketing` | `ticketing.ticket.state_changed` | Entry |
+| `entry-catalog-catalog-event-published-v1` | `CATALOG` | `catalog.event.published.v1` | Entry |
+| `entry-catalog-catalog-event-updated-v1` | `CATALOG` | `catalog.event.updated.v1` | Entry |
+| `entry-catalog-catalog-event-ongoing-v1` | `CATALOG` | `catalog.event.ongoing.v1` | Entry |
+| `entry-catalog-membership` | `CATALOG` | `catalog.membership.changed.v1` | Entry |
 
 Durable names suffixed with `*` are per subject.
 
@@ -60,6 +64,16 @@ It only forwards live messages. Historical replay would flood open WebSocket con
 
 ## Outbox
 
-Identity uses a transactional outbox instead of publishing directly from request handlers. Domain events are written atomically to the `outbox` table in the same transaction as the business write. The outbox worker polls and publishes to JetStream, marking rows as dispatched. Failed rows enter a DLQ after a configurable retry count.
+Catalog, sales, payments, ticketing and identity all use a transactional outbox instead of publishing directly from request handlers. Domain events are written atomically to an `event_outbox` table in the same transaction as the business write. A drainer job polls that table every minute and publishes to JetStream, marking rows as dispatched. A row that the broker refuses is retried with a growing backoff of 5, 15, 60, 300, 900, 1800 and 3600 seconds, and after 8 attempts it is parked with `dlq_reason = 'attempts_exhausted'` rather than retried for ever.
+
+The table, the recorder and the drainer live in the shared `outbox` package, so the five services share the same columns and the same semantics. Identity keeps a second, unrelated `outbox` table that defers arq jobs rather than domain events.
+
+| Service | Table | Drainer job | Container |
+|---|---|---|---|
+| Catalog | `catalog.event_outbox` | `catalog.outbox.drain` | `catalog-worker` |
+| Sales | `sales.event_outbox` | `sales.outbox.drain` | `sales-arq-worker` |
+| Payments | `payments.event_outbox` | `payments.outbox.drain` | `payments-worker` |
+| Ticketing | `ticketing.event_outbox` | `ticketing.outbox.drain` | `ticketing-arq-worker` |
+| Identity | `identity.event_outbox` | `identity.event_outbox.drain` | `identity-arq-worker` |
 
 This guarantees that events are never lost even if the NATS connection is unavailable at the time of the business operation.

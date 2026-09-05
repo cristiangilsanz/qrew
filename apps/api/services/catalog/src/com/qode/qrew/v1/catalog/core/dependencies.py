@@ -143,7 +143,7 @@ def get_event_service(db: AsyncSession = Depends(get_db)) -> EventService:
 
 # builds a ticket type service for a request
 def get_ticket_type_service(db: AsyncSession = Depends(get_db)) -> TicketTypeService:
-    return TicketTypeService(EventRepository(db), TicketTypeRepository(db), AuditService())
+    return TicketTypeService(db, EventRepository(db), TicketTypeRepository(db), AuditService())
 
 
 # builds a venue service for a request

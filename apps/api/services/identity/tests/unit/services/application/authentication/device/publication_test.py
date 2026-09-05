@@ -27,30 +27,29 @@ def _device(user_id: uuid.UUID) -> MagicMock:
     return device
 
 
-# verifies that binding announces the attested device
+# reads back the row the service left in the outbox
+def _recorded(session: MagicMock) -> object:
+    rows = [c.args[0] for c in session.add.call_args_list if hasattr(c.args[0], "subject")]
+    assert rows, "no outbox row was recorded"
+    return rows[-1]
+
+
+# verifies that binding records the attested device
 @pytest.mark.asyncio
 async def test_binding_announces_the_attested_device() -> None:
     user_id = uuid.uuid4()
     device = _device(user_id)
     now = datetime.now(UTC)
-    publish = AsyncMock()
-    with patch("messaging.publisher.publish", publish):
-        await _publish_device_attested(device, platform="android", attested_at=now)
+    session = MagicMock()
 
-    subject, envelope = publish.await_args.args
-    assert subject == "identity.device.attested.v1"
-    assert envelope.data["device_id"] == str(device.id)
-    assert envelope.data["user_id"] == str(user_id)
-    assert envelope.data["attested_at"] == now.isoformat()
-    assert envelope.data["platform"] == "android"
+    await _publish_device_attested(session, device, platform="android", attested_at=now)
 
-
-# verifies that a failed publication does not break the binding
-@pytest.mark.asyncio
-async def test_a_failed_publication_does_not_break_the_binding() -> None:
-    device = _device(uuid.uuid4())
-    with patch("messaging.publisher.publish", AsyncMock(side_effect=RuntimeError("down"))):
-        await _publish_device_attested(device, platform="ios", attested_at=datetime.now(UTC))
+    row = _recorded(session)
+    assert row.subject == "identity.device.attested.v1"
+    assert row.payload["device_id"] == str(device.id)
+    assert row.payload["user_id"] == str(user_id)
+    assert row.payload["attested_at"] == now.isoformat()
+    assert row.payload["platform"] == "android"
 
 
 # verifies that revocation announces the device
@@ -58,15 +57,15 @@ async def test_a_failed_publication_does_not_break_the_binding() -> None:
 async def test_revocation_announces_the_device() -> None:
     device_id, user_id = uuid.uuid4(), uuid.uuid4()
     revoked_at = datetime.now(UTC)
-    publish = AsyncMock()
-    with patch("messaging.publisher.publish", publish):
-        await publish_device_revoked(device_id, user_id, revoked_at)
+    session = MagicMock()
 
-    subject, envelope = publish.await_args.args
-    assert subject == "identity.device.revoked.v1"
-    assert envelope.data["device_id"] == str(device_id)
-    assert envelope.data["user_id"] == str(user_id)
-    assert envelope.data["revoked_at"] == revoked_at.isoformat()
+    await publish_device_revoked(session, device_id, user_id, revoked_at)
+
+    row = _recorded(session)
+    assert row.subject == "identity.device.revoked.v1"
+    assert row.payload["device_id"] == str(device_id)
+    assert row.payload["user_id"] == str(user_id)
+    assert row.payload["revoked_at"] == revoked_at.isoformat()
 
 
 # verifies that revoking every device announces each one
@@ -87,7 +86,8 @@ async def test_revoking_every_device_announces_each_one() -> None:
     publicados: list[uuid.UUID] = []
 
     # handles capturar
-    async def _capturar(device_id, user_id, revoked_at):  # type: ignore[no-untyped-def]
+    async def _capturar(session, device_id, user_id, revoked_at):  # type: ignore[no-untyped-def]
+        del session
         publicados.append(device_id)
 
     with patch(f"{_MANAGEMENT}.publish_device_revoked", _capturar):

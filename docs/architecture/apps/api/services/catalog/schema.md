@@ -75,6 +75,21 @@ erDiagram
         TIMESTAMPTZ deleted_at
     }
 
+    event_outbox["event_outbox (transactional outbox)"] {
+        UUID id PK
+        VARCHAR_128 subject
+        VARCHAR_64 aggregate_type
+        VARCHAR_64 aggregate_id
+        VARCHAR_64 actor_id
+        JSONB payload
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ dispatched_at
+        INTEGER attempt_count
+        TEXT last_error
+        TIMESTAMPTZ next_attempt_at
+        VARCHAR_64 dlq_reason
+    }
+
     organisations ||--o{ organisation_members : "has"
     organisations ||--o{ events : "owns"
     venues ||--o{ events : "hosts"
@@ -98,6 +113,7 @@ erDiagram
 | `events` | `ix_events_status_starts_at` | `status, starts_at` | BTREE |
 | `events` | `ix_events_search_vector` | `search_vector` | GIN |
 | `ticket_types` | `ix_ticket_types_event_id` | `event_id` | BTREE |
+| `event_outbox` | `ix_catalog_event_outbox_pending` | `next_attempt_at` | BTREE, partial `WHERE dispatched_at IS NULL AND dlq_reason IS NULL` |
 
 ## Check Constraints
 
@@ -112,3 +128,9 @@ erDiagram
 | `ticket_types` | `ck_ticket_types_capacity` | `capacity >= 1 AND capacity <= 100000` |
 | `ticket_types` | `ck_ticket_types_reserved` | `reserved_count >= 0 AND reserved_count <= capacity` |
 | `ticket_types` | `ck_ticket_types_price` | `price_cents >= 0 AND price_cents <= 10000000` |
+
+## Transactional Outbox
+
+`catalog.event_outbox` holds every domain event the service records inside the transaction that caused it. The `outbox_drainer` job publishes each pending row to NATS and stamps `dispatched_at`. A row that fails is retried with a growing backoff of 5, 15, 60, 300, 900, 1800 and 3600 seconds, and after 8 attempts it is parked with `dlq_reason = 'attempts_exhausted'` instead of retried for ever.
+
+The table and the drainer come from the shared `outbox` package, so catalog, sales, payments, ticketing and identity all use the same columns and the same semantics.

@@ -9,6 +9,7 @@ version = "0.1.0"
 description = "Qrew catalog service."
 requires-python = ">=3.12"
 dependencies = [
+    "outbox",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic-settings[yaml]>=2.0",
@@ -42,6 +43,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
+outbox = { workspace = true }
 exceptions = { workspace = true }
 idempotency = { workspace = true }
 middleware = { workspace = true }
@@ -80,7 +82,7 @@ venv = ".venv"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 testpaths = ["tests"]
-pythonpath = ["src", "tests", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/pagination/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
+pythonpath = ["src", "tests", "../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/pagination/src", "../../packages/contracts/src", "../../packages/shared-python/security/src", "../../packages/shared-python/outbox/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
 markers = ["integration: mark test as integration test requiring Docker services (Postgres + Redis)"]
@@ -90,7 +92,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/pagination/src", "../../packages/contracts/src", "../../packages/shared-python/security/src"]
+extraPaths = ["../../packages/shared-python/exceptions/src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/middleware/src", "../../packages/shared-python/observability/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/pagination/src", "../../packages/contracts/src", "../../packages/shared-python/security/src", "../../packages/shared-python/outbox/src"]
 
 [tool.ruff]
 line-length = 100

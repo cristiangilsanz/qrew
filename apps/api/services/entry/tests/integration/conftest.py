@@ -201,7 +201,9 @@ def membership(
     import com.qode.qrew.v1.entry.core.dependencies as deps
 
     # handles fetch
-    async def _fetch(_event_id: uuid.UUID, _user_id: uuid.UUID) -> EventMembership:
+    async def _fetch(
+        _session: object, _event_id: uuid.UUID, _user_id: uuid.UUID
+    ) -> EventMembership:
         return EventMembership(
             event_exists=event_exists,
             is_member=is_member,

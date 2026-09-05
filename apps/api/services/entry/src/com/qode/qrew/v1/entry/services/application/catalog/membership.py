@@ -1,15 +1,17 @@
-# asks catalog whether a user belongs to an event's organisation
+# reads from the local projection whether a user belongs to an event's organisation
 import uuid
 from dataclasses import dataclass
 
-import httpx
 import structlog
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from com.qode.qrew.v1.entry.core.config import settings
+from com.qode.qrew.v1.entry.models.projections import (
+    EventContext,
+    OrganisationMemberContext,
+)
 
 logger = structlog.get_logger(__name__)
-
-_TIMEOUT_SECONDS = 5.0
 
 
 class CatalogUnavailableError(Exception):
@@ -23,30 +25,26 @@ class EventMembership:
     venue_id: uuid.UUID | None
 
 
-# fetches an event's existence venue and the user's membership from catalog
+# answers from the projection catalog keeps up to date, without asking anyone
 async def fetch_event_membership(
-    event_id: uuid.UUID, user_id: uuid.UUID
+    session: AsyncSession, event_id: uuid.UUID, user_id: uuid.UUID
 ) -> EventMembership:
-    url = f"{settings.catalog_url}/v1/_internal/events/{event_id}/members/{user_id}"
-    try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT_SECONDS) as client:
-            response = await client.get(
-                url, headers={"X-Internal-Key": settings.internal_api_key}
-            )
-    except httpx.HTTPError as exc:
-        await logger.awarning("catalog_membership_failed", error=str(exc))
-        raise CatalogUnavailableError from exc
-
-    if not response.is_success:
-        await logger.awarning(
-            "catalog_membership_rejected", status_code=response.status_code
+    event = (
+        await session.execute(
+            select(EventContext).where(EventContext.event_id == event_id)
         )
-        raise CatalogUnavailableError
+    ).scalar_one_or_none()
+    if event is None:
+        return EventMembership(event_exists=False, is_member=False, venue_id=None)
 
-    body = response.json()
-    venue_id = body.get("venue_id")
+    member = (
+        await session.execute(
+            select(OrganisationMemberContext).where(
+                OrganisationMemberContext.organisation_id == event.organisation_id,
+                OrganisationMemberContext.user_id == user_id,
+            )
+        )
+    ).scalar_one_or_none()
     return EventMembership(
-        event_exists=bool(body["event_exists"]),
-        is_member=bool(body["is_member"]),
-        venue_id=uuid.UUID(str(venue_id)) if venue_id else None,
+        event_exists=True, is_member=member is not None, venue_id=event.venue_id
     )

@@ -30,6 +30,18 @@ just up
 just db-seed
 ```
 
+## Networks
+
+The stack is not on a single flat network. `docker-compose.yml` declares three bridge networks, and each container joins only the ones it needs.
+
+| Network | Members |
+|---|---|
+| `borde` | `frontend`, `gateway` |
+| `interna` | `gateway`, the seven domain services, the ten background containers, `nats`, `jaeger` |
+| `datos` | The seven domain services, the ten background containers, `postgres`, `redis` |
+
+The gateway therefore reaches the services but not the databases, and the frontend reaches only the gateway. If you add a container, give it the networks it needs, or it will fail to resolve its dependencies by name.
+
 ## Ports
 
 | Service | Port |
@@ -46,3 +58,8 @@ just db-seed
 | PostgreSQL | `5432` |
 | Redis | `6379` |
 | NATS | `4222` |
+| NATS monitoring | `8222` |
+| Jaeger UI | `16686` |
+| Jaeger OTLP | `4317`, `4318` |
+
+Only the frontend, the gateway and the stateful containers publish their port to the host. The domain services listen on `8001` to `8007` inside the `interna` network, so reach them through the gateway rather than directly.

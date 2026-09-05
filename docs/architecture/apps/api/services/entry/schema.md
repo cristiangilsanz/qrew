@@ -33,8 +33,24 @@ erDiagram
         timestamp updated_at
     }
 
+    event_contexts["event_contexts (projection)"] {
+        UUID event_id PK
+        UUID organisation_id
+        UUID venue_id
+        timestamp updated_at
+    }
+
+    organisation_member_contexts["organisation_member_contexts (projection)"] {
+        UUID organisation_id PK
+        UUID user_id PK
+        string role
+        timestamp updated_at
+    }
+
     scans }o--|| scanners : "submitted by"
     scans }o--|| ticket_contexts : "validates"
+    ticket_contexts }o--|| event_contexts : "belongs to"
+    event_contexts }o--o{ organisation_member_contexts : "shares organisation_id"
 ```
 
 ## Tables
@@ -97,3 +113,29 @@ Immutable log of every scan attempt, regardless of outcome.
 **Indexes**
 - `ix_entry_scans_event_id` on `(event_id)`
 - `ix_entry_scans_event_scanned_at` on `(event_id, scanned_at)`
+
+---
+
+### entry.event_contexts
+
+Read-model projection of the organisation and venue an event belongs to, maintained by consuming catalog domain events. It replaces the synchronous call entry used to make to catalog, so authorising a scanner request never leaves the service.
+
+| Column | Type | Nullable | Default | Notes |
+|---|---|---|---|---|
+| event_id | UUID | NOT NULL | | PK |
+| organisation_id | UUID | NOT NULL | | Organisation that owns the event |
+| venue_id | UUID | NULL | | Venue resolved from the event |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Last projection update time |
+
+---
+
+### entry.organisation_member_contexts
+
+Read-model projection of who belongs to each organisation, maintained by consuming `catalog.membership.changed.v1`. A message carrying a null role deletes the row instead of upserting it.
+
+| Column | Type | Nullable | Default | Notes |
+|---|---|---|---|---|
+| organisation_id | UUID | NOT NULL | | PK, with `user_id` |
+| user_id | UUID | NOT NULL | | PK, with `organisation_id` |
+| role | VARCHAR(32) | NOT NULL | | `member`, `manager`, or `owner` |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Last projection update time |

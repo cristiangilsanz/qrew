@@ -193,7 +193,7 @@ class RecoveryService:
         revoked = await self._device_repo.revoke_all_by_user_id(user_id, exclude_id=None)
         now = datetime.now(UTC)
         for device_id in revoked:
-            await publish_device_revoked(device_id, user_id, now)
+            await publish_device_revoked(self._device_repo.session, device_id, user_id, now)
 
     # replaces every existing passkey with the newly verified one
     async def _replace_passkey(

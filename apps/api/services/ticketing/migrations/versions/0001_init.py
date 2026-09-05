@@ -29,6 +29,28 @@ def upgrade() -> None:
     op.execute("CREATE SCHEMA IF NOT EXISTS ticketing")
 
     op.execute("""
+        CREATE TABLE IF NOT EXISTS ticketing.event_outbox (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            subject VARCHAR(128) NOT NULL,
+            aggregate_type VARCHAR(64) NOT NULL,
+            aggregate_id VARCHAR(64) NOT NULL,
+            actor_id VARCHAR(64),
+            payload JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dispatched_at TIMESTAMPTZ,
+            attempt_count INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT,
+            next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dlq_reason VARCHAR(64)
+        )
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS ix_ticketing_event_outbox_pending
+            ON ticketing.event_outbox (next_attempt_at)
+            WHERE dispatched_at IS NULL AND dlq_reason IS NULL
+    """)
+
+    op.execute("""
         CREATE TABLE IF NOT EXISTS ticketing.tickets (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             reservation_id UUID NOT NULL,
@@ -90,6 +112,7 @@ def upgrade() -> None:
 
 # drops the ticketing schema and its tables
 def downgrade() -> None:
+    op.execute("DROP TABLE IF EXISTS ticketing.event_outbox")
     op.execute("DROP TABLE IF EXISTS ticketing.device_context")
     op.execute("DROP TABLE IF EXISTS ticketing.event_venue_context")
     op.execute("DROP TABLE IF EXISTS ticketing.tickets")

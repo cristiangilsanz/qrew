@@ -124,7 +124,7 @@ async def get_entry_stats(
 ) -> EntryStatsResponse:
     del request
     try:
-        await require_event_member(event_id, current_user.id)
+        await require_event_member(event_id, current_user.id, db)
     except EventNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

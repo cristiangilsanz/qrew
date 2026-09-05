@@ -6,6 +6,7 @@ from com.qode.qrew.v1.sales.models.reservation import (
 from com.qode.qrew.v1.sales.models.reservation_item import (
     ReservationItem as ReservationItem,
 )
+from com.qode.qrew.v1.sales.models.outbox import EventOutbox as EventOutbox
 from com.qode.qrew.v1.sales.models.projections import (
     EventContext as EventContext,
     FingerprintContext as FingerprintContext,

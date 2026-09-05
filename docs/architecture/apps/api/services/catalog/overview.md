@@ -65,8 +65,11 @@ Full spec: [`packages/contracts/openapi/catalog/openapi.yaml`](../../../../../..
 | `EventCancelled` | `catalog.event.cancelled.v1` | Emitted when a published event was cancelled. |
 | `TicketTypeCreated` | `catalog.ticket_type.created.v1` | Emitted when a ticket type was added to an event. |
 | `TicketTypeUpdated` | `catalog.ticket_type.updated.v1` | Emitted when a ticket type capacity or price changes. |
+| `MembershipChanged` | `catalog.membership.changed.v1` | Emitted when an organisation roster changes, on creation, invitation, addition, or removal. A null `role` means the member left. |
 
 Schemas: [`packages/contracts/openapi/catalog/events/`](../../../../../../packages/contracts/openapi/catalog/events/)
+
+Every event is recorded in the `catalog.event_outbox` table inside the same transaction as the change that caused it, and the `outbox_drainer` job publishes it afterwards. The request never talks to the broker.
 
 ### Consumed
 
@@ -78,6 +81,9 @@ This service does not consume events from other services.
 |--------|------|-------------|
 | `search_reindexer` | arq job, daily at 05:00 | Rebuilds the full-text index that ranks the events a search returns. |
 | `event_lifecycle` | arq job, every minute | Marks a published event as ongoing once its start time has passed, so nobody has to do it by hand. |
+| `outbox_drainer` | arq job, every minute | Publishes to NATS every domain event waiting in `catalog.event_outbox`, retrying with backoff and parking a row after eight attempts. |
+
+These jobs run in the `catalog-worker` container, an arq runner on the `qrew:jobs:catalog` queue. It does not subscribe to NATS; it only publishes what the drainer takes from the outbox.
 
 ## Internal Dependencies
 
@@ -92,6 +98,7 @@ This service does not consume events from other services.
 | `messaging` | NATS JetStream publisher |
 | `middleware` | Request ID, correlation, and security headers |
 | `observability` | OpenTelemetry setup |
+| `outbox` | Transactional outbox mixin, recorder, and drainer |
 
 ## External Dependencies
 

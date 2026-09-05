@@ -117,7 +117,7 @@ async def create_scanner_for_event(
     db: AsyncSession = Depends(get_db),
 ) -> ScannerTokenResponse:
     del request
-    membership = await event_membership(event_id, current_user.id)
+    membership = await event_membership(event_id, current_user.id, db)
     if not membership.event_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

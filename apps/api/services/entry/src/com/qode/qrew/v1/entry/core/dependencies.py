@@ -22,7 +22,6 @@ from com.qode.qrew.v1.entry.models.scanner import Scanner
 from com.qode.qrew.v1.entry.repositories.scanner import ScannerRepository
 from com.qode.qrew.v1.entry.services.application.audit import AuditService
 from com.qode.qrew.v1.entry.services.application.catalog import (
-    CatalogUnavailableError,
     EventMembership,
     fetch_event_membership,
 )
@@ -118,20 +117,18 @@ def get_scanner_service(db: AsyncSession = Depends(get_db)) -> ScannerService:
     return ScannerService(ScannerRepository(db), AuditService())
 
 
-# asks catalog whether a user belongs to an event
-async def event_membership(event_id: uuid.UUID, user_id: uuid.UUID) -> EventMembership:
-    try:
-        return await fetch_event_membership(event_id, user_id)
-    except CatalogUnavailableError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"message": "Catalog unavailable.", "field": None},
-        ) from exc
+# reads from the local projection whether a user belongs to an event
+async def event_membership(
+    event_id: uuid.UUID, user_id: uuid.UUID, db: AsyncSession
+) -> EventMembership:
+    return await fetch_event_membership(db, event_id, user_id)
 
 
 # rejects a request whose user does not belong to the event
-async def require_event_member(event_id: uuid.UUID, user_id: uuid.UUID) -> None:
-    membership = await event_membership(event_id, user_id)
+async def require_event_member(
+    event_id: uuid.UUID, user_id: uuid.UUID, db: AsyncSession
+) -> None:
+    membership = await event_membership(event_id, user_id, db)
     if not membership.event_exists:
         raise EventNotFoundError(event_id)
     if not membership.is_member:

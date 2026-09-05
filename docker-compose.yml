@@ -15,6 +15,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - datos
+
 
   redis:
     image: redis:7-alpine
@@ -28,6 +31,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+    networks:
+      - datos
+
 
   nats:
     image: nats:2.10-alpine
@@ -43,6 +49,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+    networks:
+      - interna
+
 
   identity:
     build:
@@ -75,8 +84,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - interna
+      - datos
+
 
   identity-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/identity/Dockerfile
@@ -93,8 +107,13 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   identity-arq-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/identity/Dockerfile
@@ -105,11 +124,18 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   entry:
     build:
@@ -121,7 +147,6 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
       NATS_URL: nats://nats:4222
-      CATALOG_URL: http://catalog:8002
       HOST: 0.0.0.0
       DEBUG: "false"
       TICKETING_URL: http://ticketing:8005
@@ -140,8 +165,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - interna
+      - datos
+
 
   entry-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/entry/Dockerfile
@@ -157,6 +187,10 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   payments:
     build:
@@ -184,6 +218,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - interna
+      - datos
+
 
   catalog:
     build:
@@ -211,8 +249,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - interna
+      - datos
+
 
   catalog-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/catalog/Dockerfile
@@ -230,6 +273,34 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  payments-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/payments/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.payments.worker"]
+    volumes:
+      - ./apps/api/services/payments/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   ticketing:
     build:
@@ -256,8 +327,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - interna
+      - datos
+
 
   ticketing-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/ticketing/Dockerfile
@@ -273,6 +349,10 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   sales:
     build:
@@ -299,8 +379,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - interna
+      - datos
+
 
   sales-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/sales/Dockerfile
@@ -316,8 +401,13 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   ticketing-arq-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/ticketing/Dockerfile
@@ -327,13 +417,21 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   sales-arq-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/sales/Dockerfile
@@ -351,6 +449,10 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   audit:
     build:
@@ -374,8 +476,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - interna
+      - datos
+
 
   audit-worker:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/api/services/audit/Dockerfile
@@ -391,6 +498,10 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+    networks:
+      - interna
+      - datos
+
 
   gateway:
     build:
@@ -434,6 +545,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    networks:
+      - borde
+      - interna
+
 
   frontend:
     build:
@@ -449,6 +564,9 @@ services:
     depends_on:
       gateway:
         condition: service_healthy
+    networks:
+      - borde
+
 
   jaeger:
     image: jaegertracing/all-in-one:1.76.0
@@ -460,6 +578,16 @@ services:
       - "16686:16686"
       - "4317:4317"
       - "4318:4318"
+    networks:
+      - interna
+
+networks:
+  borde:
+    driver: bridge
+  interna:
+    driver: bridge
+  datos:
+    driver: bridge
 
 volumes:
   postgres_data:

@@ -33,7 +33,6 @@ class Settings(BaseSettings):
 
     internal_api_key: str = ""
     ticketing_url: str = "http://localhost:8004"
-    catalog_url: str = "http://localhost:8002"
 
     access_jwt_private_key: str = ""
     access_jwt_previous_public_keys: str = ""

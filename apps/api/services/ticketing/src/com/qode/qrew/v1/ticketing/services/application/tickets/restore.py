@@ -5,6 +5,9 @@ from datetime import UTC, datetime, timedelta
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from outbox import record as record_event
+
+from com.qode.qrew.v1.ticketing.models.outbox import EventOutbox
 from com.qode.qrew.v1.ticketing.services.application.audit import AuditService
 from com.qode.qrew.v1.ticketing.core.errors import DomainError
 from com.qode.qrew.v1.ticketing.models.projections import DeviceContext
@@ -92,24 +95,18 @@ async def restore_frozen_ticket(
         )
     except Exception as exc:
         await logger.awarning("audit_write_failed", action=_TICKET_RESTORED, error=repr(exc))
-    await _publish_restored(ticket, actor_id)
+    await _publish_restored(db, ticket, actor_id)
     return ticket
 
 
 # publishes that a ticket was restored onto the shared nats connection
-async def _publish_restored(ticket: Ticket, actor_id: uuid.UUID) -> None:
-    try:
-        from messaging.publisher import publish  # type: ignore[import-untyped]
-        from contracts.messaging.envelope import EventEnvelope  # type: ignore[import-untyped]
-
-        envelope = EventEnvelope(
-            occurred_at=datetime.now(UTC),
-            aggregate_type="ticket",
-            aggregate_id=str(ticket.id),
-            data={"ticket_id": str(ticket.id), "user_id": str(actor_id)},
-        )
-        await publish("ticketing.ticket.restored", envelope)
-    except Exception as exc:
-        await logger.awarning(
-            "nats_publish_failed", subject="ticketing.ticket.restored", error=repr(exc)
-        )
+async def _publish_restored(session: AsyncSession, ticket: Ticket, actor_id: uuid.UUID) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject="ticketing.ticket.restored",
+        aggregate_type="ticket",
+        aggregate_id=str(ticket.id),
+        actor_id=str(actor_id),
+        data={"ticket_id": str(ticket.id), "user_id": str(actor_id)},
+    )

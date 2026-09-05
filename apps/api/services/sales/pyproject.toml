@@ -9,6 +9,7 @@ version = "0.1.0"
 description = "Qrew sales service."
 requires-python = ">=3.12"
 dependencies = [
+    "outbox",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic-settings[yaml]>=2.0",
@@ -40,6 +41,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
+outbox = { workspace = true }
 exceptions = { workspace = true }
 idempotency = { workspace = true }
 middleware = { workspace = true }
@@ -80,13 +82,13 @@ reportMissingTypeStubs = false
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src"]
-extraPaths = ["../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src"]
+extraPaths = ["../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/outbox/src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 testpaths = ["tests"]
-pythonpath = ["src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src"]
+pythonpath = ["src", "../../packages/shared-python/idempotency/src", "../../packages/shared-python/locking/src", "../../packages/shared-python/messaging/src", "../../packages/shared-python/worker/src", "../../packages/shared-python/observability/src", "../../packages/contracts/src", "../../packages/shared-python/db/src", "../../packages/shared-python/jobs/src", "../../packages/shared-python/outbox/src"]
 python_files = ["*_test.py"]
 addopts = ["--tb=short", "--strict-markers", "--no-header"]
 markers = ["integration: marks tests as integration tests (require running Postgres)"]
