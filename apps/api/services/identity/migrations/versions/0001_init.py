@@ -1,0 +1,508 @@
+"""init identity schema (squashed)
+
+Revision ID: 0001_identity_init
+Revises:
+Create Date: 2026-06-14 00:00:00.000000
+
+"""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+import sqlalchemy as sa
+from alembic import op
+from sqlalchemy.dialects import postgresql
+
+revision: str = "0001_identity_init"
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+
+# creates the identity schema and its tables
+def upgrade() -> None:
+    op.execute("CREATE SCHEMA IF NOT EXISTS identity")
+
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS identity.event_outbox (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            subject VARCHAR(128) NOT NULL,
+            aggregate_type VARCHAR(64) NOT NULL,
+            aggregate_id VARCHAR(64) NOT NULL,
+            actor_id VARCHAR(64),
+            payload JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dispatched_at TIMESTAMPTZ,
+            attempt_count INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT,
+            next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dlq_reason VARCHAR(64)
+        )
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS ix_identity_event_outbox_pending
+            ON identity.event_outbox (next_attempt_at)
+            WHERE dispatched_at IS NULL AND dlq_reason IS NULL
+    """)
+    op.create_table(
+        "notifications",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=True),
+        sa.Column(
+            "channel",
+            sa.Enum("email", "sms", name="notification_channel"),
+            nullable=False,
+        ),
+        sa.Column("template_key", sa.String(length=64), nullable=False),
+        sa.Column("destination_ciphertext", sa.LargeBinary(), nullable=False),
+        sa.Column("payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "status",
+            sa.Enum("pending", "sent", "failed", name="notification_status"),
+            nullable=False,
+        ),
+        sa.Column("error", sa.Text(), nullable=True),
+        sa.Column("attempt_count", sa.Integer(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("sent_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("read_at", sa.DateTime(timezone=True), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_notifications_created_at"),
+        "notifications",
+        ["created_at"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_notifications_status"),
+        "notifications",
+        ["status"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_notifications_template_key"),
+        "notifications",
+        ["template_key"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_notifications_user_id"),
+        "notifications",
+        ["user_id"],
+        unique=False,
+        schema="identity",
+    )
+
+    op.create_table(
+        "users",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("full_name_ciphertext", sa.LargeBinary(), nullable=False),
+        sa.Column("email_ciphertext", sa.LargeBinary(), nullable=False),
+        sa.Column("email_hash", sa.String(length=64), nullable=False),
+        sa.Column("phone_number_ciphertext", sa.LargeBinary(), nullable=False),
+        sa.Column("phone_number_hash", sa.String(length=64), nullable=False),
+        sa.Column("hashed_password", sa.String(length=255), nullable=False),
+        sa.Column("email_verified", sa.Boolean(), nullable=False),
+        sa.Column("phone_number_verified", sa.Boolean(), nullable=False),
+        sa.Column("email_verification_token", sa.String(length=255), nullable=True),
+        sa.Column("email_verification_token_expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("phone_number_otp", sa.String(length=64), nullable=True),
+        sa.Column("phone_number_otp_expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("pending_phone_number_ciphertext", sa.LargeBinary(), nullable=True),
+        sa.Column("pending_phone_number_hash", sa.String(length=64), nullable=True),
+        sa.Column("pending_phone_otp", sa.String(length=64), nullable=True),
+        sa.Column("pending_phone_otp_expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("pending_email_ciphertext", sa.LargeBinary(), nullable=True),
+        sa.Column("pending_email_hash", sa.String(length=64), nullable=True),
+        sa.Column("pending_email_verification_token", sa.String(length=255), nullable=True),
+        sa.Column("pending_email_token_expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("national_id_hash", sa.String(length=64), nullable=True),
+        sa.Column("national_id_number", sa.Text(), nullable=True),
+        sa.Column("national_id_type", sa.String(length=16), nullable=True),
+        sa.Column(
+            "kyc_status",
+            sa.Enum("not_submitted", "pending", "approved", "rejected", name="kyc_status"),
+            nullable=False,
+        ),
+        sa.Column("kyc_document_object_key", sa.String(length=255), nullable=True),
+        sa.Column("kyc_ocr_result", sa.String(length=16), nullable=True),
+        sa.Column("terms_accepted_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("registration_ip", sa.String(length=45), nullable=False),
+        sa.Column("device_fingerprint", sa.String(length=255), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("is_active", sa.Boolean(), nullable=False),
+        sa.Column("is_admin", sa.Boolean(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("totp_secret_ciphertext", sa.LargeBinary(), nullable=True),
+        sa.Column(
+            "totp_enabled",
+            sa.Boolean(),
+            server_default=sa.text("false"),
+            nullable=False,
+        ),
+        sa.Column("totp_backup_codes_json", sa.Text(), nullable=True),
+        sa.Column("password_reset_token", sa.String(length=255), nullable=True),
+        sa.Column("password_reset_token_expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_users_email_hash"),
+        "users",
+        ["email_hash"],
+        unique=True,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_users_email_verification_token"),
+        "users",
+        ["email_verification_token"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_users_national_id_hash"),
+        "users",
+        ["national_id_hash"],
+        unique=True,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_users_pending_email_hash"),
+        "users",
+        ["pending_email_hash"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_users_pending_email_verification_token"),
+        "users",
+        ["pending_email_verification_token"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_users_pending_phone_number_hash"),
+        "users",
+        ["pending_phone_number_hash"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_users_phone_number_hash"),
+        "users",
+        ["phone_number_hash"],
+        unique=True,
+        schema="identity",
+    )
+    op.create_index(
+        "ix_identity_users_password_reset_token",
+        "users",
+        ["password_reset_token"],
+        unique=False,
+        schema="identity",
+    )
+
+    op.create_table(
+        "device_fingerprints",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("fingerprint_hash", sa.String(length=255), nullable=False),
+        sa.Column("user_agent", sa.Text(), nullable=True),
+        sa.Column("ip_address", sa.String(length=45), nullable=True),
+        sa.Column(
+            "seen_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("account_count_at_seen", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(["user_id"], ["identity.users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id", "fingerprint_hash", name="uq_device_fingerprints_user_hash"),
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_device_fingerprints_fingerprint_hash"),
+        "device_fingerprints",
+        ["fingerprint_hash"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_device_fingerprints_user_id"),
+        "device_fingerprints",
+        ["user_id"],
+        unique=False,
+        schema="identity",
+    )
+
+    op.create_table(
+        "devices",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("name", sa.String(length=128), nullable=False),
+        sa.Column("public_key", sa.LargeBinary(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("last_seen_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("attested_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("attestation_platform", sa.String(length=16), nullable=True),
+        sa.ForeignKeyConstraint(["user_id"], ["identity.users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("public_key"),
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_devices_user_id"),
+        "devices",
+        ["user_id"],
+        unique=False,
+        schema="identity",
+    )
+
+    op.create_table(
+        "passkey_credentials",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("credential_id", sa.LargeBinary(), nullable=False),
+        sa.Column("public_key", sa.LargeBinary(), nullable=False),
+        sa.Column("sign_count", sa.Integer(), nullable=False),
+        sa.Column("aaguid", sa.String(length=36), nullable=False),
+        sa.Column("name", sa.String(length=128), nullable=True),
+        sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["user_id"], ["identity.users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_passkey_credentials_credential_id"),
+        "passkey_credentials",
+        ["credential_id"],
+        unique=True,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_passkey_credentials_user_id"),
+        "passkey_credentials",
+        ["user_id"],
+        unique=False,
+        schema="identity",
+    )
+
+    op.create_table(
+        "outbox",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("aggregate_type", sa.String(length=64), nullable=False),
+        sa.Column("aggregate_id", sa.String(length=64), nullable=False),
+        sa.Column("job_name", sa.String(length=64), nullable=False),
+        sa.Column("payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("dispatched_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("attempt_count", sa.Integer(), nullable=False),
+        sa.Column("last_error", sa.Text(), nullable=True),
+        sa.Column(
+            "next_attempt_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("dlq_reason", sa.String(length=64), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+        schema="identity",
+    )
+    op.create_index(
+        "ix_identity_outbox_next_attempt_at",
+        "outbox",
+        ["next_attempt_at"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        "ix_identity_outbox_dlq_reason",
+        "outbox",
+        ["dlq_reason"],
+        unique=False,
+        schema="identity",
+    )
+
+    op.create_table(
+        "sessions",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("jti", sa.String(length=36), nullable=False),
+        sa.Column("ip_address", sa.String(length=45), nullable=True),
+        sa.Column("user_agent", sa.Text(), nullable=True),
+        sa.Column("device_fingerprint", sa.String(length=255), nullable=True),
+        sa.Column("device_id", sa.UUID(), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "last_used_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("last_asserted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.ForeignKeyConstraint(["device_id"], ["identity.devices.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["user_id"], ["identity.users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_sessions_device_id"),
+        "sessions",
+        ["device_id"],
+        unique=False,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_sessions_jti"),
+        "sessions",
+        ["jti"],
+        unique=True,
+        schema="identity",
+    )
+    op.create_index(
+        op.f("ix_identity_sessions_user_id"),
+        "sessions",
+        ["user_id"],
+        unique=False,
+        schema="identity",
+    )
+
+
+# drops the identity schema and its tables
+def downgrade() -> None:
+    op.execute("DROP TABLE IF EXISTS identity.event_outbox")
+    op.drop_index(op.f("ix_identity_sessions_user_id"), table_name="sessions", schema="identity")
+    op.drop_index(op.f("ix_identity_sessions_jti"), table_name="sessions", schema="identity")
+    op.drop_index(op.f("ix_identity_sessions_device_id"), table_name="sessions", schema="identity")
+    op.drop_table("sessions", schema="identity")
+
+    op.drop_index("ix_identity_outbox_dlq_reason", table_name="outbox", schema="identity")
+    op.drop_index("ix_identity_outbox_next_attempt_at", table_name="outbox", schema="identity")
+    op.drop_table("outbox", schema="identity")
+
+    op.drop_index(
+        op.f("ix_identity_passkey_credentials_user_id"),
+        table_name="passkey_credentials",
+        schema="identity",
+    )
+    op.drop_index(
+        op.f("ix_identity_passkey_credentials_credential_id"),
+        table_name="passkey_credentials",
+        schema="identity",
+    )
+    op.drop_table("passkey_credentials", schema="identity")
+
+    op.drop_index(op.f("ix_identity_devices_user_id"), table_name="devices", schema="identity")
+    op.drop_table("devices", schema="identity")
+
+    op.drop_index(
+        op.f("ix_identity_device_fingerprints_user_id"),
+        table_name="device_fingerprints",
+        schema="identity",
+    )
+    op.drop_index(
+        op.f("ix_identity_device_fingerprints_fingerprint_hash"),
+        table_name="device_fingerprints",
+        schema="identity",
+    )
+    op.drop_table("device_fingerprints", schema="identity")
+
+    op.drop_index("ix_identity_users_password_reset_token", table_name="users", schema="identity")
+    op.drop_index(
+        op.f("ix_identity_users_phone_number_hash"), table_name="users", schema="identity"
+    )
+    op.drop_index(
+        op.f("ix_identity_users_pending_phone_number_hash"),
+        table_name="users",
+        schema="identity",
+    )
+    op.drop_index(
+        op.f("ix_identity_users_pending_email_verification_token"),
+        table_name="users",
+        schema="identity",
+    )
+    op.drop_index(
+        op.f("ix_identity_users_pending_email_hash"), table_name="users", schema="identity"
+    )
+    op.drop_index(op.f("ix_identity_users_national_id_hash"), table_name="users", schema="identity")
+    op.drop_index(
+        op.f("ix_identity_users_email_verification_token"),
+        table_name="users",
+        schema="identity",
+    )
+    op.drop_index(op.f("ix_identity_users_email_hash"), table_name="users", schema="identity")
+    op.drop_table("users", schema="identity")
+
+    op.drop_index(
+        op.f("ix_identity_notifications_user_id"),
+        table_name="notifications",
+        schema="identity",
+    )
+    op.drop_index(
+        op.f("ix_identity_notifications_template_key"),
+        table_name="notifications",
+        schema="identity",
+    )
+    op.drop_index(
+        op.f("ix_identity_notifications_status"), table_name="notifications", schema="identity"
+    )
+    op.drop_index(
+        op.f("ix_identity_notifications_created_at"),
+        table_name="notifications",
+        schema="identity",
+    )
+    op.drop_table("notifications", schema="identity")
+
+    op.drop_index()
+
+    sa.Enum(name="kyc_status").drop(op.get_bind(), checkfirst=True)
+    sa.Enum(name="notification_status").drop(op.get_bind(), checkfirst=True)
+    sa.Enum(name="notification_channel").drop(op.get_bind(), checkfirst=True)
+
+    op.execute("DROP SCHEMA IF EXISTS identity")

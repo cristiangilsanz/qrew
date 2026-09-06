@@ -1,0 +1,98 @@
+# exposes the endpoints that join and redeem an event's virtual waiting room
+import secrets
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+
+from com.qode.qrew.v1.sales.core.principals import AuthenticatedUser, get_current_user
+from idempotency import idempotent
+from com.qode.qrew.v1.sales.core.dependencies import get_queue_service, limiter
+from com.qode.qrew.v1.sales.schemas.queue import (
+    QueueJoinResponse,
+    QueuePositionResponse,
+    QueueRedeemRequest,
+    QueueRedeemResponse,
+)
+from com.qode.qrew.v1.sales.services.application.queue.service import QueueError, QueueService
+
+router = APIRouter(prefix="/events/{event_id}/queue", tags=["queue"])
+
+
+# converts a queue error into its http response
+def _bad_request(error: QueueError) -> HTTPException:
+    code = (
+        status.HTTP_404_NOT_FOUND
+        if error.field == "event_id"
+        else status.HTTP_409_CONFLICT
+        if error.field in {"sale_starts_at", "sale_window", "queue_required"}
+        else status.HTTP_400_BAD_REQUEST
+    )
+    return HTTPException(status_code=code, detail={"message": error.message, "field": error.field})
+
+
+# joins the caller into an event's queue
+@router.post(
+    "/join",
+    response_model=QueueJoinResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Join the virtual waiting room for an event",
+)
+@limiter.limit("10/minute")  # type: ignore[misc]
+@idempotent(scope="user", ttl_seconds=60)
+async def join_queue(
+    request: Request,
+    event_id: uuid.UUID,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    service: QueueService = Depends(get_queue_service),
+) -> QueueJoinResponse:
+    del request
+    tiebreak = secrets.randbits(16)
+    try:
+        position = await service.join(user_id=current_user.id, event_id=event_id, tiebreak=tiebreak)
+    except QueueError as exc:
+        raise _bad_request(exc) from exc
+    return QueueJoinResponse(position=position)
+
+
+# reads the caller's current position in the queue
+@router.get(
+    "/position",
+    response_model=QueuePositionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Read the caller's current queue position",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def queue_position(
+    request: Request,
+    event_id: uuid.UUID,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    service: QueueService = Depends(get_queue_service),
+) -> QueuePositionResponse:
+    del request
+    position, redeem_token = await service.position(user_id=current_user.id, event_id=event_id)
+    return QueuePositionResponse(position=position, redeem_token=redeem_token)
+
+
+# exchanges a redeem token for a reservation window
+@router.post(
+    "/redeem",
+    response_model=QueueRedeemResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Exchange a redeem token for a reservation window",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def redeem_queue(
+    request: Request,
+    event_id: uuid.UUID,
+    body: QueueRedeemRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    service: QueueService = Depends(get_queue_service),
+) -> QueueRedeemResponse:
+    del request, event_id
+    try:
+        reservation_token = await service.redeem(
+            user_id=current_user.id, token=body.redeem_window_token
+        )
+    except QueueError as exc:
+        raise _bad_request(exc) from exc
+    return QueueRedeemResponse(reservation_window_token=reservation_token)

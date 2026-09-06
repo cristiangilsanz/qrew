@@ -1,0 +1,63 @@
+# defines the audit action enum for the identity service
+import enum
+
+
+class AuditAction(enum.StrEnum):
+    REGISTER = "register"
+    LOGIN = "login"
+    LOGIN_FAILED = "login_failed"
+    LOGIN_LOCKED = "login_locked"
+    LOGIN_UNLOCKED = "login_unlocked"
+    LOGIN_COMPROMISED_PASSWORD = "login_compromised_password"  # noqa: S105
+    SESSION_EVICTED = "session_evicted"
+    ACCOUNT_DELETED = "account_deleted"
+    DEVICE_ATTESTED = "device_attested"
+    DEVICE_ATTESTATION_FAILED = "device_attestation_failed"
+    LOGOUT = "logout"
+    VERIFY_EMAIL = "verify_email"
+    VERIFY_PHONE = "verify_phone"
+    KYC_UPLOADED = "kyc_uploaded"
+    KYC_REVIEWED = "kyc_reviewed"
+    PASSKEY_REGISTERED = "passkey_registered"
+    PASSKEY_AUTHENTICATED = "passkey_authenticated"
+    PASSKEY_DELETED = "passkey_deleted"
+    PASSKEY_RENAMED = "passkey_renamed"
+    TOKEN_REFRESHED = "token_refreshed"  # noqa: S105
+    TOKEN_THEFT_DETECTED = "token_theft_detected"  # noqa: S105
+    REFRESH_SIGNATURE_INVALID = "refresh_signature_invalid"
+    SETUP_COMPLETED = "setup_completed"
+    PASSWORD_CHANGED = "password_changed"  # noqa: S105
+    EMAIL_CHANGE_REQUESTED = "email_change_requested"
+    EMAIL_CHANGE_CONFIRMED = "email_change_confirmed"
+    PHONE_CHANGE_REQUESTED = "phone_change_requested"
+    PHONE_CHANGE_CONFIRMED = "phone_change_confirmed"
+    FINGERPRINT_MULTI_ACCOUNT_FLAG = "fingerprint_multi_account_flag"
+    FINGERPRINT_HEADLESS_FLAG = "fingerprint_headless_flag"
+    RECOVERY_BEGIN = "recovery_begin"
+    RECOVERY_COMPLETED = "recovery_completed"
+    RECOVERY_FAILED = "recovery_failed"
+    LOGIN_ANOMALY_DETECTED = "login_anomaly_detected"
+    DEVICE_BIND = "device_bind"
+    DEVICE_REVOKE = "device_revoke"
+    DEVICE_REVOKE_ALL = "device_revoke_all"
+    PASSKEY_REASSERTED = "passkey_reasserted"
+    SCANNER_CREATED = "scanner_created"
+    SCANNER_ROTATED = "scanner_rotated"
+    SCANNER_DEACTIVATED = "scanner_deactivated"
+    GENESIS = "genesis"
+    EXPIRED_TOKENS_CLEANED = "expired_tokens_cleaned"
+    RATE_LIMIT_HIT = "rate_limit_hit"
+    NOTIFICATION_FAILED = "notification_failed"
+    PAYMENT_INITIATED = "payment_initiated"  # noqa: S105
+    PAYMENT_SUCCEEDED = "payment_succeeded"  # noqa: S105
+    PAYMENT_FAILED = "payment_failed"  # noqa: S105
+    PAYMENT_REFUNDED = "payment_refunded"  # noqa: S105
+    PAYMENT_PARTIAL_REFUND = "payment_partial_refund"  # noqa: S105
+    CHARGEBACK_OPENED = "chargeback_opened"
+    CHARGEBACK_CLOSED = "chargeback_closed"
+    OUTBOX_ROW_DLQ = "outbox_row_dlq"
+    TOTP_ENABLED = "totp_enabled"
+    TOTP_DISABLED = "totp_disabled"
+    TOTP_VERIFIED = "totp_verified"
+    TOTP_VERIFY_FAILED = "totp_verify_failed"
+    TOTP_BACKUP_USED = "totp_backup_used"

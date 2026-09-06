@@ -1,0 +1,71 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: docker
+    directory: /apps/api/services/audit
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: docker
+    directory: /apps/api/services/catalog
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: docker
+    directory: /apps/api/services/entry
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: docker
+    directory: /apps/api/gateway
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: docker
+    directory: /apps/api/services/identity
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: docker
+    directory: /apps/api/services/payments
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: docker
+    directory: /apps/api/services/sales
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: docker
+    directory: /apps/api/services/ticketing
+    schedule:
+      interval: weekly
+    labels:
+      - security
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - security

@@ -1,0 +1,22 @@
+# exposes the identity models package
+from com.qode.qrew.v1.identity.core.database import Base
+from com.qode.qrew.v1.identity.models.session import Session
+from com.qode.qrew.v1.identity.models.user import User
+from com.qode.qrew.v1.identity.models.device import Device
+from com.qode.qrew.v1.identity.models.fingerprint import DeviceFingerprint
+from com.qode.qrew.v1.identity.models.notification import Notification
+from com.qode.qrew.v1.identity.models.passkey import PasskeyCredential
+from com.qode.qrew.v1.identity.models.event_outbox import EventOutbox
+from com.qode.qrew.v1.identity.models.outbox import OutboxEvent
+
+__all__ = [
+    "EventOutbox",
+    "OutboxEvent",
+    "Base",
+    "Device",
+    "DeviceFingerprint",
+    "Notification",
+    "PasskeyCredential",
+    "Session",
+    "User",
+]

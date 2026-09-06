@@ -1,0 +1,83 @@
+# defines the configuration settings for the ticketing service
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import YamlConfigSettingsSource
+
+_SERVICE_DIR = Path(__file__).parents[7]
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        yaml_file=str(_SERVICE_DIR / "config" / "local.yaml"),
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    app_name: str = "qrew-ticketing"
+    version: str = "0.1.0"
+    debug: bool = True
+    host: str = "0.0.0.0"  # noqa: S104
+    port: int = 8005
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+
+    database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
+    redis_url: str = "redis://localhost:6379/0"
+    nats_url: str = ""
+
+    internal_api_key: str = ""
+
+    pii_encryption_key: str = ""
+    pii_encryption_previous_keys: str = ""
+
+    access_jwt_private_key: str = ""
+    access_jwt_previous_public_keys: str = ""
+    ticket_qr_jwt_private_key: str = ""
+    ticket_qr_jwt_previous_public_keys: str = ""
+
+    ticket_qr_ttl_seconds: int = 20
+    # long enough to cover a stay in the queue, short enough to still mean presence
+    ticket_qr_reassert_window_seconds: int = 180
+    ticket_qr_mint_audit_sample_rate: int = 10
+    ticket_qr_attestation_max_age_hours: int = 24
+    # each gate check has its own switch so a denial always names the real cause
+    ticket_qr_require_reassertion: bool = True
+    ticket_qr_require_attestation: bool = False
+    ticket_qr_require_device_binding: bool = True
+    ticket_qr_require_geofence: bool = True
+    # off by default: only an attested android build reports the mock flag at all
+    ticket_qr_require_location_integrity: bool = False
+    ticket_qr_audience: str = "qrew.scan"
+    ticket_qr_stream_max_seconds: int = 1800
+
+    gate_bypass: bool = False
+
+    idempotency_enabled: bool = True
+    idempotency_lock_seconds: int = 30
+
+    ratelimit_enabled: bool = True
+
+    otel_enabled: bool = False
+    otel_endpoint: str = "http://localhost:4317"
+
+    # orders the configuration sources so the yaml file can override the defaults
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            YamlConfigSettingsSource(settings_cls),
+        )  # noqa: E501
+
+
+settings = Settings()

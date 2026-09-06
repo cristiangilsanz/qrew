@@ -1,0 +1,428 @@
+# runs the resale market's queue listings and assignments through to payment
+import secrets
+import uuid
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
+import structlog
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from outbox import record as record_event
+
+from com.qode.qrew.v1.sales.models.outbox import EventOutbox
+from com.qode.qrew.v1.sales.core.errors import DomainError
+from com.qode.qrew.v1.sales.models.market import (
+    MarketAssignment,
+    MarketAssignmentState,
+    MarketListing,
+    MarketListingState,
+    MarketQueueEntry,
+)
+from com.qode.qrew.v1.sales.models.projections import EventContext
+from com.qode.qrew.v1.sales.repositories.market import MarketRepository
+from com.qode.qrew.v1.sales.repositories.projections import (
+    EventContextRepository,
+    TicketTypeInventoryRepository,
+)
+from com.qode.qrew.v1.sales.services.application.audit import AuditService
+from observability import traced
+
+logger = structlog.get_logger(__name__)
+
+_NATS_TIMEOUT = 5.0
+
+_QUEUE_JOINED = "MARKET_QUEUE_JOINED"
+_QUEUE_LEFT = "MARKET_QUEUE_LEFT"
+_TICKET_LISTED = "MARKET_TICKET_LISTED"
+_ASSIGNMENT_DECLINED = "MARKET_ASSIGNMENT_DECLINED"
+_ASSIGNMENT_PAID = "MARKET_ASSIGNMENT_PAID"
+
+
+class MarketError(DomainError):
+    pass
+
+
+# returns the current time
+def _now() -> datetime:
+    return datetime.now(UTC)
+
+
+class MarketService:
+    # stores the repositories audit service and ttl settings the service uses
+    def __init__(
+        self,
+        repo: MarketRepository,
+        event_ctx_repo: EventContextRepository,
+        inventory_repo: TicketTypeInventoryRepository,
+        audit: AuditService,
+        *,
+        assignment_ttl_hours: int,
+        listing_ttl_days: int,
+    ) -> None:
+        self._repo = repo
+        self._event_ctx = event_ctx_repo
+        self._inventory = inventory_repo
+        self._audit = audit
+        self._assignment_ttl = timedelta(hours=assignment_ttl_hours)
+        self._listing_ttl = timedelta(days=listing_ttl_days)
+
+    # reports whether an event can no longer be bought from, by date or by capacity
+    async def _sale_is_over(self, event_ctx: EventContext, now: datetime) -> bool:
+        if event_ctx.sale_ends_at is not None and now > event_ctx.sale_ends_at:
+            return True
+        return await self._inventory.event_is_sold_out(event_ctx.event_id)
+
+    # joins a user into an event's resale queue once the sale is over
+    @traced("market.service.join_queue")
+    async def join_queue(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> MarketQueueEntry:
+        event_ctx = await self._event_ctx.get_by_event_id(event_id)
+        if event_ctx is None or event_ctx.status != "published":
+            raise MarketError("Event not found.", field="event_id")
+
+        now = _now()
+        if not await self._sale_is_over(event_ctx, now):
+            raise MarketError(
+                "Resale queue opens once the event is sold out or its sale has closed",
+                field="event_id",
+            )
+
+        active_count = await self._repo.active_ticket_count_for_user(
+            user_id=user_id, event_id=event_id
+        )
+        if active_count >= event_ctx.max_tickets_per_user:
+            raise MarketError(
+                "You already have the maximum number of tickets for this event",
+                field="user_id",
+            )
+
+        existing = await self._repo.get_queue_entry(event_id=event_id, user_id=user_id)
+        if existing is not None:
+            return existing
+
+        entry = MarketQueueEntry(
+            event_id=event_id,
+            user_id=user_id,
+            tiebreak=secrets.randbits(16),
+        )
+        entry = await self._repo.insert_queue_entry(entry)
+        await self._record(_QUEUE_JOINED, actor_id=user_id, entity_id=str(event_id))
+        return entry
+
+    # removes a user from an event's resale queue
+    @traced("market.service.leave_queue")
+    async def leave_queue(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> bool:
+        entry = await self._repo.get_queue_entry(event_id=event_id, user_id=user_id)
+        if entry is None:
+            return False
+        entry.left_at = _now()
+        await self._repo.flush()
+        await self._record(_QUEUE_LEFT, actor_id=user_id, entity_id=str(event_id))
+        return True
+
+    # reports a user's resale queue standing and any pending assignment
+    @traced("market.service.queue_status")
+    async def queue_status(self, *, user_id: uuid.UUID, event_id: uuid.UUID) -> dict[str, Any]:
+        entry = await self._repo.get_queue_entry(event_id=event_id, user_id=user_id)
+        pending = await self._repo.get_pending_assignment_for_user(
+            buyer_user_id=user_id, event_id=event_id
+        )
+        active_count = await self._repo.active_queue_count(event_id)
+        return {
+            "in_queue": entry is not None,
+            "joined_at": entry.joined_at if entry else None,
+            "pending_assignment_id": str(pending.id) if pending else None,
+            "queue_count": active_count,
+        }
+
+    # lists every resale queue a user is active in
+    @traced("market.service.my_queues")
+    async def my_queues(self, *, user_id: uuid.UUID) -> list[dict[str, Any]]:
+        entries = await self._repo.get_active_queue_entries_for_user(user_id=user_id)
+        return [{"event_id": e.event_id, "joined_at": e.joined_at} for e in entries]
+
+    # lists an issued ticket for resale once the sale window has closed
+    @traced("market.service.list_ticket")
+    async def list_ticket(self, *, user_id: uuid.UUID, ticket_id: uuid.UUID) -> MarketListing:
+        ticket_row = await self._get_ticket_for_listing(user_id, ticket_id)
+        event_id: uuid.UUID = ticket_row["event_id"]
+        ticket_type_id: uuid.UUID = ticket_row["ticket_type_id"]
+
+        event_ctx = await self._event_ctx.get_by_event_id(event_id)
+        if event_ctx is None or event_ctx.status != "published":
+            raise MarketError("Event not found.", field="event_id")
+
+        now = _now()
+        if not await self._sale_is_over(event_ctx, now):
+            raise MarketError(
+                "Tickets can be listed once the event is sold out or its sale has closed",
+                field="event_id",
+            )
+
+        if event_ctx.starts_at is not None and (event_ctx.starts_at - now).total_seconds() < 86400:
+            raise MarketError(
+                "Resale listing is closed within 24 hours of the event",
+                field="event_id",
+            )
+
+        existing = await self._repo.get_listing_by_ticket_id(ticket_id)
+        if existing is not None:
+            raise MarketError("Ticket already listed.", field="ticket_id")
+
+        inventory = await self._inventory.get_by_id(ticket_type_id)
+        if inventory is None:
+            raise MarketError("Ticket type not found.", field="ticket_type_id")
+
+        listing = MarketListing(
+            ticket_id=ticket_id,
+            event_id=event_id,
+            seller_user_id=user_id,
+            ticket_type_id=ticket_type_id,
+            price_cents=inventory.price_cents,
+            currency=inventory.currency or "EUR",
+            state=MarketListingState.available,
+            expires_at=now + self._listing_ttl,
+        )
+        listing = await self._repo.insert_listing(listing)
+
+        await _freeze_ticket(self._repo.session, ticket_id, actor_id=user_id)
+        await self._record(_TICKET_LISTED, actor_id=user_id, entity_id=str(ticket_id))
+        return listing
+
+    # reads a ticket's active listing
+    async def get_listing_for_seller(
+        self, *, user_id: uuid.UUID, ticket_id: uuid.UUID
+    ) -> MarketListing | None:
+        return await self._repo.get_listing_by_ticket_id(ticket_id)
+
+    # reads a specific market assignment owned by the caller
+    @traced("market.service.get_assignment")
+    async def get_assignment(
+        self, *, user_id: uuid.UUID, assignment_id: uuid.UUID
+    ) -> MarketAssignment:
+        assignment = await self._repo.get_assignment_by_id(assignment_id)
+        if assignment is None or assignment.buyer_user_id != user_id:
+            raise MarketError("Assignment not found.", field="assignment_id")
+        return assignment
+
+    # reads a user's pending assignment across every event
+    @traced("market.service.get_pending_assignment")
+    async def get_pending_assignment(self, *, user_id: uuid.UUID) -> MarketAssignment | None:
+        return await self._repo.get_pending_assignment_for_user_any_event(user_id)
+
+    # lists the caller's pending assignments and the ones that just ended
+    async def list_recent_assignments(
+        self, *, user_id: uuid.UUID, within_hours: int = 24
+    ) -> list[MarketAssignment]:
+        since = _now() - timedelta(hours=within_hours)
+        return await self._repo.list_recent_assignments_for_user(user_id, since=since)
+
+    # reads a listing by its identifier
+    async def get_listing(self, *, listing_id: uuid.UUID) -> MarketListing | None:
+        return await self._repo.get_listing_by_id(listing_id)
+
+    # names the holder of the ticket a pending assignment will transfer
+    @traced("market.service.set_holders")
+    async def set_holders(
+        self,
+        *,
+        user_id: uuid.UUID,
+        assignment_id: uuid.UUID,
+        holder_name: str,
+        holder_document_type: str,
+        holder_dni: str,
+    ) -> MarketAssignment:
+        assignment = await self._repo.get_assignment_by_id(assignment_id)
+        if assignment is None or assignment.buyer_user_id != user_id:
+            raise MarketError("Assignment not found.", field="assignment_id")
+        if assignment.state != MarketAssignmentState.pending:
+            raise MarketError("Assignment already closed.", field="state")
+        if _now() >= assignment.expires_at:
+            raise MarketError("Assignment expired.", field="expires_at")
+        assignment.holder_name = holder_name
+        assignment.holder_dni = holder_dni
+        assignment.holder_document_type = holder_document_type
+        await self._repo.flush()
+        return assignment
+
+    # validates a pending assignment and returns its price
+    @traced("market.service.get_payment_context")
+    async def get_payment_context(
+        self, *, user_id: uuid.UUID, assignment_id: uuid.UUID
+    ) -> dict[str, Any]:
+        assignment = await self._repo.get_assignment_by_id(assignment_id)
+        if assignment is None or assignment.buyer_user_id != user_id:
+            raise MarketError("Assignment not found.", field="assignment_id")
+        if assignment.state != MarketAssignmentState.pending:
+            raise MarketError("Assignment not pending payment.", field="state")
+        if _now() >= assignment.expires_at:
+            raise MarketError("Assignment expired.", field="expires_at")
+        if not assignment.holder_name or not assignment.holder_dni:
+            raise MarketError("Holders not set.", field="holder_name")
+
+        listing = await self._repo.get_listing_by_id(assignment.listing_id)
+        if listing is None:
+            raise MarketError("Listing not found.", field="listing_id")
+
+        return {
+            "amount_cents": listing.price_cents,
+            "currency": listing.currency,
+        }
+
+    # records the stripe payment intent an assignment is waiting on
+    @traced("market.service.record_payment_intent")
+    async def record_payment_intent(
+        self,
+        *,
+        user_id: uuid.UUID,
+        assignment_id: uuid.UUID,
+        payment_intent_id: str,
+    ) -> None:
+        assignment = await self._repo.get_assignment_by_id(assignment_id)
+        if assignment is None or assignment.buyer_user_id != user_id:
+            raise MarketError("Assignment not found.", field="assignment_id")
+        assignment.payment_intent_id = payment_intent_id
+        await self._repo.flush()
+
+    # declines a pending assignment and frees its listing and queue slot
+    @traced("market.service.decline_assignment")
+    async def decline_assignment(self, *, user_id: uuid.UUID, assignment_id: uuid.UUID) -> None:
+        assignment = await self._repo.get_assignment_by_id(assignment_id)
+        if assignment is None or assignment.buyer_user_id != user_id:
+            raise MarketError("Assignment not found.", field="assignment_id")
+        if assignment.state != MarketAssignmentState.pending:
+            raise MarketError("Assignment not declined.", field="state")
+
+        assignment.state = MarketAssignmentState.declined
+        await self._repo.flush()
+
+        entry = await self._repo.get_queue_entry(event_id=assignment.event_id, user_id=user_id)
+        if entry is not None:
+            entry.left_at = _now()
+            await self._repo.flush()
+
+        listing = await self._repo.get_listing_by_id(assignment.listing_id)
+        if listing is not None and listing.state == MarketListingState.assigned:
+            listing.state = MarketListingState.available
+            await self._repo.flush()
+
+        await self._record(_ASSIGNMENT_DECLINED, actor_id=user_id, entity_id=str(assignment_id))
+
+    # settles a paid assignment by transferring its ticket to the buyer
+    @traced("market.service.complete_assignment")
+    async def complete_assignment(
+        self, *, payment_intent_id: str, assignment_id: uuid.UUID | None = None
+    ) -> None:
+        assignment = None
+        if assignment_id is not None:
+            assignment = await self._repo.get_assignment_by_id(assignment_id)
+        if assignment is None:
+            assignment = await self._repo.get_assignment_by_payment_intent(payment_intent_id)
+        if assignment is None:
+            await logger.awarning(
+                "market.complete_assignment.not_found",
+                payment_intent_id=payment_intent_id,
+                assignment_id=str(assignment_id) if assignment_id else None,
+            )
+            return
+        if not assignment.payment_intent_id:
+            assignment.payment_intent_id = payment_intent_id
+        if assignment.state != MarketAssignmentState.pending:
+            await logger.awarning(
+                "market.complete_assignment.skip",
+                state=assignment.state,
+                assignment_id=str(assignment.id),
+            )
+            return
+
+        listing = await self._repo.get_listing_by_id(assignment.listing_id)
+        if listing is None:
+            return
+
+        assignment.state = MarketAssignmentState.paid
+        assignment.paid_at = _now()
+        listing.state = MarketListingState.completed
+        listing.completed_at = _now()
+        await self._repo.flush()
+
+        await _publish_transfer(
+            self._repo.session,
+            ticket_id=listing.ticket_id,
+            new_owner_user_id=assignment.buyer_user_id,
+            holder_name=assignment.holder_name or "",
+            holder_document_type=assignment.holder_document_type or "",
+            holder_dni=assignment.holder_dni or "",
+            actor_id=assignment.buyer_user_id,
+        )
+        await self._record(
+            _ASSIGNMENT_PAID,
+            actor_id=assignment.buyer_user_id,
+            entity_id=str(assignment.id),
+        )
+
+    # validates that a ticket is owned by the caller and eligible for listing
+    async def _get_ticket_for_listing(
+        self, user_id: uuid.UUID, ticket_id: uuid.UUID
+    ) -> dict[str, Any]:
+        row = await self._repo.get_ticket_for_listing(ticket_id=ticket_id, owner_user_id=user_id)
+        if row is None:
+            raise MarketError("Ticket not found.", field="ticket_id")
+        if row["state"] != "issued":
+            raise MarketError("Ticket not listable.", field="ticket_id")
+        return {"event_id": row["event_id"], "ticket_type_id": row["ticket_type_id"]}
+
+    # records an audit event without letting a failure interrupt the caller
+    async def _record(self, action: str, *, actor_id: uuid.UUID, entity_id: str) -> None:
+        try:
+            await self._audit.record(
+                action=action,
+                actor_id=actor_id,
+                entity_type="market",
+                entity_id=entity_id,
+                payload={},
+            )
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))
+
+
+# leaves in the outbox that a listed ticket should be frozen
+async def _freeze_ticket(
+    session: AsyncSession, ticket_id: uuid.UUID, *, actor_id: uuid.UUID
+) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject="market.ticket.freeze.v1",
+        aggregate_type="ticket",
+        aggregate_id=str(ticket_id),
+        actor_id=str(actor_id),
+        data={"ticket_id": str(ticket_id), "actor_id": str(actor_id)},
+    )
+
+
+# publishes that a ticket was transferred onto the shared nats connection
+async def _publish_transfer(
+    session: AsyncSession,
+    *,
+    ticket_id: uuid.UUID,
+    new_owner_user_id: uuid.UUID,
+    holder_name: str,
+    holder_document_type: str,
+    holder_dni: str,
+    actor_id: uuid.UUID,
+) -> None:
+    await record_event(
+        session,
+        EventOutbox,
+        subject="market.transfer.v1",
+        aggregate_type="ticket",
+        aggregate_id=str(ticket_id),
+        actor_id=str(actor_id),
+        data={
+            "ticket_id": str(ticket_id),
+            "new_owner_user_id": str(new_owner_user_id),
+            "holder_name": holder_name,
+            "holder_document_type": holder_document_type,
+            "holder_dni": holder_dni,
+        },
+    )

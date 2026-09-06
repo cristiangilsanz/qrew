@@ -1,0 +1,65 @@
+# exposes the admin endpoint that lists outbox rows stuck in the dead letter queue
+import uuid
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, Request, status
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from pagination import Page, clamp_limit
+from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
+from com.qode.qrew.v1.identity.core.database import get_db
+from com.qode.qrew.v1.identity.core.dependencies import limiter
+from com.qode.qrew.v1.identity.models.user import User
+from com.qode.qrew.v1.identity.services.application.outbox.querier import paginate_dlq
+
+router = APIRouter(prefix="/outbox", tags=["admin-outbox"])
+
+
+class OutboxDlqItem(BaseModel):
+    id: uuid.UUID
+    aggregate_type: str
+    aggregate_id: str
+    job_name: str
+    attempt_count: int
+    last_error: str | None
+    dlq_reason: str | None
+    created_at: datetime
+    dispatched_at: datetime | None
+
+
+# paginates the outbox rows the drainer parked in the dead letter queue
+@router.get(
+    "/dlq",
+    response_model=Page[OutboxDlqItem],
+    status_code=status.HTTP_200_OK,
+    summary="Paginate outbox rows the drainer parked in the DLQ",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def list_dlq(
+    request: Request,
+    cursor: str | None = None,
+    limit: int = 20,
+    _admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> Page[OutboxDlqItem]:
+    del request
+    page_limit = clamp_limit(limit, default=20)
+    rows, next_cursor = await paginate_dlq(db, cursor=cursor, limit=page_limit)
+    return Page[OutboxDlqItem](
+        items=[
+            OutboxDlqItem(
+                id=row.id,
+                aggregate_type=row.aggregate_type,
+                aggregate_id=row.aggregate_id,
+                job_name=row.job_name,
+                attempt_count=row.attempt_count,
+                last_error=row.last_error,
+                dlq_reason=row.dlq_reason,
+                created_at=row.created_at,
+                dispatched_at=row.dispatched_at,
+            )
+            for row in rows
+        ],
+        next_cursor=next_cursor,
+    )

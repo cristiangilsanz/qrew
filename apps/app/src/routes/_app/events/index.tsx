@@ -1,0 +1,49 @@
+// implements events
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { EmptyMessage } from '@/components/ui/empty-message'
+import { PageError } from '@/components/ui/page-error'
+import { EventCardSkeleton } from '@/components/ui/skeleton'
+import { type EventFilters } from '@/features/events/api'
+import { EventCard } from '@/features/events/components/EventCard'
+import { EventFiltersBar } from '@/features/events/components/EventFiltersBar'
+import { useEvents } from '@/features/events/hooks/useEvents'
+
+export const Route = createFileRoute('/_app/events/')({
+  component: EventsPage,
+})
+
+// renders the events page component
+function EventsPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [filters, setFilters] = useState<EventFilters>({})
+  const { data, isLoading, isError, refetch } = useEvents(filters)
+
+  if (isError) return <PageError onRetry={() => void refetch()} />
+
+  return (
+    <div className="space-y-6 px-4 pt-5 pb-4">
+      <h1 className="text-2xl font-bold">{t('events.title')}</h1>
+      <EventFiltersBar onFiltersChange={setFilters} />
+      {!isLoading && !isError && data?.items.length === 0 && (
+        <EmptyMessage>{t('events.empty')}</EmptyMessage>
+      )}
+      <div className="grid gap-4">
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, i) => <EventCardSkeleton key={i} />)
+          : data?.items.map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                onClick={() =>
+                  void navigate({ to: '/events/$eventId', params: { eventId: event.id } })
+                }
+              />
+            ))}
+      </div>
+    </div>
+  )
+}

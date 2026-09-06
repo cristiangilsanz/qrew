@@ -1,0 +1,292 @@
+# exposes the endpoints that mint a ticket's rotating qr code at the gate
+import asyncio
+import json
+import uuid
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from com.qode.qrew.v1.ticketing.services.application.audit import AuditService
+from com.qode.qrew.v1.ticketing.core.principals import AuthenticatedUser, get_current_user
+from com.qode.qrew.v1.ticketing.core.database import get_db
+from com.qode.qrew.v1.ticketing.core.dependencies import get_audit_service, limiter
+from com.qode.qrew.v1.ticketing.schemas.tickets.qr import (
+    GateRequirements,
+    QrIssueRequest,
+    QrResponse,
+)
+from com.qode.qrew.v1.ticketing.models.projections import DeviceContext, EventVenueContext
+from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
+from com.qode.qrew.v1.ticketing.services.domain.tickets.lifecycle import (
+    TicketTransitionError,
+    transition_ticket,
+)
+from locking import LockUnavailableError
+from com.qode.qrew.v1.ticketing.services.domain.gate import (
+    DenialReason,
+    GateInputs,
+    evaluate_gate,
+    load_inputs,
+)
+from com.qode.qrew.v1.ticketing.services.application.tickets.mint import mint_qr, record_denial
+from com.qode.qrew.v1.ticketing.core.config import settings
+
+_BYPASS_DEVICE_ID = uuid.UUID("00000000-0000-0000-0000-000000000000")
+
+router = APIRouter(prefix="/tickets", tags=["ticket-qr"])
+
+_REASON_TO_STATUS: dict[DenialReason, int] = {
+    DenialReason.not_found: status.HTTP_404_NOT_FOUND,
+    DenialReason.not_owner: status.HTTP_404_NOT_FOUND,
+    DenialReason.state: status.HTTP_409_CONFLICT,
+    DenialReason.reassertion: status.HTTP_403_FORBIDDEN,
+    DenialReason.attestation: status.HTTP_403_FORBIDDEN,
+    DenialReason.geofence: status.HTTP_403_FORBIDDEN,
+    DenialReason.location_mock: status.HTTP_403_FORBIDDEN,
+    DenialReason.time_window: status.HTTP_403_FORBIDDEN,
+}
+
+
+# converts a gate denial reason into its http response
+def _denied_exception(reason: DenialReason) -> HTTPException:
+    return HTTPException(
+        status_code=_REASON_TO_STATUS[reason],
+        detail={"message": "QR code denied.", "field": reason.value},
+    )
+
+
+# builds gate inputs for a bypassed device when the gate check is disabled
+async def _resolve_or_deny_bypass(
+    db: AsyncSession,
+    *,
+    ticket_id: uuid.UUID,
+    current_user: AuthenticatedUser,
+) -> GateInputs:
+    ticket = await db.get(Ticket, ticket_id)
+    if ticket is None or ticket.owner_user_id != current_user.id:
+        raise _denied_exception(DenialReason.not_found)
+    if ticket.state not in {TicketState.issued, TicketState.scanning}:
+        raise _denied_exception(DenialReason.state)
+    event_ctx = await db.get(EventVenueContext, ticket.event_id)
+    if event_ctx is None:
+        raise _denied_exception(DenialReason.not_found)
+    device_ctx = DeviceContext(
+        device_id=_BYPASS_DEVICE_ID,
+        user_id=current_user.id,
+        attested_at=datetime.now(UTC),
+        revoked_at=None,
+        updated_at=datetime.now(UTC),
+    )
+    return GateInputs(ticket=ticket, event_ctx=event_ctx, device_ctx=device_ctx)
+
+
+# loads the gate inputs for a ticket or records why it was denied
+async def _resolve_or_deny(
+    db: AsyncSession,
+    *,
+    ticket_id: uuid.UUID,
+    current_user: AuthenticatedUser,
+    latitude: float,
+    longitude: float,
+    location_is_mock: bool | None,
+    now: datetime,
+    audit: AuditService,
+) -> GateInputs:
+    if settings.gate_bypass:
+        return await _resolve_or_deny_bypass(db, ticket_id=ticket_id, current_user=current_user)
+    device_id = current_user.device_id
+    if device_id is None and not settings.ticket_qr_require_device_binding:
+        device_id = _BYPASS_DEVICE_ID
+    if device_id is None:
+        await record_denial(
+            audit=audit,
+            user_id=current_user.id,
+            ticket_id=ticket_id,
+            reason=DenialReason.device_binding.value,
+            device_id=None,
+        )
+        raise _denied_exception(DenialReason.device_binding)
+    resolved = await load_inputs(
+        db, ticket_id=ticket_id, user_id=current_user.id, device_id=device_id
+    )
+    if isinstance(resolved, DenialReason):
+        await record_denial(
+            audit=audit,
+            user_id=current_user.id,
+            ticket_id=ticket_id,
+            reason=resolved.value,
+            device_id=device_id,
+        )
+        raise _denied_exception(resolved)
+    reason = evaluate_gate(
+        resolved,
+        last_asserted_at=current_user.last_asserted_at,  # type: ignore[arg-type]
+        latitude=latitude,
+        longitude=longitude,
+        location_is_mock=location_is_mock,
+        now=now,
+    )
+    if reason is not None:
+        await record_denial(
+            audit=audit,
+            user_id=current_user.id,
+            ticket_id=ticket_id,
+            reason=reason.value,
+            device_id=device_id,
+        )
+        raise _denied_exception(reason)
+    return resolved
+
+
+# moves an issued ticket into scanning so the gate can redeem it later
+async def _mark_scanning(db: AsyncSession, inputs: GateInputs, *, actor_id: uuid.UUID) -> None:
+    if inputs.ticket.state != TicketState.issued:
+        return
+    try:
+        await transition_ticket(
+            db,
+            ticket_id=inputs.ticket.id,
+            to_state=TicketState.scanning,
+            reason="qr_shown",
+            actor_id=actor_id,
+        )
+        await db.commit()
+    except (TicketTransitionError, LockUnavailableError):
+        await db.rollback()
+
+
+# reports which gate checks are switched on for this deployment
+@router.get(
+    "/qr/requirements",
+    response_model=GateRequirements,
+    status_code=status.HTTP_200_OK,
+    summary="Report which gate checks the server will evaluate",
+)
+async def gate_requirements(
+    _current_user: AuthenticatedUser = Depends(get_current_user),
+) -> GateRequirements:
+    return GateRequirements(
+        reassertion=settings.ticket_qr_require_reassertion,
+        geofence=settings.ticket_qr_require_geofence,
+        device_binding=settings.ticket_qr_require_device_binding,
+        attestation=settings.ticket_qr_require_attestation,
+        location_integrity=settings.ticket_qr_require_location_integrity,
+    )
+
+
+# mints a single fresh qr for a ticket
+@router.get(
+    "/{ticket_id}/qr",
+    response_model=QrResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Mint a fresh rotating QR for a ticket",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def issue_qr(
+    request: Request,
+    ticket_id: uuid.UUID,
+    latitude: float = Query(..., ge=-90.0, le=90.0),
+    longitude: float = Query(..., ge=-180.0, le=180.0),
+    location_is_mock: bool | None = Query(
+        None,
+        description="Whether the handset reported the fix as simulated; absent when unknown.",
+    ),
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    audit: AuditService = Depends(get_audit_service),
+) -> QrResponse:
+    del request
+    now = datetime.now(UTC)
+    inputs = await _resolve_or_deny(
+        db,
+        ticket_id=ticket_id,
+        current_user=current_user,
+        latitude=latitude,
+        longitude=longitude,
+        location_is_mock=location_is_mock,
+        now=now,
+        audit=audit,
+    )
+    device_id = current_user.device_id or _BYPASS_DEVICE_ID
+    await _mark_scanning(db, inputs, actor_id=current_user.id)
+    minted = await mint_qr(
+        inputs=inputs,
+        user_id=current_user.id,
+        device_id=device_id,
+        audit=audit,
+        now=now,
+    )
+    return QrResponse(
+        ticket_id=inputs.ticket.id,
+        jwt=minted.jwt,
+        jti=minted.jti,
+        issued_at=minted.issued_at,
+        expires_at=minted.expires_at,
+        rotates_at=minted.expires_at,
+    )
+
+
+# streams a rotating qr for a ticket while the gate stays open
+@router.post(
+    "/{ticket_id}/qr/stream",
+    status_code=status.HTTP_200_OK,
+    summary="Server-sent stream of rotating QRs while the gate is open",
+)
+@limiter.limit("10/minute")  # type: ignore[misc]
+async def stream_qr(
+    request: Request,
+    ticket_id: uuid.UUID,
+    body: QrIssueRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    audit: AuditService = Depends(get_audit_service),
+) -> StreamingResponse:
+    del request
+    latitude = float(body.latitude)
+    longitude = float(body.longitude)
+    location_is_mock = body.location_is_mock
+    device_id = current_user.device_id or _BYPASS_DEVICE_ID
+
+    # yields a fresh qr event on each rotation until the stream deadline
+    async def _events() -> AsyncGenerator[bytes, None]:
+        deadline = datetime.now(UTC).timestamp() + settings.ticket_qr_stream_max_seconds
+        while datetime.now(UTC).timestamp() < deadline:
+            now = datetime.now(UTC)
+            try:
+                inputs = await _resolve_or_deny(
+                    db,
+                    ticket_id=ticket_id,
+                    current_user=current_user,
+                    latitude=latitude,
+                    longitude=longitude,
+                    location_is_mock=location_is_mock,
+                    now=now,
+                    audit=audit,
+                )
+            except HTTPException as exc:
+                payload = json.dumps({"type": "denied", "detail": exc.detail})
+                yield f"event: denied\ndata: {payload}\n\n".encode()
+                return
+            minted = await mint_qr(
+                inputs=inputs,
+                user_id=current_user.id,
+                device_id=device_id,
+                audit=audit,
+                now=now,
+            )
+            payload = json.dumps(
+                {
+                    "ticket_id": str(inputs.ticket.id),
+                    "jwt": minted.jwt,
+                    "jti": minted.jti,
+                    "issued_at": minted.issued_at.isoformat(),
+                    "expires_at": minted.expires_at.isoformat(),
+                }
+            )
+            yield f"event: qr\ndata: {payload}\n\n".encode()
+            await asyncio.sleep(settings.ticket_qr_ttl_seconds)
+
+    return StreamingResponse(_events(), media_type="text/event-stream")

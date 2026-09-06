@@ -1,0 +1,29 @@
+// configures capacitor for the native app shell
+import type { CapacitorConfig } from '@capacitor/cli'
+
+const config: CapacitorConfig = {
+  appId: 'com.qrew.app',
+  appName: 'QREW',
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https',
+    url: 'https://qrew-dev.uk',
+    cleartext: false,
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#000000',
+      showSpinner: false,
+    },
+    StatusBar: {
+      backgroundColor: '#000000',
+      overlaysWebView: false,
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
+  },
+}
+
+export default config

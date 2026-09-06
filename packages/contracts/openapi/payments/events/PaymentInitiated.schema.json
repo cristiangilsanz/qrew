@@ -1,0 +1,57 @@
+{
+  "properties": {
+    "payment_id": {
+      "format": "uuid",
+      "title": "Payment Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "amount_cents": {
+      "title": "Amount Cents",
+      "type": "integer"
+    },
+    "currency": {
+      "title": "Currency",
+      "type": "string"
+    },
+    "reservation_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reservation Id"
+    },
+    "market_assignment_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Assignment Id"
+    }
+  },
+  "required": [
+    "payment_id",
+    "user_id",
+    "amount_cents",
+    "currency"
+  ],
+  "title": "PaymentInitiated",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

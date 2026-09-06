@@ -1,0 +1,48 @@
+[project]
+name = "qrew-workspace"
+version = "1.1.1"
+description = "Qrew monorepo."
+requires-python = ">=3.12"
+dependencies = [
+    "cryptography>=46.0.5",
+    "opencv-python-headless>=4.8",
+    "pillow>=12.2.0",
+    "pytesseract>=0.3.13",
+]
+
+[tool.uv.workspace]
+members = [
+  "apps/api/services/audit",
+  "apps/api/services/entry",
+  "apps/api/gateway",
+  "apps/api/services/payments",
+  "apps/api/services/catalog",
+  "apps/api/services/ticketing",
+  "apps/api/services/sales",
+  "apps/api/services/identity",
+  "packages/contracts",
+  "packages/shared-python/messaging",
+  "packages/shared-python/worker",
+  "packages/shared-python/jobs",
+  "packages/shared-python/db",
+  "packages/shared-python/locking",
+  "packages/shared-python/outbox",
+  "packages/shared-python/exceptions",
+  "packages/shared-python/idempotency",
+  "packages/shared-python/middleware",
+  "packages/shared-python/ratelimit",
+  "packages/shared-python/security",
+  "packages/shared-python/observability",
+  "packages/shared-python/pagination",
+  "packages/shared-python/probes",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.4",
+]
+
+[tool.ruff.lint]
+ignore = [
+    "S104", # binding to 0.0.0.0 is intentional in Docker service configs
+]

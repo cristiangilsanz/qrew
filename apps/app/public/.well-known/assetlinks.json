@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.qrew.app",
+      "sha256_cert_fingerprints": [
+        "DF:20:39:60:07:87:CD:17:C3:B3:C9:FD:0E:92:AA:E7:1D:9D:20:3C:75:C1:54:3E:9F:85:56:E3:06:BB:8B:B8"
+      ]
+    }
+  }
+]

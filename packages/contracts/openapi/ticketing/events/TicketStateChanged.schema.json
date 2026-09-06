@@ -1,0 +1,50 @@
+{
+  "properties": {
+    "ticket_id": {
+      "format": "uuid",
+      "title": "Ticket Id",
+      "type": "string"
+    },
+    "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "state": {
+      "title": "State",
+      "type": "string"
+    },
+    "previous_state": {
+      "title": "Previous State",
+      "type": "string"
+    },
+    "owner_user_id": {
+      "format": "uuid",
+      "title": "Owner User Id",
+      "type": "string"
+    },
+    "bound_device_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bound Device Id"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "event_id",
+    "state",
+    "previous_state",
+    "owner_user_id"
+  ],
+  "title": "TicketStateChanged",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

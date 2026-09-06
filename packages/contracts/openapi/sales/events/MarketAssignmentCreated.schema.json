@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "assignment_id": {
+      "format": "uuid",
+      "title": "Assignment Id",
+      "type": "string"
+    },
+    "buyer_user_id": {
+      "format": "uuid",
+      "title": "Buyer User Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "assignment_id",
+    "buyer_user_id"
+  ],
+  "title": "MarketAssignmentCreated",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

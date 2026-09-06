@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "registered_at": {
+      "format": "date-time",
+      "title": "Registered At",
+      "type": "string"
+    },
+    "phone_e164": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Phone E164"
+    }
+  },
+  "required": [
+    "user_id",
+    "registered_at"
+  ],
+  "title": "UserRegistered",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

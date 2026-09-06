@@ -1,0 +1,140 @@
+# defines the configuration settings for the identity service
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import YamlConfigSettingsSource
+
+_SERVICE_DIR = Path(__file__).parents[7]
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        yaml_file=str(_SERVICE_DIR / "config" / "local.yaml"),
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    app_name: str = "qrew-identity"
+    version: str = "0.1.0"
+    debug: bool = True
+    host: str = "0.0.0.0"  # noqa: S104
+    port: int = 8001
+    base_url: str = "http://localhost:3000"
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+
+    database_url: str = "postgresql+asyncpg://postgres:sekret@localhost:5432/qrew"
+    redis_url: str = "redis://localhost:6379/0"
+    trusted_proxy_ip: str = ""
+    nats_url: str = ""
+
+    access_jwt_private_key: str = ""
+    setup_jwt_private_key: str = ""
+    recovery_jwt_private_key: str = ""
+    refresh_jwt_private_key: str = ""
+    queue_jwt_private_key: str = ""
+    ticket_qr_jwt_private_key: str = ""
+    access_jwt_previous_public_keys: str = ""
+    setup_jwt_previous_public_keys: str = ""
+    recovery_jwt_previous_public_keys: str = ""
+    refresh_jwt_previous_public_keys: str = ""
+    queue_jwt_previous_public_keys: str = ""
+    ticket_qr_jwt_previous_public_keys: str = ""
+    totp_jwt_private_key: str = ""
+    totp_jwt_previous_public_keys: str = ""
+    totp_token_expire_minutes: int = 5
+    access_token_expire_minutes: int = 30
+    setup_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+    email_verification_token_expire_hours: int = 24
+    phone_number_otp_expire_minutes: int = 10
+
+    kyc_auto_approve: bool = False
+    national_id_encryption_key: str = ""
+    pii_encryption_key: str = ""
+    pii_encryption_previous_keys: str = ""
+
+    fingerprint_multi_account_threshold: int = 2
+
+    geoip_db_path: str = "GeoLite2-City.mmdb"
+    anomaly_impossible_travel_kmh: float = 1000.0
+    anomaly_concurrent_window_minutes: int = 5
+    anomaly_kill_sessions_on_detection: bool = False
+
+    hibp_enabled: bool = False
+
+    login_max_attempts: int = 5
+    login_lockout_base_seconds: int = 300
+
+    max_sessions_per_user: int = 5
+
+    attestation_enabled: bool = False
+    attestation_skip_verification: bool = True
+    android_package_name: str = ""
+    android_app_cert_digest_sha256: str = ""
+
+    ratelimit_enabled: bool = True
+    captcha_enabled: bool = False
+    captcha_secret_key: str = ""
+
+    smtp_enabled: bool = False
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_address: str = ""
+
+    twilio_enabled: bool = False
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_from_number: str = ""
+
+    rp_id: str = "localhost"
+    rp_name: str = "QREW"
+    rp_expected_origin: str = "http://localhost:3000"
+    rp_expected_origins: list[str] = []
+
+    otel_enabled: bool = False
+    otel_endpoint: str = "http://localhost:4317"
+
+    ratelimit_audit_debounce_seconds: int = 60
+
+    idempotency_enabled: bool = True
+    idempotency_lock_seconds: int = 60
+
+    storage_root: str = "./var/storage"
+    storage_signing_key: str = ""
+    storage_signed_url_ttl_seconds: int = 300
+    storage_base_url: str = "http://localhost:8001"
+    kyc_document_retention_days: int = 30
+
+    notification_enabled: bool = True
+    notification_max_attempts: int = 5
+
+    outbox_batch_size: int = 50
+    outbox_max_attempts: int = 5
+    outbox_backoff_delays_seconds: list[int] = [1, 5, 25, 125, 625]
+
+    audit_url: str = "http://localhost:8007"
+    internal_api_key: str = ""
+
+    # orders the configuration sources so the yaml file can override the defaults
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            YamlConfigSettingsSource(settings_cls),
+        )  # noqa: E501
+
+
+settings = Settings()

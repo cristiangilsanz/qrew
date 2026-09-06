@@ -1,0 +1,42 @@
+# ── app ──────────────────────────────────────────────────────────────────────
+debug: true
+host: "127.0.0.1"
+port: 8000
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:5173"
+
+# ── infrastructure ────────────────────────────────────────────────────────────
+nats_url: "nats://localhost:4222"
+redis_url: "redis://localhost:6379/0"
+
+# ── keys ──────────────────────────────────────────────────────────────────────
+access_jwt_private_key: ""
+access_jwt_previous_public_keys: ""
+# signs the short lived token an account uses while it finishes onboarding
+setup_jwt_private_key: ""
+setup_jwt_previous_public_keys: ""
+scanner_jwt_private_key: ""
+jwt_audience: ""
+jwt_issuer: ""
+
+# ── websocket ─────────────────────────────────────────────────────────────────
+ws_heartbeat_seconds: 30
+ws_pong_timeout_seconds: 10
+
+# ── features ──────────────────────────────────────────────────────────────────
+idempotency_enabled: true
+idempotency_lock_seconds: 30
+ratelimit_enabled: true
+
+# ── upstream services (for local dev — all services running on localhost) ──────
+identity_url: "http://localhost:8001"
+catalog_url: "http://localhost:8002"
+sales_url: "http://localhost:8003"
+payments_url: "http://localhost:8004"
+ticketing_url: "http://localhost:8005"
+entry_url: "http://localhost:8006"
+
+# ── observability ─────────────────────────────────────────────────────────────
+otel_enabled: false
+otel_endpoint: "http://localhost:4317"

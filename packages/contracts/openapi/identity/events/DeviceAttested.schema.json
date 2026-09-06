@@ -1,0 +1,39 @@
+{
+  "properties": {
+    "device_id": {
+      "format": "uuid",
+      "title": "Device Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "attested_at": {
+      "format": "date-time",
+      "title": "Attested At",
+      "type": "string"
+    },
+    "platform": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Platform"
+    }
+  },
+  "required": [
+    "device_id",
+    "user_id",
+    "attested_at"
+  ],
+  "title": "DeviceAttested",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
