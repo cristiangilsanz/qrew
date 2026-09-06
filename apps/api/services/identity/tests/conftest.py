@@ -1,0 +1,113 @@
+# provides shared pytest fixtures
+import os
+import uuid as _uuid_env
+
+from cryptography.fernet import Fernet as _Fernet
+
+_FERNET_KEY = _Fernet.generate_key().decode()
+
+os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("PII_ENCRYPTION_KEY", _FERNET_KEY)
+os.environ.setdefault("NATIONAL_ID_ENCRYPTION_KEY", _FERNET_KEY)
+os.environ.setdefault("STORAGE_SIGNING_KEY", _uuid_env.uuid4().hex * 2)
+os.environ.setdefault("RATELIMIT_ENABLED", "false")
+os.environ.setdefault("CAPTCHA_ENABLED", "false")
+os.environ.setdefault("CAPTCHA_SECRET_KEY", "")
+os.environ.setdefault("HIBP_ENABLED", "false")
+os.environ.setdefault("SMTP_ENABLED", "false")
+os.environ.setdefault("TWILIO_ENABLED", "false")
+os.environ.setdefault("NATS_URL", "")
+os.environ.setdefault("IDEMPOTENCY_ENABLED", "false")
+os.environ.setdefault("ATTESTATION_ENABLED", "false")
+os.environ.setdefault("NOTIFICATION_ENABLED", "false")
+os.environ.setdefault("OTEL_ENABLED", "false")
+os.environ.setdefault("KYC_AUTO_APPROVE", "false")
+os.environ.setdefault("INTERNAL_API_KEY", "test-internal-key")
+
+import uuid  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+from unittest.mock import AsyncMock  # noqa: E402
+
+import pytest  # noqa: E402
+
+from com.qode.qrew.v1.identity.models.user import KycStatus  # noqa: E402
+
+
+# provides user id
+@pytest.fixture
+def user_id() -> uuid.UUID:
+    return uuid.uuid4()
+
+
+# provides actor id
+@pytest.fixture
+def actor_id() -> uuid.UUID:
+    return uuid.uuid4()
+
+
+# handles make user
+def make_user(
+    *,
+    user_id: uuid.UUID | None = None,
+    email: str = "user@example.com",
+    full_name: str = "Test User",
+    phone_number: str = "+31612345678",
+    hashed_password: str = "hashed_pw",
+    email_verified: bool = True,
+    phone_number_verified: bool = True,
+    kyc_status: KycStatus = KycStatus.approved,
+    is_active: bool = True,
+    is_admin: bool = False,
+    totp_enabled: bool = False,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        id=user_id or uuid.uuid4(),
+        email=email,
+        full_name=full_name,
+        phone_number=phone_number,
+        hashed_password=hashed_password,
+        email_verified=email_verified,
+        phone_number_verified=phone_number_verified,
+        kyc_status=kyc_status,
+        is_active=is_active,
+        is_admin=is_admin,
+        totp_enabled=totp_enabled,
+        email_verification_token="tok123",
+        email_verification_token_expires_at=None,
+        phone_number_otp="123456",
+        phone_number_otp_expires_at=None,
+        created_at=None,
+        deleted_at=None,
+    )
+
+
+# handles make session
+def make_session(
+    *,
+    session_id: uuid.UUID | None = None,
+    user_id: uuid.UUID | None = None,
+    jti: str = "test-jti",
+    device_fingerprint: str | None = None,
+    device_id: uuid.UUID | None = None,
+) -> SimpleNamespace:
+    from datetime import UTC, datetime
+
+    return SimpleNamespace(
+        id=session_id or uuid.uuid4(),
+        user_id=user_id or uuid.uuid4(),
+        jti=jti,
+        ip_address="1.2.3.4",
+        user_agent="pytest",
+        device_fingerprint=device_fingerprint,
+        device_id=device_id,
+        created_at=datetime.now(UTC),
+        last_used_at=datetime.now(UTC),
+    )
+
+
+# handles make audit svc
+def make_audit_svc() -> AsyncMock:
+    audit = AsyncMock()
+    audit.record = AsyncMock()
+    audit.get_recent_login_events = AsyncMock(return_value=[])
+    return audit

@@ -1,0 +1,19 @@
+[project]
+name = "worker"
+version = "0.1.0"
+description = "NATS subscriber worker runner with graceful shutdown"
+requires-python = ">=3.12"
+dependencies = [
+    "nats-py>=2.7",
+    "structlog>=24.1",
+]
+
+[tool.uv]
+venvPath = "../../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+reportMissingTypeStubs = false

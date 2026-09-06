@@ -1,0 +1,454 @@
+# projects sales reservations and market listings into the tickets they govern
+import asyncio
+import uuid
+from typing import Any
+
+import structlog
+
+from observability import consume_traced
+from security import infer_document_type
+
+from com.qode.qrew.v1.ticketing.core.config import settings
+from com.qode.qrew.v1.ticketing.core.database import AsyncSessionLocal
+from com.qode.qrew.v1.ticketing.models.ticket import Ticket, TicketState
+from com.qode.qrew.v1.ticketing.repositories.ticket import TicketRepository
+from com.qode.qrew.v1.ticketing.services.application.audit import AuditService
+from com.qode.qrew.v1.ticketing.services.domain.tickets.lifecycle import transition_ticket
+from com.qode.qrew.v1.ticketing.worker._parser import parse
+from locking import redlock
+
+logger = structlog.get_logger(__name__)
+
+STREAM = "SALES"
+DURABLE = "ticketing-sales-handler"
+
+
+# creates the reserved tickets a new reservation calls for
+async def handle_reservation_created(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
+        user_id = uuid.UUID(str(data["data"]["user_id"]))
+        event_id = uuid.UUID(str(data["data"]["event_id"]))
+        items = [
+            (uuid.UUID(str(item["ticket_type_id"])), int(item["quantity"]))
+            for item in data["data"]["items"]
+        ]
+    except (KeyError, TypeError, ValueError):
+        await logger.awarning("sales_events.reservation_created.bad_payload")
+        return
+    if not items:
+        await logger.awarning("sales_events.reservation_created.bad_payload")
+        return
+    quantity = sum(qty for _, qty in items)
+
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            existing = await TicketRepository(session).list_by_reservation(reservation_id)
+            if existing:
+                await logger.ainfo(
+                    "sales_events.reservation_created.already_exists",
+                    reservation_id=str(reservation_id),
+                )
+                return
+            for ticket_type_id, item_quantity in items:
+                for _ in range(item_quantity):
+                    session.add(
+                        Ticket(
+                            reservation_id=reservation_id,
+                            event_id=event_id,
+                            ticket_type_id=ticket_type_id,
+                            owner_user_id=user_id,
+                            state=TicketState.reserved,
+                        )
+                    )
+            await session.commit()
+    await logger.ainfo(
+        "sales_events.tickets_created",
+        reservation_id=str(reservation_id),
+        quantity=quantity,
+    )
+
+
+# issues a reservation's tickets and attaches their holders
+async def handle_reservation_paid(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
+        user_id = uuid.UUID(str(data["data"]["user_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("sales_events.reservation_paid.bad_payload")
+        return
+
+    holders_raw: list[dict[str, Any]] = data["data"].get("holders", [])
+    holders_by_position: dict[int, dict[str, Any]] = {int(h["position"]): h for h in holders_raw}
+
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            audit = AuditService()
+            tickets = await TicketRepository(session).list_by_reservation(reservation_id)
+            reserved = [t for t in tickets if t.state == TicketState.reserved]
+            for idx, ticket in enumerate(reserved):
+                await transition_ticket(
+                    session,
+                    ticket_id=ticket.id,
+                    to_state=TicketState.issued,
+                    reason="reservation_paid",
+                    actor_id=user_id,
+                    audit=audit,
+                )
+                holder: dict[str, Any] | None = holders_by_position.get(idx + 1)
+                if holder:
+                    ticket.holder_name = str(holder["holder_name"])
+                    ticket.holder_dni = str(holder["holder_dni"])
+                    ticket.holder_document_type = str(
+                        holder.get("holder_document_type")
+                        or infer_document_type(str(holder["holder_dni"]))
+                    )
+            await session.commit()
+    await logger.ainfo("sales_events.tickets_issued", reservation_id=str(reservation_id))
+
+
+# cancels the tickets of a cancelled reservation
+async def handle_reservation_cancelled(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
+        user_id = uuid.UUID(str(data["data"]["user_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("sales_events.reservation_cancelled.bad_payload")
+        return
+    await _cancel_tickets_for_reservation(reservation_id, user_id, reason="reservation_cancelled")
+
+
+# expires the still reserved tickets of an expired reservation
+async def handle_reservation_expired(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        reservation_id = uuid.UUID(str(data["data"]["reservation_id"]))
+        user_id = uuid.UUID(str(data["data"]["user_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("sales_events.reservation_expired.bad_payload")
+        return
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            audit = AuditService()
+            tickets = await TicketRepository(session).list_by_reservation(reservation_id)
+            for ticket in tickets:
+                if ticket.state == TicketState.reserved:
+                    await transition_ticket(
+                        session,
+                        ticket_id=ticket.id,
+                        to_state=TicketState.expired,
+                        reason="reservation_expired",
+                        actor_id=user_id,
+                        audit=audit,
+                    )
+            await session.commit()
+    await logger.ainfo("sales_events.tickets_expired", reservation_id=str(reservation_id))
+
+
+# cancels a reservation's tickets that have not reached a terminal state
+async def _cancel_tickets_for_reservation(
+    reservation_id: uuid.UUID,
+    user_id: uuid.UUID,
+    *,
+    reason: str,
+) -> None:
+    cancellable = {TicketState.reserved, TicketState.issued}
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"reservation:{reservation_id}:tickets", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            audit = AuditService()
+            tickets = await TicketRepository(session).list_by_reservation(reservation_id)
+            for ticket in tickets:
+                if ticket.state in cancellable:
+                    await transition_ticket(
+                        session,
+                        ticket_id=ticket.id,
+                        to_state=TicketState.cancelled,
+                        reason=reason,
+                        actor_id=user_id,
+                        audit=audit,
+                    )
+            await session.commit()
+    await logger.ainfo(
+        "sales_events.tickets_cancelled",
+        reason=reason,
+        reservation_id=str(reservation_id),
+    )
+
+
+_HANDLERS = {
+    "sales.reservation.created.v1": handle_reservation_created,
+    "sales.reservation.paid.v1": handle_reservation_paid,
+    "sales.reservation.cancelled.v1": handle_reservation_cancelled,
+    "sales.reservation.expired.v1": handle_reservation_expired,
+}
+
+
+_MARKET_STREAM = "MARKET"
+_MARKET_DURABLE = "ticketing-market-handler"
+
+
+# freezes an issued ticket once it is listed on the market
+async def handle_ticket_freeze(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        ticket_id = uuid.UUID(str(data["data"]["ticket_id"]))
+        actor_id = uuid.UUID(str(data["data"]["actor_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("market_events.freeze.bad_payload")
+        return
+
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"ticket:{ticket_id}:state", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            ticket = await TicketRepository(session).get_by_id(ticket_id)
+            if ticket is None:
+                await logger.awarning(
+                    "market_events.freeze.ticket_not_found", ticket_id=str(ticket_id)
+                )
+                return
+            if ticket.state == TicketState.on_sale:
+                return
+            if ticket.state != TicketState.issued:
+                await logger.awarning(
+                    "market_events.freeze.wrong_state",
+                    state=ticket.state,
+                    ticket_id=str(ticket_id),
+                )
+                return
+            await transition_ticket(
+                session,
+                ticket_id=ticket_id,
+                to_state=TicketState.on_sale,
+                reason="market_listed",
+                actor_id=actor_id,
+                audit=AuditService(),
+            )
+            await session.commit()
+    await logger.ainfo("market_events.ticket_on_sale", ticket_id=str(ticket_id))
+
+
+# transfers a listed ticket to its buyer and reissues it
+async def handle_transfer(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        ticket_id = uuid.UUID(str(data["data"]["ticket_id"]))
+        new_owner_user_id = uuid.UUID(str(data["data"]["new_owner_user_id"]))
+        holder_name: str = str(data["data"]["holder_name"])
+        holder_dni: str = str(data["data"]["holder_dni"])
+        holder_document_type: str = str(
+            data["data"].get("holder_document_type") or infer_document_type(holder_dni)
+        )
+        actor_id = new_owner_user_id
+    except (KeyError, ValueError):
+        await logger.awarning("market_events.transfer.bad_payload")
+        return
+
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"ticket:{ticket_id}:state", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            ticket = await TicketRepository(session).get_by_id(ticket_id)
+            if ticket is None:
+                await logger.awarning(
+                    "market_events.transfer.ticket_not_found", ticket_id=str(ticket_id)
+                )
+                return
+            if ticket.state != TicketState.on_sale:
+                await logger.awarning(
+                    "market_events.transfer.wrong_state",
+                    state=ticket.state,
+                    ticket_id=str(ticket_id),
+                )
+                return
+            ticket.owner_user_id = new_owner_user_id
+            ticket.holder_name = holder_name
+            ticket.holder_dni = holder_dni
+            ticket.holder_document_type = holder_document_type
+            await transition_ticket(
+                session,
+                ticket_id=ticket_id,
+                to_state=TicketState.issued,
+                reason="market_transfer",
+                actor_id=actor_id,
+                audit=AuditService(),
+            )
+            await session.commit()
+    await logger.ainfo(
+        "market_events.ticket_transferred",
+        ticket_id=str(ticket_id),
+        new_owner=str(new_owner_user_id),
+    )
+
+
+# returns an expired listing's ticket to its seller
+async def handle_listing_expired(raw: bytes) -> None:
+    data = await parse(raw)
+    if data is None:
+        return
+    try:
+        ticket_id = uuid.UUID(str(data["data"]["ticket_id"]))
+        seller_user_id = uuid.UUID(str(data["data"]["seller_user_id"]))
+    except (KeyError, ValueError):
+        await logger.awarning("market_events.listing_expired.bad_payload")
+        return
+
+    async with AsyncSessionLocal() as session:
+        async with redlock(
+            f"ticket:{ticket_id}:state", redis_url=settings.redis_url, ttl_seconds=10
+        ):
+            ticket = await TicketRepository(session).get_by_id(ticket_id)
+            if ticket is None:
+                return
+            if ticket.state != TicketState.on_sale:
+                return
+            await transition_ticket(
+                session,
+                ticket_id=ticket_id,
+                to_state=TicketState.issued,
+                reason="market_listing_expired",
+                actor_id=seller_user_id,
+                audit=AuditService(),
+            )
+            await session.commit()
+    await logger.ainfo("market_events.listing_expired_ticket_returned", ticket_id=str(ticket_id))
+
+
+_MARKET_HANDLERS = {
+    "market.ticket.freeze.v1": handle_ticket_freeze,
+    "market.transfer.v1": handle_transfer,
+    "market.listing.expired.v1": handle_listing_expired,
+}
+
+
+# subscribes to every market event subject and dispatches each message
+async def run_market_event_subscriber(nats_url: str) -> None:
+    import nats
+    from nats.js.api import ConsumerConfig, DeliverPolicy
+
+    _tasks: list[asyncio.Task[None]] = []
+    nc = await nats.connect(nats_url)  # type: ignore[reportUnknownMemberType]
+    js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
+
+    try:
+        await js.find_stream_name_by_subject("market.>")
+    except Exception:
+        await js.add_stream(name=_MARKET_STREAM, subjects=["market.>"])  # type: ignore[misc]
+
+    for subject, handler in _MARKET_HANDLERS.items():
+        durable = f"{_MARKET_DURABLE}-{subject.replace('.', '-')}"
+        config = ConsumerConfig(
+            durable_name=durable,
+            deliver_policy=DeliverPolicy.ALL,
+            filter_subject=subject,
+        )
+        psub = await js.subscribe(subject, durable=durable, config=config, stream=_MARKET_STREAM)  # type: ignore[misc]
+        await logger.ainfo("market_events.subscribed", subject=subject)
+
+        # acknowledges each message once its handler has run
+        async def _consume(psub: Any = psub, h: Any = handler, subject: str = subject) -> None:
+            try:
+                async for msg in psub.messages:  # type: ignore[attr-defined]
+                    try:
+                        await consume_traced(h, msg.data, subject=subject)  # type: ignore[attr-defined]
+                        await msg.ack()  # type: ignore[attr-defined]
+                    except Exception as exc:
+                        await logger.awarning("market_events.handler_error", error=repr(exc))
+                        await msg.nak()  # type: ignore[attr-defined]
+            except asyncio.CancelledError:
+                raise
+
+        _tasks.append(asyncio.create_task(_consume()))
+
+    await logger.ainfo("market_events.all_subscribed")
+    try:
+        while True:
+            await asyncio.sleep(3600)
+    except asyncio.CancelledError:
+        pass
+    finally:
+        for t in _tasks:
+            t.cancel()
+        await asyncio.gather(*_tasks, return_exceptions=True)
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("market_events.drain_failed", error=repr(exc))
+
+
+# subscribes to every sales event subject and dispatches each message
+async def run_sales_event_subscriber(nats_url: str) -> None:
+    import nats
+    from nats.js.api import ConsumerConfig, DeliverPolicy
+
+    _tasks: list[asyncio.Task[None]] = []
+    nc = await nats.connect(nats_url)  # type: ignore[reportUnknownMemberType]
+    js = nc.jetstream()  # type: ignore[reportUnknownMemberType]
+
+    try:
+        await js.find_stream_name_by_subject("sales.>")
+    except Exception:
+        await js.add_stream(name=STREAM, subjects=["sales.>"])  # type: ignore[misc]
+
+    for subject, handler in _HANDLERS.items():
+        durable = f"{DURABLE}-{subject.replace('.', '-')}"
+        config = ConsumerConfig(
+            durable_name=durable,
+            deliver_policy=DeliverPolicy.ALL,
+            filter_subject=subject,
+        )
+        psub = await js.subscribe(subject, durable=durable, config=config, stream=STREAM)  # type: ignore[misc]
+        await logger.ainfo("sales_events.subscribed", subject=subject)
+
+        # acknowledges each message once its handler has run
+        async def _consume(psub: Any = psub, h: Any = handler, subject: str = subject) -> None:
+            try:
+                async for msg in psub.messages:  # type: ignore[attr-defined]
+                    try:
+                        await consume_traced(h, msg.data, subject=subject)  # type: ignore[attr-defined]
+                        await msg.ack()  # type: ignore[attr-defined]
+                    except Exception as exc:
+                        await logger.awarning("sales_events.handler_error", error=repr(exc))
+                        await msg.nak()  # type: ignore[attr-defined]
+            except asyncio.CancelledError:
+                raise
+
+        _tasks.append(asyncio.create_task(_consume()))
+
+    await logger.ainfo("sales_events.all_subscribed")
+    try:
+        while True:
+            await asyncio.sleep(3600)
+    except asyncio.CancelledError:
+        pass
+    finally:
+        for t in _tasks:
+            t.cancel()
+        await asyncio.gather(*_tasks, return_exceptions=True)
+        try:
+            await nc.drain()
+        except Exception as exc:
+            await logger.awarning("sales_events.drain_failed", error=repr(exc))

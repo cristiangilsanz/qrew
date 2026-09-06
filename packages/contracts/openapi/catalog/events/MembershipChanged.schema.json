@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "organisation_id": {
+      "format": "uuid",
+      "title": "Organisation Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "role": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Role"
+    }
+  },
+  "required": [
+    "organisation_id",
+    "user_id"
+  ],
+  "title": "MembershipChanged",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

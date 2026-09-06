@@ -1,0 +1,134 @@
+# authenticates websocket connections against access or scanner tokens
+import functools
+from dataclasses import dataclass
+
+import jwt
+import security.jwt as _sec_jwt
+from cryptography.hazmat.primitives import serialization
+from fastapi import WebSocket
+
+from com.qode.qrew.v1.gateway.core.config import settings
+
+ALGORITHM = "ES256"
+
+_PROTOCOL_PREFIX = "bearer."
+
+
+class WebSocketAuthError(Exception):
+    pass
+
+
+@dataclass(frozen=True)
+class WebSocketIdentity:
+    claims: dict[str, object]
+    accepted_subprotocol: str | None
+
+
+# derives the public key that matches a private key
+def _load_public_pem(private_pem: str) -> str:
+    key = serialization.load_pem_private_key(private_pem.encode(), password=None)
+    return (
+        key.public_key()  # type: ignore[union-attr]
+        .public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        .decode()
+    )
+
+
+# returns the public keys that verify access tokens
+@functools.cache
+def access_public_keys() -> list[str]:
+    keys: list[str] = []
+    if settings.access_jwt_private_key:
+        keys.append(_load_public_pem(settings.access_jwt_private_key))
+    for entry in settings.access_jwt_previous_public_keys.split(","):
+        pem = entry.strip()
+        if pem:
+            keys.append(pem)
+    return keys
+
+
+# returns the public keys that verify the tokens issued during account setup
+@functools.cache
+def setup_public_keys() -> list[str]:
+    keys: list[str] = []
+    if settings.setup_jwt_private_key:
+        keys.append(_load_public_pem(settings.setup_jwt_private_key))
+    for entry in settings.setup_jwt_previous_public_keys.split(","):
+        pem = entry.strip()
+        if pem:
+            keys.append(pem)
+    return keys
+
+
+# returns every public key that can verify a token belonging to a user
+@functools.cache
+def user_public_keys() -> list[str]:
+    return access_public_keys() + setup_public_keys()
+
+
+# returns the public keys that verify scanner tokens
+@functools.cache
+def scanner_public_keys() -> list[str]:
+    if settings.scanner_jwt_private_key:
+        return [_load_public_pem(settings.scanner_jwt_private_key)]
+    return []
+
+
+# reads the bearer token carried in the websocket subprotocol header
+def _extract_token(websocket: WebSocket) -> tuple[str, str | None] | None:
+    raw = websocket.headers.get("sec-websocket-protocol")
+    if raw:
+        for entry in raw.split(","):
+            value = entry.strip()
+            if value.startswith(_PROTOCOL_PREFIX):
+                token = value[len(_PROTOCOL_PREFIX) :]
+                if token:
+                    return token, value
+    return None
+
+
+# verifies a token against whichever of the given keys matches
+def try_verify(
+    token: str, public_keys: list[str], *, audience_override: str | None = None
+) -> dict[str, object] | None:
+    audience = audience_override or settings.jwt_audience or None
+    issuer = settings.jwt_issuer or None
+    for public_pem in public_keys:
+        try:
+            return _sec_jwt.decode_token(  # type: ignore[return-value]
+                token,
+                public_pem,
+                algorithms=[ALGORITHM],
+                audience=audience,
+                issuer=issuer,
+            )
+        except jwt.InvalidTokenError:
+            continue
+    return None
+
+
+# authenticates a websocket connection as an access or scanner identity
+def authenticate(websocket: WebSocket) -> WebSocketIdentity:
+    extracted = _extract_token(websocket)
+    if extracted is None:
+        raise WebSocketAuthError("missing token")
+    token, protocol_value = extracted
+
+    claims = try_verify(token, access_public_keys())
+    if claims is not None:
+        if claims.get("type") != "access":
+            raise WebSocketAuthError("invalid token type")
+        return WebSocketIdentity(claims=claims, accepted_subprotocol=protocol_value)
+
+    scanner_keys = scanner_public_keys()
+    if scanner_keys:
+        claims = try_verify(
+            token, scanner_keys, audience_override=settings.scanner_jwt_audience or None
+        )
+        if claims is not None and claims.get("type") == "scanner":
+            return WebSocketIdentity(claims=claims, accepted_subprotocol=protocol_value)
+
+    raise WebSocketAuthError("invalid token")

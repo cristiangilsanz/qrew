@@ -1,0 +1,32 @@
+[project]
+name = "security"
+version = "0.1.0"
+description = "JWT verification and PII encryption utilities"
+requires-python = ">=3.12"
+dependencies = [
+    "PyJWT>=2.8",
+    "cryptography>=42",
+    "pydantic>=2.0",
+]
+
+[tool.uv]
+venvPath = "../../.."
+venv = ".venv"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src"]
+reportMissingTypeStubs = false
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+python_files = ["*_test.py"]

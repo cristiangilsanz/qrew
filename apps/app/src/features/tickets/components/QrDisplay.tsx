@@ -1,0 +1,285 @@
+// renders the qr display component
+import { Capacitor } from '@capacitor/core'
+import { Geolocation } from '@capacitor/geolocation'
+import { Clock, Fingerprint, Loader2, MapPin, QrCode, RefreshCw, ShieldX } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import QRCode from 'react-qr-code'
+
+import { Button } from '@/components/ui/button'
+import { env } from '@/config/env'
+import { useReassertPasskey } from '@/features/passkeys/hooks/useReassertPasskey'
+import { readLocationIsMock } from '@/lib/locationIntegrity'
+import { useAuthStore } from '@/store/auth'
+
+import { useGateRequirements } from '../hooks/useGateRequirements'
+
+interface Props {
+  ticketId: string
+  startsAt?: string | null
+  endsAt?: string | null
+}
+
+type QrState =
+  | { status: 'idle' }
+  | { status: 'asserting' }
+  | { status: 'locating' }
+  | { status: 'streaming'; jwt: string; expiresAt: string }
+  | { status: 'denied'; reason: string }
+  | { status: 'error' }
+
+const _QR_WINDOW_HOURS_BEFORE = 5
+
+// maps each denial the gate can return to the line the holder reads
+const DENIAL_KEYS: Record<string, string> = {
+  geolocation: 'tickets.qr.deniedLocation',
+  geofence: 'tickets.qr.deniedGeofence',
+  location_mock: 'tickets.qr.deniedLocationMock',
+  attestation: 'tickets.qr.deniedAttestation',
+  reassertion: 'tickets.qr.deniedReassertion',
+  device_binding: 'tickets.qr.deniedDeviceBinding',
+  state: 'tickets.qr.deniedState',
+  time_window: 'tickets.qr.deniedTimeWindow',
+}
+
+// provides use countdown
+function useCountdown(targetIso: string | null): number {
+  const [secondsLeft, setSecondsLeft] = useState(0)
+  useEffect(() => {
+    if (!targetIso) return
+    // implements update
+    const update = () => {
+      const diff = Math.max(0, Math.floor((new Date(targetIso).getTime() - Date.now()) / 1000))
+      setSecondsLeft(diff)
+    }
+    update()
+    const id = setInterval(update, 1000)
+    return () => clearInterval(id)
+  }, [targetIso])
+  return secondsLeft
+}
+
+// renders the qr display component
+export function QrDisplay({ ticketId, startsAt, endsAt }: Props) {
+  const { t } = useTranslation()
+  const [state, setState] = useState<QrState>({ status: 'idle' })
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const activeRef = useRef(false)
+  const expiresAt = state.status === 'streaming' ? state.expiresAt : null
+  const secondsLeft = useCountdown(expiresAt)
+  const reassert = useReassertPasskey()
+  const { data: requirements } = useGateRequirements()
+
+  // implements fetch qr
+  const fetchQr = useCallback(
+    async (
+      latitude: number,
+      longitude: number,
+      isMock: boolean | null,
+      retriedAfterAssertion = false,
+    ) => {
+      if (!activeRef.current) return
+      const token = useAuthStore.getState().accessToken
+      // the flag travels only when the handset actually has one to give, so the
+      // server can tell a device that vouches for its fix from one that cannot
+      const mockParam = isMock === null ? '' : `&location_is_mock=${isMock}`
+      try {
+        const res = await fetch(
+          `${env.API_URL}/api/ticketing/v1/tickets/${ticketId}/qr?latitude=${latitude}&longitude=${longitude}${mockParam}`,
+          {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        )
+        if (!activeRef.current) return
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          const field = (data?.detail as { field?: string } | undefined)?.field ?? 'unknown'
+          // the presence window can lapse mid stream, so ask once more and retry
+          if (field === 'reassertion' && !retriedAfterAssertion) {
+            setState({ status: 'asserting' })
+            await reassert()
+            if (!activeRef.current) return
+            await fetchQr(latitude, longitude, isMock, true)
+            return
+          }
+          setState({ status: 'denied', reason: field })
+          return
+        }
+        const data = await res.json()
+        setState({ status: 'streaming', jwt: data.jwt, expiresAt: data.expires_at })
+
+        const msUntilExpiry = new Date(data.expires_at).getTime() - Date.now()
+        const refreshIn = Math.max(1000, msUntilExpiry - 3000)
+        refreshTimerRef.current = setTimeout(() => {
+          void fetchQr(latitude, longitude, isMock)
+        }, refreshIn)
+      } catch {
+        if (activeRef.current) setState({ status: 'error' })
+      }
+    },
+    [ticketId, reassert],
+  )
+
+  // implements start stream
+  const startStream = async () => {
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+    activeRef.current = true
+    // an unread answer is treated as every check being on, so a failed read never
+    // relaxes the gate
+    const needsAssertion = requirements?.reassertion ?? true
+    const needsPosition =
+      (requirements?.geofence ?? true) || (requirements?.location_integrity ?? true)
+    // the code only appears once the holder proves presence with the passkey
+    if (needsAssertion) {
+      setState({ status: 'asserting' })
+      try {
+        await reassert()
+      } catch {
+        if (activeRef.current) setState({ status: 'denied', reason: 'reassertion' })
+        return
+      }
+      if (!activeRef.current) return
+    }
+    if (!needsPosition) {
+      await fetchQr(0, 0, null)
+      return
+    }
+    setState({ status: 'locating' })
+    try {
+      if (Capacitor.isNativePlatform()) await Geolocation.requestPermissions()
+      const pos = await Geolocation.getCurrentPosition({ timeout: 20000, maximumAge: 60000 })
+      const isMock = await readLocationIsMock()
+      await fetchQr(pos.coords.latitude, pos.coords.longitude, isMock)
+    } catch {
+      if (activeRef.current) setState({ status: 'denied', reason: 'geolocation' })
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      activeRef.current = false
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+    }
+  }, [ticketId])
+
+  const outsideWindow = (() => {
+    if (!startsAt || !endsAt) return false
+    const now = Date.now()
+    const opens = new Date(startsAt).getTime() - _QR_WINDOW_HOURS_BEFORE * 3600 * 1000
+    return now < opens || now > new Date(endsAt).getTime()
+  })()
+
+  if (state.status === 'idle' && outsideWindow) {
+    return (
+      <div className="flex h-[300px] flex-col items-center justify-center gap-3 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          <Clock className="h-6 w-6 text-gray-400" />
+        </div>
+        <p className="text-xs text-gray-400">{t('tickets.qr.windowPending')}</p>
+      </div>
+    )
+  }
+
+  if (state.status === 'idle') {
+    return (
+      <div className="flex h-[300px] flex-col items-center justify-center gap-4">
+        <div className="relative">
+          <div className="opacity-40 blur-md">
+            <QRCode value="qrew-placeholder-blurred" size={200} />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Button onClick={startStream} className="rounded-full px-6 shadow-lg">
+              <QrCode className="h-4 w-4" />
+              {t('tickets.qr.showButton')}
+            </Button>
+          </div>
+        </div>
+        <div className="h-10" />
+      </div>
+    )
+  }
+
+  if (state.status === 'asserting' || state.status === 'locating') {
+    return (
+      <div className="flex h-[300px] flex-col items-center justify-center gap-3">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          {state.status === 'asserting' ? (
+            <Fingerprint className="text-primary h-6 w-6" />
+          ) : (
+            <Loader2 className="text-primary h-6 w-6 animate-spin" />
+          )}
+        </div>
+        <p className="text-xs text-gray-400">
+          {state.status === 'asserting' ? t('tickets.qr.asserting') : t('tickets.qr.locating')}
+        </p>
+      </div>
+    )
+  }
+
+  if (state.status === 'denied') {
+    const key = DENIAL_KEYS[state.reason] ?? 'tickets.qr.denied'
+    const isLocation = state.reason === 'geolocation'
+    return (
+      <div className="flex h-[300px] flex-col items-center justify-center gap-3 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          {isLocation ? (
+            <MapPin className="h-6 w-6 text-red-400" />
+          ) : (
+            <ShieldX className="h-6 w-6 text-red-400" />
+          )}
+        </div>
+        <p className="text-xs text-gray-400">{t(key)}</p>
+        <button
+          onClick={startStream}
+          className="bg-primary mt-1 flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white"
+        >
+          <RefreshCw className="h-4 w-4 shrink-0" />
+          {t('tickets.qr.retry')}
+        </button>
+      </div>
+    )
+  }
+
+  if (state.status === 'error') {
+    return (
+      <div className="flex h-[300px] flex-col items-center justify-center gap-3 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          <QrCode className="h-6 w-6 text-red-400" />
+        </div>
+        <p className="text-xs text-gray-400">{t('tickets.qr.error')}</p>
+        <button
+          onClick={startStream}
+          className="bg-primary mt-1 flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white"
+        >
+          <RefreshCw className="h-4 w-4 shrink-0" />
+          {t('tickets.qr.retry')}
+        </button>
+      </div>
+    )
+  }
+
+  const mins = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
+  const secs = String(secondsLeft % 60).padStart(2, '0')
+
+  return (
+    <div className="flex h-[300px] flex-col items-center justify-center gap-4">
+      <div className="rounded-2xl bg-white p-4 shadow-md">
+        <QRCode value={state.jwt} size={200} />
+      </div>
+      <div className="flex flex-col items-center gap-0.5">
+        <p className="font-mono text-2xl font-bold text-gray-900 tabular-nums">
+          {mins}:{secs}
+        </p>
+        <p className="text-xs text-gray-400">
+          Rotates at{' '}
+          {new Date(state.expiresAt).toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })}
+        </p>
+      </div>
+    </div>
+  )
+}

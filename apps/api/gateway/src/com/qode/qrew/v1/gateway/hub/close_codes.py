@@ -1,0 +1,7 @@
+# defines the websocket close codes the gateway uses
+WS_CLOSE_NORMAL = 1000
+WS_CLOSE_INTERNAL = 1011
+
+WS_CLOSE_UNAUTHORIZED = 4401
+WS_CLOSE_FORBIDDEN = 4403
+WS_CLOSE_OVERLOAD = 4400

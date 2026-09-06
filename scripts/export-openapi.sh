@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# exports the openapi schema and event types for every service
+set -e
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OUT_DIR="$REPO_ROOT/packages/contracts/openapi"
+CONTRACTS_SRC="$REPO_ROOT/packages/contracts/src"
+
+declare -A SERVICES=(
+  [identity]="apps/api/services/identity:com.qode.qrew.v1.identity.app"
+  [catalog]="apps/api/services/catalog:com.qode.qrew.v1.catalog.app"
+  [entry]="apps/api/services/entry:com.qode.qrew.v1.entry.app"
+  [payments]="apps/api/services/payments:com.qode.qrew.v1.payments.app"
+  [sales]="apps/api/services/sales:com.qode.qrew.v1.sales.app"
+  [ticketing]="apps/api/services/ticketing:com.qode.qrew.v1.ticketing.app"
+  [audit]="apps/api/services/audit:com.qode.qrew.v1.audit.app"
+  [gateway]="apps/api/gateway:com.qode.qrew.v1.gateway.app"
+)
+
+# maps each service that publishes domain events to its contracts events module
+declare -A SERVICE_EVENTS=(
+  [identity]="identity"
+  [catalog]="catalog"
+  [payments]="payments"
+  [sales]="sales"
+  [ticketing]="ticketing"
+)
+
+echo "Exporting OpenAPI specs..."
+echo ""
+
+for svc in "${!SERVICES[@]}"; do
+  IFS=':' read -r path module <<< "${SERVICES[$svc]}"
+  svc_dir="$OUT_DIR/$svc"
+
+  if [[ -n "${SERVICE_EVENTS[$svc]+x}" ]]; then
+    mkdir -p "$svc_dir/events"
+  else
+    mkdir -p "$svc_dir"
+  fi
+
+  echo "[$svc] OpenAPI spec..."
+  PYTHONPATH="$REPO_ROOT/$path/src" uv run --package "$svc" python -c "
+import yaml
+from $module import app
+
+spec = app.openapi()
+
+_VERBS = ('get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace')
+for path, item in spec.get('paths', {}).items():
+    ordered = dict(sorted(item.items()))
+    for method, op in ordered.items():
+        if method in _VERBS and isinstance(op, dict):
+            oid = op.get('operationId')
+            if isinstance(oid, str):
+                for verb in _VERBS:
+                    if oid.endswith('_' + verb):
+                        op['operationId'] = oid[: -len(verb)] + method
+                        break
+    spec['paths'][path] = ordered
+
+with open('$svc_dir/openapi.yaml', 'w') as f:
+    yaml.dump(spec, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+"
+  echo "  -> packages/contracts/openapi/$svc/openapi.yaml"
+done
+
+echo ""
+echo "Exporting event schemas..."
+echo ""
+
+for svc in "${!SERVICE_EVENTS[@]}"; do
+  events_module="${SERVICE_EVENTS[$svc]}"
+  events_dir="$OUT_DIR/$svc/events"
+
+  echo "[$svc] event schemas..."
+  PYTHONPATH="$CONTRACTS_SRC" uv run --package contracts python -c "
+import json, inspect
+import contracts.events.$events_module as mod
+from pydantic import BaseModel
+
+for name, cls in inspect.getmembers(mod, inspect.isclass):
+    if issubclass(cls, BaseModel) and cls is not BaseModel and name.endswith('Data'):
+        event_name = name.removesuffix('Data')
+        schema = cls.model_json_schema()
+        schema['\$schema'] = 'https://json-schema.org/draft/2020-12/schema'
+        schema['title'] = event_name
+        out_path = '$events_dir/' + event_name + '.schema.json'
+        with open(out_path, 'w') as f:
+            json.dump(schema, f, indent=2)
+            f.write('\n')
+        print(f'  -> packages/contracts/openapi/$svc/events/{event_name}.schema.json')
+"
+done
+
+echo ""
+echo "Done. All specs exported to packages/contracts/openapi/"

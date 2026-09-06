@@ -1,0 +1,20 @@
+# defines the response schemas for listing and revoking sessions
+from datetime import datetime
+
+from pydantic import BaseModel
+
+
+class SessionResponse(BaseModel):
+    id: str
+    jti: str
+    ip_address: str | None
+    user_agent: str | None
+    device_fingerprint: str | None
+    created_at: datetime
+    last_used_at: datetime
+    is_current: bool = False
+    location: str | None = None
+
+
+class RevokeAllResponse(BaseModel):
+    message: str

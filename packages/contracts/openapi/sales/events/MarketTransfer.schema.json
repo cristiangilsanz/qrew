@@ -1,0 +1,36 @@
+{
+  "properties": {
+    "ticket_id": {
+      "format": "uuid",
+      "title": "Ticket Id",
+      "type": "string"
+    },
+    "new_owner_user_id": {
+      "format": "uuid",
+      "title": "New Owner User Id",
+      "type": "string"
+    },
+    "holder_name": {
+      "title": "Holder Name",
+      "type": "string"
+    },
+    "holder_document_type": {
+      "title": "Holder Document Type",
+      "type": "string"
+    },
+    "holder_dni": {
+      "title": "Holder Dni",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "new_owner_user_id",
+    "holder_name",
+    "holder_document_type",
+    "holder_dni"
+  ],
+  "title": "MarketTransfer",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

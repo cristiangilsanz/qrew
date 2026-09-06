@@ -1,0 +1,52 @@
+# entry point that starts the identity background worker
+import asyncio
+
+import structlog
+from messaging.client import init_nats
+from worker import run_nats_subscribers
+from observability import setup_worker_observability, shutdown_tracing
+from outbox import install_drain_notifier
+from com.qode.qrew.v1.identity.core.config import settings
+
+logger = structlog.get_logger(__name__)
+
+
+# connects to nats and starts every identity subscriber
+async def main() -> None:
+    setup_worker_observability(
+        service_name=f"{settings.app_name}-worker",
+        version=settings.version,
+        debug=settings.debug,
+        otel_enabled=settings.otel_enabled,
+        otel_endpoint=settings.otel_endpoint,
+    )
+    if not settings.nats_url:
+        await logger.awarning("identity_worker.no_nats_url")
+        return
+
+    await init_nats(settings.nats_url)
+
+    import com.qode.qrew.v1.identity.worker.jobs.event_outbox_drainer  # noqa: F401  # pyright: ignore[reportUnusedImport]
+
+    install_drain_notifier(
+        "identity", redis_url=settings.redis_url, job_name="identity.event_outbox.drain"
+    )
+
+    from com.qode.qrew.v1.identity.worker.subscribers.catalog import run_catalog_event_subscriber
+    from com.qode.qrew.v1.identity.worker.subscribers.payments import run_payment_event_subscriber
+
+    await run_nats_subscribers(
+        "identity",
+        run_payment_event_subscriber(settings.nats_url),
+        run_catalog_event_subscriber(settings.nats_url),
+    )
+    shutdown_tracing()
+
+
+# runs the worker main coroutine until it stops
+def run() -> None:
+    asyncio.run(main())
+
+
+if __name__ == "__main__":
+    run()

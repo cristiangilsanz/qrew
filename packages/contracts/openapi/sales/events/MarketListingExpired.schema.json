@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "ticket_id": {
+      "format": "uuid",
+      "title": "Ticket Id",
+      "type": "string"
+    },
+    "seller_user_id": {
+      "format": "uuid",
+      "title": "Seller User Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "seller_user_id"
+  ],
+  "title": "MarketListingExpired",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

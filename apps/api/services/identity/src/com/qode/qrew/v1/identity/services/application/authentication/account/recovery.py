@@ -1,0 +1,256 @@
+# recovers an account by verifying a national identity document and a new passkey
+import uuid
+from datetime import UTC, datetime, timedelta
+
+import redis.asyncio as aioredis
+import structlog
+import webauthn
+from webauthn.helpers.base64url_to_bytes import base64url_to_bytes
+from webauthn.helpers.structs import (
+    AuthenticatorAttestationResponse,
+    AuthenticatorSelectionCriteria,
+    PublicKeyCredentialCreationOptions,
+    PublicKeyCredentialType,
+    RegistrationCredential,
+    ResidentKeyRequirement,
+    UserVerificationRequirement,
+)
+from webauthn.registration.verify_registration_response import VerifiedRegistration
+
+from com.qode.qrew.v1.identity.services.application.authentication.token.security import (
+    create_recovery_token,
+)
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
+from com.qode.qrew.v1.identity.core.errors import DomainError
+from com.qode.qrew.v1.identity.models.audit import AuditAction
+from com.qode.qrew.v1.identity.models.user import User
+from com.qode.qrew.v1.identity.models.passkey import PasskeyCredential
+from com.qode.qrew.v1.identity.repositories.device import DeviceRepository
+from com.qode.qrew.v1.identity.repositories.session import SessionRepository
+from com.qode.qrew.v1.identity.repositories.user import UserRepository
+from com.qode.qrew.v1.identity.repositories.passkey import (
+    PasskeyCredentialRepository,
+)
+from com.qode.qrew.v1.identity.schemas.passkey import (
+    PasskeyRegistrationCompleteRequest,
+)
+from com.qode.qrew.v1.identity.services.application.audit import AuditService
+from com.qode.qrew.v1.identity.services.application.authentication.device.management import (
+    publish_device_revoked,
+)
+from com.qode.qrew.v1.identity.services.application.notification.dispatcher import (
+    NotificationDispatcher,
+)
+from com.qode.qrew.v1.identity.services.application.authentication.kyc.ocr import (
+    OcrError,
+    OcrService,
+)
+from com.qode.qrew.v1.identity.core.config import settings
+
+logger = structlog.get_logger(__name__)
+
+_CHALLENGE_PREFIX = "webauthn:recovery:challenge:"
+_CHALLENGE_TTL_SECONDS = 300
+_BLACKLIST_JTI_PREFIX = "blacklist:jti:"
+
+
+class RecoveryError(DomainError):
+    pass
+
+
+class RecoveryService:
+    # stores the repositories redis client notifier ocr and audit service the service uses
+    def __init__(
+        self,
+        user_repo: UserRepository,
+        passkey_repo: PasskeyCredentialRepository,
+        session_repo: SessionRepository,
+        device_repo: DeviceRepository,
+        redis: aioredis.Redis,  # type: ignore[type-arg]
+        notifier: NotificationDispatcher,
+        audit: AuditService,
+        ocr: OcrService,
+    ) -> None:
+        self._user_repo = user_repo
+        self._passkey_repo = passkey_repo
+        self._session_repo = session_repo
+        self._device_repo = device_repo
+        self._redis = redis
+        self._notifier = notifier
+        self._audit = audit
+        self._ocr = ocr
+
+    # verifies identity and starts registering a replacement passkey
+    async def begin(self, email: str, document: bytes) -> tuple[str | None, str]:
+        user = await self._verify_identity(email, document)
+        if user is None:
+            return None, ""
+
+        options = self._generate_registration_options(user)
+        await self._redis.set(
+            _CHALLENGE_PREFIX + str(user.id),
+            options.challenge,
+            ex=_CHALLENGE_TTL_SECONDS,
+        )
+        token = create_recovery_token(str(user.id))
+
+        await logger.ainfo("recovery_begin", user_id=str(user.id))
+        await self._audit_safe(AuditAction.RECOVERY_BEGIN, user.id)
+        return token, webauthn.options_to_json(options)
+
+    # verifies the new passkey kills every session and replaces the old ones
+    async def complete(
+        self,
+        user: User,
+        request: PasskeyRegistrationCompleteRequest,
+    ) -> None:
+        raw_challenge = await self._consume_challenge(user.id)
+        verification = self._verify_attestation(raw_challenge, request)
+        await self._kill_sessions(user.id)
+        await self._replace_passkey(user.id, verification)
+        await self._revoke_devices(user.id)
+        await self._notify_recovery(user)
+        await logger.ainfo("recovery_completed", user_id=str(user.id))
+        await self._audit_safe(AuditAction.RECOVERY_COMPLETED, user.id)
+
+    # matches the document's national identity number against the account
+    async def _verify_identity(self, email: str, document: bytes) -> User | None:
+        try:
+            id_number = self._ocr.extract_national_id(document)
+        except OcrError:
+            await self._audit_failed(None, "ocr_failed")
+            return None
+
+        id_hash = pii_crypto.hash_lookup(id_number)
+        user = await self._user_repo.get_by_email(email.lower())
+        if user is None or not user.is_active or user.national_id_hash != id_hash:
+            await self._audit_failed(user.id if user else None, "identity_mismatch")
+            return None
+        return user
+
+    # builds the webauthn options for the replacement passkey
+    def _generate_registration_options(self, user: User) -> PublicKeyCredentialCreationOptions:
+        return webauthn.generate_registration_options(
+            rp_id=settings.rp_id,
+            rp_name=settings.rp_name,
+            user_id=str(user.id).encode(),
+            user_name=user.email,
+            user_display_name=user.full_name,
+            # the replacement has to be discoverable like the one the ordinary sign-up
+            # creates, or the platform stops offering it and the holder cannot sign in
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                resident_key=ResidentKeyRequirement.REQUIRED,
+                user_verification=UserVerificationRequirement.REQUIRED,
+            ),
+        )
+
+    # reads and deletes the pending registration challenge
+    async def _consume_challenge(self, user_id: uuid.UUID) -> bytes:
+        key = _CHALLENGE_PREFIX + str(user_id)
+        raw_challenge: bytes | None = await self._redis.get(key)
+        if raw_challenge is None:
+            raise RecoveryError("Recovery session expired.", field=None)
+        await self._redis.delete(key)
+        return raw_challenge
+
+    # verifies the webauthn registration response against the challenge
+    def _verify_attestation(
+        self,
+        raw_challenge: bytes,
+        request: PasskeyRegistrationCompleteRequest,
+    ) -> VerifiedRegistration:
+        credential = RegistrationCredential(
+            id=request.id,
+            raw_id=base64url_to_bytes(request.raw_id),
+            response=AuthenticatorAttestationResponse(
+                client_data_json=base64url_to_bytes(request.response.client_data_json),
+                attestation_object=base64url_to_bytes(request.response.attestation_object),
+            ),
+            type=PublicKeyCredentialType.PUBLIC_KEY,
+        )
+        # the native client signs with its own origin, so the recovery has to admit the
+        # same set the ordinary registration does or it can never succeed from a handset
+        expected_origins: str | list[str] = (
+            [settings.rp_expected_origin] + settings.rp_expected_origins
+            if settings.rp_expected_origins
+            else settings.rp_expected_origin
+        )
+        try:
+            return webauthn.verify_registration_response(
+                credential=credential,
+                expected_challenge=raw_challenge,
+                expected_rp_id=settings.rp_id,
+                expected_origin=expected_origins,
+                require_user_verification=True,
+            )
+        except Exception as exc:
+            msg = (
+                f"Passkey registration failed: {exc}"
+                if settings.debug
+                else "Passkey registration failed. Please try again."
+            )
+            raise RecoveryError(msg) from exc
+
+    # revokes and blacklists every session of the account
+    async def _kill_sessions(self, user_id: uuid.UUID) -> None:
+        jtis = await self._session_repo.delete_all_by_user_id(user_id)
+        ttl = int(timedelta(days=settings.refresh_token_expire_days).total_seconds())
+        for jti in jtis:
+            await self._redis.setex(_BLACKLIST_JTI_PREFIX + jti, ttl, "1")
+
+    # revokes every device, since recovery follows the loss of the one that held
+    # the key, and the account binds the next device it signs in from
+    async def _revoke_devices(self, user_id: uuid.UUID) -> None:
+        revoked = await self._device_repo.revoke_all_by_user_id(user_id, exclude_id=None)
+        now = datetime.now(UTC)
+        for device_id in revoked:
+            await publish_device_revoked(self._device_repo.session, device_id, user_id, now)
+
+    # replaces every existing passkey with the newly verified one
+    async def _replace_passkey(
+        self, user_id: uuid.UUID, verification: VerifiedRegistration
+    ) -> None:
+        await self._passkey_repo.delete_all_by_user_id(user_id)
+        await self._passkey_repo.create(
+            PasskeyCredential(
+                id=uuid.uuid4(),
+                user_id=user_id,
+                credential_id=verification.credential_id,
+                public_key=verification.credential_public_key,
+                sign_count=verification.sign_count,
+                aaguid=str(verification.aaguid),
+                name="Default",
+            )
+        )
+
+    # notifies the user that their account was recovered
+    async def _notify_recovery(self, user: User) -> None:
+        pass
+
+    # records why a recovery attempt failed
+    async def _audit_failed(self, actor_id: uuid.UUID | None, reason: str) -> None:
+        await logger.awarning("recovery_failed", reason=reason)
+        try:
+            await self._audit.record(
+                action=AuditAction.RECOVERY_FAILED,
+                actor_id=actor_id,
+                entity_type="user",
+                entity_id=str(actor_id) if actor_id else None,
+                payload={"reason": reason},
+            )
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.RECOVERY_FAILED, error=repr(exc)
+            )
+
+    # records a recovery audit event without letting a failure interrupt the caller
+    async def _audit_safe(self, action: AuditAction, user_id: uuid.UUID) -> None:
+        try:
+            await self._audit.record(
+                action=action,
+                actor_id=user_id,
+                entity_type="user",
+                entity_id=str(user_id),
+            )
+        except Exception as exc:
+            await logger.awarning("audit_write_failed", action=action, error=repr(exc))

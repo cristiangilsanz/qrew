@@ -1,0 +1,107 @@
+# exposes the admin endpoints that search list and unlock users
+import uuid
+
+from fastapi import APIRouter, Depends, Query, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from pagination import Page, clamp_limit
+from com.qode.qrew.v1.identity.core.utils.pagination import cursor_paginate
+from com.qode.qrew.v1.identity.core.dependencies import get_admin_user
+from com.qode.qrew.v1.identity.core.database import get_db
+from com.qode.qrew.v1.identity.core.dependencies import limiter
+from com.qode.qrew.v1.identity.models.user import KycStatus, User
+from com.qode.qrew.v1.identity.repositories.user import UserRepository
+from com.qode.qrew.v1.identity.schemas.admin import UserSearchResult, UserSummaryResponse
+from com.qode.qrew.v1.identity.services.application.authentication.login.guards.lockout import (
+    LoginLockoutService,
+)
+
+from ._deps import get_login_lockout_service, get_user_repository
+
+router = APIRouter(prefix="/users")
+
+_DEFAULT_LIMIT = 20
+
+
+# searches users by partial email
+@router.get(
+    "/search",
+    response_model=list[UserSearchResult],
+    status_code=status.HTTP_200_OK,
+    summary="Search users by partial email (admin only)",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def search_users(
+    request: Request,
+    q: str = Query(min_length=1, max_length=128),
+    _admin: User = Depends(get_admin_user),
+    repo: UserRepository = Depends(get_user_repository),
+) -> list[UserSearchResult]:
+    del request
+    users = await repo.search_by_email_partial(q, limit=50)
+    return [UserSearchResult(id=u.id, email=u.email, full_name=u.full_name) for u in users]
+
+
+# lists and filters users by search term and kyc status
+@router.get(
+    "",
+    response_model=Page[UserSummaryResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List and search users",
+)
+@limiter.limit("60/minute")  # type: ignore[misc]
+async def list_users(
+    request: Request,
+    cursor: str | None = None,
+    limit: int = _DEFAULT_LIMIT,
+    search: str | None = Query(default=None, max_length=128),
+    kyc_status: KycStatus | None = None,
+    _admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+    repo: UserRepository = Depends(get_user_repository),
+) -> Page[UserSummaryResponse]:
+    page_limit = clamp_limit(limit, default=_DEFAULT_LIMIT)
+    stmt = repo.search_query(search=search, kyc_status=kyc_status)
+    users, next_cursor = await cursor_paginate(
+        db,
+        stmt,
+        sort_column=User.created_at,
+        id_column=User.id,
+        limit=page_limit,
+        cursor=cursor,
+    )
+    return Page[UserSummaryResponse](
+        items=[
+            UserSummaryResponse(
+                id=u.id,
+                email=u.email,
+                full_name=u.full_name,
+                kyc_status=u.kyc_status,
+                national_id_type=u.national_id_type,
+                kyc_ocr_result=u.kyc_ocr_result,
+                email_verified=u.email_verified,
+                phone_verified=u.phone_number_verified,
+                is_admin=u.is_admin,
+                created_at=u.created_at,
+            )
+            for u in users
+        ],
+        next_cursor=next_cursor,
+    )
+
+
+# clears a user's login lockout
+@router.post(
+    "/{user_id}/unlock",
+    status_code=status.HTTP_200_OK,
+    summary="Clear a per-account login lockout",
+)
+@limiter.limit("30/minute")  # type: ignore[misc]
+async def unlock_user(
+    request: Request,
+    user_id: uuid.UUID,
+    admin: User = Depends(get_admin_user),
+    lockout: LoginLockoutService = Depends(get_login_lockout_service),
+) -> dict[str, str]:
+    await lockout.admin_unlock(user_id, admin.id)
+    return {"message": "Account unlocked."}

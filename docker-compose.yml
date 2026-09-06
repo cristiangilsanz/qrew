@@ -1,0 +1,596 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sekret
+      POSTGRES_DB: qrew
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d qrew"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - datos
+
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - datos
+
+
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - interna
+
+
+  identity:
+    build:
+      context: .
+      dockerfile: apps/api/services/identity/Dockerfile
+    volumes:
+      - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - identity_storage:/app/var/storage
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+      AUDIT_URL: http://audit:8007
+      HOST: 0.0.0.0
+      DEBUG: "false"
+      RP_ID: ${RP_ID:-qrew-dev.uk}
+      RP_EXPECTED_ORIGIN: ${RP_EXPECTED_ORIGIN:-https://qrew-dev.uk}
+      BASE_URL: ${BASE_URL:-https://qrew-dev.uk}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:5173","https://qrew-dev.uk"]}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - interna
+      - datos
+
+
+  identity-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/identity/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.identity.worker"]
+    volumes:
+      - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - identity_storage:/app/var/storage
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  identity-arq-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/identity/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.identity.worker.runner"]
+    volumes:
+      - ./apps/api/services/identity/config/local.yaml:/app/config/local.yaml:ro
+      - identity_storage:/app/var/storage
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  entry:
+    build:
+      context: .
+      dockerfile: apps/api/services/entry/Dockerfile
+    volumes:
+      - ./apps/api/services/entry/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: "false"
+      TICKETING_URL: http://ticketing:8005
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      ticketing:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8006/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - interna
+      - datos
+
+
+  entry-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/entry/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.entry.worker"]
+    volumes:
+      - ./apps/api/services/entry/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  payments:
+    build:
+      context: .
+      dockerfile: apps/api/services/payments/Dockerfile
+    volumes:
+      - ./apps/api/services/payments/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: "false"
+      SALES_URL: http://sales:8003
+    depends_on:
+      sales:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8004/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - interna
+      - datos
+
+
+  catalog:
+    build:
+      context: .
+      dockerfile: apps/api/services/catalog/Dockerfile
+    volumes:
+      - ./apps/api/services/catalog/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+      IDENTITY_URL: http://identity:8001
+      HOST: 0.0.0.0
+      DEBUG: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8002/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - interna
+      - datos
+
+
+  catalog-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/catalog/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.catalog.worker"]
+    volumes:
+      - ./apps/api/services/catalog/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  payments-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/payments/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.payments.worker"]
+    volumes:
+      - ./apps/api/services/payments/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  ticketing:
+    build:
+      context: .
+      dockerfile: apps/api/services/ticketing/Dockerfile
+    volumes:
+      - ./apps/api/services/ticketing/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8005/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - interna
+      - datos
+
+
+  ticketing-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/ticketing/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.ticketing.worker"]
+    volumes:
+      - ./apps/api/services/ticketing/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  sales:
+    build:
+      context: .
+      dockerfile: apps/api/services/sales/Dockerfile
+    volumes:
+      - ./apps/api/services/sales/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8003/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - interna
+      - datos
+
+
+  sales-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/sales/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.sales.worker"]
+    volumes:
+      - ./apps/api/services/sales/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  ticketing-arq-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/ticketing/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.ticketing.worker.runner"]
+    volumes:
+      - ./apps/api/services/ticketing/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  sales-arq-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/sales/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.sales.worker.runner"]
+    volumes:
+      - ./apps/api/services/sales/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  audit:
+    build:
+      context: .
+      dockerfile: apps/api/services/audit/Dockerfile
+    volumes:
+      - ./apps/api/services/audit/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      NATS_URL: nats://nats:4222
+      HOST: 0.0.0.0
+      DEBUG: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8007/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - interna
+      - datos
+
+
+  audit-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: apps/api/services/audit/Dockerfile
+    command: ["python", "-m", "com.qode.qrew.v1.audit.worker"]
+    volumes:
+      - ./apps/api/services/audit/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:sekret@postgres:5432/qrew
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - interna
+      - datos
+
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/api/gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api/gateway/config/local.yaml:/app/config/local.yaml:ro
+    environment:
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379/0
+      HOST: 0.0.0.0
+      PORT: 8000
+      DEBUG: "false"
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:5173","https://qrew-dev.uk"]}
+      IDENTITY_URL: http://identity:8001
+      CATALOG_URL: http://catalog:8002
+      SALES_URL: http://sales:8003
+      PAYMENTS_URL: http://payments:8004
+      TICKETING_URL: http://ticketing:8005
+      ENTRY_URL: http://entry:8006
+    depends_on:
+      nats:
+        condition: service_healthy
+      identity:
+        condition: service_healthy
+      catalog:
+        condition: service_healthy
+      ticketing:
+        condition: service_healthy
+      sales:
+        condition: service_healthy
+      payments:
+        condition: service_healthy
+      entry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - publica
+      - interna
+
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/app/Dockerfile
+      args:
+        VITE_API_URL: ""
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+    ports:
+      - "3000:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - publica
+
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.76.0
+    container_name: qrew-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - interna
+
+networks:
+  publica:
+    driver: bridge
+  interna:
+    driver: bridge
+  datos:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  nats_data:
+  identity_storage:

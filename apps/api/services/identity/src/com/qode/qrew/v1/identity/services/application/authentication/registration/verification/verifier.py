@@ -1,0 +1,120 @@
+# confirms a pending email or phone verification token
+from datetime import UTC, datetime
+
+import structlog
+
+from com.qode.qrew.v1.identity.core.utils import pii as pii_crypto
+from com.qode.qrew.v1.identity.core.errors import DomainError
+from com.qode.qrew.v1.identity.models.audit import AuditAction
+from com.qode.qrew.v1.identity.repositories.user import UserRepository
+from com.qode.qrew.v1.identity.services.application.audit import AuditService
+
+logger = structlog.get_logger(__name__)
+
+
+class VerificationError(DomainError):
+    pass
+
+
+class EmailVerificationService:
+    # stores the repository and audit service the service uses
+    def __init__(self, repo: UserRepository, audit: AuditService) -> None:
+        self._repo = repo
+        self._audit = audit
+
+    # confirms an email address using its still valid verification token
+    async def verify(self, token: str) -> None:
+        user = await self._repo.get_by_email_verification_token(token)
+
+        if user is None:
+            await logger.awarning("email_verification_failed", reason="invalid_token")
+            raise VerificationError("Verification link expired.", field="token")
+        if user.email_verified:
+            await logger.awarning(
+                "email_verification_failed",
+                reason="already_verified",
+                user_id=str(user.id),
+            )
+            raise VerificationError("Email already verified.", field="token")
+        if (
+            user.email_verification_token_expires_at is None
+            or user.email_verification_token_expires_at < datetime.now(UTC)
+        ):
+            await logger.awarning(
+                "email_verification_failed",
+                reason="token_expired",
+                user_id=str(user.id),
+            )
+            raise VerificationError(
+                "This verification link has expired. Request a new one", field="token"
+            )
+
+        user.email_verified = True
+        user.email_verification_token = None
+        user.email_verification_token_expires_at = None
+        await self._repo.save(user)
+
+        await logger.ainfo("email_verified", user_id=str(user.id))
+        try:
+            await self._audit.record(
+                action=AuditAction.VERIFY_EMAIL,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+            )
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.VERIFY_EMAIL, error=repr(exc)
+            )
+
+
+class PhoneVerificationService:
+    # stores the repository and audit service the service uses
+    def __init__(self, repo: UserRepository, audit: AuditService) -> None:
+        self._repo = repo
+        self._audit = audit
+
+    # confirms a phone number using its still valid otp
+    async def verify(self, phone_number: str, otp: str) -> None:
+        user = await self._repo.get_by_phone_number(phone_number)
+
+        if user is None or user.phone_number_otp != pii_crypto.hash_lookup(otp):
+            await logger.awarning("phone_number_verification_failed", reason="invalid_otp")
+            raise VerificationError("Verification code expired.", field="otp")
+        if user.phone_number_verified:
+            await logger.awarning(
+                "phone_number_verification_failed",
+                reason="already_verified",
+                user_id=str(user.id),
+            )
+            raise VerificationError("Phone number already verified.", field="otp")
+        if (
+            user.phone_number_otp_expires_at is None
+            or user.phone_number_otp_expires_at < datetime.now(UTC)
+        ):
+            await logger.awarning(
+                "phone_number_verification_failed",
+                reason="otp_expired",
+                user_id=str(user.id),
+            )
+            raise VerificationError(
+                "This verification OTP has expired. Request a new one", field="otp"
+            )
+
+        user.phone_number_verified = True
+        user.phone_number_otp = None
+        user.phone_number_otp_expires_at = None
+        await self._repo.save(user)
+
+        await logger.ainfo("phone_number_verified", user_id=str(user.id))
+        try:
+            await self._audit.record(
+                action=AuditAction.VERIFY_PHONE,
+                actor_id=user.id,
+                entity_type="user",
+                entity_id=str(user.id),
+            )
+        except Exception as exc:
+            await logger.awarning(
+                "audit_write_failed", action=AuditAction.VERIFY_PHONE, error=repr(exc)
+            )

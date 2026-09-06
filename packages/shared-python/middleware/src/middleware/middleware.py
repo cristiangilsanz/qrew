@@ -1,0 +1,58 @@
+# stamps every request with an id and every response with security headers
+import uuid
+from collections.abc import Awaitable, Callable
+
+import structlog
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+logger = structlog.get_logger(__name__)
+
+
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    # binds a request id to the log context and echoes it in the response
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        structlog.contextvars.clear_contextvars()
+        structlog.contextvars.bind_contextvars(request_id=request_id)
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    # adds the baseline security headers to every response
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
+        response = await call_next(request)
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault(
+            "Referrer-Policy", "strict-origin-when-cross-origin"
+        )
+        response.headers.setdefault("Permissions-Policy", "geolocation=(), camera=()")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+        )
+        return response
+
+
+# resolves the real client address trusting a forwarded header only from the proxy
+def client_ip(request: Request, trusted_proxy_ip: str = "") -> str | None:
+    client_host = request.client.host if request.client else None
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded and trusted_proxy_ip and client_host == trusted_proxy_ip:
+        return forwarded.split(",", 1)[0].strip() or None
+    return client_host

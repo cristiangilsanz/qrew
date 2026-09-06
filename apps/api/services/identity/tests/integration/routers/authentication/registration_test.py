@@ -1,0 +1,103 @@
+# tests registration
+import uuid
+
+import httpx
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio(loop_scope="session")]
+
+_DEFAULT_PASSWORD = "StrongP@ss1!"
+
+
+# handles payload
+def _payload(**overrides) -> dict:
+    base = {
+        "full_name": "Test User",
+        "email": f"reg-{uuid.uuid4().hex[:8]}@example.com",
+        "phone_number": f"+346{str(int(uuid.uuid4().int % 90_000_000) + 10_000_000)}",
+        "password": _DEFAULT_PASSWORD,
+        "terms_accepted": True,
+        "captcha_token": "test-token",
+    }
+    return {**base, **overrides}
+
+
+class TestRegister:
+    # verifies that creates user and returns id
+    async def test_creates_user_and_returns_id(self, client: httpx.AsyncClient) -> None:
+        resp = await client.post("/v1/auth/registration/", json=_payload())
+        assert resp.status_code == 201
+        body = resp.json()
+        assert "id" in body
+        assert uuid.UUID(body["id"])
+
+    # verifies that duplicate email returns 409
+    async def test_duplicate_email_returns_409(self, client: httpx.AsyncClient) -> None:
+        payload = _payload()
+        await client.post("/v1/auth/registration/", json=payload)
+        resp2 = await client.post(
+            "/v1/auth/registration/",
+            json={
+                **payload,
+                "phone_number": f"+346{str(int(uuid.uuid4().int % 90_000_000) + 10_000_000)}",
+            },
+        )
+        assert resp2.status_code == 409
+
+    # verifies that weak password returns 422
+    async def test_weak_password_returns_422(self, client: httpx.AsyncClient) -> None:
+        resp = await client.post("/v1/auth/registration/", json=_payload(password="weak"))
+        assert resp.status_code == 422
+
+    # verifies that missing terms returns 422
+    async def test_missing_terms_returns_422(self, client: httpx.AsyncClient) -> None:
+        resp = await client.post("/v1/auth/registration/", json=_payload(terms_accepted=False))
+        assert resp.status_code == 422
+
+    # verifies that invalid email returns 422
+    async def test_invalid_email_returns_422(self, client: httpx.AsyncClient) -> None:
+        resp = await client.post("/v1/auth/registration/", json=_payload(email="not-an-email"))
+        assert resp.status_code == 422
+
+
+class TestVerifyEmail:
+    # verifies that valid token verifies
+    async def test_valid_token_verifies(
+        self, client: httpx.AsyncClient, db_session: AsyncSession
+    ) -> None:
+        from integration.conftest import _issued_token
+
+        payload = _payload()
+        resp = await client.post("/v1/auth/registration/", json=payload)
+        assert resp.status_code == 201
+
+        token = await _issued_token(db_session, payload["email"], "email_account_verify", "token")
+
+        verify_resp = await client.post("/v1/auth/registration/verify-email", json={"token": token})
+        assert verify_resp.status_code == 200
+
+    # verifies that invalid token returns 400
+    async def test_invalid_token_returns_400(self, client: httpx.AsyncClient) -> None:
+        resp = await client.post("/v1/auth/registration/verify-email", json={"token": "bad-token"})
+        assert resp.status_code == 400
+
+
+class TestResendEmailVerification:
+    # verifies that resend returns 200
+    async def test_resend_returns_200(self, client: httpx.AsyncClient) -> None:
+        payload = _payload()
+        await client.post("/v1/auth/registration/", json=payload)
+        resp = await client.post(
+            "/v1/auth/registration/resend-email-verification",
+            json={"email": payload["email"]},
+        )
+        assert resp.status_code == 200
+
+    # verifies that unknown email still returns 200
+    async def test_unknown_email_still_returns_200(self, client: httpx.AsyncClient) -> None:
+        resp = await client.post(
+            "/v1/auth/registration/resend-email-verification",
+            json={"email": "nobody@example.com"},
+        )
+        assert resp.status_code == 200

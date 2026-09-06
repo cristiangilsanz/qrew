@@ -1,0 +1,69 @@
+{
+  "properties": {
+    "payment_id": {
+      "format": "uuid",
+      "title": "Payment Id",
+      "type": "string"
+    },
+    "user_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "User Id"
+    },
+    "reservation_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reservation Id"
+    },
+    "market_assignment_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Market Assignment Id"
+    },
+    "amount_refunded_cents": {
+      "title": "Amount Refunded Cents",
+      "type": "integer"
+    },
+    "amount_total_cents": {
+      "title": "Amount Total Cents",
+      "type": "integer"
+    },
+    "is_full_refund": {
+      "title": "Is Full Refund",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "payment_id",
+    "amount_refunded_cents",
+    "amount_total_cents",
+    "is_full_refund"
+  ],
+  "title": "PaymentRefunded",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

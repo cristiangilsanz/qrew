@@ -1,0 +1,585 @@
+# tests payment
+import uuid
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from com.qode.qrew.v1.payments.models.payment import PaymentStatus
+from com.qode.qrew.v1.payments.services.application.payment import (
+    PaymentError,
+    PaymentExpiredError,
+    PaymentService,
+    WebhookError,
+)
+from com.qode.qrew.v1.payments.services.domain.status import map_intent_status
+from conftest import make_payment
+
+_PATCH_GET_CTX = "com.qode.qrew.v1.payments.services.application.payment._get_reservation_context"
+_PATCH_CRYPTO = "com.qode.qrew.v1.payments.services.application.payment.pii_crypto"
+_PATCH_RECORD = "com.qode.qrew.v1.payments.services.application.payment.record_event"
+_PATCH_CLAIM = "com.qode.qrew.v1.payments.services.application.webhooks.idempotency.claim_event"
+_PATCH_DISPATCH = (
+    "com.qode.qrew.v1.payments.services.application.webhooks.dispatch.dispatch_webhook_event"
+)
+
+
+# handles make ctx
+def _make_ctx(
+    *,
+    is_valid: bool = True,
+    amount_cents: int = 2000,
+    currency: str = "EUR",
+    error_code: str | None = None,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        is_valid=is_valid,
+        amount_cents=amount_cents,
+        currency=currency,
+        error_code=error_code,
+    )
+
+
+# handles make intent
+def _make_intent(
+    *, intent_id: str = "pi_test_123", client_secret: str = "secret_abc", status: str = "succeeded"
+) -> SimpleNamespace:
+    return SimpleNamespace(intent_id=intent_id, client_secret=client_secret, status=status)
+
+
+# handles make svc
+def _make_svc(
+    *,
+    by_reservation: object = None,
+    by_intent: object = None,
+) -> tuple[PaymentService, MagicMock, MagicMock]:
+    session = MagicMock()
+    repo = MagicMock()
+    repo.get_by_reservation_id = AsyncMock(return_value=by_reservation)
+    repo.get_by_intent_id = AsyncMock(return_value=by_intent)
+    repo.insert = AsyncMock(side_effect=lambda p: p)
+    repo.flush = AsyncMock()
+    stripe = AsyncMock()
+    svc = PaymentService(session=session, repo=repo, stripe=stripe)
+    return svc, repo, stripe
+
+
+class TestMapIntentStatus:
+    # verifies that succeeded
+    def test_succeeded(self) -> None:
+        assert map_intent_status("succeeded") == PaymentStatus.succeeded
+
+    # verifies that processing
+    def test_processing(self) -> None:
+        assert map_intent_status("processing") == PaymentStatus.processing
+
+    # verifies that requires payment method
+    def test_requires_payment_method(self) -> None:
+        assert map_intent_status("requires_payment_method") == PaymentStatus.requires_action
+
+    # verifies that requires confirmation
+    def test_requires_confirmation(self) -> None:
+        assert map_intent_status("requires_confirmation") == PaymentStatus.requires_action
+
+    # verifies that canceled maps to failed
+    def test_canceled_maps_to_failed(self) -> None:
+        assert map_intent_status("canceled") == PaymentStatus.failed
+
+    # verifies that unknown maps to requires action
+    def test_unknown_maps_to_requires_action(self) -> None:
+        assert map_intent_status("unknown_status") == PaymentStatus.requires_action
+
+
+class TestPaymentServiceInitiate:
+    # verifies that raises expired when context says expired
+    async def test_raises_expired_when_context_says_expired(
+        self, user_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> None:
+        svc, _, _ = _make_svc()
+        ctx = _make_ctx(is_valid=False, error_code="expired")
+        with (
+            patch(_PATCH_GET_CTX, new=AsyncMock(return_value=ctx)),
+            pytest.raises(PaymentExpiredError),
+        ):
+            await svc.initiate(actor_id=user_id, reservation_id=reservation_id)
+
+    # verifies that raises expired on 410 code
+    async def test_raises_expired_on_410_code(
+        self, user_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> None:
+        svc, _, _ = _make_svc()
+        ctx = _make_ctx(is_valid=False, error_code="410")
+        with (
+            patch(_PATCH_GET_CTX, new=AsyncMock(return_value=ctx)),
+            pytest.raises(PaymentExpiredError),
+        ):
+            await svc.initiate(actor_id=user_id, reservation_id=reservation_id)
+
+    # verifies that raises not found when 404
+    async def test_raises_not_found_when_404(
+        self, user_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> None:
+        svc, _, _ = _make_svc()
+        ctx = _make_ctx(is_valid=False, error_code="not_found")
+        with (
+            patch(_PATCH_GET_CTX, new=AsyncMock(return_value=ctx)),
+            pytest.raises(PaymentError, match="not found"),
+        ):
+            await svc.initiate(actor_id=user_id, reservation_id=reservation_id)
+
+    # verifies that raises generic error for invalid status
+    async def test_raises_generic_error_for_invalid_status(
+        self, user_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> None:
+        svc, _, _ = _make_svc()
+        ctx = _make_ctx(is_valid=False, error_code="not_reserved")
+        with (
+            patch(_PATCH_GET_CTX, new=AsyncMock(return_value=ctx)),
+            pytest.raises(PaymentError, match="not pending"),
+        ):
+            await svc.initiate(actor_id=user_id, reservation_id=reservation_id)
+
+    # verifies that returns existing payment when intent already set
+    async def test_returns_existing_payment_when_intent_already_set(
+        self, user_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> None:
+        existing = make_payment(reservation_id=reservation_id, intent_id="pi_existing")
+        svc, repo, stripe = _make_svc(by_reservation=existing)
+        ctx = _make_ctx()
+        with patch(_PATCH_GET_CTX, new=AsyncMock(return_value=ctx)):
+            result = await svc.initiate(actor_id=user_id, reservation_id=reservation_id)
+        assert result is existing
+        stripe.create_payment_intent.assert_not_awaited()
+        repo.insert.assert_not_awaited()
+
+    # verifies that creates new payment and intent
+    async def test_creates_new_payment_and_intent(
+        self, user_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> None:
+        svc, repo, stripe = _make_svc(by_reservation=None)
+        ctx = _make_ctx(amount_cents=3000, currency="GBP")
+        intent = _make_intent(intent_id="pi_new", client_secret="secret_new", status="succeeded")
+        stripe.create_payment_intent = AsyncMock(return_value=intent)
+        mock_crypto = MagicMock()
+        mock_crypto.encrypt = MagicMock(return_value=b"encrypted_secret")
+        with (
+            patch(_PATCH_GET_CTX, new=AsyncMock(return_value=ctx)),
+            patch(_PATCH_CRYPTO, mock_crypto),
+        ):
+            result = await svc.initiate(actor_id=user_id, reservation_id=reservation_id)
+        assert result.provider_payment_intent_id == "pi_new"
+        assert result.status == PaymentStatus.succeeded
+        assert result.client_secret_ciphertext == b"encrypted_secret"
+        repo.insert.assert_awaited_once()
+
+    # verifies that updates existing payment without intent
+    async def test_updates_existing_payment_without_intent(
+        self, user_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> None:
+        existing = make_payment(
+            reservation_id=reservation_id, intent_id=None, client_secret_ciphertext=None
+        )
+        svc, repo, stripe = _make_svc(by_reservation=existing)
+        ctx = _make_ctx()
+        intent = _make_intent(intent_id="pi_attached", status="requires_action")
+        stripe.create_payment_intent = AsyncMock(return_value=intent)
+        mock_crypto = MagicMock()
+        mock_crypto.encrypt = MagicMock(return_value=b"enc")
+        with (
+            patch(_PATCH_GET_CTX, new=AsyncMock(return_value=ctx)),
+            patch(_PATCH_CRYPTO, mock_crypto),
+        ):
+            result = await svc.initiate(actor_id=user_id, reservation_id=reservation_id)
+        assert result is existing
+        assert existing.provider_payment_intent_id == "pi_attached"
+        repo.insert.assert_not_awaited()
+        repo.flush.assert_awaited_once()
+
+
+class TestPaymentServiceDecryptClientSecret:
+    # verifies that returns none when ciphertext is none
+    def test_returns_none_when_ciphertext_is_none(
+        self, user_id: uuid.UUID, reservation_id: uuid.UUID
+    ) -> None:
+        svc, _, _ = _make_svc()
+        payment = make_payment(reservation_id=reservation_id, client_secret_ciphertext=None)
+        mock_crypto = MagicMock()
+        with patch(_PATCH_CRYPTO, mock_crypto):
+            result = svc.decrypt_client_secret(payment)  # type: ignore[arg-type]
+        assert result is None
+        mock_crypto.decrypt.assert_not_called()
+
+    # verifies that decrypts ciphertext
+    def test_decrypts_ciphertext(self, user_id: uuid.UUID, reservation_id: uuid.UUID) -> None:
+        svc, _, _ = _make_svc()
+        payment = make_payment(reservation_id=reservation_id, client_secret_ciphertext=b"cipher")
+        mock_crypto = MagicMock()
+        mock_crypto.decrypt = MagicMock(return_value="the_secret")
+        with patch(_PATCH_CRYPTO, mock_crypto):
+            result = svc.decrypt_client_secret(payment)  # type: ignore[arg-type]
+        assert result == "the_secret"
+        mock_crypto.decrypt.assert_called_once_with(b"cipher")
+
+
+class TestPaymentServiceApplySucceeded:
+    # verifies that silently returns when not found
+    async def test_silently_returns_when_not_found(self) -> None:
+        svc, repo, _ = _make_svc(by_intent=None)
+        await svc.apply_succeeded(intent_id="pi_unknown")
+        repo.flush.assert_not_awaited()
+
+    # verifies that marks succeeded and flushes
+    async def test_marks_succeeded_and_flushes(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.requires_action)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.apply_succeeded(intent_id="pi_test")
+        assert payment.status == PaymentStatus.succeeded
+        repo.flush.assert_awaited_once()
+
+
+class TestPaymentServiceApplyFailed:
+    # verifies that silently returns when not found
+    async def test_silently_returns_when_not_found(self) -> None:
+        svc, repo, _ = _make_svc(by_intent=None)
+        await svc.apply_failed(intent_id="pi_x", failure_code="card_declined", failure_message="No")
+        repo.flush.assert_not_awaited()
+
+    # verifies that records failure and flushes
+    async def test_records_failure_and_flushes(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.processing)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.apply_failed(
+            intent_id="pi_test", failure_code="insufficient_funds", failure_message="Not enough"
+        )
+        assert payment.status == PaymentStatus.failed
+        assert payment.failure_code == "insufficient_funds"
+        assert payment.failure_message == "Not enough"
+        repo.flush.assert_awaited_once()
+
+
+class TestPaymentServiceApplyRefund:
+    # verifies that silently returns when not found
+    async def test_silently_returns_when_not_found(self) -> None:
+        svc, repo, _ = _make_svc(by_intent=None)
+        await svc.apply_refund(intent_id="pi_x", amount_refunded=1000, amount_total=2000)
+        repo.flush.assert_not_awaited()
+
+    # verifies that partial refund does not change status
+    async def test_partial_refund_does_not_change_status(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.apply_refund(intent_id="pi_test", amount_refunded=500, amount_total=2000)
+        assert payment.status == PaymentStatus.succeeded
+        repo.flush.assert_not_awaited()
+
+    # verifies that full refund sets refunded and flushes
+    async def test_full_refund_sets_refunded_and_flushes(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.apply_refund(intent_id="pi_test", amount_refunded=2000, amount_total=2000)
+        assert payment.status == PaymentStatus.refunded
+        repo.flush.assert_awaited_once()
+
+    # verifies that overpaid refund counts as full
+    async def test_overpaid_refund_counts_as_full(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.apply_refund(intent_id="pi_test", amount_refunded=2500, amount_total=2000)
+        assert payment.status == PaymentStatus.refunded
+
+
+class TestPaymentServiceApplyChargeback:
+    # verifies that silently returns when not found
+    async def test_silently_returns_when_not_found(self) -> None:
+        svc, repo, _ = _make_svc(by_intent=None)
+        await svc.apply_chargeback(intent_id="pi_x")
+        repo.flush.assert_not_awaited()
+
+    # verifies that sets refunded and flushes
+    async def test_sets_refunded_and_flushes(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.apply_chargeback(intent_id="pi_test")
+        assert payment.status == PaymentStatus.refunded
+        repo.flush.assert_awaited_once()
+
+
+class TestPaymentServiceRecordChargebackClosed:
+    # verifies that silently returns when not found
+    async def test_silently_returns_when_not_found(self) -> None:
+        svc, repo, _ = _make_svc(by_intent=None)
+        await svc.record_chargeback_closed(intent_id="pi_x")
+        repo.flush.assert_not_awaited()
+
+    # verifies that publishes event without status change
+    async def test_publishes_event_without_status_change(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.refunded)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.record_chargeback_closed(intent_id="pi_test")
+        assert payment.status == PaymentStatus.refunded
+        repo.flush.assert_not_awaited()
+
+
+class TestPaymentServiceUpdateIntermediate:
+    # verifies that silently returns when not found
+    async def test_silently_returns_when_not_found(self) -> None:
+        svc, repo, _ = _make_svc(by_intent=None)
+        await svc.update_intermediate(intent_id="pi_x", status="processing")
+        repo.flush.assert_not_awaited()
+
+    # verifies that skips update for terminal succeeded
+    async def test_skips_update_for_terminal_succeeded(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.processing)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.update_intermediate(intent_id="pi_test", status="succeeded")
+        assert payment.status == PaymentStatus.processing
+        repo.flush.assert_not_awaited()
+
+    # verifies that skips update for terminal failed
+    async def test_skips_update_for_terminal_failed(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.processing)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.update_intermediate(intent_id="pi_test", status="canceled")
+        assert payment.status == PaymentStatus.processing
+        repo.flush.assert_not_awaited()
+
+    # verifies that updates intermediate status
+    async def test_updates_intermediate_status(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.requires_action)
+        svc, repo, _ = _make_svc(by_intent=payment)
+        await svc.update_intermediate(intent_id="pi_test", status="processing")
+        assert payment.status == PaymentStatus.processing
+        repo.flush.assert_awaited_once()
+
+
+class TestPaymentServiceHandleWebhook:
+    # verifies that raises when signature missing
+    async def test_raises_when_signature_missing(self) -> None:
+        svc, _, _ = _make_svc()
+        with pytest.raises(WebhookError, match="signature missing"):
+            await svc.handle_webhook(b"payload", None)
+
+    # verifies that raises when signature invalid
+    async def test_raises_when_signature_invalid(self) -> None:
+        svc, _, stripe = _make_svc()
+        stripe.verify_webhook = AsyncMock(side_effect=ValueError("bad sig"))
+        with pytest.raises(WebhookError, match="Stripe signature rejected."):
+            await svc.handle_webhook(b"payload", "bad_sig")
+
+    # verifies that returns duplicate for already seen event
+    async def test_returns_duplicate_for_already_seen_event(self) -> None:
+        svc, _, stripe = _make_svc()
+        stripe.verify_webhook = AsyncMock(return_value={"id": "evt_123", "type": "x"})
+        with patch(_PATCH_CLAIM, new=AsyncMock(return_value=False)):
+            result = await svc.handle_webhook(b"payload", "sig_abc")
+        assert result == {"status": "duplicate"}
+
+    # verifies that dispatches and returns ok
+    async def test_dispatches_and_returns_ok(self) -> None:
+        svc, _, stripe = _make_svc()
+        stripe.verify_webhook = AsyncMock(return_value={"id": "evt_456", "type": "x"})
+        with (
+            patch(_PATCH_CLAIM, new=AsyncMock(return_value=True)),
+            patch(_PATCH_DISPATCH, new=AsyncMock(return_value=None)) as mock_dispatch,
+        ):
+            result = await svc.handle_webhook(b"payload", "sig_abc")
+        assert result == {"status": "ok"}
+        mock_dispatch.assert_awaited_once()
+
+    # verifies that raises when event id missing
+    async def test_raises_when_event_id_missing(self) -> None:
+        svc, _, stripe = _make_svc()
+        stripe.verify_webhook = AsyncMock(return_value={"type": "x"})
+        with pytest.raises(WebhookError, match="payload rejected"):
+            await svc.handle_webhook(b"payload", "sig_abc")
+
+
+class TestPaymentEventPayloads:
+    # collects the payload of every event a call recorded, keyed by subject
+    @staticmethod
+    def _events(mock: AsyncMock) -> dict[str, dict[str, object]]:
+        return {call.kwargs["subject"]: call.kwargs["data"] for call in mock.await_args_list}
+
+    # runs an outcome against a payment and returns the events it published
+    @classmethod
+    async def _publish(cls, payment: SimpleNamespace, outcome: str) -> dict[str, dict[str, object]]:
+        svc, _, _ = _make_svc(by_intent=payment)
+        with patch(_PATCH_RECORD, new=AsyncMock()) as mock_record:
+            if outcome == "succeeded":
+                await svc.apply_succeeded(intent_id="pi_test")
+            elif outcome == "failed":
+                await svc.apply_failed(
+                    intent_id="pi_test", failure_code="card_declined", failure_message="No"
+                )
+            elif outcome == "refunded":
+                await svc.apply_refund(intent_id="pi_test", amount_refunded=2000, amount_total=2000)
+            elif outcome == "chargeback_opened":
+                await svc.apply_chargeback(intent_id="pi_test")
+            else:
+                await svc.record_chargeback_closed(intent_id="pi_test")
+        return cls._events(mock_record)
+
+    # verifies that a market payment never emits a reservation id
+    @pytest.mark.parametrize(
+        ("outcome", "subject"),
+        [
+            ("succeeded", "payments.payment.succeeded.v1"),
+            ("failed", "payments.payment.failed.v1"),
+            ("refunded", "payments.payment.refunded.v1"),
+            ("chargeback_opened", "payments.chargeback.opened.v1"),
+            ("chargeback_closed", "payments.chargeback.closed.v1"),
+        ],
+    )
+    async def test_market_payment_carries_assignment_and_omits_reservation(
+        self, outcome: str, subject: str, user_id: uuid.UUID
+    ) -> None:
+        assignment_id = uuid.uuid4()
+        payment = make_payment(
+            reservation_id=None,
+            market_assignment_id=assignment_id,
+            user_id=user_id,
+            status=PaymentStatus.succeeded,
+        )
+        data = (await self._publish(payment, outcome))[subject]
+        assert "reservation_id" not in data
+        assert data["market_assignment_id"] == str(assignment_id)
+        assert data["user_id"] == str(user_id)
+        assert str(assignment_id) not in ("None", "")
+
+    # verifies that a reservation payment never emits a market assignment id
+    @pytest.mark.parametrize(
+        ("outcome", "subject"),
+        [
+            ("succeeded", "payments.payment.succeeded.v1"),
+            ("failed", "payments.payment.failed.v1"),
+            ("refunded", "payments.payment.refunded.v1"),
+            ("chargeback_opened", "payments.chargeback.opened.v1"),
+            ("chargeback_closed", "payments.chargeback.closed.v1"),
+        ],
+    )
+    async def test_reservation_payment_carries_reservation_and_omits_assignment(
+        self, outcome: str, subject: str, reservation_id: uuid.UUID
+    ) -> None:
+        payment = make_payment(
+            reservation_id=reservation_id,
+            market_assignment_id=None,
+            status=PaymentStatus.succeeded,
+        )
+        data = (await self._publish(payment, outcome))[subject]
+        assert data["reservation_id"] == str(reservation_id)
+        assert "market_assignment_id" not in data
+
+    # verifies that a payment without a user omits the payer instead of sending an empty string
+    async def test_payment_without_user_omits_user_id(self, reservation_id: uuid.UUID) -> None:
+        payment = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
+        payment.user_id = None
+        data = (await self._publish(payment, "failed"))["payments.payment.failed.v1"]
+        assert "user_id" not in data
+
+    # verifies that the succeeded event keeps the intent id only on the market variant
+    async def test_payment_intent_id_only_on_market_variant(
+        self, reservation_id: uuid.UUID
+    ) -> None:
+        market = make_payment(
+            reservation_id=None, market_assignment_id=uuid.uuid4(), status=PaymentStatus.succeeded
+        )
+        reservation = make_payment(reservation_id=reservation_id, status=PaymentStatus.succeeded)
+        subject = "payments.payment.succeeded.v1"
+        assert (await self._publish(market, "succeeded"))[subject]["payment_intent_id"] == "pi_test"
+        assert "payment_intent_id" not in (await self._publish(reservation, "succeeded"))[subject]
+
+
+# handles make retrieved intent
+def _make_retrieved(
+    *,
+    intent_id: str = "pi_test_123",
+    status: str = "succeeded",
+    failure_code: str | None = None,
+    failure_message: str | None = None,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        intent_id=intent_id,
+        status=status,
+        failure_code=failure_code,
+        failure_message=failure_message,
+    )
+
+
+class TestPaymentServiceSyncFromProvider:
+    # verifies that a terminal payment is never re-read from the provider
+    async def test_leaves_a_terminal_payment_alone(self) -> None:
+        payment = make_payment(intent_id="pi_done")
+        payment.status = PaymentStatus.succeeded
+        svc, _repo, stripe = _make_svc(by_intent=payment)
+        stripe.retrieve_payment_intent = AsyncMock()
+        result = await svc.sync_from_provider(payment)
+        assert result is payment
+        stripe.retrieve_payment_intent.assert_not_awaited()
+
+    # verifies that a payment without an intent is never re-read from the provider
+    async def test_leaves_a_payment_without_an_intent_alone(self) -> None:
+        payment = make_payment(intent_id=None)
+        svc, _repo, stripe = _make_svc(by_intent=payment)
+        stripe.retrieve_payment_intent = AsyncMock()
+        await svc.sync_from_provider(payment)
+        stripe.retrieve_payment_intent.assert_not_awaited()
+
+    # verifies that a succeeded intent is applied and published when the webhook never arrived
+    async def test_applies_a_succeeded_intent(self) -> None:
+        payment = make_payment(intent_id="pi_open")
+        payment.status = PaymentStatus.requires_action
+        svc, _repo, stripe = _make_svc(by_intent=payment)
+        stripe.retrieve_payment_intent = AsyncMock(
+            return_value=_make_retrieved(intent_id="pi_open", status="succeeded")
+        )
+        record = AsyncMock()
+        with patch(_PATCH_RECORD, new=record):
+            await svc.sync_from_provider(payment)
+        assert payment.status == PaymentStatus.succeeded
+        assert record.await_args is not None
+        assert record.await_args.kwargs["subject"] == "payments.payment.succeeded.v1"
+
+    # verifies that a failed intent is applied and published
+    async def test_applies_a_failed_intent(self) -> None:
+        payment = make_payment(intent_id="pi_open")
+        payment.status = PaymentStatus.requires_action
+        svc, _repo, stripe = _make_svc(by_intent=payment)
+        stripe.retrieve_payment_intent = AsyncMock(
+            return_value=_make_retrieved(
+                intent_id="pi_open",
+                status="canceled",
+                failure_code="card_declined",
+                failure_message="Card declined.",
+            )
+        )
+        record = AsyncMock()
+        with patch(_PATCH_RECORD, new=record):
+            await svc.sync_from_provider(payment)
+        assert payment.status == PaymentStatus.failed
+        assert payment.failure_code == "card_declined"
+        assert record.await_args is not None
+        assert record.await_args.kwargs["subject"] == "payments.payment.failed.v1"
+
+    # verifies that an intent still in flight only moves the intermediate status
+    async def test_applies_an_intermediate_intent(self) -> None:
+        payment = make_payment(intent_id="pi_open")
+        payment.status = PaymentStatus.requires_action
+        svc, _repo, stripe = _make_svc(by_intent=payment)
+        stripe.retrieve_payment_intent = AsyncMock(
+            return_value=_make_retrieved(intent_id="pi_open", status="processing")
+        )
+        record = AsyncMock()
+        with patch(_PATCH_RECORD, new=record):
+            await svc.sync_from_provider(payment)
+        assert payment.status == PaymentStatus.processing
+        record.assert_not_awaited()
+
+    # verifies that a provider outage leaves the stored status untouched
+    async def test_keeps_the_stored_status_when_the_provider_fails(self) -> None:
+        payment = make_payment(intent_id="pi_open")
+        payment.status = PaymentStatus.requires_action
+        svc, _repo, stripe = _make_svc(by_intent=payment)
+        stripe.retrieve_payment_intent = AsyncMock(side_effect=RuntimeError("stripe down"))
+        result = await svc.sync_from_provider(payment)
+        assert result is payment
+        assert payment.status == PaymentStatus.requires_action

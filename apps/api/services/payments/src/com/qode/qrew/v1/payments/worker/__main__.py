@@ -1,0 +1,60 @@
+# entry point that starts the payments arq worker
+import asyncio
+from typing import Any
+
+import structlog
+from db.redis import redis_settings_from_url
+from jobs import build_worker_settings
+from outbox import install_drain_notifier
+from messaging.client import close_nats, init_nats
+
+from observability import setup_worker_observability, shutdown_tracing
+from com.qode.qrew.v1.payments.core.config import settings
+
+import com.qode.qrew.v1.payments.worker.jobs.outbox_drainer  # noqa: F401  # pyright: ignore[reportUnusedImport]
+
+logger = structlog.get_logger(__name__)
+
+
+WorkerSettings = build_worker_settings(
+    redis_settings_from_url(settings.redis_url), queue_name="qrew:jobs:payments"
+)
+
+
+# starts tracing and logging and opens the nats connection the jobs use
+async def _on_startup(ctx: dict[str, Any]) -> None:
+    del ctx
+    install_drain_notifier("payments", redis_url=settings.redis_url)
+    setup_worker_observability(
+        service_name=f"{settings.app_name}-worker",
+        version=settings.version,
+        debug=settings.debug,
+        otel_enabled=settings.otel_enabled,
+        otel_endpoint=settings.otel_endpoint,
+    )
+    if not settings.nats_url:
+        await logger.awarning("payments_worker.no_nats_url")
+        return
+    await init_nats(settings.nats_url)
+
+
+# closes the nats connection and flushes the pending spans when the worker stops
+async def _on_shutdown(ctx: dict[str, Any]) -> None:
+    del ctx
+    await close_nats()
+    shutdown_tracing()
+
+
+WorkerSettings.on_startup = _on_startup  # type: ignore[attr-defined]
+WorkerSettings.on_shutdown = _on_shutdown  # type: ignore[attr-defined]
+
+
+# runs the arq worker loop
+def main() -> None:
+    from arq import run_worker
+
+    asyncio.run(run_worker(WorkerSettings))  # type: ignore[arg-type]
+
+
+if __name__ == "__main__":
+    main()

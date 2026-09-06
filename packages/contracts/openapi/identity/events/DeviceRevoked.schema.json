@@ -1,0 +1,27 @@
+{
+  "properties": {
+    "device_id": {
+      "format": "uuid",
+      "title": "Device Id",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "revoked_at": {
+      "format": "date-time",
+      "title": "Revoked At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "device_id",
+    "user_id",
+    "revoked_at"
+  ],
+  "title": "DeviceRevoked",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

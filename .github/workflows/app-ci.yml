@@ -1,0 +1,42 @@
+name: App CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths: [apps/app/**]
+    types: [opened, synchronize, reopened]
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  quality-checks:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint -w apps/app
+      - name: Format
+        run: npm run format:check -w apps/app
+      - name: Build
+        run: npm run build -w apps/app
+      - name: Type Check
+        run: npm run type:check
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Unit Tests
+        run: npm run test:run

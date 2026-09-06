@@ -1,0 +1,545 @@
+openapi: 3.1.0
+info:
+  title: qrew-ticketing
+  version: 0.1.0
+paths:
+  /v1/tickets:
+    get:
+      tags:
+      - tickets
+      summary: List all tickets owned by the authenticated user
+      operationId: list_tickets_v1_tickets_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TicketResponse'
+                type: array
+                title: Response List Tickets V1 Tickets Get
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /v1/tickets/{ticket_id}:
+    get:
+      tags:
+      - tickets
+      summary: Get a single ticket owned by the authenticated user
+      operationId: get_ticket_v1_tickets__ticket_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/tickets/{ticket_id}/qr:
+    get:
+      tags:
+      - ticket-qr
+      summary: Mint a fresh rotating QR for a ticket
+      operationId: issue_qr_v1_tickets__ticket_id__qr_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      - name: latitude
+        in: query
+        required: true
+        schema:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+          title: Latitude
+      - name: longitude
+        in: query
+        required: true
+        schema:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+          title: Longitude
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/tickets/{ticket_id}/qr/stream:
+    post:
+      tags:
+      - ticket-qr
+      summary: Server-sent stream of rotating QRs while the gate is open
+      operationId: stream_qr_v1_tickets__ticket_id__qr_stream_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QrIssueRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/tickets/{ticket_id}/restore:
+    post:
+      tags:
+      - ticket-restore
+      summary: Restore a frozen ticket onto a re-enrolled device
+      operationId: restore_ticket_v1_tickets__ticket_id__restore_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Ticket Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                title: Response Restore Ticket V1 Tickets  Ticket Id  Restore Post
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ErrorDetail:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Human-readable explanation of the failure.
+        field:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Field
+      type: object
+      required:
+      - message
+      title: ErrorDetail
+    ErrorResponse:
+      properties:
+        detail:
+          $ref: '#/components/schemas/ErrorDetail'
+      type: object
+      required:
+      - detail
+      title: ErrorResponse
+    QrIssueRequest:
+      properties:
+        latitude:
+          anyOf:
+          - type: number
+            maximum: 90.0
+            minimum: -90.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Latitude
+        longitude:
+          anyOf:
+          - type: number
+            maximum: 180.0
+            minimum: -180.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Longitude
+      type: object
+      required:
+      - latitude
+      - longitude
+      title: QrIssueRequest
+    QrResponse:
+      properties:
+        ticket_id:
+          type: string
+          format: uuid
+          title: Ticket Id
+        jwt:
+          type: string
+          title: Jwt
+        jti:
+          type: string
+          title: Jti
+        issued_at:
+          type: string
+          format: date-time
+          title: Issued At
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+        rotates_at:
+          type: string
+          format: date-time
+          title: Rotates At
+      type: object
+      required:
+      - ticket_id
+      - jwt
+      - jti
+      - issued_at
+      - expires_at
+      - rotates_at
+      title: QrResponse
+    TicketResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        reservation_id:
+          type: string
+          format: uuid
+          title: Reservation Id
+        event_id:
+          type: string
+          format: uuid
+          title: Event Id
+        ticket_type_id:
+          type: string
+          format: uuid
+          title: Ticket Type Id
+        state:
+          type: string
+          title: State
+        state_updated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: State Updated At
+        issued_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Issued At
+        expired_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expired At
+        holder_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Holder Name
+        holder_document_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Holder Document Type
+        holder_dni:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Holder Dni
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        qr_eligible:
+          type: boolean
+          title: Qr Eligible
+        counts_toward_limit:
+          type: boolean
+          title: Counts Toward Limit
+      type: object
+      required:
+      - id
+      - reservation_id
+      - event_id
+      - ticket_type_id
+      - state
+      - state_updated_at
+      - issued_at
+      - expired_at
+      - holder_name
+      - holder_document_type
+      - holder_dni
+      - created_at
+      - qr_eligible
+      - counts_toward_limit
+      title: TicketResponse
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
